@@ -19,13 +19,34 @@ const sqlite = {
   ...shared
 };
 
+const client = (process.env.DB_CLIENT || 'sqlite3').toLowerCase();
+
+// Validate DATABASE_URL when using PostgreSQL
+if (client === 'pg') {
+  if (!process.env.DATABASE_URL) {
+    throw new Error(
+      'DATABASE_URL environment variable is required when DB_CLIENT=pg.\n' +
+      'Please set DATABASE_URL in your environment variables.\n' +
+      'Example: DATABASE_URL=postgresql://user:password@host:5432/dbname?sslmode=require\n' +
+      'For Neon: Get your connection string from https://console.neon.tech'
+    );
+  }
+  
+  // Validate that DATABASE_URL looks like a PostgreSQL connection string
+  if (!process.env.DATABASE_URL.startsWith('postgresql://') && 
+      !process.env.DATABASE_URL.startsWith('postgres://')) {
+    throw new Error(
+      `Invalid DATABASE_URL format. Expected postgresql:// or postgres://, got: ${process.env.DATABASE_URL.substring(0, 20)}...\n` +
+      'Example: DATABASE_URL=postgresql://user:password@host:5432/dbname?sslmode=require'
+    );
+  }
+}
+
 const pg = {
   client: 'pg',
   connection: process.env.DATABASE_URL,
   ...shared
 };
-
-const client = (process.env.DB_CLIENT || 'sqlite3').toLowerCase();
 
 // Check if sqlite3 is requested and available
 if (client === 'sqlite3') {

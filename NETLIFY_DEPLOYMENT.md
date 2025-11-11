@@ -197,9 +197,20 @@ If you see "Cannot find module 'pg'" or "Knex: run $ npm install pg --save":
 ### Database Connection Error
 
 If you see database connection errors:
-- Verify `DATABASE_URL` is correct
+
+**Error: `connect ECONNREFUSED 127.0.0.1:5432`**
+- This means environment variables are not set correctly
+- **Solution**: See [NETLIFY_ENV_SETUP.md](./NETLIFY_ENV_SETUP.md) for detailed setup instructions
+- Verify `DB_CLIENT=pg` is set in Netlify environment variables
+- Verify `DATABASE_URL` is set with your Neon connection string
+- Ensure you redeployed after setting environment variables
+
+**Other connection errors:**
+- Verify `DATABASE_URL` is correct and includes `?sslmode=require`
 - Check that your database allows connections from Netlify's IPs
 - Ensure SSL is enabled if required (`?sslmode=require`)
+- Verify your Neon database is active (not paused)
+- Check Neon dashboard for connection issues
 
 ### Puppeteer/PDF Generation Issues
 
