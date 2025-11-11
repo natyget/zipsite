@@ -1,0 +1,106 @@
+<%- include('../partials/forms', { errors, values }) %>
+<% 
+  const _errors = (typeof errors === 'object' && errors) ? errors : {};
+  const _values = (typeof values === 'object' && values) ? values : {};
+  
+  function fieldError(name) {
+    const val = _errors[name];
+    if (!val) return '';
+    return Array.isArray(val) ? val[0] : val;
+  }
+  
+  function valueFor(name, fallback) {
+    if (Object.prototype.hasOwnProperty.call(_values, name) && _values[name] != null) {
+      return _values[name];
+    }
+    return fallback || '';
+  }
+%>
+<section class="auth-page">
+  <div class="auth-page__visual">
+    <div class="auth-page__visual-content">
+      <span class="auth-page__visual-badge">Partners</span>
+      <h1 class="auth-page__visual-headline">
+        <span class="auth-page__visual-headline-fashion">Join as a partner agency.</span>
+        <span class="auth-page__visual-headline-ai">Professional portal.</span>
+      </h1>
+      <p class="auth-page__visual-tagline">Access our free talent discovery platform. Filter, review, and manage applications from verified talent—all in one place.</p>
+      <div class="auth-page__visual-accent"></div>
+    </div>
+  </div>
+  
+  <div class="auth-page__form">
+    <div class="auth-page__form-container">
+      <div class="auth-page__form-header">
+        <h2 class="auth-page__form-title">Partner Registration</h2>
+        <p class="auth-page__form-subtitle">Create your agency account to start discovering talent</p>
+      </div>
+      
+      <div class="auth-card" role="form">
+        <form method="post" action="/partners" class="form" data-async>
+          <div class="form-field <%= fieldError('agency_name') ? 'has-error' : '' %>">
+            <label for="agency_name">Agency Name</label>
+            <input id="agency_name" name="agency_name" type="text" autocomplete="organization" required value="<%= valueFor('agency_name', '') %>" placeholder="True Modeling Agency">
+            <% if (fieldError('agency_name')) { %>
+              <p class="field-error" role="alert"><%= fieldError('agency_name') %></p>
+            <% } %>
+          </div>
+          
+          <div class="form-field <%= fieldError('company_website') ? 'has-error' : '' %>">
+            <label for="company_website">Company Website <span class="muted">(optional)</span></label>
+            <input id="company_website" name="company_website" type="url" autocomplete="url" value="<%= valueFor('company_website', '') %>" placeholder="https://example.com">
+            <% if (fieldError('company_website')) { %>
+              <p class="field-error" role="alert"><%= fieldError('company_website') %></p>
+            <% } %>
+            <p class="form-field__help">Help us verify your agency</p>
+          </div>
+          
+          <div class="form-grid">
+            <div class="form-field <%= fieldError('contact_name') ? 'has-error' : '' %>">
+              <label for="contact_name">Your Full Name</label>
+              <input id="contact_name" name="contact_name" type="text" autocomplete="name" required value="<%= valueFor('contact_name', '') %>" placeholder="John Smith">
+              <% if (fieldError('contact_name')) { %>
+                <p class="field-error" role="alert"><%= fieldError('contact_name') %></p>
+              <% } %>
+            </div>
+            <div class="form-field <%= fieldError('contact_role') ? 'has-error' : '' %>">
+              <label for="contact_role">Your Role</label>
+              <select id="contact_role" name="contact_role" required>
+                <option value="">Select role</option>
+                <option value="Booker" <%= valueFor('contact_role') === 'Booker' ? 'selected' : '' %>>Booker</option>
+                <option value="Director" <%= valueFor('contact_role') === 'Director' ? 'selected' : '' %>>Director</option>
+                <option value="Scout" <%= valueFor('contact_role') === 'Scout' ? 'selected' : '' %>>Scout</option>
+                <option value="Other" <%= valueFor('contact_role') === 'Other' ? 'selected' : '' %>>Other</option>
+              </select>
+              <% if (fieldError('contact_role')) { %>
+                <p class="field-error" role="alert"><%= fieldError('contact_role') %></p>
+              <% } %>
+            </div>
+          </div>
+          
+          <div class="form-field <%= fieldError('email') ? 'has-error' : '' %>">
+            <label for="email">Work Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" required value="<%= valueFor('email', '') %>" placeholder="you@agency.com">
+            <% if (fieldError('email')) { %>
+              <p class="field-error" role="alert"><%= fieldError('email') %></p>
+            <% } %>
+          </div>
+          
+          <div class="form-field <%= fieldError('password') ? 'has-error' : '' %>">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="new-password" required minlength="8" value="<%= valueFor('password', '') %>">
+            <% if (fieldError('password')) { %>
+              <p class="field-error" role="alert"><%= fieldError('password') %></p>
+            <% } %>
+            <p class="form-field__help">Minimum 8 characters</p>
+          </div>
+          
+          <button type="submit" class="button button-primary button-block" data-loading-text="Creating account…">Create Agency Account</button>
+        </form>
+        
+        <p class="auth-switch">Already have an account? <a href="/login">Sign in</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+

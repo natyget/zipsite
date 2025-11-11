@@ -1,0 +1,183 @@
+<!-- Editorial Header: Compact and elegant -->
+<section class="demo-header" id="demo-header">
+  <div class="demo-header__container">
+    <span class="demo-header__badge">Live Demo</span>
+    <h1 class="demo-header__headline">
+      <span class="demo-header__headline-fashion">Experience Pro.</span>
+      <span class="demo-header__headline-ai">Editorial quality. Zero compromises.</span>
+    </h1>
+    <p class="demo-header__subheadline">Explore the live portfolio and premium PDF themes that define professional talent representation.</p>
+    <div class="demo-header__accent"></div>
+  </div>
+</section>
+
+<!-- Split-Screen Interactive Showcase -->
+<section class="demo-showcase" id="demo-showcase">
+  <div class="demo-showcase__container">
+    <div class="demo-showcase__layout">
+      
+      <!-- Left Column: Pro Live Portfolio -->
+      <div class="demo-portfolio-preview">
+        <div class="demo-portfolio-preview__header">
+          <div class="demo-portfolio-preview__title-group">
+            <h2 class="demo-portfolio-preview__title">Pro Live Portfolio</h2>
+            <div class="demo-portfolio-preview__badges">
+              <span class="demo-portfolio-preview__badge demo-portfolio-preview__badge--pro">No Branding</span>
+              <span class="demo-portfolio-preview__badge demo-portfolio-preview__badge--pro">Custom Domain</span>
+              <span class="demo-portfolio-preview__badge demo-portfolio-preview__badge--pro">Analytics</span>
+            </div>
+          </div>
+          <div class="demo-portfolio-preview__controls">
+            <button class="demo-portfolio-preview__control-btn" data-view="desktop" aria-label="Desktop view">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </button>
+            <button class="demo-portfolio-preview__control-btn" data-view="tablet" aria-label="Tablet view">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+            </button>
+            <button class="demo-portfolio-preview__control-btn" data-view="mobile" aria-label="Mobile view">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <div class="demo-portfolio-preview__frame" id="portfolio-preview-frame">
+          <div class="demo-portfolio-preview__iframe-wrapper">
+            <iframe 
+              src="/portfolio/elara-k" 
+              class="demo-portfolio-preview__iframe"
+              title="Pro Portfolio Preview"
+              loading="lazy"
+              allow="fullscreen">
+            </iframe>
+          </div>
+          <div class="demo-portfolio-preview__overlay">
+            <div class="demo-portfolio-preview__url-display">
+              <span class="demo-portfolio-preview__url-label">Share URL:</span>
+              <code class="demo-portfolio-preview__url" id="portfolio-url">zipsite.me/elara-k</code>
+              <button class="demo-portfolio-preview__copy-btn" id="copy-portfolio-url" aria-label="Copy URL">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="demo-portfolio-preview__actions">
+          <a href="/portfolio/elara-k" target="_blank" rel="noopener" class="demo-portfolio-preview__action-btn button button-primary">
+            Open Full Portfolio
+          </a>
+        </div>
+      </div>
+
+      <!-- Right Column: Pro PDF Comp Card -->
+      <div class="demo-pdf-themes">
+        <div class="demo-pdf-themes__header">
+          <h2 class="demo-pdf-themes__title">Pro PDF Themes</h2>
+          <p class="demo-pdf-themes__subtitle">Choose from premium editorial themes</p>
+        </div>
+        
+        <div class="demo-pdf-themes__gallery" id="pdf-themes-gallery">
+          <!-- Theme cards will be populated by JavaScript -->
+        </div>
+        
+        <div class="demo-pdf-themes__preview" id="pdf-theme-preview">
+          <div class="demo-pdf-themes__preview-header">
+            <h3 class="demo-pdf-themes__preview-title" id="preview-theme-name">Select a theme</h3>
+            <button class="demo-pdf-themes__preview-close" id="close-pdf-preview" aria-label="Close preview" hidden>&times;</button>
+          </div>
+          <div class="demo-pdf-themes__preview-content" id="pdf-preview-content">
+            <div class="demo-pdf-themes__preview-placeholder">
+              <div class="demo-pdf-themes__preview-placeholder-icon">📄</div>
+              <p class="demo-pdf-themes__preview-placeholder-text">Click a theme above to preview</p>
+            </div>
+          </div>
+          <div class="demo-pdf-themes__preview-actions" id="pdf-preview-actions" hidden>
+            <a href="#" class="demo-pdf-themes__download-btn button button-primary" id="download-pdf-btn" target="_blank">
+              Download Sample PDF
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Interactive Comparison Section -->
+<section class="demo-comparison" id="demo-comparison">
+  <div class="demo-comparison__container">
+    <div class="demo-comparison__header">
+      <h2 class="demo-comparison__title">Free vs Pro</h2>
+      <p class="demo-comparison__subtitle">See the difference that makes Pro the professional standard</p>
+    </div>
+    
+    <div class="demo-comparison__grid">
+      <div class="comparison-card">
+        <div class="comparison-card__icon">🌐</div>
+        <div class="comparison-card__title">Portfolio URL</div>
+        <div class="comparison-card__free">—</div>
+        <div class="comparison-card__pro">zipsite.me/yourname</div>
+      </div>
+      
+      <div class="comparison-card">
+        <div class="comparison-card__icon">✨</div>
+        <div class="comparison-card__title">Branding</div>
+        <div class="comparison-card__free">ZipSite watermark</div>
+        <div class="comparison-card__pro">No branding</div>
+      </div>
+      
+      <div class="comparison-card">
+        <div class="comparison-card__icon">🎨</div>
+        <div class="comparison-card__title">PDF Themes</div>
+        <div class="comparison-card__free">1 theme (Ink)</div>
+        <div class="comparison-card__pro">5+ premium themes</div>
+      </div>
+      
+      <div class="comparison-card">
+        <div class="comparison-card__icon">📊</div>
+        <div class="comparison-card__title">Analytics</div>
+        <div class="comparison-card__free">—</div>
+        <div class="comparison-card__pro">Full dashboard</div>
+      </div>
+      
+      <div class="comparison-card">
+        <div class="comparison-card__icon">🎬</div>
+        <div class="comparison-card__title">Video Support</div>
+        <div class="comparison-card__free">—</div>
+        <div class="comparison-card__pro">Reels & lookbooks</div>
+      </div>
+      
+      <div class="comparison-card">
+        <div class="comparison-card__icon">⚡</div>
+        <div class="comparison-card__title">AI Processing</div>
+        <div class="comparison-card__free">Standard</div>
+        <div class="comparison-card__pro">Priority</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- "Try It Yourself" CTA -->
+<section class="demo-cta" id="demo-cta">
+  <div class="demo-cta__content">
+    <h2 class="demo-cta__headline">Ready to experience Pro?</h2>
+    <p class="demo-cta__subheadline">Join working talent and agencies who trust ZipSite for their professional portfolios.</p>
+    <div class="demo-cta__actions">
+      <a href="/pro/upgrade" class="demo-cta__button button button-primary">Start Your Pro Portfolio</a>
+      <a href="/portfolio/elara-k" target="_blank" rel="noopener" class="demo-cta__button button button-secondary">View Sample Portfolio</a>
+    </div>
+  </div>
+</section>
+
+<script src="/scripts/demo.js?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>" defer></script>

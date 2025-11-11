@@ -1,0 +1,10 @@
+<% if (messages && messages.length) { %>
+  <section class="flash-stack" role="status" aria-live="polite">
+    <% messages.forEach((message, index) => { %>
+      <div class="flash flash-<%= message.type %>" data-flash data-flash-type="<%= message.type %>" data-flash-index="<%= index %>">
+        <span class="flash__label"><%= message.type === 'error' ? 'Alert' : 'Notice' %>:</span>
+        <span><%= message.text %></span>
+      </div>
+    <% }) %>
+  </section>
+<% } %>

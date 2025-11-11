@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZipSite Portfolio Template</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .font-display {
+      font-family: 'Playfair Display', serif;
+    }
+    .nav-blur {
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: rgba(241, 245, 249, 0.85);
+    }
+    .button-primary {
+      transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+    }
+    .button-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 35px -20px rgba(37, 99, 235, 0.8);
+    }
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .fade-in[data-visible="true"] {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .mobile-menu {
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .mobile-menu.hidden {
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    .mobile-menu.visible {
+      pointer-events: auto;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .stat-grid {
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+  </style>
+</head>
+<body class="antialiased">
+  <header class="fixed top-0 inset-x-0 z-50 border-b border-slate-200/70 nav-blur">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <a href="index.html" class="text-lg font-semibold tracking-[0.2em] uppercase">ZipSite</a>
+      <nav class="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
+        <a href="#showcase" class="hover:text-slate-900 transition">Portfolio</a>
+        <a href="#stats" class="hover:text-slate-900 transition">Stats</a>
+        <a href="#bio" class="hover:text-slate-900 transition">Bio</a>
+        <a href="#contact" class="hover:text-slate-900 transition">Contact</a>
+      </nav>
+      <div class="hidden items-center gap-3 md:flex">
+        <a href="#" class="text-sm font-medium text-slate-600 hover:text-slate-900">Download PDF</a>
+        <a href="#" class="button-primary rounded-full border border-slate-900 px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white">Share</a>
+      </div>
+      <button id="mobile-nav-toggle" class="md:hidden" aria-label="Open navigation">
+        <span class="block h-0.5 w-6 bg-slate-900"></span>
+        <span class="mt-1 block h-0.5 w-6 bg-slate-900"></span>
+        <span class="mt-1 block h-0.5 w-6 bg-slate-900"></span>
+      </button>
+    </div>
+    <div id="mobile-menu" class="mobile-menu hidden absolute inset-x-0 top-full bg-white px-6 pb-6 shadow-xl md:hidden">
+      <nav class="flex flex-col gap-4 pt-4 text-sm font-medium text-slate-700">
+        <a href="#showcase" class="transition hover:text-slate-900">Portfolio</a>
+        <a href="#stats" class="transition hover:text-slate-900">Stats</a>
+        <a href="#bio" class="transition hover:text-slate-900">Bio</a>
+        <a href="#contact" class="transition hover:text-slate-900">Contact</a>
+        <a href="#" class="transition hover:text-slate-900">Download PDF</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="pt-28 pb-24">
+    <section id="showcase" class="mx-auto max-w-6xl px-6">
+      <div class="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+        <div class="fade-in" data-visible="false">
+          <p class="text-xs uppercase tracking-[0.5em] text-slate-500">ZipSite Presents</p>
+          <h1 class="mt-4 font-display text-5xl leading-tight text-slate-900">Natan Black</h1>
+          <p class="mt-4 text-sm uppercase tracking-[0.4em] text-slate-500">Editorial | Runway | Commercial</p>
+        </div>
+        <div class="fade-in flex flex-col gap-6 text-sm text-slate-600" data-visible="false">
+          <p class="text-base text-slate-600">Curated by ZipSite's Groq-powered AI. Updated automatically as new work arrives.</p>
+          <div class="rounded-3xl border border-slate-200/70 bg-white/70 p-5 shadow-sm backdrop-blur-sm">
+            <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Representation</p>
+            <p class="mt-3 text-base text-slate-700">Ford Models New York</p>
+            <p class="text-sm text-slate-500">Direct inquiries via <a href="mailto:bookings@zipsite.me" class="underline decoration-slate-400 underline-offset-4 hover:text-slate-900">bookings@zipsite.me</a></p>
+          </div>
+        </div>
+      </div>
+      <div class="mt-12 grid gap-6 md:grid-cols-3">
+        <div class="fade-in rounded-[28px] border border-slate-200 shadow-[0_35px_60px_-45px_rgba(15,23,42,0.45)]" data-visible="false">
+          <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80" alt="Editorial portrait" class="h-full w-full rounded-[28px] object-cover">
+        </div>
+        <div class="fade-in rounded-[28px] border border-slate-200 shadow-[0_35px_60px_-45px_rgba(15,23,42,0.45)]" data-visible="false">
+          <img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=80" alt="Runway walk" class="h-full w-full rounded-[28px] object-cover">
+        </div>
+        <div class="fade-in rounded-[28px] border border-slate-200 shadow-[0_35px_60px_-45px_rgba(15,23,42,0.45)]" data-visible="false">
+          <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=900&q=80" alt="Editorial profile" class="h-full w-full rounded-[28px] object-cover">
+        </div>
+      </div>
+    </section>
+
+    <section id="stats" class="mx-auto mt-24 max-w-6xl px-6">
+      <div class="rounded-3xl border border-slate-200/80 bg-white p-10 shadow-sm">
+        <div class="fade-in" data-visible="false">
+          <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Stats</p>
+          <h2 class="mt-3 font-display text-3xl text-slate-900">Polished measurements curated by AI.</h2>
+        </div>
+        <div class="stat-grid mt-8 grid gap-6 text-sm text-slate-600">
+          <div class="rounded-3xl border border-slate-200/80 bg-white/70 p-5 text-center">
+            <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Height</p>
+            <p class="mt-3 text-xl font-semibold text-slate-900">5' 11"</p>
+          </div>
+          <div class="rounded-3xl border border-slate-200/80 bg-white/70 p-5 text-center">
+            <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Measurements</p>
+            <p class="mt-3 text-xl font-semibold text-slate-900">32 • 24 • 34</p>
+          </div>
+          <div class="rounded-3xl border border-slate-200/80 bg-white/70 p-5 text-center">
+            <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Shoe</p>
+            <p class="mt-3 text-xl font-semibold text-slate-900">8 US</p>
+          </div>
+          <div class="rounded-3xl border border-slate-200/80 bg-white/70 p-5 text-center">
+            <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Eyes</p>
+            <p class="mt-3 text-xl font-semibold text-slate-900">Hazel</p>
+          </div>
+          <div class="rounded-3xl border border-slate-200/80 bg-white/70 p-5 text-center">
+            <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Hair</p>
+            <p class="mt-3 text-xl font-semibold text-slate-900">Chestnut</p>
+          </div>
+          <div class="rounded-3xl border border-slate-200/80 bg-white/70 p-5 text-center">
+            <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Location</p>
+            <p class="mt-3 text-xl font-semibold text-slate-900">New York, NY</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="bio" class="mx-auto mt-24 max-w-4xl px-6">
+      <div class="fade-in" data-visible="false">
+        <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Profile</p>
+        <h2 class="mt-3 font-display text-3xl text-slate-900">Narrative refined by ZipSite's AI curator.</h2>
+        <p class="mt-6 text-base leading-relaxed text-slate-600">Natan Black is a New York-based model celebrated for a magnetic runway presence and editorial versatility. Recent campaigns include work for major luxury houses and tech-forward fashion collaborations. Comfortable moving between cinematic storytelling and precision commercial work, Natan adapts seamlessly to international schedules and creative demands.</p>
+      </div>
+      <div class="mt-12 grid gap-6 md:grid-cols-2">
+        <div class="fade-in rounded-[28px] border border-slate-200 shadow-[0_35px_60px_-45px_rgba(15,23,42,0.45)]" data-visible="false">
+          <img src="https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=900&q=80" alt="Studio portrait" class="h-full w-full rounded-[28px] object-cover">
+        </div>
+        <div class="fade-in rounded-[28px] border border-slate-200 shadow-[0_35px_60px_-45px_rgba(15,23,42,0.45)]" data-visible="false">
+          <img src="https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?auto=format&fit=crop&w=900&q=80" alt="Editorial outdoor" class="h-full w-full rounded-[28px] object-cover">
+        </div>
+      </div>
+    </section>
+
+    <section class="mx-auto mt-24 max-w-6xl px-6">
+      <div class="rounded-3xl border border-slate-200/80 bg-white p-10 shadow-sm">
+        <div class="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between">
+          <div class="fade-in max-w-xl" data-visible="false">
+            <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Featured Reel</p>
+            <h2 class="mt-3 font-display text-3xl text-slate-900">Motion work delivered for Pro members.</h2>
+            <p class="mt-4 text-base text-slate-600">Embed reels, BTS, and motion studies. When the portfolio is Pro, the ZipSite watermark disappears and the experience becomes fully branded.</p>
+          </div>
+          <div class="fade-in w-full lg:max-w-md" data-visible="false">
+            <div class="aspect-video overflow-hidden rounded-[28px] border border-slate-200 bg-slate-900/90 shadow-[0_35px_60px_-45px_rgba(15,23,42,0.45)]">
+              <iframe class="h-full w-full" src="https://player.vimeo.com/video/76979871?h=8272103f6e" title="Portfolio reel" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="mx-auto mt-24 max-w-4xl px-6">
+      <div class="rounded-3xl border border-slate-200/80 bg-white p-8 text-center shadow-sm">
+        <div class="fade-in" data-visible="false">
+          <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Bookings</p>
+          <h2 class="mt-3 font-display text-3xl text-slate-900">Connect with Natan's team.</h2>
+          <p class="mt-4 text-base text-slate-600">Direct: <a href="mailto:bookings@zipsite.me" class="underline decoration-slate-400 underline-offset-4 hover:text-slate-900">bookings@zipsite.me</a> · Office: +1 (212) 555-0123</p>
+          <div class="mt-8 flex flex-wrap justify-center gap-4">
+            <a href="#" class="button-primary inline-flex rounded-full bg-slate-900 px-7 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">Download PDF Comp Card</a>
+            <a href="#" class="inline-flex rounded-full border border-slate-900 px-7 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white">Share Portfolio</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mt-24 bg-slate-950 py-12 text-slate-200">
+    <div class="mx-auto flex max-w-6xl flex-col gap-10 px-6 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="text-sm uppercase tracking-[0.5em] text-slate-500">ZipSite</p>
+        <p class="mt-4 max-w-lg text-sm text-slate-400">This template dynamically loads each talent's AI-curated profile. Consistent, premium, and ready for agency distribution.</p>
+      </div>
+      <div class="flex flex-col gap-3 text-sm text-slate-400 md:flex-row md:items-center md:gap-6">
+        <a href="index.html" class="hover:text-white transition">Platform</a>
+        <a href="application.html" class="hover:text-white transition">Apply</a>
+        <a href="#" class="hover:text-white transition">Privacy</a>
+      </div>
+    </div>
+    <p class="mt-12 text-center text-xs text-slate-500">© 2025 ZipSite. Refined by AI. Crafted for agency confidence.</p>
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.dataset.visible = 'true';
+        }
+      });
+    }, { threshold: 0.2 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    const toggle = document.getElementById('mobile-nav-toggle');
+    const menu = document.getElementById('mobile-menu');
+
+    toggle.addEventListener('click', () => {
+      if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        requestAnimationFrame(() => menu.classList.add('visible'));
+      } else {
+        menu.classList.remove('visible');
+        menu.addEventListener('transitionend', () => menu.classList.add('hidden'), { once: true });
+      }
+    });
+
+    document.querySelectorAll('#mobile-menu a').forEach(link => {
+      link.addEventListener('click', () => {
+        menu.classList.remove('visible');
+        menu.addEventListener('transitionend', () => menu.classList.add('hidden'), { once: true });
+      });
+    });
+  </script>
+  <script src="/scripts/wire.js"></script>
+</body>
+</html>

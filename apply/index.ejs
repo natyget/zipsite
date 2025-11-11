@@ -1,0 +1,61 @@
+<section class="panel">
+  <h1>Start your application</h1>
+  <p class="muted">Complete the details below to save your talent profile.</p>
+  <form method="post" action="/apply" class="form-grid two-col">
+    <label>First name
+      <input type="text" name="first_name" value="<%= values.first_name || '' %>" required>
+      <% if (errors && errors.first_name) { %>
+        <small class="field-error"><%= errors.first_name[0] %></small>
+      <% } %>
+    </label>
+    <label>Last name
+      <input type="text" name="last_name" value="<%= values.last_name || '' %>" required>
+      <% if (errors && errors.last_name) { %>
+        <small class="field-error"><%= errors.last_name[0] %></small>
+      <% } %>
+    </label>
+    <label>Email
+      <input type="email" name="email" value="<%= values.email || '' %>" required>
+      <% if (errors && errors.email) { %>
+        <small class="field-error"><%= errors.email[0] %></small>
+      <% } %>
+    </label>
+    <label>Password
+      <input type="password" name="password" required>
+      <% if (errors && errors.password) { %>
+        <small class="field-error"><%= errors.password[0] %></small>
+      <% } %>
+    </label>
+    <label>City
+      <input type="text" name="city" value="<%= values.city || '' %>" required>
+      <% if (errors && errors.city) { %>
+        <small class="field-error"><%= errors.city[0] %></small>
+      <% } %>
+    </label>
+    <label>Height (cm)
+      <input type="number" name="height_cm" min="120" max="220" value="<%= values.height_cm || '' %>" required>
+      <% if (errors && errors.height_cm) { %>
+        <small class="field-error"><%= errors.height_cm[0] %></small>
+      <% } %>
+    </label>
+    <label>Measurements
+      <input type="text" name="measurements" value="<%= values.measurements || '' %>" placeholder="32-24-34" required>
+      <% if (errors && errors.measurements) { %>
+        <small class="field-error"><%= errors.measurements[0] %></small>
+      <% } %>
+    </label>
+    <label>Partner agency email <span class="muted">(optional)</span>
+      <input type="email" name="partner_agency_email" value="<%= values.partner_agency_email || '' %>">
+      <% if (errors && errors.partner_agency_email) { %>
+        <small class="field-error"><%= errors.partner_agency_email[0] %></small>
+      <% } %>
+    </label>
+    <label class="full-width">Bio
+      <textarea name="bio" rows="4" placeholder="Tell us about your editorial focus." required><%= values.bio || '' %></textarea>
+      <% if (errors && errors.bio) { %>
+        <small class="field-error"><%= errors.bio[0] %></small>
+      <% } %>
+    </label>
+    <button type="submit" class="button button-primary">Submit application</button>
+  </form>
+</section>

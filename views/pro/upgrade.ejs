@@ -1,0 +1,248 @@
+<% const safeProfile = (typeof profile !== 'undefined' && profile) ? profile : {}; %>
+
+<section class="pro-upgrade-hero">
+  <div class="pro-upgrade-hero__content">
+    <span class="pro-upgrade-hero__eyebrow">Premium Features</span>
+    <h1 class="pro-upgrade-hero__title">Upgrade to ZipSite Pro</h1>
+    <p class="pro-upgrade-hero__description">
+      Unlock watermark-free PDFs, advanced analytics, and priority support for your professional portfolio.
+    </p>
+  </div>
+</section>
+
+<section class="pro-features">
+  <div class="dash-panel">
+    <header class="dash-panel__header">
+      <h3>Pro Features</h3>
+      <p>Everything you need for a professional modeling career</p>
+    </header>
+    <div class="dash-panel__body">
+      <div class="pro-features__grid">
+        <div class="pro-feature">
+          <div class="pro-feature__icon">✓</div>
+          <h4 class="pro-feature__title">Watermark-Free PDFs</h4>
+          <p class="pro-feature__description">Generate professional comp cards without ZipSite branding for client submissions.</p>
+        </div>
+        <div class="pro-feature">
+          <div class="pro-feature__icon">✓</div>
+          <h4 class="pro-feature__title">Advanced Analytics</h4>
+          <p class="pro-feature__description">Track portfolio views, PDF downloads, and engagement metrics to optimize your presence.</p>
+        </div>
+        <div class="pro-feature">
+          <div class="pro-feature__icon">✓</div>
+          <h4 class="pro-feature__title">Priority Support</h4>
+          <p class="pro-feature__description">Get fast-tracked help from our editorial team for profile optimization and technical issues.</p>
+        </div>
+        <div class="pro-feature">
+          <div class="pro-feature__icon">✓</div>
+          <h4 class="pro-feature__title">Unlimited Updates</h4>
+          <p class="pro-feature__description">Refresh your portfolio, bio, and imagery as often as you need without restrictions.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pro-pricing">
+  <div class="dash-panel">
+    <header class="dash-panel__header">
+      <h3>Pricing</h3>
+      <p>Simple, transparent pricing for professionals</p>
+    </header>
+    <div class="dash-panel__body">
+      <div class="pro-pricing__card">
+        <div class="pro-pricing__amount">
+          <span class="pro-pricing__currency">$</span>
+          <span class="pro-pricing__price">9.99</span>
+          <span class="pro-pricing__period">/month</span>
+        </div>
+        <p class="pro-pricing__note">Cancel anytime, no questions asked.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pro-payment">
+  <div class="dash-panel">
+    <header class="dash-panel__header">
+      <h3>Payment</h3>
+      <p>Secure checkout coming soon</p>
+    </header>
+    <div class="dash-panel__body">
+      <div class="pro-payment__notice">
+        <p class="pro-payment__message">
+          Payment processing is currently under development. We're working with industry-leading payment providers to ensure secure, seamless transactions.
+        </p>
+        <p class="pro-payment__message">
+          <strong>Interested in early access?</strong> Contact us at <a href="mailto:pro@zipsite.me">pro@zipsite.me</a> to be notified when Pro subscriptions launch.
+        </p>
+      </div>
+      <div class="form-actions" style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <a href="/dashboard/talent" class="button button-primary button-block" style="flex: 1; min-width: 200px; text-align: center;">
+          Upgrade to Pro - Coming Soon
+        </a>
+        <a href="/dashboard/talent" class="button button-secondary" style="flex: 0 0 auto;">
+          Return to Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .pro-upgrade-hero {
+    margin-bottom: 48px;
+  }
+
+  .pro-upgrade-hero__content {
+    padding-top: 8px;
+  }
+
+  .pro-upgrade-hero__eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+    margin-bottom: 12px;
+  }
+
+  .pro-upgrade-hero__title {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 16px 0;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .pro-upgrade-hero__description {
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    max-width: 600px;
+  }
+
+  .pro-features {
+    margin-bottom: 40px;
+  }
+
+  .pro-features__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+  }
+
+  .pro-feature {
+    padding: 24px;
+    background: var(--bg-surface-elevated);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+  }
+
+  .pro-feature__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  .pro-feature__title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+  }
+
+  .pro-feature__description {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .pro-pricing {
+    margin-bottom: 40px;
+  }
+
+  .pro-pricing__card {
+    text-align: center;
+    padding: 32px;
+  }
+
+  .pro-pricing__amount {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+
+  .pro-pricing__currency {
+    font-size: 24px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .pro-pricing__price {
+    font-family: 'Playfair Display', serif;
+    font-size: 64px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .pro-pricing__period {
+    font-size: 18px;
+    color: var(--text-secondary);
+  }
+
+  .pro-pricing__note {
+    font-size: 14px;
+    color: var(--text-tertiary);
+    margin: 0;
+  }
+
+  .pro-payment {
+    margin-bottom: 40px;
+  }
+
+  .pro-payment__notice {
+    padding: 24px;
+    background: var(--bg-surface-elevated);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+  }
+
+  .pro-payment__message {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0 0 16px 0;
+  }
+
+  .pro-payment__message:last-child {
+    margin-bottom: 0;
+  }
+
+  .pro-payment__message a {
+    color: var(--accent-gold);
+    text-decoration: none;
+  }
+
+  .pro-payment__message a:hover {
+    text-decoration: underline;
+  }
+</style>
+

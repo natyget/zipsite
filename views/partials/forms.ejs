@@ -1,0 +1,4 @@
+<% const _errors=(typeof errors==='object' && errors) ? errors : {}; const _values=(typeof values==='object' && values)
+  ? values : {}; function fieldError(name) { const val=_errors[name]; if (!val) return '' ; return Array.isArray(val) ?
+  val[0] : val; } function valueFor(name, fallback) { if (Object.prototype.hasOwnProperty.call(_values, name) &&
+  _values[name] !=null) { return _values[name]; } return fallback || '' ; } %>

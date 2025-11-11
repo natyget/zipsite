@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comp Card — ZipSite</title>
+  <meta name="description" content="ZipSite comp card template designed for 5.5 × 8.5 inch print exports with watermark logic and metadata.">
+  <link rel="canonical" href="https://zipsite.example.com/comp-card/">
+  <link rel="stylesheet" href="/styles/print.css">
+  <link rel="stylesheet" media="screen" href="/styles/global.css">
+</head>
+<body>
+  <div class="page-frame">
+    <article class="comp-card" id="compCard" data-watermark="Refined by ZipSite" data-tier="free">
+      <div class="comp-hero">
+        <img id="cardImage" src="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=1200&q=80" alt="Talent headshot">
+      </div>
+      <div class="comp-info">
+        <header class="comp-header">
+          <h1 class="comp-name" id="cardName">Natan Barrera</h1>
+          <span class="comp-role" id="cardRole">Editorial / Runway · New York</span>
+        </header>
+        <dl class="comp-stats" id="cardStats">
+          <div>
+            <dt>Height</dt>
+            <dd>5' 11"</dd>
+          </div>
+          <div>
+            <dt>Bust</dt>
+            <dd>31"</dd>
+          </div>
+          <div>
+            <dt>Waist</dt>
+            <dd>24"</dd>
+          </div>
+          <div>
+            <dt>Hips</dt>
+            <dd>34"</dd>
+          </div>
+          <div>
+            <dt>Shoe</dt>
+            <dd>9 US</dd>
+          </div>
+          <div>
+            <dt>Eyes</dt>
+            <dd>Brown</dd>
+          </div>
+        </dl>
+        <p class="comp-bio" id="cardBio">Has a strong passion for editorial fashion, blending architectural poses with dynamic movement. Comfortable on runway, e-commerce, and motion shoots.</p>
+        <p class="comp-contact" id="cardContact">bookings@zipsite.com · @zipsite</p>
+      </div>
+      <div class="bleed-guides" aria-hidden="true">
+        <div class="top-left"></div>
+        <div class="top-right"></div>
+        <div class="bottom-left"></div>
+        <div class="bottom-right"></div>
+      </div>
+    </article>
+  </div>
+  <div class="sticky-cta" style="justify-content:center;">
+    <button class="button button-secondary" id="toggleTier">Toggle Free / Pro</button>
+    <button class="button button-primary" id="downloadPdf">Download PDF</button>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha384-KpW4Q0zb62LF8A3+yQUwpsOSJyYwcmBHQYaWV7k/akdUSHhDuEeylYWSIk2s9InE" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" integrity="sha384-jeMGF2rMUR3pvN8MPWXc2MvmP0xSg6u40qCMgfHdCqkfNNpJBWlAbIYW/W2PASi6" crossorigin="anonymous"></script>
+  <script src="/scripts/pdf-export.js" defer></script>
+</body>
+</html>

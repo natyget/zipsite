@@ -1,0 +1,60 @@
+<% 
+  // Access variables from parent scope
+  const user = typeof currentUser !== 'undefined' && currentUser ? currentUser : null;
+  const page = typeof currentPage !== 'undefined' ? currentPage : '';
+  const isHomepageFlag = typeof isHomepage !== 'undefined' && isHomepage === true;
+%>
+<header class="universal-header <%= isHomepageFlag ? 'universal-header--homepage' : '' %>" role="banner">
+  <div class="universal-header__inner">
+    <a class="universal-header__logo" href="/">ZIPSITE</a>
+    
+    <button class="universal-header__menu-toggle" aria-expanded="false" aria-controls="universalNav" aria-label="Toggle navigation">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    
+    <nav class="universal-header__nav" aria-label="Primary">
+      <ul>
+        <li><a href="/" <%= page === '/' || page === 'home' ? 'aria-current="page"' : '' %>>Home</a></li>
+        <li><a href="/features" <%= page === 'features' ? 'aria-current="page"' : '' %>>Features</a></li>
+        <li><a href="/pricing" <%= page === 'pricing' ? 'aria-current="page"' : '' %>>Pricing</a></li>
+        <li><a href="/demo" <%= page === 'demo' ? 'aria-current="page"' : '' %>>Demo</a></li>
+        <li><a href="/press" <%= page === 'press' ? 'aria-current="page"' : '' %>>Press</a></li>
+      </ul>
+    </nav>
+
+    <div class="universal-header__actions">
+      <% if (user) { %>
+        <% const dashboardHref = user.role === 'AGENCY' ? '/dashboard/agency' : '/dashboard/talent'; %>
+        <% const dashboardLabel = user.role === 'AGENCY' ? 'Agency Portal' : 'My Portfolio'; %>
+        <a class="universal-header__link" href="<%= dashboardHref %>"><%= dashboardLabel %></a>
+        <a class="universal-header__cta universal-header__cta--primary" href="<%= user.role === 'TALENT' ? '/apply' : '#' %>"><%= user.role === 'TALENT' ? 'Start Creating' : 'Browse Talent' %></a>
+      <% } else { %>
+        <a class="universal-header__link" href="/login">Login</a>
+        <a class="universal-header__cta universal-header__cta--primary" href="/apply">Start Creating</a>
+      <% } %>
+    </div>
+  </div>
+  
+  <div class="universal-header__nav-panel" id="universalNav" hidden>
+    <nav class="universal-header__mobile-nav" aria-label="Primary">
+      <ul>
+        <li><a href="/" <%= page === '/' || page === 'home' ? 'aria-current="page"' : '' %>>Home</a></li>
+        <li><a href="/features" <%= page === 'features' ? 'aria-current="page"' : '' %>>Features</a></li>
+        <li><a href="/pricing" <%= page === 'pricing' ? 'aria-current="page"' : '' %>>Pricing</a></li>
+        <li><a href="/demo" <%= page === 'demo' ? 'aria-current="page"' : '' %>>Demo</a></li>
+        <li><a href="/press" <%= page === 'press' ? 'aria-current="page"' : '' %>>Press</a></li>
+        <% if (user) { %>
+          <% const dashboardHref = user.role === 'AGENCY' ? '/dashboard/agency' : '/dashboard/talent'; %>
+          <% const dashboardLabel = user.role === 'AGENCY' ? 'Agency Portal' : 'My Portfolio'; %>
+          <li><a href="<%= dashboardHref %>"><%= dashboardLabel %></a></li>
+        <% } else { %>
+          <li><a href="/login">Login</a></li>
+        <% } %>
+        <li><a class="universal-header__cta universal-header__cta--primary" href="/apply">Start Creating</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+

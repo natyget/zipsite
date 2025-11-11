@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>
+    <%= title ? `${title} — ZipSite` : 'ZipSite' %>
+  </title>
+
+  <!-- Core styles -->
+  <link rel="stylesheet" href="/styles/global.css" />
+  <% if (typeof isDashboard !=='undefined' && isDashboard) { %>
+    <link rel="stylesheet" href="/styles/dashboard.css" />
+    <% } %>
+</head>
+
+<body class="<%= (typeof isDashboard !== 'undefined' && isDashboard) ? 'dashboard-shell' : 'page' %>">
+  <!-- Header -->
+  <% if (typeof isDashboard !=='undefined' && isDashboard) { %>
+    <header class="dash-header">
+      <a class="dash-logo" href="/">ZipSite</a>
+      <nav>
+        <% if (currentUser) { %>
+          <span class="dash-user">
+            <%= currentUser.email %> • <%= currentUser.role %>
+          </span>
+          <form action="/logout" method="post" style="display:inline;">
+            <button class="button-link" type="submit">Sign out</button>
+          </form>
+          <% } else { %>
+            <a href="/login">Sign in</a>
+            <% } %>
+      </nav>
+    </header>
+    <% } else { %>
+      <header class="site-header">
+        <div class="inner">
+          <a class="site-brand" href="/">ZipSite</a>
+          <nav class="site-nav" aria-label="Primary">
+            <a href="/#features">Features</a>
+            <a href="/#how">How it Works</a>
+            <a href="/pricing">Pricing</a>
+            <a href="/demo">Demo</a>
+            <a href="/press">Press</a>
+          </nav>
+          <div class="nav-actions">
+            <a class="btn btn-outline" href="/apply">Start Free PDF</a>
+            <% if (currentUser) { %>
+              <a class="btn btn-primary"
+                href="<%= currentUser.role === 'AGENCY' ? '/dashboard/agency' : '/dashboard/talent' %>">Dashboard</a>
+              <form action="/logout" method="post" style="display:inline;">
+                <button class="button-link" type="submit">Sign out</button>
+              </form>
+              <% } else { %>
+                <a class="btn btn-primary" href="/login">Sign in</a>
+                <% } %>
+          </div>
+        </div>
+      </header>
+      <% } %>
+
+        <!-- Main -->
+        <main id="main" class="<%= (typeof isDashboard !== 'undefined' && isDashboard) ? 'dash-main' : '' %>">
+          <% if (messages && messages.length) { %>
+            <div class="flash-group">
+              <% messages.forEach((m)=> { %>
+                <div class="flash flash-<%= m.type %>">
+                  <%= m.text %>
+                </div>
+                <% }); %>
+            </div>
+            <% } %>
+
+              <%- body %>
+        </main>
+
+        <!-- Footer -->
+        <% if (!(typeof isDashboard !=='undefined' && isDashboard)) { %>
+          <footer class="site-footer">
+            <div class="inner">
+              <span>© 2025 ZipSite</span>
+              <div class="footer-links">
+                <a href="/legal#privacy">Privacy Policy</a>
+                <a href="/legal#terms">Terms of Service</a>
+              </div>
+              <div class="social-links" aria-label="Social">
+                <a href="https://instagram.com" aria-label="Instagram"><img src="/assets/icons/instagram.svg"
+                    alt="Instagram" /></a>
+                <a href="https://linkedin.com" aria-label="LinkedIn"><img src="/assets/icons/linkedin.svg"
+                    alt="LinkedIn" /></a>
+              </div>
+            </div>
+          </footer>
+          <% } %>
+
+            <!-- Scripts -->
+            <script src="/scripts/main.js" defer></script>
+            <script src="/scripts/wire.js" defer></script>
+</body>
+
+</html>

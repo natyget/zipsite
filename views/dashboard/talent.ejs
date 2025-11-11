@@ -1,0 +1,342 @@
+<% const safeProfile=(typeof profile !=='undefined' && profile) ? profile : {}; const rawMedia=(typeof images
+  !=='undefined' && images) ? images : []; const safeMedia=Array.isArray(rawMedia) ? rawMedia : []; const
+  slug=safeProfile.slug || 'yourname' ; const effectiveShareUrl=(typeof shareUrl !=='undefined' ) ? shareUrl :
+  `https://zipsite.me/${slug}`; const safeCompleteness=(typeof completeness !=='undefined' ) ? completeness : {}; const
+  editDefaults={ city: safeProfile.city || '' , height_cm: safeProfile.height_cm || '' , measurements:
+  safeProfile.measurements || '' , bio: safeProfile.bio_raw || '' }; const formValues=(typeof values !=='undefined' ) ?
+  { ...editDefaults, ...values } : editDefaults; const _formErrors=(typeof formErrors !=='undefined' ) ? formErrors :
+  {}; const valueFor=(key)=> formValues[key] || '';
+  const fieldError = (key) => (_formErrors[key] && _formErrors[key].length) ? _formErrors[key][0] : null;
+  const fieldHasError = (key) => Boolean(fieldError(key));
+
+  // Helper function to normalize image paths
+  function normalizeImagePath(imagePath) {
+    if (!imagePath) return '';
+    // Preserve external URLs
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    // Remove any ../ sequences and normalize
+    let normalized = imagePath.replace(/\.\.\//g, '').replace(/\\/g, '/');
+    // Ensure it starts with /
+    if (!normalized.startsWith('/')) {
+      normalized = '/' + normalized;
+    }
+    // If path contains /uploads/ but starts with /../, fix it
+    if (normalized.includes('/uploads/')) {
+      const uploadsIndex = normalized.indexOf('/uploads/');
+      normalized = normalized.substring(uploadsIndex);
+    }
+    // If it doesn't start with /uploads/ and is a relative path, assume it's in uploads
+    if (!normalized.startsWith('/uploads/') && !normalized.startsWith('http')) {
+      // Extract filename if path contains one
+      const parts = normalized.split('/');
+      const filename = parts[parts.length - 1];
+      if (filename && filename.includes('.')) {
+        normalized = '/uploads/' + filename;
+      }
+    }
+    return normalized;
+  }
+
+  // Get hero image
+  const heroImage = safeProfile.hero_image_path || (safeMedia.length > 0 ? safeMedia[0].path : null);
+  %>
+
+  <!-- Hero Section with Talent Image -->
+  <section class="dash-hero">
+    <div class="dash-hero__image">
+      <% if (heroImage) { %>
+        <div class="dash-hero__image-placeholder">
+          <div class="dash-hero__placeholder-shimmer"></div>
+        </div>
+        <img src="<%= normalizeImagePath(heroImage) %>"
+          alt="<%= safeProfile.first_name %> <%= safeProfile.last_name %>"
+          onload="this.classList.add('is-loaded')"
+          onerror="this.classList.add('is-loaded')">
+        <% } else { %>
+          <div class="dash-hero__image-placeholder">
+            Upload images to see your portfolio
+          </div>
+          <% } %>
+    </div>
+
+    <div class="dash-hero__copy">
+      <div class="dash-hero__title-wrapper">
+        <h1 class="dash-hero__title">
+          <%= (safeProfile.first_name || 'Your' ) + ' ' + (safeProfile.last_name || 'Name' ) %>
+        </h1>
+        <% if (safeProfile.is_pro) { %>
+          <span class="badge badge-pro">PRO</span>
+          <% } else { %>
+            <span class="badge badge-free">Free</span>
+            <% } %>
+      </div>
+
+      <p class="dash-hero__subtitle">
+        <%= safeProfile.city || 'Add your primary city' %>
+      </p>
+
+      <div class="dash-hero__stats">
+        <div class="dash-hero__stat">
+          <span class="dash-hero__stat-label">Height</span>
+          <span class="dash-hero__stat-value">
+            <%= safeProfile.height_cm ? safeProfile.height_cm + ' cm' : '—' %>
+          </span>
+        </div>
+        <div class="dash-hero__stat">
+          <span class="dash-hero__stat-label">Measurements</span>
+          <span class="dash-hero__stat-value">
+            <%= safeProfile.measurements || '—' %>
+          </span>
+        </div>
+        <div class="dash-hero__stat">
+          <span class="dash-hero__stat-label">Images</span>
+          <span class="dash-hero__stat-value">
+            <%= safeMedia.length %>
+          </span>
+        </div>
+      </div>
+
+      <div class="dash-hero__actions">
+        <button type="button" class="button-primary" id="pdf-download-btn" data-slug="<%= slug %>" data-theme="<%= safeProfile.pdf_theme || 'ink' %>" data-is-pro="<%= safeProfile.is_pro ? 'true' : 'false' %>">Download Comp Card</button>
+        <a href="/portfolio/<%= slug %>" class="button-secondary" target="_blank" rel="noopener">View Portfolio</a>
+        <% if (!safeProfile.is_pro) { %>
+          <a href="/pro/upgrade" class="button-primary">Upgrade to Pro</a>
+          <% } %>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Dashboard Grid -->
+  <div class="dash-grid">
+
+    <!-- Left Column: Main Content -->
+    <div class="dash-grid__column">
+
+      <!-- Profile Details Form -->
+      <div class="dash-panel">
+        <header class="dash-panel__header">
+          <h3>Profile Details</h3>
+          <p>Your essential stats for agency rosters and comp cards</p>
+        </header>
+        <div class="dash-panel__body">
+          <form method="post" action="/dashboard/talent" class="form-stacked">
+            <div class="form-grid">
+              <div class="form-field <%= fieldHasError('city') ? 'has-error' : '' %>">
+                <label for="city">City</label>
+                <input id="city" name="city" type="text" autocomplete="address-level2" value="<%= valueFor('city') %>"
+                  placeholder="Los Angeles, CA">
+                <% if (fieldHasError('city')) { %>
+                  <p class="form-field__error">
+                    <%= fieldError('city') %>
+                  </p>
+                  <% } %>
+              </div>
+
+              <div class="form-field <%= fieldHasError('height_cm') ? 'has-error' : '' %>">
+                <label for="height_cm">Height (cm)</label>
+                <input id="height_cm" name="height_cm" type="number" min="120" max="220"
+                  value="<%= valueFor('height_cm') %>" placeholder="177">
+                <% if (fieldHasError('height_cm')) { %>
+                  <p class="form-field__error">
+                    <%= fieldError('height_cm') %>
+                  </p>
+                  <% } %>
+              </div>
+
+              <div class="form-field <%= fieldHasError('measurements') ? 'has-error' : '' %>">
+                <label for="measurements">Measurements</label>
+                <input id="measurements" name="measurements" type="text" value="<%= valueFor('measurements') %>"
+                  placeholder="32-25-35">
+                <% if (fieldHasError('measurements')) { %>
+                  <p class="form-field__error">
+                    <%= fieldError('measurements') %>
+                  </p>
+                  <% } %>
+              </div>
+            </div>
+
+            <div class="form-field <%= fieldHasError('bio') ? 'has-error' : '' %>">
+              <label for="bio">Editorial Bio</label>
+              <textarea id="bio" name="bio" rows="5"
+                placeholder="Experienced in runway, editorial, commercial, and beauty campaigns..."><%= valueFor('bio') %></textarea>
+              <p class="form-field__help">
+                Write naturally. Our AI will refine this into a polished editorial bio.
+              </p>
+              <% if (fieldHasError('bio')) { %>
+                <p class="form-field__error">
+                  <%= fieldError('bio') %>
+                </p>
+                <% } %>
+            </div>
+
+            <% if (safeProfile.bio_curated) { %>
+              <div class="form-field--readonly">
+                <label>AI-Refined Bio (Live on Portfolio)</label>
+                <p class="form-field__static-text">
+                  <%= safeProfile.bio_curated %>
+                </p>
+              </div>
+              <% } %>
+
+                <div class="form-actions">
+                  <button class="button-primary" type="submit">Save Changes</button>
+                </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Portfolio Imagery -->
+      <div class="dash-panel">
+        <header class="dash-panel__header">
+          <h3>Portfolio Imagery</h3>
+          <p>Upload 6-12 high-quality images. The first image becomes your hero shot.</p>
+        </header>
+        <div class="dash-panel__body">
+          <form action="/dashboard/talent/media" method="post" enctype="multipart/form-data" class="form-stacked"
+            style="margin-bottom: 32px;" id="media-upload-form">
+            <div class="form-field">
+              <label for="media">Select Images</label>
+              <div class="file-upload-wrapper">
+                <input id="media" name="media" type="file" accept="image/jpeg,image/png,image/webp" multiple
+                  class="file-upload-input">
+                <label for="media" class="file-upload-label">
+                  <span class="file-upload-icon">📷</span>
+                  <span class="file-upload-text">
+                    <span class="file-upload-text-primary">Choose images to upload</span>
+                    <span class="file-upload-text-secondary">or drag and drop</span>
+                  </span>
+                </label>
+                <div class="file-upload-preview" id="file-preview"></div>
+              </div>
+              <p class="form-field__help">
+                JPEG, PNG, or WebP. Maximum 10MB per image. Up to 12 images.
+              </p>
+            </div>
+            <div class="form-actions">
+              <button class="button-primary" type="submit" id="upload-button">Upload Images</button>
+            </div>
+          </form>
+
+          <% if (safeMedia.length) { %>
+            <div class="media-grid" data-media-grid>
+              <% safeMedia.forEach((image, index)=> { %>
+                <article class="media-card" data-media-id="<%= image.id %>">
+                  <div class="media-card__image-placeholder">
+                    <div class="media-card__placeholder-shimmer"></div>
+                  </div>
+                  <img src="<%= normalizeImagePath(image.path) %>"
+                    alt="<%= image.label || 'Portfolio image' %>" 
+                    loading="lazy"
+                    onload="this.classList.add('is-loaded')"
+                    onerror="this.classList.add('is-loaded')">
+                  <div class="media-card__controls">
+                    <button class="media-card__delete" type="button" title="Delete image">&times;</button>
+                  </div>
+                </article>
+                <% }); %>
+            </div>
+            <% } else { %>
+              <div class="empty-state">
+                <p>No images yet. Upload your first portfolio images to get started.</p>
+              </div>
+              <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Meta & Actions -->
+    <div class="dash-grid__column">
+
+      <!-- Profile Status -->
+      <div class="dash-panel dash-panel--compact">
+        <header class="dash-panel__header">
+          <h3>Profile Status</h3>
+        </header>
+        <div class="dash-panel__body">
+          <p class="form-field__help" style="margin-bottom: 16px;">
+            Complete all requirements to activate your profile for agencies
+          </p>
+          <div class="completion-chips">
+            <span class="chip <%= safeCompleteness.basics ? 'is-complete' : '' %>">
+              Profile Details
+            </span>
+            <span class="chip <%= safeCompleteness.imagery ? 'is-complete' : '' %>">
+              2+ Images
+            </span>
+            <span class="chip <%= safeCompleteness.hero ? 'is-complete' : '' %>">
+              Hero Image
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Public Portfolio Link -->
+      <div class="dash-panel dash-panel--compact">
+        <header class="dash-panel__header">
+          <h3>Share Portfolio</h3>
+        </header>
+        <div class="dash-panel__body">
+          <div class="share-url" data-share-url>
+            <%= effectiveShareUrl %>
+          </div>
+          <div class="form-actions">
+            <button class="button-secondary" type="button" data-copy-target="[data-share-url]" style="width: 100%;">
+              Copy Link
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Status -->
+      <% if (!safeProfile.is_pro) { %>
+        <div class="dash-panel dash-panel--compact">
+          <header class="dash-panel__header">
+            <h3>Upgrade to Pro</h3>
+          </header>
+          <div class="dash-panel__body">
+            <p class="form-field__help" style="margin-bottom: 16px;">
+              Remove watermarks, unlock advanced features, and get priority support
+            </p>
+            <a href="/pro/upgrade" class="button button-primary button-block">
+              Upgrade Now
+            </a>
+          </div>
+        </div>
+        <% } else { %>
+          <div class="dash-panel dash-panel--compact">
+            <header class="dash-panel__header">
+              <h3>Pro Account</h3>
+            </header>
+            <div class="dash-panel__body">
+              <p class="form-field__help">
+                ✓ Watermark-free PDFs<br>
+                ✓ Advanced analytics<br>
+                ✓ Priority support
+              </p>
+            </div>
+          </div>
+          <% } %>
+    </div>
+  </div>
+
+  <!-- PDF Theme Selector Modal -->
+  <div class="pdf-theme-modal" id="pdf-theme-modal" hidden>
+    <div class="pdf-theme-modal__backdrop"></div>
+    <div class="pdf-theme-modal__content">
+      <header class="pdf-theme-modal__header">
+        <h2>Select PDF Theme</h2>
+        <button type="button" class="pdf-theme-modal__close" aria-label="Close">&times;</button>
+      </header>
+      <div class="pdf-theme-modal__body">
+        <div class="pdf-theme-grid" id="pdf-theme-grid">
+          <!-- Themes will be populated by JavaScript -->
+        </div>
+      </div>
+      <footer class="pdf-theme-modal__footer">
+        <button type="button" class="button button-secondary" id="pdf-theme-cancel">Cancel</button>
+        <a href="#" class="button button-primary" id="pdf-theme-download">Download PDF</a>
+      </footer>
+    </div>
+  </div>

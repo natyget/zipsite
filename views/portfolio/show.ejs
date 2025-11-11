@@ -1,0 +1,37 @@
+<section class="portfolio-hero">
+  <div class="portfolio-hero__meta">
+    <span class="eyebrow">ZipSite portfolio</span>
+    <h1 class="display"><%= profile.first_name %> <%= profile.last_name %></h1>
+    <p class="portfolio-location"><%= profile.city %></p>
+    <ul class="portfolio-stats">
+      <li><span>Height</span> <%= profile.height_cm %> cm (<%= heightFeet %>)</li>
+      <li><span>Measurements</span> <%= profile.measurements %></li>
+      <% if (profile.is_pro) { %>
+        <li><span>Status</span> Pro talent</li>
+      <% } %>
+    </ul>
+  </div>
+  <% if (profile.hero_image_path) { %>
+    <figure class="portfolio-hero__image">
+      <img src="<%= profile.hero_image_path %>" alt="Hero image for <%= profile.first_name %> <%= profile.last_name %>">
+    </figure>
+  <% } %>
+</section>
+
+<section class="portfolio-body">
+  <article class="portfolio-bio">
+    <h2>About</h2>
+    <p><%= profile.bio_curated %></p>
+  </article>
+  <section class="portfolio-gallery">
+    <h2>Gallery</h2>
+    <div class="portfolio-grid">
+      <% images.forEach((item) => { %>
+        <figure>
+          <img src="<%= item.path %>" alt="<%= item.label || 'Portfolio image' %>">
+          <figcaption><%= item.label || 'Portfolio image' %></figcaption>
+        </figure>
+      <% }) %>
+    </div>
+  </section>
+</section>

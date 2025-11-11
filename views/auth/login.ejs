@@ -1,0 +1,62 @@
+<%- include('../partials/forms', { errors, values }) %>
+<% const _errors=(typeof errors==='object' && errors) ? errors : {}; const _values=(typeof values==='object' && values) ? values : {}; const valueFor=(name, fallback='')=> {
+  if (Object.prototype.hasOwnProperty.call(_values, name) && _values[name] != null) {
+    return _values[name];
+  }
+  return fallback;
+};
+
+const fieldError = (name) => {
+  const v = _errors[name];
+  if (!v) return '';
+  return Array.isArray(v) ? v[0] : v;
+};
+%>
+<section class="auth-page">
+  <div class="auth-page__visual">
+    <div class="auth-page__visual-content">
+      <span class="auth-page__visual-badge">Sign In</span>
+      <h1 class="auth-page__visual-headline">
+        <span class="auth-page__visual-headline-fashion">Welcome back.</span>
+        <span class="auth-page__visual-headline-ai">Your editorial studio.</span>
+      </h1>
+      <p class="auth-page__visual-tagline">Access your dashboard, refresh your comp card, and keep your book in sync with every update.</p>
+      <div class="auth-page__visual-accent"></div>
+    </div>
+  </div>
+  
+  <div class="auth-page__form">
+    <div class="auth-page__form-container">
+      <div class="auth-page__form-header">
+        <h2 class="auth-page__form-title">Sign in</h2>
+        <p class="auth-page__form-subtitle">Enter your credentials to continue</p>
+      </div>
+      
+      <div class="auth-card" role="form">
+        <form method="post" action="/login" class="form" data-async>
+          <input type="hidden" name="next" value="<%= valueFor('next', '') %>">
+          
+          <div class="form-field <%= fieldError('email') ? 'has-error' : '' %>">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" required value="<%= valueFor('email', '') %>">
+            <% if (fieldError('email')) { %>
+              <p class="field-error" role="alert"><%= fieldError('email') %></p>
+            <% } %>
+          </div>
+          
+          <div class="form-field <%= fieldError('password') ? 'has-error' : '' %>">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <% if (fieldError('password')) { %>
+              <p class="field-error" role="alert"><%= fieldError('password') %></p>
+            <% } %>
+          </div>
+          
+          <button type="submit" class="button button-primary button-block" data-loading-text="Signing in…">Sign in</button>
+        </form>
+        
+        <p class="auth-switch">Need an account? <a href="/apply">Start Creating</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>

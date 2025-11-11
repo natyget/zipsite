@@ -1,0 +1,599 @@
+<% const safeProfiles=(typeof profiles !=='undefined' && profiles) ? profiles : []; const safeFilters=(typeof filters
+  !=='undefined' ) ? filters : {}; const safeCommissionsTotal=(typeof commissionsTotal !=='undefined' ) ?
+  commissionsTotal : '0.00' ; const safeLatestCommissions=(typeof latestCommissions !=='undefined' && latestCommissions)
+  ? latestCommissions : []; const currentUser=(typeof user !=='undefined' && user) ? user : {}; %>
+
+  <!-- Agency Hero Section -->
+  <section class="agency-hero">
+    <div class="agency-hero__content">
+      <span class="agency-hero__eyebrow">
+        <% if (currentUser && currentUser.agency_name) { %>
+          <%= currentUser.agency_name %>
+        <% } else { %>
+          Partner Dashboard
+        <% } %>
+      </span>
+      <h1 class="agency-hero__title">Discover Curated Talent</h1>
+      <p class="agency-hero__description">
+        Browse ZipSite profiles refined by our editorial team. Accept, archive, or decline applications to manage your talent pipeline.
+      </p>
+    </div>
+
+    <div class="agency-hero__stats">
+      <div class="agency-stat-card">
+        <p class="agency-stat-card__label">Total Profiles</p>
+        <p class="agency-stat-card__value">
+          <%= safeProfiles.length %>
+        </p>
+      </div>
+      <div class="agency-stat-card agency-stat-card--highlight">
+        <p class="agency-stat-card__label">Lifetime Commissions</p>
+        <p class="agency-stat-card__value">$<%= safeCommissionsTotal %>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filter Toolbar -->
+  <section class="filter-section">
+    <div class="dash-panel">
+      <form method="get" action="/dashboard/agency" class="filter-form">
+        <div class="filter-grid">
+          <div class="form-field">
+            <label for="search">Search Name</label>
+            <input id="search" name="search" type="search" placeholder="First or last name"
+              value="<%= safeFilters.search || '' %>">
+          </div>
+
+          <div class="form-field">
+            <label for="city">City</label>
+            <input id="city" name="city" type="text" placeholder="Any city" value="<%= safeFilters.city || '' %>">
+          </div>
+
+          <div class="form-field">
+            <label for="letter">Last Name Starts With</label>
+            <select id="letter" name="letter">
+              <option value="">All letters</option>
+              <% 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' .split('').forEach((l)=> { %>
+                <option value="<%= l %>" <%=safeFilters.letter===l ? 'selected' : '' %>><%= l %>
+                </option>
+                <% }) %>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="min_height">Min Height (cm)</label>
+            <input id="min_height" name="min_height" type="number" min="120" max="220" placeholder="160"
+              value="<%= safeFilters.min_height || '' %>">
+          </div>
+
+          <div class="form-field">
+            <label for="max_height">Max Height (cm)</label>
+            <input id="max_height" name="max_height" type="number" min="120" max="220" placeholder="190"
+              value="<%= safeFilters.max_height || '' %>">
+          </div>
+
+          <div class="form-field">
+            <label for="sort">Sort By</label>
+            <select id="sort" name="sort">
+              <option value="az" <%=safeFilters.sort==='az' ? 'selected' : '' %>>A–Z (Last name)</option>
+              <option value="city" <%=safeFilters.sort==='city' ? 'selected' : '' %>>City</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="all" <%=safeFilters.status==='all' || !safeFilters.status ? 'selected' : '' %>>All Applications</option>
+              <option value="pending" <%=safeFilters.status==='pending' ? 'selected' : '' %>>Pending</option>
+              <option value="accepted" <%=safeFilters.status==='accepted' ? 'selected' : '' %>>Accepted</option>
+              <option value="archived" <%=safeFilters.status==='archived' ? 'selected' : '' %>>Archived</option>
+              <option value="declined" <%=safeFilters.status==='declined' ? 'selected' : '' %>>Declined</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button type="submit" class="button-primary">Apply Filters</button>
+          <a href="/dashboard/agency" class="button-secondary">Clear All</a>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Talent Grid -->
+  <section class="talent-section">
+    <% if (!safeProfiles.length) { %>
+      <div class="empty-state-large">
+        <h3>No profiles found</h3>
+        <p>Adjust your filters to discover more talent, or check back soon as new profiles are added daily.</p>
+        <a href="/dashboard/agency" class="button-secondary">Clear Filters</a>
+      </div>
+      <% } else { %>
+        <div class="talent-grid">
+          <% safeProfiles.forEach((profile)=> {
+            const isClaimed = Boolean(profile.partner_agency_id);
+            const isClaimedByMe = profile.partner_agency_id === currentUser.id;
+            const applicationStatus = profile.application_status || 'pending';
+            %>
+            <article class="talent-card">
+              <!-- Talent Image -->
+              <div class="talent-card__image">
+                <% if (profile.hero_image_path) { %>
+                  <img src="<%= profile.hero_image_path %>" alt="<%= profile.first_name %> <%= profile.last_name %>">
+                  <% } else { %>
+                    <div class="talent-card__image-placeholder">
+                      <%= profile.first_name.charAt(0) %>
+                        <%= profile.last_name.charAt(0) %>
+                    </div>
+                    <% } %>
+
+                      <!-- Badges -->
+                      <div class="talent-card__badges">
+                        <% if (profile.is_pro) { %>
+                          <span class="badge badge-pro">PRO</span>
+                          <% } %>
+                            <% if (applicationStatus === 'accepted') { %>
+                              <span class="badge badge-success">Accepted</span>
+                              <% } else if (applicationStatus === 'declined') { %>
+                                <span class="badge badge-error">Declined</span>
+                                <% } else if (applicationStatus === 'archived') { %>
+                                  <span class="badge badge-muted">Archived</span>
+                                  <% } else if (isClaimedByMe) { %>
+                                    <span class="badge badge-success">Your Talent</span>
+                                    <% } else if (isClaimed) { %>
+                                      <span class="badge badge-muted">Claimed</span>
+                                      <% } %>
+                      </div>
+              </div>
+
+              <!-- Talent Info -->
+              <div class="talent-card__content">
+                <h3 class="talent-card__name">
+                  <%= profile.first_name %>
+                    <%= profile.last_name %>
+                </h3>
+
+                <p class="talent-card__stats">
+                  <%= profile.city || 'Location TBD' %>
+                    <% if (profile.height_cm) { %> • <%= profile.height_cm %> cm<% } %>
+                          <% if (profile.measurements) { %> • <%= profile.measurements %>
+                              <% } %>
+                </p>
+
+                <% if (profile.bio_curated) { %>
+                  <p class="talent-card__bio">
+                    <%= profile.bio_curated.length> 120 ? profile.bio_curated.substring(0, 120) + '...' :
+                      profile.bio_curated %>
+                  </p>
+                  <% } %>
+
+                    <!-- Actions -->
+                    <div class="talent-card__actions">
+                      <a href="/portfolio/<%= profile.slug %>" class="button-secondary" target="_blank" rel="noopener">
+                        View Portfolio
+                      </a>
+
+                      <!-- Application Action Buttons -->
+                      <div class="talent-card__application-actions" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+                        <% if (applicationStatus !== 'accepted') { %>
+                          <form method="post" action="/dashboard/agency/application/accept" style="display: inline;">
+                            <input type="hidden" name="profile_id" value="<%= profile.id %>">
+                            <button type="submit" class="button-accent" style="padding: 8px 16px; font-size: 12px;">
+                              Accept
+                            </button>
+                          </form>
+                          <% } %>
+                            <% if (applicationStatus !== 'declined') { %>
+                              <form method="post" action="/dashboard/agency/application/decline" style="display: inline;">
+                                <input type="hidden" name="profile_id" value="<%= profile.id %>">
+                                <button type="submit" class="button-secondary" style="padding: 8px 16px; font-size: 12px;">
+                                  Decline
+                                </button>
+                              </form>
+                              <% } %>
+                                <% if (applicationStatus !== 'archived') { %>
+                                  <form method="post" action="/dashboard/agency/application/archive" style="display: inline;">
+                                    <input type="hidden" name="profile_id" value="<%= profile.id %>">
+                                    <button type="submit" class="button-secondary" style="padding: 8px 16px; font-size: 12px;">
+                                      Archive
+                                    </button>
+                                  </form>
+                                  <% } else { %>
+                                    <form method="post" action="/dashboard/agency/application/accept" style="display: inline;">
+                                      <input type="hidden" name="profile_id" value="<%= profile.id %>">
+                                      <button type="submit" class="button-secondary" style="padding: 8px 16px; font-size: 12px;">
+                                        Unarchive
+                                      </button>
+                                    </form>
+                                    <% } %>
+                      </div>
+
+                      <!-- Legacy Claim Button (keep for backwards compatibility) -->
+                      <% if (!isClaimed || isClaimedByMe) { %>
+                        <form method="post" action="/agency/claim" class="talent-claim-form"
+                          data-claim-form="<%= profile.slug %>" style="margin-top: 8px;">
+                          <input type="hidden" name="slug" value="<%= profile.slug %>">
+                          <button type="submit" class="button-primary" style="width: 100%;">
+                            <%= isClaimedByMe ? 'Refresh Claim' : 'Claim Talent' %>
+                          </button>
+                        </form>
+                        <% } %>
+                    </div>
+              </div>
+            </article>
+            <% }); %>
+        </div>
+        <% } %>
+  </section>
+
+  <!-- Recent Commissions -->
+  <% if (safeLatestCommissions.length> 0) { %>
+    <section class="commissions-section">
+      <div class="dash-panel">
+        <header class="dash-panel__header">
+          <h3>Recent Commissions</h3>
+          <p>Automatic earnings from talent upgrades</p>
+        </header>
+        <div class="dash-panel__body">
+          <div class="commission-table-wrapper">
+            <table class="commission-table">
+              <thead>
+                <tr>
+                  <th>Talent</th>
+                  <th>Amount</th>
+                  <th>Date</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% safeLatestCommissions.forEach((commission)=> { %>
+                  <tr>
+                    <td class="commission-talent">
+                      <%= commission.first_name %>
+                        <%= commission.last_name %>
+                    </td>
+                    <td class="commission-amount">
+                      $<%= (commission.amount_cents / 100).toFixed(2) %>
+                    </td>
+                    <td class="commission-date">
+                      <%= new Date(commission.created_at).toLocaleDateString('en-US', { month: 'short' , day: 'numeric'
+                        , year: 'numeric' }) %>
+                    </td>
+                    <td>
+                      <a href="/portfolio/<%= commission.slug %>" class="commission-link" target="_blank"
+                        rel="noopener">
+                        View →
+                      </a>
+                    </td>
+                  </tr>
+                  <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+    <% } %>
+
+      <!-- Additional Styles for Agency Dashboard -->
+      <style>
+        /* Agency Hero */
+        .agency-hero {
+          display: grid;
+          grid-template-columns: 2fr 1fr;
+          gap: 48px;
+          margin-bottom: 48px;
+          align-items: start;
+        }
+
+        .agency-hero__content {
+          padding-top: 8px;
+        }
+
+        .agency-hero__eyebrow {
+          display: inline-block;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--accent-gold);
+          margin-bottom: 12px;
+        }
+
+        .agency-hero__title {
+          font-family: 'Noto Serif Display', serif;
+          font-size: 48px;
+          font-weight: 300;
+          color: var(--text-primary);
+          margin: 0 0 16px 0;
+          line-height: 1.1;
+          letter-spacing: 0.02em;
+        }
+
+        .agency-hero__description {
+          font-size: 16px;
+          color: var(--text-secondary);
+          line-height: 1.6;
+          margin: 0;
+        }
+
+        .agency-hero__stats {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .agency-stat-card {
+          background: var(--bg-surface);
+          border: 1px solid var(--border-color);
+          border-radius: 8px;
+          padding: 24px;
+          transition: var(--transition);
+        }
+
+        .agency-stat-card:hover {
+          box-shadow: var(--shadow-md);
+        }
+
+        .agency-stat-card--highlight {
+          background: linear-gradient(135deg, rgba(201, 165, 90, 0.08) 0%, rgba(201, 165, 90, 0.02) 100%);
+          border-color: rgba(201, 165, 90, 0.3);
+        }
+
+        .agency-stat-card__label {
+          font-size: 12px;
+          font-weight: 500;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          color: var(--text-tertiary);
+          margin: 0 0 8px 0;
+        }
+
+        .agency-stat-card__value {
+          font-family: var(--font-serif);
+          font-size: 36px;
+          font-weight: 300;
+          color: var(--text-primary);
+          margin: 0;
+        }
+
+        .agency-stat-card--highlight .agency-stat-card__value {
+          color: var(--accent-gold);
+        }
+
+        /* Filter Section */
+        .filter-section {
+          margin-bottom: 40px;
+        }
+
+        .filter-form {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
+
+        .filter-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 16px;
+        }
+
+        .filter-actions {
+          display: flex;
+          gap: 12px;
+          padding-top: 8px;
+        }
+
+        /* Talent Grid */
+        .talent-section {
+          margin-bottom: 48px;
+        }
+
+        .talent-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+          gap: 24px;
+        }
+
+        .talent-card {
+          background: var(--bg-surface);
+          border: 1px solid var(--border-color);
+          border-radius: 8px;
+          overflow: hidden;
+          transition: var(--transition);
+        }
+
+        .talent-card:hover {
+          transform: translateY(-4px);
+          box-shadow: var(--shadow-lg);
+        }
+
+        .talent-card__image {
+          position: relative;
+          aspect-ratio: 3/4;
+          background: var(--bg-surface-elevated);
+          overflow: hidden;
+        }
+
+        .talent-card__image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .talent-card__image-placeholder {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: 'Playfair Display', serif;
+          font-size: 48px;
+          font-weight: 600;
+          color: var(--text-tertiary);
+          background: linear-gradient(135deg, #F5F5F4 0%, #E7E5E4 100%);
+        }
+
+        .talent-card__badges {
+          position: absolute;
+          top: 12px;
+          right: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          align-items: flex-end;
+        }
+
+        .badge-success {
+          background: var(--accent-success);
+          color: #FFFFFF;
+        }
+
+        .badge-muted {
+          background: rgba(0, 0, 0, 0.6);
+          color: #FFFFFF;
+        }
+
+        .talent-card__content {
+          padding: 24px;
+        }
+
+        .talent-card__name {
+          font-family: 'Playfair Display', serif;
+          font-size: 22px;
+          font-weight: 600;
+          color: var(--text-primary);
+          margin: 0 0 8px 0;
+          letter-spacing: -0.01em;
+        }
+
+        .talent-card__stats {
+          font-size: 13px;
+          color: var(--text-secondary);
+          margin: 0 0 12px 0;
+        }
+
+        .talent-card__bio {
+          font-size: 14px;
+          color: var(--text-secondary);
+          line-height: 1.6;
+          margin: 0 0 20px 0;
+        }
+
+        .talent-card__actions {
+          display: flex;
+          gap: 10px;
+        }
+
+        .talent-card__actions .button-primary,
+        .talent-card__actions .button-secondary {
+          flex: 1;
+          font-size: 13px;
+          padding: 10px 16px;
+        }
+
+        .talent-claim-form {
+          flex: 1;
+        }
+
+        .talent-claim-form button {
+          width: 100%;
+        }
+
+        /* Commission Table */
+        .commissions-section {
+          margin-bottom: 48px;
+        }
+
+        .commission-table-wrapper {
+          overflow-x: auto;
+        }
+
+        .commission-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        .commission-table th {
+          text-align: left;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          color: var(--text-tertiary);
+          padding: 12px 16px;
+          border-bottom: 1px solid var(--border-color);
+        }
+
+        .commission-table td {
+          padding: 16px;
+          border-bottom: 1px solid var(--border-color);
+          font-size: 14px;
+          color: var(--text-secondary);
+        }
+
+        .commission-talent {
+          font-weight: 500;
+          color: var(--text-primary);
+        }
+
+        .commission-amount {
+          font-family: 'SF Mono', monospace;
+          font-weight: 600;
+          color: var(--accent-gold);
+        }
+
+        .commission-link {
+          color: var(--accent-gold);
+          text-decoration: none;
+          font-size: 13px;
+          font-weight: 500;
+          transition: var(--transition);
+        }
+
+        .commission-link:hover {
+          color: var(--text-primary);
+        }
+
+        /* Empty State - styles are now in dashboard.css with gradient background */
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+          .agency-hero {
+            grid-template-columns: 1fr;
+            gap: 32px;
+          }
+
+          .agency-hero__stats {
+            flex-direction: row;
+          }
+
+          .filter-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        @media (max-width: 768px) {
+          .agency-hero__title {
+            font-size: 36px;
+          }
+
+          .filter-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .talent-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .filter-actions {
+            flex-direction: column;
+          }
+
+          .filter-actions .button-primary,
+          .filter-actions .button-secondary {
+            width: 100%;
+          }
+        }
+      </style>

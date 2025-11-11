@@ -1,0 +1,344 @@
+<%- include('../partials/forms', { errors, values }) %>
+<% 
+  // Ensure functions are available in this scope
+  const _errors = (typeof errors === 'object' && errors) ? errors : {};
+  const _values = (typeof values === 'object' && values) ? values : {};
+  
+  function fieldError(name) {
+    const val = _errors[name];
+    if (!val) return '';
+    return Array.isArray(val) ? val[0] : val;
+  }
+  
+  function valueFor(name, fallback) {
+    if (Object.prototype.hasOwnProperty.call(_values, name) && _values[name] != null) {
+      return _values[name];
+    }
+    return fallback || '';
+  }
+%>
+<section class="apply-header" id="apply-header">
+  <div class="apply-header__container">
+    <span class="apply-header__badge">Apply</span>
+    <h1 class="apply-header__headline">
+      <span class="apply-header__headline-fashion">Create your comp card.</span>
+      <span class="apply-header__headline-ai">AI-curated quality.</span>
+    </h1>
+    <p class="apply-header__subheadline">Submit your details once. Our AI refines your bio, standardizes your stats, and delivers a polished PDF comp card — free, instantly, no watermark.</p>
+    <div class="apply-header__accent"></div>
+  </div>
+</section>
+
+<section class="apply-main">
+  <div class="apply-grid">
+      <div class="apply-info">
+        <div class="apply-info__card">
+          <h2 class="apply-info__title">What you'll get</h2>
+          <ul class="apply-info__list">
+            <li>
+              <strong>Free PDF comp card</strong>
+              <span>Watermark-free, ready to share with agencies</span>
+            </li>
+            <li>
+              <strong>AI-curated bio</strong>
+              <span>Professional third-person copy, instantly refined</span>
+            </li>
+            <li>
+              <strong>Standardized format</strong>
+              <span>Consistent layout trusted by booking directors</span>
+            </li>
+            <li>
+              <strong>Live portfolio option</strong>
+              <span>Upgrade to $9.99/mo for booking-ready links & analytics</span>
+            </li>
+          </ul>
+        </div>
+        <div class="apply-info__note">
+          <p><strong>Four steps.</strong> Save progress anytime. We'll refine the copy and deliver your comp card instantly.</p>
+        </div>
+      </div>
+
+      <div class="apply-form-wrapper">
+        <div class="apply-form-card">
+          <% const userIsLoggedIn = typeof isLoggedIn !== 'undefined' ? isLoggedIn : false; %>
+          <div class="apply-form-header">
+            <ol class="apply-steps">
+              <li class="is-active" data-step="1"><%= userIsLoggedIn ? '1 BASIC INFO' : '1 ACCOUNT' %></li>
+              <li data-step="2">2 EXPERIENCE</li>
+              <li data-step="3">3 PHOTOS</li>
+              <li data-step="4">4 REVIEW</li>
+            </ol>
+          </div>
+
+          <form method="post" action="/apply" enctype="multipart/form-data" class="form" id="apply-form">
+            
+            <!-- Step 1: VITALS -->
+            <div class="form-step" data-step="1">
+              <div class="form-grid">
+                <div class="form-field <%= fieldError('first_name') ? 'has-error' : '' %>">
+                  <label for="first_name">FIRST NAME</label>
+                  <input id="first_name" name="first_name" value="<%= valueFor('first_name', '') %>" required>
+                  <% if (fieldError('first_name')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('first_name') %></p>
+                  <% } %>
+                </div>
+                <div class="form-field <%= fieldError('last_name') ? 'has-error' : '' %>">
+                  <label for="last_name">LAST NAME</label>
+                  <input id="last_name" name="last_name" value="<%= valueFor('last_name', '') %>" required>
+                  <% if (fieldError('last_name')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('last_name') %></p>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-field <%= fieldError('phone') ? 'has-error' : '' %>">
+                  <label for="phone">PHONE</label>
+                  <input id="phone" name="phone" type="tel" autocomplete="tel" value="<%= valueFor('phone', '') %>" placeholder="+1 (555) 123-4567">
+                  <% if (fieldError('phone')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('phone') %></p>
+                  <% } %>
+                </div>
+                <div class="form-field <%= fieldError('city') ? 'has-error' : '' %>">
+                  <label for="city">PRIMARY CITY</label>
+                  <input id="city" name="city" value="<%= valueFor('city', '') %>" placeholder="New York, NY" required>
+                  <% if (fieldError('city')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('city') %></p>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-field <%= fieldError('height_cm') ? 'has-error' : '' %>">
+                  <label for="height_cm">HEIGHT</label>
+                  <input id="height_cm" name="height_cm" type="text" value="<%= valueFor('height_cm', '') %>" placeholder="5' 11&quot; or 180 cm" required>
+                  <% if (fieldError('height_cm')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('height_cm') %></p>
+                  <% } %>
+                </div>
+                <div class="form-field <%= fieldError('measurements') ? 'has-error' : '' %>">
+                  <label for="measurements">MEASUREMENTS</label>
+                  <input id="measurements" name="measurements" value="<%= valueFor('measurements', '') %>" placeholder="32-24-34" required>
+                  <% if (fieldError('measurements')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('measurements') %></p>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-field <%= fieldError('bust') ? 'has-error' : '' %>">
+                  <label for="bust">BUST <span class="muted">(inches)</span></label>
+                  <input id="bust" name="bust" type="number" min="20" max="60" value="<%= valueFor('bust', '') %>" placeholder="32">
+                  <% if (fieldError('bust')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('bust') %></p>
+                  <% } %>
+                </div>
+                <div class="form-field <%= fieldError('waist') ? 'has-error' : '' %>">
+                  <label for="waist">WAIST <span class="muted">(inches)</span></label>
+                  <input id="waist" name="waist" type="number" min="20" max="50" value="<%= valueFor('waist', '') %>" placeholder="24">
+                  <% if (fieldError('waist')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('waist') %></p>
+                  <% } %>
+                </div>
+                <div class="form-field <%= fieldError('hips') ? 'has-error' : '' %>">
+                  <label for="hips">HIPS <span class="muted">(inches)</span></label>
+                  <input id="hips" name="hips" type="number" min="25" max="60" value="<%= valueFor('hips', '') %>" placeholder="34">
+                  <% if (fieldError('hips')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('hips') %></p>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-field <%= fieldError('shoe_size') ? 'has-error' : '' %>">
+                  <label for="shoe_size">SHOE SIZE</label>
+                  <input id="shoe_size" name="shoe_size" type="text" value="<%= valueFor('shoe_size', '') %>" placeholder="9 US">
+                  <% if (fieldError('shoe_size')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('shoe_size') %></p>
+                  <% } %>
+                </div>
+                <div class="form-field <%= fieldError('eye_color') ? 'has-error' : '' %>">
+                  <label for="eye_color">EYE COLOR</label>
+                  <input id="eye_color" name="eye_color" type="text" value="<%= valueFor('eye_color', '') %>" placeholder="Brown">
+                  <% if (fieldError('eye_color')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('eye_color') %></p>
+                  <% } %>
+                </div>
+                <div class="form-field <%= fieldError('hair_color') ? 'has-error' : '' %>">
+                  <label for="hair_color">HAIR COLOR</label>
+                  <input id="hair_color" name="hair_color" type="text" value="<%= valueFor('hair_color', '') %>" placeholder="Blonde">
+                  <% if (fieldError('hair_color')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('hair_color') %></p>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: EXPERIENCE -->
+            <div class="form-step" data-step="2">
+              <div class="form-field <%= fieldError('bio') ? 'has-error' : '' %>">
+                <label for="bio">BIO</label>
+                <p class="form-field__help">Tell us about your editorial focus. The Brain will refine this into third-person copy automatically.</p>
+                <textarea id="bio" name="bio" rows="5" required placeholder="Tell us about your editorial focus."><%= valueFor('bio', '') %></textarea>
+                <% if (fieldError('bio')) { %>
+                  <p class="field-error" role="alert"><%= fieldError('bio') %></p>
+                <% } %>
+              </div>
+
+              <div class="form-field">
+                <label>SPECIALTIES / CATEGORIES</label>
+                <p class="form-field__help">Select all that apply</p>
+                <div class="checkbox-group">
+                  <% 
+                    const specialtiesValue = valueFor('specialties', '');
+                    const specialtiesArray = Array.isArray(specialtiesValue) ? specialtiesValue : (specialtiesValue ? [specialtiesValue] : []);
+                    const hasSpecialty = (val) => specialtiesArray.includes(val);
+                  %>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="specialties" value="Editorial" <%= hasSpecialty('Editorial') ? 'checked' : '' %>>
+                    <span>Editorial</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="specialties" value="Commercial" <%= hasSpecialty('Commercial') ? 'checked' : '' %>>
+                    <span>Commercial</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="specialties" value="Runway" <%= hasSpecialty('Runway') ? 'checked' : '' %>>
+                    <span>Runway</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="specialties" value="Fitness" <%= hasSpecialty('Fitness') ? 'checked' : '' %>>
+                    <span>Fitness</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="specialties" value="Parts" <%= hasSpecialty('Parts') ? 'checked' : '' %>>
+                    <span>Parts (Hands, Feet, etc.)</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="specialties" value="Other" <%= hasSpecialty('Other') ? 'checked' : '' %>>
+                    <span>Other</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-field <%= fieldError('partner_agency_email') ? 'has-error' : '' %>">
+                <label for="partner_agency_email">PARTNER AGENCY EMAIL <span class="muted">(optional)</span></label>
+                <input id="partner_agency_email" name="partner_agency_email" type="email" value="<%= valueFor('partner_agency_email', '') %>">
+                <% if (fieldError('partner_agency_email')) { %>
+                  <p class="field-error" role="alert"><%= fieldError('partner_agency_email') %></p>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Step 3: PHOTOS -->
+            <div class="form-step" data-step="3">
+              <div class="form-field">
+                <label for="photos">UPLOAD PHOTOS</label>
+                <p class="form-field__help">Upload 2-12 high-resolution portraits. JPEG, PNG, or WebP. Maximum 10MB per image.</p>
+                <div class="file-upload-area" id="file-upload-area">
+                  <input type="file" id="photos" name="photos" accept="image/jpeg,image/png,image/webp" multiple>
+                  <div class="file-upload-dropzone">
+                    <p class="file-upload-text">Drag and drop images here, or <span class="file-upload-link">browse</span></p>
+                    <p class="file-upload-hint">You can select multiple files</p>
+                  </div>
+                  <div class="file-preview-grid" id="file-preview-grid"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 4: REVIEW & ACCOUNT CREATION -->
+            <div class="form-step" data-step="4">
+              <div class="review-summary">
+                <h3>Review Your Application</h3>
+                <div class="review-section">
+                  <h4>Account Information</h4>
+                  <dl>
+                    <dt>Name:</dt>
+                    <dd id="review-name"></dd>
+                    <dt>Phone:</dt>
+                    <dd id="review-phone"></dd>
+                  </dl>
+                </div>
+                
+                <% if (!userIsLoggedIn) { %>
+                <div class="review-section" style="border-top: 1px solid rgba(15, 23, 42, 0.1); padding-top: 1.5rem; margin-top: 1.5rem;">
+                  <h4>Create Your Account</h4>
+                  <p style="margin-bottom: 1.5rem; color: rgba(15, 23, 42, 0.7); font-size: 0.9rem;">Save your profile by creating an account. You'll be able to update your portfolio and apply to agencies.</p>
+                  <div class="form-grid">
+                    <div class="form-field <%= fieldError('email') ? 'has-error' : '' %>">
+                      <label for="email">EMAIL</label>
+                      <input id="email" name="email" type="email" autocomplete="email" value="<%= valueFor('email', '') %>" required>
+                      <% if (fieldError('email')) { %>
+                        <p class="field-error" role="alert"><%= fieldError('email') %></p>
+                      <% } %>
+                    </div>
+                  </div>
+                  <div class="form-grid">
+                    <div class="form-field <%= fieldError('password') ? 'has-error' : '' %>">
+                      <label for="password">PASSWORD</label>
+                      <input id="password" name="password" type="password" autocomplete="new-password" value="<%= valueFor('password', '') %>" required minlength="8">
+                      <% if (fieldError('password')) { %>
+                        <p class="field-error" role="alert"><%= fieldError('password') %></p>
+                      <% } %>
+                      <p class="form-field__help">Minimum 8 characters</p>
+                    </div>
+                    <div class="form-field <%= fieldError('password_confirm') ? 'has-error' : '' %>">
+                      <label for="password_confirm">CONFIRM PASSWORD</label>
+                      <input id="password_confirm" name="password_confirm" type="password" autocomplete="new-password" value="<%= valueFor('password_confirm', '') %>" required minlength="8">
+                      <% if (fieldError('password_confirm')) { %>
+                        <p class="field-error" role="alert"><%= fieldError('password_confirm') %></p>
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+                <% } %>
+                <div class="review-section">
+                  <h4>Physical Stats</h4>
+                  <dl>
+                    <dt>City:</dt>
+                    <dd id="review-city"></dd>
+                    <dt>Height:</dt>
+                    <dd id="review-height"></dd>
+                    <dt>Measurements:</dt>
+                    <dd id="review-measurements"></dd>
+                    <dt>Bust:</dt>
+                    <dd id="review-bust"></dd>
+                    <dt>Waist:</dt>
+                    <dd id="review-waist"></dd>
+                    <dt>Hips:</dt>
+                    <dd id="review-hips"></dd>
+                    <dt>Shoe Size:</dt>
+                    <dd id="review-shoe-size"></dd>
+                    <dt>Eye Color:</dt>
+                    <dd id="review-eye-color"></dd>
+                    <dt>Hair Color:</dt>
+                    <dd id="review-hair-color"></dd>
+                  </dl>
+                </div>
+                <div class="review-section">
+                  <h4>Experience</h4>
+                  <dl>
+                    <dt>Bio:</dt>
+                    <dd id="review-bio"></dd>
+                    <dt>Specialties:</dt>
+                    <dd id="review-specialties"></dd>
+                  </dl>
+                </div>
+                <div class="review-section">
+                  <h4>Photos</h4>
+                  <p id="review-photos-count">0 images selected</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="button button-secondary" id="prev-button" disabled>Previous</button>
+              <button type="button" class="button button-primary" id="next-button" data-loading-text="<%= userIsLoggedIn ? 'Saving application…' : 'Creating account…' %>">Next</button>
+            </div>
+          </form>
+
+          <p class="apply-note">Uploads happen next—have 2-6 high-resolution portraits ready for the dashboard.</p>
+        </div>
+      </div>
+    </div>
+</section>

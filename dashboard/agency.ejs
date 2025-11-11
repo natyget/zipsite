@@ -1,0 +1,42 @@
+<section class="panel">
+  <header class="panel-header">
+    <h1>Agency feed</h1>
+    <div class="panel-actions">
+      <form method="get" class="filter-form">
+        <label>Sort
+          <select name="sort">
+            <option value="az" <%= filters.sort === 'az' ? 'selected' : '' %>>A–Z</option>
+            <option value="city" <%= filters.sort === 'city' ? 'selected' : '' %>>City</option>
+          </select>
+        </label>
+        <label>City
+          <input type="text" name="city" value="<%= filters.city || '' %>">
+        </label>
+        <label>Letter
+          <select name="letter">
+            <option value="">All</option>
+            <% 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach((l) => { %>
+              <option value="<%= l %>" <%= filters.letter === l ? 'selected' : '' %>><%= l %></option>
+            <% }) %>
+          </select>
+        </label>
+        <button type="submit" class="button">Apply</button>
+      </form>
+    </div>
+  </header>
+
+  <p class="muted">Commission summary: <strong>$<%= commissionsTotal %></strong> lifetime</p>
+
+  <div class="grid three-col">
+    <% profiles.forEach((profile) => { %>
+      <article class="card">
+        <h2><a href="/portfolio/<%= profile.slug %>"><%= profile.first_name %> <%= profile.last_name %></a></h2>
+        <p class="muted"><%= profile.city %> • <%= profile.measurements %> • <%= profile.height_cm %> cm</p>
+        <form method="post" action="/agency/claim">
+          <input type="hidden" name="slug" value="<%= profile.slug %>">
+          <button type="submit" class="button button-secondary">Claim profile</button>
+        </form>
+      </article>
+    <% }) %>
+  </div>
+</section>

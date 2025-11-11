@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portfolio — ZipSite</title>
+  <meta name="description" content="ZipSite portfolio template showcasing AI-refined stats, editorial imagery, and booking CTAs.">
+  <link rel="canonical" href="https://zipsite.example.com/portfolio/">
+  <link rel="stylesheet" href="/styles/global.css">
+  <script id="personSchema" type="application/ld+json"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container inner">
+      <a class="brand" href="/">ZipSite</a>
+      <nav class="primary-nav" aria-label="Primary">
+        <ul>
+          <li><a href="/demo.html">Back to demo</a></li>
+          <li><a href="/apply/">Submit profile</a></li>
+        </ul>
+      </nav>
+      <a class="button button-secondary" href="mailto:bookings@zipsite.com">Contact agency</a>
+    </div>
+  </header>
+  <main id="main">
+    <article class="section" style="padding-top:6rem;">
+      <div class="container" id="portfolioContent">
+        <header class="motion-reveal" style="display:grid; gap:1.5rem;">
+          <div class="pill-group" id="quickStats"></div>
+          <h1 id="talentName" style="font-family:var(--font-serif); font-size:clamp(3rem,5vw,4rem); font-weight:400; margin:0;"></h1>
+          <p class="muted" id="talentLocation"></p>
+        </header>
+        <section class="gallery-grid motion-reveal" id="talentGallery" aria-label="Portfolio imagery"></section>
+        <section class="section" style="padding:3rem 0 0;" aria-labelledby="bio">
+          <div class="grid" style="grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); gap:3rem;">
+            <div>
+              <h2 id="bio" style="font-family:var(--font-serif); font-weight:400;">Bio</h2>
+              <p class="muted" id="talentBio"></p>
+            </div>
+            <div>
+              <h2 style="font-family:var(--font-serif); font-weight:400;">Experience</h2>
+              <ul id="talentExperience" style="list-style:none; padding:0; margin:0; display:grid; gap:0.75rem; color:var(--color-muted);"></ul>
+              <div style="margin-top:1.5rem;">
+                <h3 style="font-family:var(--font-serif); font-weight:400;">Video reel</h3>
+                <div style="position:relative; padding-top:56%; border-radius:18px; overflow:hidden; background:#0f172a;">
+                  <iframe id="talentReel" title="Talent reel" src="https://player.vimeo.com/video/76979871?h=eb2a9cbb65" allow="autoplay; fullscreen; picture-in-picture" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; border:0;"></iframe>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div class="sticky-cta">
+        <a class="button button-secondary" href="/comp-card/?name=" id="downloadPdf">Download PDF</a>
+        <a class="button button-primary" id="contactCta" href="mailto:bookings@zipsite.com?subject=Booking inquiry">Book talent</a>
+      </div>
+    </article>
+  </main>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <div class="brand">ZipSite</div>
+        <p class="footer-small">Editorial-grade portfolios, curated by AI.</p>
+      </div>
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href="/press.html">Press</a></li>
+          <li><a href="/legal.html">Legal</a></li>
+          <li><a href="mailto:press@zipsite.com">press@zipsite.com</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+  <script src="/scripts/main.js" defer></script>
+  <script src="/scripts/gallery.js" defer></script>
+  <script>
+    const defaultProfile = {
+      name: 'Natan Barrera',
+      role: 'Editorial / Runway',
+      location: 'Based in New York & Mexico City',
+      stats: ['Height 5\' 11"', 'Bust 31"', 'Waist 24"', 'Hips 34"', 'Shoe 9 US'],
+      bio: 'Has a strong passion for editorial fashion, blending architectural poses with dynamic movement. Comfortable on runway, e-commerce, and motion shoots.',
+      experience: [
+        'SS24 — Luar, Runway',
+        'Vogue México — Beauty story',
+        'Calvin Klein — Denim lookbook',
+        'Opening Ceremony — Campaign film'
+      ],
+      gallery: [
+        {
+          src: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=1200&q=80',
+          alt: 'Studio portrait in monochrome suit'
+        },
+        {
+          src: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=80',
+          alt: 'Outdoor editorial portrait'
+        },
+        {
+          src: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=80',
+          alt: 'Beauty close-up with natural light'
+        },
+        {
+          src: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=1200&q=80',
+          alt: 'Runway walk with flowing coat'
+        }
+      ],
+      tier: 'pro'
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    const profile = JSON.parse(params.get('profile') || 'null') || defaultProfile;
+    const nameOverride = params.get('name');
+    if (nameOverride) profile.name = decodeURIComponent(nameOverride);
+
+    document.title = `${profile.name} — ZipSite Portfolio`;
+    document.getElementById('talentName').textContent = profile.name;
+    document.getElementById('talentLocation').textContent = `${profile.role || 'Talent'} · ${profile.location || 'Global'}`;
+
+    const quickStats = document.getElementById('quickStats');
+    quickStats.innerHTML = '';
+    (profile.stats || []).forEach(stat => {
+      const pill = document.createElement('span');
+      pill.className = 'stat-pill';
+      pill.textContent = stat;
+      quickStats.appendChild(pill);
+    });
+
+    const gallery = document.getElementById('talentGallery');
+    gallery.innerHTML = '';
+    (profile.gallery || []).forEach(item => {
+      const card = document.createElement('figure');
+      card.className = 'gallery-item';
+      card.innerHTML = `<div class="skeleton" aria-hidden="true"></div>`;
+      const img = document.createElement('img');
+      img.src = item.src;
+      img.alt = item.alt;
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.addEventListener('load', () => {
+        const skeleton = card.querySelector('.skeleton');
+        if (skeleton) skeleton.remove();
+      });
+      card.appendChild(img);
+      gallery.appendChild(card);
+    });
+
+    document.getElementById('talentBio').textContent = profile.bio;
+    const experience = document.getElementById('talentExperience');
+    experience.innerHTML = '';
+    (profile.experience || []).forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      experience.appendChild(li);
+    });
+
+    const pdfLink = document.getElementById('downloadPdf');
+    pdfLink.href = `/comp-card/?name=${encodeURIComponent(profile.name)}&tier=${profile.tier || 'free'}`;
+
+    const contactCta = document.getElementById('contactCta');
+    contactCta.href = `mailto:bookings@zipsite.com?subject=Booking%20inquiry%20for%20${encodeURIComponent(profile.name)}`;
+
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      'name': profile.name,
+      'jobTitle': profile.role,
+      'description': profile.bio,
+      'height': profile.stats?.find(s => s.toLowerCase().includes('height')),
+      'url': window.location.href
+    };
+    document.getElementById('personSchema').textContent = JSON.stringify(schema);
+  </script>
+</body>
+</html>

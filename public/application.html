@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZipSite Application — Automated Portfolio Strategy</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+    .font-display {
+      font-family: 'Playfair Display', serif;
+    }
+    .nav-blur {
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: rgba(248, 250, 252, 0.85);
+    }
+    .button-primary {
+      transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+    }
+    .button-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 35px -20px rgba(37, 99, 235, 0.8);
+    }
+    .fade-in {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .fade-in[data-visible="true"] {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .step-indicator::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 -24px 0;
+      height: 1px;
+      background: rgba(15, 23, 42, 0.08);
+    }
+    .step-indicator:last-child::after {
+      display: none;
+    }
+    .mobile-menu {
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .mobile-menu.hidden {
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    .mobile-menu.visible {
+      pointer-events: auto;
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body class="antialiased">
+  <header class="fixed top-0 inset-x-0 z-50 border-b border-slate-200/70 nav-blur">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <a href="index.html" class="text-lg font-semibold tracking-[0.2em] uppercase">ZipSite</a>
+      <nav class="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
+        <a href="index.html#vision" class="hover:text-slate-900 transition">Vision</a>
+        <a href="index.html#technology" class="hover:text-slate-900 transition">Technology</a>
+        <a href="index.html#journey" class="hover:text-slate-900 transition">Flow</a>
+        <a href="index.html#tiers" class="hover:text-slate-900 transition">Plans</a>
+      </nav>
+      <div class="hidden items-center gap-3 md:flex">
+        <a href="#" class="text-sm font-medium text-slate-600 hover:text-slate-900">Support</a>
+        <a href="#" class="button-primary rounded-full border border-slate-900 px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white">Login</a>
+      </div>
+      <button id="mobile-nav-toggle" class="md:hidden" aria-label="Open navigation">
+        <span class="block h-0.5 w-6 bg-slate-900"></span>
+        <span class="mt-1 block h-0.5 w-6 bg-slate-900"></span>
+        <span class="mt-1 block h-0.5 w-6 bg-slate-900"></span>
+      </button>
+    </div>
+    <div id="mobile-menu" class="mobile-menu hidden absolute inset-x-0 top-full bg-white px-6 pb-6 shadow-xl md:hidden">
+      <nav class="flex flex-col gap-4 pt-4 text-sm font-medium text-slate-700">
+        <a href="index.html#vision" class="transition hover:text-slate-900">Vision</a>
+        <a href="index.html#technology" class="transition hover:text-slate-900">Technology</a>
+        <a href="index.html#journey" class="transition hover:text-slate-900">Flow</a>
+        <a href="index.html#tiers" class="transition hover:text-slate-900">Plans</a>
+        <a href="#" class="transition hover:text-slate-900">Support</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="pt-28 pb-24">
+    <section class="mx-auto max-w-4xl px-6">
+      <div class="fade-in" data-visible="false">
+        <p class="text-sm uppercase tracking-[0.5em] text-slate-500">Apply</p>
+        <h1 class="mt-4 font-display text-4xl text-slate-900">Begin your ZipSite curation.</h1>
+        <p class="mt-4 text-base text-slate-600">Answer a few focused questions. ZipSite's AI curator refines your story instantly. Save progress at any time — we maintain your voice, edit for precision, and deliver a portfolio that feels bespoke.</p>
+      </div>
+
+      <div class="mt-14 grid gap-8 lg:grid-cols-[320px_1fr]">
+        <aside class="flex flex-col gap-8 rounded-3xl border border-slate-200/80 bg-white p-8 shadow-sm">
+          <div class="step-indicator relative pb-10">
+            <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Step 01</p>
+            <h2 class="mt-3 font-display text-xl text-slate-900">Talent Profile</h2>
+            <p class="mt-3 text-sm text-slate-600">We capture your essentials to ground the narrative.</p>
+          </div>
+          <div class="step-indicator relative pb-10">
+            <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Step 02</p>
+            <h2 class="mt-3 font-display text-xl text-slate-900">Bio & Experience</h2>
+            <p class="mt-3 text-sm text-slate-600">Share your story. The AI polishes every sentence.</p>
+          </div>
+          <div class="relative">
+            <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Step 03</p>
+            <h2 class="mt-3 font-display text-xl text-slate-900">Portfolio Assets</h2>
+            <p class="mt-3 text-sm text-slate-600">Upload imagery and media for the final portfolio.</p>
+          </div>
+          <div class="rounded-3xl border border-slate-200/70 bg-slate-50 p-5">
+            <p class="text-xs uppercase tracking-[0.4em] text-slate-500">Need help?</p>
+            <p class="mt-3 text-sm text-slate-600">Our team monitors every submission. Expect a response within 24 hours.</p>
+          </div>
+        </aside>
+
+        <div class="rounded-3xl border border-slate-200/80 bg-white p-8 shadow-lg">
+          <form id="application-form" class="space-y-10">
+            <div id="step-1" class="form-step space-y-6" data-step="1">
+              <div class="fade-in" data-visible="false">
+                <h2 class="font-display text-2xl text-slate-900">Talent Profile</h2>
+                <p class="mt-3 text-sm text-slate-600">Provide the core details your agent expects to see first.</p>
+              </div>
+              <div class="grid gap-6 md:grid-cols-2">
+                <label class="flex flex-col text-sm text-slate-700">Full Name
+                  <input type="text" class="mt-2 rounded-full border border-slate-200 px-4 py-3 focus:border-slate-900 focus:outline-none" placeholder="E.g., Natan Black" required>
+                </label>
+                <label class="flex flex-col text-sm text-slate-700">Email
+                  <input type="email" class="mt-2 rounded-full border border-slate-200 px-4 py-3 focus:border-slate-900 focus:outline-none" placeholder="you@email.com" required>
+                </label>
+                <label class="flex flex-col text-sm text-slate-700">Phone
+                  <input type="tel" class="mt-2 rounded-full border border-slate-200 px-4 py-3 focus:border-slate-900 focus:outline-none" placeholder="+1 (555) 123-4567">
+                </label>
+                <label class="flex flex-col text-sm text-slate-700">Location
+                  <input type="text" class="mt-2 rounded-full border border-slate-200 px-4 py-3 focus:border-slate-900 focus:outline-none" placeholder="New York, NY">
+                </label>
+              </div>
+              <div class="grid gap-6 md:grid-cols-3">
+                <label class="flex flex-col text-sm text-slate-700">Height
+                  <input type="text" class="mt-2 rounded-full border border-slate-200 px-4 py-3 focus:border-slate-900 focus:outline-none" placeholder="5' 11"">
+                </label>
+                <label class="flex flex-col text-sm text-slate-700">Measurements
+                  <input type="text" class="mt-2 rounded-full border border-slate-200 px-4 py-3 focus:border-slate-900 focus:outline-none" placeholder="32-24-34">
+                </label>
+                <label class="flex flex-col text-sm text-slate-700">Shoe Size
+                  <input type="text" class="mt-2 rounded-full border border-slate-200 px-4 py-3 focus:border-slate-900 focus:outline-none" placeholder="8 US">
+                </label>
+              </div>
+            </div>
+
+            <div id="step-2" class="form-step hidden space-y-6" data-step="2">
+              <div class="fade-in" data-visible="false">
+                <h2 class="font-display text-2xl text-slate-900">Bio & Experience</h2>
+                <p class="mt-3 text-sm text-slate-600">Write freely. Our AI curator will refine it into a compelling third-person voice.</p>
+              </div>
+              <label class="flex flex-col text-sm text-slate-700">Raw Bio
+                <textarea rows="6" class="mt-2 rounded-3xl border border-slate-200 px-4 py-3 focus:border-slate-900 focus:outline-none" placeholder="Share your experience, passions, and direction."></textarea>
+              </label>
+              <div class="grid gap-6 md:grid-cols-2">
+                <label class="flex flex-col text-sm text-slate-700">Agency History
+                  <input type="text" class="mt-2 rounded-full border border-slate-200 px-4 py-3 focus:border-slate-900 focus:outline-none" placeholder="Current or past representation">
+                </label>
+                <label class="flex flex-col text-sm text-slate-700">Notable Work
+                  <input type="text" class="mt-2 rounded-full border border-slate-200 px-4 py-3 focus:border-slate-900 focus:outline-none" placeholder="Editorials, campaigns, runways">
+                </label>
+              </div>
+              <label class="flex flex-col text-sm text-slate-700">Availability & Travel
+                <textarea rows="4" class="mt-2 rounded-3xl border border-slate-200 px-4 py-3 focus:border-slate-900 focus:outline-none" placeholder="Include travel bases, international clearance, or upcoming tours."></textarea>
+              </label>
+            </div>
+
+            <div id="step-3" class="form-step hidden space-y-6" data-step="3">
+              <div class="fade-in" data-visible="false">
+                <h2 class="font-display text-2xl text-slate-900">Portfolio Assets</h2>
+                <p class="mt-3 text-sm text-slate-600">Upload photography and media. Tag each asset for effortless display in your final portfolio.</p>
+              </div>
+              <label class="flex flex-col text-sm text-slate-700">Primary Headshot
+                <input type="file" class="mt-2 rounded-full border border-slate-200 px-4 py-3 focus:border-slate-900 focus:outline-none" accept="image/*">
+              </label>
+              <label class="flex flex-col text-sm text-slate-700">Full Body
+                <input type="file" class="mt-2 rounded-full border border-slate-200 px-4 py-3 focus:border-slate-900 focus:outline-none" accept="image/*">
+              </label>
+              <label class="flex flex-col text-sm text-slate-700">Editorial Feature
+                <input type="file" class="mt-2 rounded-full border border-slate-200 px-4 py-3 focus:border-slate-900 focus:outline-none" accept="image/*">
+              </label>
+              <label class="flex flex-col text-sm text-slate-700">Video Reel (optional)
+                <input type="url" class="mt-2 rounded-full border border-slate-200 px-4 py-3 focus:border-slate-900 focus:outline-none" placeholder="https://">
+              </label>
+              <div class="rounded-3xl border border-slate-200/80 bg-slate-50 p-6 text-sm text-slate-600">
+                <p class="font-medium text-slate-800">Upload guidance</p>
+                <ul class="mt-3 space-y-2">
+                  <li>Use high-resolution images with minimal retouching.</li>
+                  <li>Tag assets accurately to help our AI sequence the story.</li>
+                  <li>Video reels are available to Pro members.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-6">
+              <button type="button" id="prev-btn" class="rounded-full border border-slate-300 px-6 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-900 hover:text-slate-900">Back</button>
+              <button type="button" id="next-btn" class="button-primary rounded-full bg-slate-900 px-7 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">Continue</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-slate-950 py-12 text-slate-200">
+    <div class="mx-auto flex max-w-5xl flex-col gap-10 px-6 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="text-sm uppercase tracking-[0.5em] text-slate-500">ZipSite</p>
+        <p class="mt-4 max-w-md text-sm text-slate-400">Once submitted, our AI curator responds in under a minute. Expect a review link within 24 hours.</p>
+      </div>
+      <div class="flex flex-col gap-3 text-sm text-slate-400 md:flex-row md:items-center md:gap-6">
+        <a href="template.html" class="hover:text-white transition">Portfolio Template</a>
+        <a href="#" class="hover:text-white transition">Support</a>
+        <a href="#" class="hover:text-white transition">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.dataset.visible = 'true';
+        }
+      });
+    }, { threshold: 0.2 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    const toggle = document.getElementById('mobile-nav-toggle');
+    const menu = document.getElementById('mobile-menu');
+
+    toggle.addEventListener('click', () => {
+      if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        requestAnimationFrame(() => menu.classList.add('visible'));
+      } else {
+        menu.classList.remove('visible');
+        menu.addEventListener('transitionend', () => menu.classList.add('hidden'), { once: true });
+      }
+    });
+
+    document.querySelectorAll('#mobile-menu a').forEach(link => {
+      link.addEventListener('click', () => {
+        menu.classList.remove('visible');
+        menu.addEventListener('transitionend', () => menu.classList.add('hidden'), { once: true });
+      });
+    });
+
+    const steps = Array.from(document.querySelectorAll('.form-step'));
+    const nextBtn = document.getElementById('next-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    let currentStep = 0;
+
+    const updateSteps = () => {
+      steps.forEach((step, index) => {
+        step.classList.toggle('hidden', index !== currentStep);
+        const focusable = step.querySelector('.fade-in');
+        if (focusable) {
+          focusable.dataset.visible = 'true';
+        }
+      });
+      prevBtn.classList.toggle('invisible', currentStep === 0);
+      prevBtn.classList.toggle('pointer-events-none', currentStep === 0);
+      nextBtn.textContent = currentStep === steps.length - 1 ? 'Submit Application' : 'Continue';
+    };
+
+    prevBtn.addEventListener('click', () => {
+      if (currentStep > 0) {
+        currentStep -= 1;
+        updateSteps();
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (currentStep < steps.length - 1) {
+        currentStep += 1;
+        updateSteps();
+      } else {
+        alert('Your submission has been captured. Expect your curated profile shortly.');
+      }
+    });
+
+    updateSteps();
+  </script>
+  <script src="/scripts/wire.js"></script>
+</body>
+</html>

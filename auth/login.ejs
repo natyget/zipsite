@@ -1,0 +1,19 @@
+<section class="panel auth-panel">
+  <h1>Sign in</h1>
+  <form method="post" action="/login" class="form-stack">
+    <label>Email
+      <input type="email" name="email" value="<%= values.email || '' %>" required>
+      <% if (errors && errors.email) { %>
+        <small class="field-error"><%= errors.email[0] %></small>
+      <% } %>
+    </label>
+    <label>Password
+      <input type="password" name="password" required>
+      <% if (errors && errors.password) { %>
+        <small class="field-error"><%= errors.password[0] %></small>
+      <% } %>
+    </label>
+    <button type="submit" class="button button-primary">Continue</button>
+  </form>
+  <p class="muted">Need an account? <a href="/signup">Create one in minutes</a>.</p>
+</section>

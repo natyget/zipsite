@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title || 'Dashboard' %> • ZipSite
+    </title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Display:wght@200;300;400&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/styles/global.css?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>">
+    <link rel="stylesheet" href="/styles/dashboard.css?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>">
+</head>
+
+<body class="dashboard-body <%= typeof user !== 'undefined' && user && user.role === 'AGENCY' ? 'dashboard-body--agency' : 'dashboard-body--talent' %>">
+
+    <!-- Dashboard Header -->
+    <header class="dash-header">
+        <div class="dash-header__inner">
+            <% if (typeof user !== 'undefined' && user && user.agency_logo_path) { %>
+                <a href="/dashboard/agency" style="display: flex; align-items: center;">
+                    <img src="<%= user.agency_logo_path %>" alt="<%= user.agency_name || 'Agency' %>" style="max-height: 40px; max-width: 200px; object-fit: contain;">
+                </a>
+            <% } else { %>
+                <a href="/" class="dash-header__logo">ZIPSITE</a>
+            <% } %>
+            <nav class="dash-header__nav">
+                <% if (typeof user !=='undefined' && user) { %>
+                    <span class="dash-header__user">
+                        <%= user.email %>
+                    </span>
+                    <% } %>
+                        <form method="post" action="/logout" style="display: inline;">
+                            <button type="submit" class="dash-header__link" style="background: none; border: none; cursor: pointer; font-size: 14px; color: var(--text-secondary); padding: 8px 20px; border-radius: 999px; border: 1px solid var(--border-color); transition: var(--transition);">Logout</button>
+                        </form>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Flash Messages -->
+    <% if (typeof messages !=='undefined' && messages && messages.length> 0) { %>
+        <div class="flash-messages">
+            <% messages.forEach(msg=> { %>
+                <div class="flash-message flash-message--<%= msg.type %>">
+                    <span>
+                        <%= msg.text %>
+                    </span>
+                    <button class="flash-message__close" type="button"
+                        onclick="this.parentElement.remove()">&times;</button>
+                </div>
+                <% }); %>
+        </div>
+        <% } %>
+
+            <!-- Main Dashboard Content -->
+            <main class="dash-container">
+                <%- body %>
+            </main>
+
+            <!-- Dashboard Scripts -->
+            <script src="/scripts/dashboard.js?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>"></script>
+</body>
+
+</html>

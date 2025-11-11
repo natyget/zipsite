@@ -1,0 +1,43 @@
+<section class="panel auth-panel">
+  <h1>Create your ZipSite account</h1>
+  <form method="post" action="/signup" class="form-stack">
+    <fieldset>
+      <legend>Account type</legend>
+      <label class="inline">
+        <input type="radio" name="role" value="TALENT" <%= (values.role || 'TALENT') === 'TALENT' ? 'checked' : '' %>> Talent
+      </label>
+      <label class="inline">
+        <input type="radio" name="role" value="AGENCY" <%= values.role === 'AGENCY' ? 'checked' : '' %>> Agency
+      </label>
+      <% if (errors && errors.role) { %>
+        <small class="field-error"><%= errors.role[0] %></small>
+      <% } %>
+    </fieldset>
+    <label>First name
+      <input type="text" name="first_name" value="<%= values.first_name || '' %>" required>
+      <% if (errors && errors.first_name) { %>
+        <small class="field-error"><%= errors.first_name[0] %></small>
+      <% } %>
+    </label>
+    <label>Last name
+      <input type="text" name="last_name" value="<%= values.last_name || '' %>" required>
+      <% if (errors && errors.last_name) { %>
+        <small class="field-error"><%= errors.last_name[0] %></small>
+      <% } %>
+    </label>
+    <label>Email
+      <input type="email" name="email" value="<%= values.email || '' %>" required>
+      <% if (errors && errors.email) { %>
+        <small class="field-error"><%= errors.email[0] %></small>
+      <% } %>
+    </label>
+    <label>Password
+      <input type="password" name="password" required>
+      <% if (errors && errors.password) { %>
+        <small class="field-error"><%= errors.password[0] %></small>
+      <% } %>
+    </label>
+    <button type="submit" class="button button-primary">Create account</button>
+  </form>
+  <p class="muted">Already on ZipSite? <a href="/login">Sign in</a></p>
+</section>

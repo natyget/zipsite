@@ -1,0 +1,97 @@
+<%- include('../partials/forms', { errors, values }) %>
+<% const _errors=(typeof errors==='object' && errors) ? errors : {}; const _values=(typeof values==='object' && values) ? values : {}; const valueFor=(name, fallback='')=> {
+  if (Object.prototype.hasOwnProperty.call(_values, name) && _values[name] != null) {
+    return _values[name];
+  }
+  return fallback;
+};
+
+const fieldError = (name) => {
+  const v = _errors[name];
+  if (!v) return '';
+  return Array.isArray(v) ? v[0] : v;
+};
+%>
+<section class="auth-page">
+  <div class="auth-page__visual">
+    <div class="auth-page__visual-content">
+      <span class="auth-page__visual-badge">Join ZipSite</span>
+      <h1 class="auth-page__visual-headline">
+        <span class="auth-page__visual-headline-fashion">Build your comp card.</span>
+        <span class="auth-page__visual-headline-ai">Editorial quality.</span>
+      </h1>
+      <p class="auth-page__visual-tagline">Create an editorial-grade profile with curated copy, sharp imagery, and an always-on PDF ready for castings.</p>
+      <div class="auth-page__visual-accent"></div>
+    </div>
+  </div>
+  
+  <div class="auth-page__form">
+    <div class="auth-page__form-container">
+      <div class="auth-page__form-header">
+        <h2 class="auth-page__form-title">Create account</h2>
+        <p class="auth-page__form-subtitle">Start building your portfolio today</p>
+      </div>
+      
+      <div class="auth-card" role="form">
+        <form method="post" action="/signup" class="form" data-async>
+          <% const signupNext = valueFor('next', ''); %>
+          <input type="hidden" name="next" value="<%= signupNext %>">
+          
+          <fieldset class="form-fieldset">
+            <legend>Account type</legend>
+            <div class="choice-group">
+              <label class="choice <%= valueFor('role', 'TALENT') === 'TALENT' ? 'is-selected' : '' %>">
+                <input type="radio" name="role" value="TALENT" <%= valueFor('role', 'TALENT') === 'TALENT' ? 'checked' : '' %>>
+                <span>Talent</span>
+              </label>
+              <label class="choice <%= valueFor('role') === 'AGENCY' ? 'is-selected' : '' %>">
+                <input type="radio" name="role" value="AGENCY" <%= valueFor('role') === 'AGENCY' ? 'checked' : '' %>>
+                <span>Agency</span>
+              </label>
+            </div>
+            <% if (fieldError('role')) { %>
+              <p class="field-error" role="alert"><%= fieldError('role') %></p>
+            <% } %>
+          </fieldset>
+          
+          <div class="form-grid">
+            <div class="form-field <%= fieldError('first_name') ? 'has-error' : '' %>">
+              <label for="first_name">First name</label>
+              <input id="first_name" name="first_name" autocomplete="given-name" required value="<%= valueFor('first_name', '') %>">
+              <% if (fieldError('first_name')) { %>
+                <p class="field-error" role="alert"><%= fieldError('first_name') %></p>
+              <% } %>
+            </div>
+            <div class="form-field <%= fieldError('last_name') ? 'has-error' : '' %>">
+              <label for="last_name">Last name</label>
+              <input id="last_name" name="last_name" autocomplete="family-name" required value="<%= valueFor('last_name', '') %>">
+              <% if (fieldError('last_name')) { %>
+                <p class="field-error" role="alert"><%= fieldError('last_name') %></p>
+              <% } %>
+            </div>
+          </div>
+          
+          <div class="form-field <%= fieldError('email') ? 'has-error' : '' %>">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" required value="<%= valueFor('email', '') %>">
+            <% if (fieldError('email')) { %>
+              <p class="field-error" role="alert"><%= fieldError('email') %></p>
+            <% } %>
+          </div>
+          
+          <div class="form-field <%= fieldError('password') ? 'has-error' : '' %>">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="new-password" required minlength="8">
+            <% if (fieldError('password')) { %>
+              <p class="field-error" role="alert"><%= fieldError('password') %></p>
+            <% } %>
+          </div>
+          
+          <button type="submit" class="button button-primary button-block" data-loading-text="Creating account…">Create account</button>
+        </form>
+        
+        <p class="auth-switch">Already on ZipSite? <a href="/login<%= signupNext ? `?next=${encodeURIComponent(signupNext)}` : '' %>">Sign in</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>

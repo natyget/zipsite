@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+    @page { size: 5.5in 8.5in; margin: 0; }
+    body {
+      margin: 0;
+      padding: 0.3in;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      background: #f8f8f8;
+      color: #111;
+    }
+    h1 {
+      font-size: 28px;
+      letter-spacing: 1px;
+      margin: 0;
+      text-transform: uppercase;
+    }
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+    .stats {
+      margin-top: 16px;
+      font-size: 12px;
+      text-transform: uppercase;
+      display: flex;
+      gap: 16px;
+    }
+    .bio {
+      margin-top: 16px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .grid {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .hero {
+      grid-column: span 2;
+      height: 360px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 6px;
+    }
+    .hero img,
+    .grid img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+    .watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 42px;
+      color: rgba(0, 0, 0, 0.1);
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      pointer-events: none;
+    }
+    footer {
+      margin-top: 18px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <section>
+    <h1><%= profile.first_name %> <%= profile.last_name %></h1>
+    <div class="meta">
+      <span><%= profile.city %></span>
+      <span>ZipSite Portfolio</span>
+    </div>
+    <div class="stats">
+      <span>Height <strong><%= heightFeet %></strong> (<%= profile.height_cm %> cm)</span>
+      <span>Measurements <strong><%= profile.measurements %></strong></span>
+    </div>
+    <p class="bio"><%= profile.bio_curated %></p>
+    <div class="grid">
+      <div class="hero">
+        <% if (hero) { %>
+          <img src="<%= hero %>" alt="Hero image">
+        <% } %>
+        <% if (watermark) { %>
+          <div class="watermark">Refined by ZipSite</div>
+        <% } %>
+      </div>
+      <% images.forEach((item) => { %>
+        <div>
+          <img src="<%= item.path %>" alt="<%= item.label || 'Portfolio image' %>">
+        </div>
+      <% }) %>
+    </div>
+  </section>
+  <footer>
+    <span>zipsite</span>
+    <span>zipsite.com/portfolio/<%= profile.slug %></span>
+  </footer>
+</body>
+</html>

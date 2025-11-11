@@ -1,0 +1,71 @@
+<section class="hero" style="padding-bottom:3rem;">
+  <div class="container hero-grid">
+    <div class="hero-copy motion-reveal">
+      <span class="badge">Media</span>
+      <h1>Press-ready. Investor-ready.</h1>
+      <p>Download the ZipSite press kit, explore our story, and connect directly with the team for interviews or collaborations.</p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="#press-kit">Download press kit</a>
+        <a class="button button-secondary" href="mailto:press@zipsite.com">Contact press</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="press-kit" aria-labelledby="press-kit-heading">
+  <div class="container">
+    <div class="section-heading motion-reveal">
+      <h2 id="press-kit-heading">Press materials</h2>
+      <p>Logos, product imagery, and executive bios curated for editorial coverage.</p>
+    </div>
+    <div class="grid cols-3">
+      <article class="card motion-reveal" data-delay="40">
+        <h3>Brand marks</h3>
+        <p>Includes monochrome and inverted logo files, usage guidance, and typography lockups.</p>
+        <a class="button button-secondary" href="#">Download .zip</a>
+      </article>
+      <article class="card motion-reveal" data-delay="80">
+        <h3>Product visuals</h3>
+        <p>High-resolution mockups of the comp card, pro site, and application flow.</p>
+        <a class="button button-secondary" href="#">Download .zip</a>
+      </article>
+      <article class="card motion-reveal" data-delay="120">
+        <h3>Executive bios</h3>
+        <p>Brief introductions to the founding team and leadership quotes for media use.</p>
+        <a class="button button-secondary" href="#">Download .zip</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="contact">
+  <div class="container">
+    <div class="section-heading motion-reveal">
+      <h2 id="contact">Contact</h2>
+      <p>We respond to press inquiries within one business day.</p>
+    </div>
+    <div class="grid" style="grid-template-columns: repeat(auto-fit,minmax(320px,1fr)); gap:3rem; align-items:start;">
+      <div class="motion-reveal">
+        <h3>Press</h3>
+        <p class="muted">press@zipsite.com</p>
+        <h3>Partnerships</h3>
+        <p class="muted">partners@zipsite.com</p>
+        <h3>Investors</h3>
+        <p class="muted">invest@zipsite.com</p>
+      </div>
+      <form class="motion-reveal" data-delay="120" action="https://formsubmit.co/press@zipsite.com" method="POST">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" required>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+        <label for="message">Message</label>
+        <textarea id="message" name="message" rows="5" required></textarea>
+        <input type="hidden" name="_subject" value="ZipSite Press Inquiry">
+        <input class="button button-primary" type="submit" value="Send inquiry">
+      </form>
+    </div>
+  </div>
+</section>
+
+<script src="/scripts/main.js" defer></script>
+

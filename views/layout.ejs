@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>
+    <%= title ? (title + ' — ZipSite' ) : 'ZipSite' %>
+  </title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Serif+Display:wght@200;300;400&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <!-- Global styles -->
+  <link rel="stylesheet" href="/styles/global.css?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>">
+
+  <% const inDashboard=typeof isDashboard !=='undefined' && isDashboard===true; const isHomepageFlag=typeof isHomepage
+    !=='undefined' && isHomepage===true; %>
+
+    <% if (inDashboard) { %>
+      <link rel="stylesheet" href="/styles/dashboard.css">
+      <% } %>
+</head>
+
+<body class="<%= inDashboard ? 'dashboard-shell' : 'page' %>">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <% if (inDashboard) { %>
+    <!-- DASHBOARD HEADER -->
+    <header class="dash-header" role="banner">
+      <div class="dash-header-inner">
+        <a class="dash-logo" href="/">ZipSite</a>
+
+        <nav class="dash-nav" aria-label="Dashboard">
+          <a href="/dashboard/talent" class="<%= currentUser && currentUser.role === 'TALENT' ? 'is-active' : '' %>">
+            Talent
+          </a>
+          <a href="/dashboard/agency" class="<%= currentUser && currentUser.role === 'AGENCY' ? 'is-active' : '' %>">
+            Agencies
+          </a>
+          <% if (currentProfile && currentProfile.slug) { %>
+            <a href="/portfolio/<%= currentProfile.slug %>" target="_blank" rel="noopener">
+              Public portfolio
+            </a>
+            <% } %>
+        </nav>
+
+        <div class="dash-user">
+          <% if (currentUser) { %>
+            <span class="dash-user__email">
+              <%= currentUser.email %>
+            </span>
+            <form action="/logout" method="post">
+              <button type="submit" class="button-ghost" aria-label="Sign out">Logout</button>
+            </form>
+            <% } %>
+        </div>
+      </div>
+    </header>
+
+    <% } else { %>
+      <!-- UNIVERSAL HEADER -->
+      <%- include('partials/header-universal', { 
+        currentUser: typeof currentUser !== 'undefined' ? currentUser : null,
+        currentPage: typeof currentPage !== 'undefined' ? currentPage : '',
+        isHomepage: typeof isHomepage !== 'undefined' && isHomepage === true
+      }) %>
+    <% } %>
+
+                  <main id="main" class="<%= inDashboard ? 'dash-main' : 'page-main main' %>" role="main">
+                    <% const flashMessages=Array.isArray(messages) ? messages : []; %>
+                      <%- include('partials/flash', { messages: flashMessages }) %>
+                        <%- body %>
+                  </main>
+
+                  <% if (!inDashboard) { %>
+                    <%- include('partials/footer-universal', { 
+                      currentUser: typeof currentUser !== 'undefined' ? currentUser : null,
+                      currentPage: typeof currentPage !== 'undefined' ? currentPage : ''
+                    }) %>
+                    <% } %>
+
+                      <script src="/scripts/wire.js" defer></script>
+                      <% if (inDashboard) { %>
+                        <script src="/scripts/dashboard.js" defer></script>
+                        <% } %>
+                          <% if (!inDashboard && isHomepageFlag) { %>
+                            <script src="/scripts/homepage.js?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>" defer></script>
+                            <% } %>
+</body>
+
+</html>

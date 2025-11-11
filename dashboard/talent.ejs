@@ -1,0 +1,43 @@
+<section class="panel">
+  <header class="panel-header">
+    <h1>Welcome back, <%= profile.first_name %></h1>
+    <div class="panel-actions">
+      <a class="button" href="/portfolio/<%= profile.slug %>">View public profile</a>
+      <button type="button" class="button button-primary" data-generate-pdf data-slug="<%= profile.slug %>">Generate PDF</button>
+    </div>
+  </header>
+
+  <section class="grid two-col">
+    <div>
+      <h2>Profile completeness</h2>
+      <ul class="checklist">
+        <li class="<%= completeness.basics ? 'done' : '' %>">Vitals & bio</li>
+        <li class="<%= completeness.imagery ? 'done' : '' %>">Portfolio images</li>
+        <li class="<%= completeness.hero ? 'done' : '' %>">Cover image</li>
+      </ul>
+      <% if (profile.is_pro) { %>
+        <div class="badge badge-pro">PRO plan active</div>
+      <% } else { %>
+        <a class="button" href="/pro/upgrade">Go Pro</a>
+      <% } %>
+      <p class="muted">Share link: <code><%= shareUrl %></code></p>
+      <p class="muted">Stats: <%= stats.heightFeet %> • <%= profile.measurements %></p>
+    </div>
+    <div>
+      <h2>Media library</h2>
+      <form id="uploadForm" class="upload-form" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*" required>
+        <input type="text" name="label" placeholder="Label" aria-label="Image label">
+        <button type="submit" class="button">Upload</button>
+      </form>
+      <div class="media-grid">
+        <% images.forEach((item) => { %>
+          <figure>
+            <img src="<%= item.path %>" alt="<%= item.label || 'Portfolio image' %>">
+            <figcaption><%= item.label || 'Portfolio image' %></figcaption>
+          </figure>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+</section>

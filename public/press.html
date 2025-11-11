@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Press & Contact — ZipSite</title>
+  <meta name="description" content="Press kit, media assets, and contact details for ZipSite. Reach the team for interviews, partnerships, or investor updates.">
+  <link rel="canonical" href="https://zipsite.example.com/press">
+  <link rel="stylesheet" href="/styles/global.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header" role="banner">
+    <div class="container site-header__inner">
+      <a class="brand" href="/">ZipSite</a>
+      <button class="mobile-nav-toggle" aria-expanded="false" aria-controls="mobileNav" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <nav class="primary-nav" aria-label="Primary">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/features">Features</a></li>
+          <li><a href="/how">How It Works</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/demo">Demo</a></li>
+          <li><a href="/press" aria-current="page">Press</a></li>
+          <li><a href="/legal">Legal</a></li>
+        </ul>
+      </nav>
+      <div class="site-header__cta">
+        <a class="link-muted" href="/login">Login</a>
+        <a class="button button-secondary" href="/signup">Sign up</a>
+        <a class="button button-primary" href="/apply">Start Free PDF</a>
+      </div>
+    </div>
+    <div class="mobile-nav-panel" id="mobileNav" hidden>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/features">Features</a></li>
+        <li><a href="/how">How It Works</a></li>
+        <li><a href="/pricing">Pricing</a></li>
+        <li><a href="/demo">Demo</a></li>
+        <li><a href="/press" aria-current="page">Press</a></li>
+        <li><a href="/legal">Legal</a></li>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/signup">Sign up</a></li>
+        <li><a class="button button-primary" href="/apply">Start Free PDF</a></li>
+      </ul>
+    </div>
+  </header>
+  <main id="main">
+    <section class="hero" style="padding-bottom:3rem;">
+      <div class="container hero-grid">
+        <div class="hero-copy motion-reveal">
+          <span class="badge">Media</span>
+          <h1>Press-ready. Investor-ready.</h1>
+          <p>Download the ZipSite press kit, explore our story, and connect directly with the team for interviews or collaborations.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#press-kit">Download press kit</a>
+            <a class="button button-secondary" href="mailto:press@zipsite.com">Contact press</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="press-kit" aria-labelledby="press-kit-heading">
+      <div class="container">
+        <div class="section-heading motion-reveal">
+          <h2 id="press-kit-heading">Press materials</h2>
+          <p>Logos, product imagery, and executive bios curated for editorial coverage.</p>
+        </div>
+        <div class="grid cols-3">
+          <article class="card motion-reveal" data-delay="40">
+            <h3>Brand marks</h3>
+            <p>Includes monochrome and inverted logo files, usage guidance, and typography lockups.</p>
+            <a class="button button-secondary" href="#">Download .zip</a>
+          </article>
+          <article class="card motion-reveal" data-delay="80">
+            <h3>Product visuals</h3>
+            <p>High-resolution mockups of the comp card, pro site, and application flow.</p>
+            <a class="button button-secondary" href="#">Download .zip</a>
+          </article>
+          <article class="card motion-reveal" data-delay="120">
+            <h3>Executive bios</h3>
+            <p>Brief introductions to the founding team and leadership quotes for media use.</p>
+            <a class="button button-secondary" href="#">Download .zip</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="contact">
+      <div class="container">
+        <div class="section-heading motion-reveal">
+          <h2 id="contact">Contact</h2>
+          <p>We respond to press inquiries within one business day.</p>
+        </div>
+        <div class="grid" style="grid-template-columns: repeat(auto-fit,minmax(320px,1fr)); gap:3rem; align-items:start;">
+          <div class="motion-reveal">
+            <h3>Press</h3>
+            <p class="muted">press@zipsite.com</p>
+            <h3>Partnerships</h3>
+            <p class="muted">partners@zipsite.com</p>
+            <h3>Investors</h3>
+            <p class="muted">invest@zipsite.com</p>
+          </div>
+          <form class="motion-reveal" data-delay="120" action="https://formsubmit.co/press@zipsite.com" method="POST">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+            <label for="message">Message</label>
+            <textarea id="message" name="message" rows="5" required></textarea>
+            <input type="hidden" name="_subject" value="ZipSite Press Inquiry">
+            <input class="button button-primary" type="submit" value="Send inquiry">
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <div class="brand">ZipSite</div>
+        <p class="footer-small">Editorial-grade portfolios, curated by AI.</p>
+      </div>
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href="/press" aria-current="page">Press</a></li>
+          <li><a href="/legal">Legal</a></li>
+          <li><a href="mailto:press@zipsite.com">press@zipsite.com</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+  <script src="/scripts/main.js" defer></script>
+  <script src="/scripts/wire.js"></script>
+</body>
+</html>

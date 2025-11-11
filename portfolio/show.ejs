@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= profile.first_name %> <%= profile.last_name %> — ZipSite Portfolio</title>
+  <link rel="stylesheet" href="/styles/global.css">
+  <link rel="stylesheet" href="/styles/dashboard.css">
+</head>
+<body class="portfolio">
+  <header class="portfolio-header">
+    <a class="portfolio-logo" href="/">ZipSite</a>
+    <div>
+      <h1><%= profile.first_name %> <%= profile.last_name %></h1>
+      <p class="muted"><%= profile.city %></p>
+    </div>
+  </header>
+  <main class="portfolio-main">
+    <% if (profile.hero_image_path) { %>
+      <figure class="hero">
+        <img src="<%= profile.hero_image_path %>" alt="Hero image of <%= profile.first_name %>">
+      </figure>
+    <% } %>
+    <section class="stats">
+      <h2>Stats</h2>
+      <ul>
+        <li>Height: <%= profile.height_cm %> cm (<%= heightFeet %>)</li>
+        <li>Measurements: <%= profile.measurements %></li>
+      </ul>
+    </section>
+    <section class="bio">
+      <h2>About</h2>
+      <p><%= profile.bio_curated %></p>
+    </section>
+    <section class="gallery">
+      <% images.forEach((item) => { %>
+        <figure>
+          <img src="<%= item.path %>" alt="<%= item.label || 'Portfolio image' %>">
+          <figcaption><%= item.label || 'Portfolio image' %></figcaption>
+        </figure>
+      <% }) %>
+    </section>
+  </main>
+</body>
+</html>
