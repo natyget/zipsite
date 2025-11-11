@@ -23,7 +23,17 @@ const proRoutes = require('./routes/pro');
 
 const app = express();
 
-fs.mkdirSync(config.uploadsDir, { recursive: true });
+// Only create uploads directory if not in serverless environment
+// In serverless, we use /tmp which is already available
+if (!config.isServerless) {
+  try {
+    fs.mkdirSync(config.uploadsDir, { recursive: true });
+  } catch (err) {
+    if (err.code !== 'EEXIST') {
+      console.warn(`Warning: Could not create upload directory: ${err.message}`);
+    }
+  }
+}
 
 app.set('trust proxy', 1);
 
@@ -231,7 +241,23 @@ const staticOptions = process.env.NODE_ENV === 'production' ? {} : {
   }
 };
 app.use(express.static(path.join(__dirname, '..', 'public'), staticOptions));
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
+// Only serve uploads directory if not in serverless environment
+// In serverless, uploads should be served via CDN or cloud storage
+// Netlify will serve static files from the public directory automatically
+if (!config.isServerless) {
+  app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+} else {
+  // In serverless, files in /tmp are temporary and not accessible via HTTP
+  // For production, configure cloud storage (S3, Netlify Blob, etc.)
+  // and update image paths in the database to use cloud storage URLs
+  app.use('/uploads', (req, res) => {
+    res.status(404).json({
+      error: 'File not found',
+      message: 'Uploads are not available in serverless environment. Cloud storage integration required for file persistence.'
+    });
+  });
+}
 
 app.use((req, res) => {
   if (req.accepts('html')) {

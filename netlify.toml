@@ -4,12 +4,29 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # Note: Runtime environment variables (DB_CLIENT, DATABASE_URL, SESSION_SECRET, etc.)
+  # must be set in Netlify UI: Site settings > Environment variables
+  # See NETLIFY_DEPLOYMENT.md for required variables
 
 [functions]
   directory = "netlify/function"
   node_bundler = "esbuild"
+  # Include views and other necessary files in function bundle
+  included_files = ["views/**", "public/**"]
+
+# Function-specific configuration for server function
+# Note: Timeout and memory settings may need to be configured in Netlify UI
+# Netlify Pro/Business: up to 26s timeout, 3008 MB memory
+# Netlify Free: up to 10s timeout, 1024 MB memory
+# Puppeteer requires significant memory - consider Pro tier for production
+[functions."server"]
+  timeout = 26
+  memory = 3008
 
 [[redirects]]
+  # Proxy all requests to the serverless function
+  # Netlify automatically serves static files from the 'public' directory
+  # Any requests that don't match static files will be handled by the function
   from = "/*"
   to = "/.netlify/functions/server"
   status = 200

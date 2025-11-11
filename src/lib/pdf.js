@@ -20,9 +20,28 @@ async function renderCompCard(slug, theme = null) {
     url.searchParams.set('theme', theme);
   }
   const target = url.toString();
+  
+  // Puppeteer configuration for serverless environments
+  // Additional args for better compatibility with AWS Lambda/Netlify Functions
+  const puppeteerArgs = [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-accelerated-2d-canvas',
+    '--no-first-run',
+    '--no-zygote',
+    '--single-process', // Important for serverless
+    '--disable-gpu'
+  ];
+  
   const browser = await puppeteer.launch({
     headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: puppeteerArgs,
+    // In serverless, we may need to set executable path if Chromium is in a specific location
+    // Puppeteer should handle this automatically, but we can override if needed
+    ...(process.env.PUPPETEER_EXECUTABLE_PATH && {
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
+    })
   });
 
   try {
