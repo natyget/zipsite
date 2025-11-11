@@ -10,6 +10,7 @@
     "migrate": "knex migrate:latest",
     "seed": "knex seed:run",
     "test": "jest",
+    "test:db": "node scripts/test-neon-connection.js",
     "build": "echo 'Build complete'"
   },
   "dependencies": {
