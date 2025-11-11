@@ -176,6 +176,24 @@ If you see "Cannot find module 'sqlite3'":
 - Verify `DATABASE_URL` is correctly formatted
 - Check that `sqlite3` is in `optionalDependencies` (it should be after our changes)
 
+### PostgreSQL Module Error (Cannot find module 'pg')
+
+If you see "Cannot find module 'pg'" or "Knex: run $ npm install pg --save":
+- **Verify `pg` is in dependencies**: Check that `pg` is listed in `package.json` under `dependencies` (not `devDependencies`)
+- **Check bundler configuration**: The `netlify.toml` should use `node_bundler = "nft"` for better native module support
+- **Verify build process**: Ensure Netlify is installing dependencies correctly
+  - Check build logs to confirm `npm install` runs successfully
+  - Verify that `pg` is being installed (look for "pg@8.12.0" in build logs)
+- **Native module compatibility**: `pg` is a native module with C++ bindings
+  - Ensure Node.js version matches (set `NODE_VERSION = "20"` in `netlify.toml`)
+  - Native modules must be compiled for the correct platform (Netlify handles this automatically)
+- **Solution steps**:
+  1. Verify `package.json` has `"pg": "8.12.0"` in `dependencies`
+  2. Commit and push changes to trigger a new build
+  3. Check Netlify build logs for installation errors
+  4. If issues persist, try removing `node_bundler` from `netlify.toml` to use default bundler
+  5. Ensure `package-lock.json` is committed to repository (helps with consistent installs)
+
 ### Database Connection Error
 
 If you see database connection errors:

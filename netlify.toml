@@ -1,18 +1,24 @@
 [build]
+  # Netlify automatically runs 'npm install' before the build command
+  # We just need to ensure the build completes successfully
   command = "npm run build"
   publish = "public"
 
 [build.environment]
   NODE_VERSION = "20"
+  # Install all dependencies including native modules
+  # Netlify will install dependencies from package.json automatically
   # Note: Runtime environment variables (DB_CLIENT, DATABASE_URL, SESSION_SECRET, etc.)
   # must be set in Netlify UI: Site settings > Environment variables
   # See NETLIFY_DEPLOYMENT.md for required variables
 
 [functions]
   directory = "netlify/function"
-  node_bundler = "esbuild"
-  # Include views and other necessary files in function bundle
-  included_files = ["views/**", "public/**"]
+  # Use 'nft' bundler which handles native modules better than 'esbuild'
+  # 'nft' (Node Function Tracing) includes required dependencies without breaking native modules
+  node_bundler = "nft"
+  # Include views and other necessary files that the function needs
+  included_files = ["views/**", "public/**", "migrations/**"]
 
 # Function-specific configuration for server function
 # Note: Timeout and memory settings may need to be configured in Netlify UI
