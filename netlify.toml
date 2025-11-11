@@ -1,6 +1,6 @@
 [build]
   command = "npm run build"
-  publish = ".netlify/functions-internal"
+  publish = "public"
 
 [build.environment]
   NODE_VERSION = "18"
