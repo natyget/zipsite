@@ -564,15 +564,39 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
           console.error('[Apply] Session save error:', err);
           reject(err);
         } else {
-          console.log('[Apply] Session saved successfully before redirect');
+          console.log('[Apply] Session saved successfully before redirect:', {
+            userId: req.session.userId,
+            role: req.session.role,
+            profileId: req.session.profileId,
+            hasProfileId: !!req.session.profileId
+          });
           resolve();
         }
       });
     });
     
+    // Verify profile was created/updated before redirecting
+    const verifyProfile = await knex('profiles').where({ id: profileId }).first();
+    if (!verifyProfile) {
+      console.error('[Apply] ERROR: Profile not found after creation!', { profileId, userId });
+      addMessage(req, 'error', 'Profile creation failed. Please try again.');
+      return res.status(500).render('apply/index', {
+        title: 'Start your ZipSite profile',
+        values: req.body,
+        errors: {},
+        layout: 'layout',
+        isLoggedIn
+      });
+    }
+    
+    console.log('[Apply] Profile verified, redirecting to dashboard:', {
+      profileId: verifyProfile.id,
+      slug: verifyProfile.slug,
+      name: `${verifyProfile.first_name} ${verifyProfile.last_name}`
+    });
+    
     // Use 303 See Other for POST redirect (best practice)
     // This ensures the message is displayed on the dashboard
-    console.log('[Apply] Redirecting to dashboard:', '/dashboard/talent');
     return res.redirect(303, '/dashboard/talent');
   } catch (error) {
     console.error('[Apply] Error in POST /apply:', {

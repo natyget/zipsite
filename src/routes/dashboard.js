@@ -217,7 +217,54 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
   if (!parsed.success) {
     const fieldErrors = parsed.error.flatten().fieldErrors;
     try {
+      // Ensure userId exists in session
+      if (!req.session || !req.session.userId) {
+        console.error('[Dashboard/Talent POST] No userId in session');
+        addMessage(req, 'error', 'Session expired. Please log in again.');
+        return res.redirect('/login');
+      }
+      
       const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
+      const currentUser = await knex('users')
+        .where({ id: req.session.userId })
+        .first();
+      
+      // Ensure currentUser exists (should always exist if requireRole passed, but be safe)
+      if (!currentUser) {
+        console.error('[Dashboard/Talent POST] User not found in database:', req.session.userId);
+        addMessage(req, 'error', 'User account not found. Please log in again.');
+        return res.redirect('/login');
+      }
+      
+      // Handle case where profile doesn't exist (null check)
+      if (!profile) {
+        return res.status(422).render('dashboard/talent', {
+          title: 'Talent Dashboard',
+          profile: null,
+          images: [],
+          completeness: {
+            basics: false,
+            imagery: false,
+            hero: false
+          },
+          stats: null,
+          shareUrl: null,
+          user: currentUser,
+          currentUser,
+          isDashboard: true,
+          layout: 'layouts/dashboard',
+          allThemes: getAllThemes(),
+          freeThemes: getFreeThemes(),
+          proThemes: getProThemes(),
+          currentTheme: getDefaultTheme(),
+          baseUrl: `${req.protocol}://${req.get('host')}`,
+          formErrors: fieldErrors,
+          values: req.body,
+          showProfileForm: true
+        });
+      }
+      
+      // Profile exists - render with profile data
       const images = await knex('images').where({ profile_id: profile.id }).orderBy('sort');
       const completeness = {
         basics: Boolean(profile.first_name && profile.last_name && profile.city && profile.bio_curated),
@@ -225,6 +272,7 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
         hero: Boolean(profile.hero_image_path || images.length > 0)
       };
       const shareUrl = `${req.protocol}://${req.get('host')}/portfolio/${profile.slug}`;
+      
       return res.status(422).render('dashboard/talent', {
         title: 'Talent Dashboard',
         profile,
@@ -232,21 +280,41 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
         completeness,
         stats: { heightFeet: toFeetInches(profile.height_cm) },
         shareUrl,
+        user: currentUser,
+        currentUser,
         isDashboard: true,
+        layout: 'layouts/dashboard',
+        allThemes: getAllThemes(),
+        freeThemes: getFreeThemes(),
+        proThemes: getProThemes(),
+        currentTheme: profile.pdf_theme || getDefaultTheme(),
+        baseUrl: `${req.protocol}://${req.get('host')}`,
         formErrors: fieldErrors,
-        values: req.body,
-        layout: 'layouts/dashboard'
+        values: req.body
       });
     } catch (error) {
+      console.error('[Dashboard/Talent POST] Error in validation error handler:', {
+        message: error.message,
+        code: error.code,
+        name: error.name,
+        stack: error.stack
+      });
       return next(error);
     }
   }
 
   try {
+    // Ensure userId exists in session
+    if (!req.session || !req.session.userId) {
+      console.error('[Dashboard/Talent POST] No userId in session');
+      addMessage(req, 'error', 'Session expired. Please log in again.');
+      return res.redirect('/login');
+    }
+    
     const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
     if (!profile) {
-      addMessage(req, 'error', 'Profile not found.');
-      return res.redirect('/apply');
+      addMessage(req, 'error', 'Profile not found. Please complete your profile.');
+      return res.redirect('/dashboard/talent');
     }
 
     const { city, height_cm, measurements, bio } = parsed.data;
@@ -267,6 +335,14 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
     addMessage(req, 'success', 'Profile updated.');
     return res.redirect('/dashboard/talent');
   } catch (error) {
+    console.error('[Dashboard/Talent POST] Error updating profile:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack,
+      userId: req.session.userId,
+      body: req.body
+    });
     return next(error);
   }
 });
