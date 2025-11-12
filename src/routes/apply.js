@@ -328,9 +328,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     partner_agency_email
   } = parsed.data;
 
-  try {
-
-    let partnerAgencyId = null;
+  let partnerAgencyId = null;
     if (partner_agency_email) {
       const agency = await knex('users').where({ email: partner_agency_email, role: 'AGENCY' }).first();
       if (!agency) {

@@ -130,157 +130,265 @@ const agencyLogoUpload = multer({
   limits: { fileSize: 2 * 1024 * 1024 } // 2MB limit for logos
 });
 
-router.get('/pdf/view/:slug', async (req, res, next) => {
-  try {
-    const data = await loadProfile(req.params.slug);
-    if (!data) {
-      return res.status(404).render('errors/404', {
-        title: 'Profile not found',
-        layout: 'layout'
+// Demo profile data for elara-k (fallback when database is empty)
+function getDemoProfile(slug) {
+  if (slug !== 'elara-k') return null;
+
+  return {
+    profile: {
+      id: 'demo-elara-k',
+      slug: 'elara-k',
+      user_id: 'demo-user',
+      first_name: 'Elara',
+      last_name: 'Keats',
+      city: 'Los Angeles, CA',
+      height_cm: 180,
+      measurements: '32-25-35',
+      bio_raw: 'Elara is a collaborative creative professional with a background in editorial campaigns and on-set leadership. Based in Los Angeles, she balances editorial edge with commercial versatility.',
+      bio_curated: 'Elara Keats brings a polished presence to every production. Based in Los Angeles, she balances editorial edge with commercial versatility. Standing at 5\'11" with measurements of 32-25-35, she brings a commanding presence to both high-fashion editorials and commercial campaigns.',
+      hero_image_path: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=2000&q=80',
+      is_pro: false,
+      pdf_theme: null,
+      pdf_customizations: null,
+      phone: null,
+      bust: null,
+      waist: null,
+      hips: null,
+      shoe_size: null,
+      eye_color: null,
+      hair_color: null,
+      specialties: null,
+      partner_agency_id: null,
+      created_at: new Date(),
+      updated_at: new Date()
+    },
+    images: [
+      {
+        id: 'demo-img-1',
+        profile_id: 'demo-elara-k',
+        path: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1000&q=80',
+        label: 'Headshot',
+        sort: 1,
+        created_at: new Date()
+      },
+      {
+        id: 'demo-img-2',
+        profile_id: 'demo-elara-k',
+        path: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1000&q=80',
+        label: 'Editorial',
+        sort: 2,
+        created_at: new Date()
+      },
+      {
+        id: 'demo-img-3',
+        profile_id: 'demo-elara-k',
+        path: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1000&q=80',
+        label: 'Runway',
+        sort: 3,
+        created_at: new Date()
+      },
+      {
+        id: 'demo-img-4',
+        profile_id: 'demo-elara-k',
+        path: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=1000&q=80',
+        label: 'Portfolio',
+        sort: 4,
+        created_at: new Date()
+      }
+    ]
+  };
+}
+
+// Helper function to render simple HTML error page (for iframe compatibility)
+function renderSimpleError(res, statusCode, title, message) {
+  const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + title + '</title><style>body{font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f5f5f5;color:#666}.error{text-align:center;padding:2rem;max-width:600px}.error h1{margin:0 0 0.5rem 0;font-size:1.5rem;color:#c9a55a}.error p{margin:0.5rem 0;font-size:0.9rem}</style></head><body><div class="error"><h1>' + title + '</h1><p>' + message + '</p></div></body></html>';
+  return res.status(statusCode).send(html);
+}
+
+// Helper function to render PDF view with profile data
+async function renderPdfView(req, res, data, isDemo) {
+  const { profile, images } = data;
+  const hero = profile.hero_image_path || (images[0] ? images[0].path : null);
+  const gallery = hero ? images.filter((img) => img.path !== hero) : images;
+
+  // Get theme from query parameter, default to profile's saved theme or default
+  let themeKey = req.query.theme || profile.pdf_theme || getDefaultTheme();
+
+  // Validate theme exists
+  let theme = getTheme(themeKey);
+  if (!theme) {
+    themeKey = getDefaultTheme();
+    theme = getTheme(themeKey);
+  }
+
+  // Check if Pro theme is selected but user is not Pro
+  if (isProTheme(themeKey) && !profile.is_pro) {
+    themeKey = getDefaultTheme();
+    theme = getTheme(themeKey);
+  }
+
+  // Load customizations from database (Pro users only) - skip for demo
+  let customizations = null;
+  if (!isDemo && profile.is_pro && profile.pdf_customizations) {
+    try {
+      customizations = typeof profile.pdf_customizations === 'string'
+        ? JSON.parse(profile.pdf_customizations)
+        : profile.pdf_customizations;
+    } catch (error) {
+      console.error('Error parsing PDF customizations:', error);
+      customizations = null;
+    }
+  }
+
+  // Merge theme with customizations
+  const mergedTheme = mergeThemeWithCustomization(theme, customizations);
+
+  // Build base URL for images
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+  // Generate QR code for Pro users linking to portfolio - skip for demo (not pro)
+  let qrCodeDataUrl = null;
+  if (!isDemo && profile.is_pro) {
+    try {
+      const portfolioUrl = `${baseUrl}/portfolio/${profile.slug}`;
+      qrCodeDataUrl = await QRCode.toDataURL(portfolioUrl, {
+        width: 120,
+        margin: 1,
+        color: {
+          dark: mergedTheme.colors.background === '#000000' || mergedTheme.colors.background === '#1A1A1A' || mergedTheme.colors.background === '#2C3E50' ? '#FAF9F7' : '#0F172A',
+          light: '#FFFFFF'
+        }
       });
+    } catch (error) {
+      console.error('QR code generation failed:', error);
     }
-    const { profile, images } = data;
-    const hero = profile.hero_image_path || (images[0] ? images[0].path : null);
-    const gallery = hero ? images.filter((img) => img.path !== hero) : images;
+  }
 
-    // Get theme from query parameter, default to profile's saved theme or default
-    let themeKey = req.query.theme || profile.pdf_theme || getDefaultTheme();
+  // Get font CSS values
+  const fontCSS = {
+    nameFont: getFontFamilyCSS(mergedTheme.fonts.name),
+    bioFont: getFontFamilyCSS(mergedTheme.fonts.bio),
+    statsFont: getFontFamilyCSS(mergedTheme.fonts.stats)
+  };
 
-    // Validate theme exists
-    let theme = getTheme(themeKey);
-    if (!theme) {
-      themeKey = getDefaultTheme();
-      theme = getTheme(themeKey);
-    }
+  // Generate Google Fonts URL
+  const googleFontsUrl = generateThemeFontsUrl(mergedTheme);
 
-    // Check if Pro theme is selected but user is not Pro
-    if (isProTheme(themeKey) && !profile.is_pro) {
-      themeKey = getDefaultTheme();
-      theme = getTheme(themeKey);
-    }
+  // Generate layout classes
+  const layoutClasses = generateLayoutClasses(mergedTheme.layout);
+  const imageGridCSS = getImageGridCSS(mergedTheme.layout);
 
-    // Load customizations from database (Pro users only)
-    let customizations = null;
-    if (profile.is_pro && profile.pdf_customizations) {
-      try {
-        customizations = typeof profile.pdf_customizations === 'string'
-          ? JSON.parse(profile.pdf_customizations)
-          : profile.pdf_customizations;
-      } catch (error) {
-        console.error('Error parsing PDF customizations:', error);
-        customizations = null;
+  // Get agency logo (Pro users only) - skip for demo
+  let agencyLogo = null;
+  if (!isDemo && profile.is_pro && customizations && customizations.agencyLogo) {
+    agencyLogo = customizations.agencyLogo;
+  }
+
+  // Disable layout for PDF view - it's a standalone HTML document
+  res.locals.layout = false;
+  return res.render('pdf/compcard', {
+    layout: false,
+    title: `${profile.first_name} ${profile.last_name} - Comp Card`,
+    profile,
+    images: gallery,
+    hero,
+    heightFeet: toFeetInches(profile.height_cm),
+    watermark: !profile.is_pro,
+    theme: mergedTheme,
+    themeKey: themeKey,
+    baseUrl,
+    isPro: profile.is_pro,
+    qrCode: qrCodeDataUrl,
+    portfolioUrl: `${baseUrl}/portfolio/${profile.slug}`,
+    fontCSS,
+    googleFontsUrl,
+    layoutClasses,
+    imageGridCSS,
+    agencyLogo
+  });
+}
+
+router.get('/pdf/view/:slug', async (req, res, next) => {
+  const slug = req.params.slug;
+  let data = null;
+  let isDemo = false;
+
+  try {
+    console.log('[PDF View] Loading profile for slug:', slug);
+
+    // Try to load from database first
+    try {
+      data = await loadProfile(slug);
+      console.log('[PDF View] Profile loaded from database:', data ? 'found' : 'not found');
+    } catch (dbError) {
+      // If database error, check if it's a missing tables error or connection error
+      if (isMissingTablesError(dbError) || isDatabaseError(dbError)) {
+        console.log('[PDF View] Database error, checking demo fallback for:', slug);
+        // For demo slug, use fallback data
+        const demoData = getDemoProfile(slug);
+        if (demoData) {
+          data = demoData;
+          isDemo = true;
+          console.log('[PDF View] Using demo profile data due to database error');
+        } else {
+          // Not a demo slug and database is unavailable - return error
+          return renderSimpleError(res, 500, 'Database Error', 'Unable to connect to the database. Please check your database configuration.');
+        }
+      } else {
+        // Other database errors - rethrow to be caught by outer catch
+        throw dbError;
       }
     }
 
-    // Merge theme with customizations
-    const mergedTheme = mergeThemeWithCustomization(theme, customizations);
-
-    // Build base URL for images
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-
-    // Generate QR code for Pro users linking to portfolio
-    let qrCodeDataUrl = null;
-    if (profile.is_pro) {
-      try {
-        const portfolioUrl = `${baseUrl}/portfolio/${profile.slug}`;
-        qrCodeDataUrl = await QRCode.toDataURL(portfolioUrl, {
-          width: 120,
-          margin: 1,
-          color: {
-            dark: mergedTheme.colors.background === '#000000' || mergedTheme.colors.background === '#1A1A1A' || mergedTheme.colors.background === '#2C3E50' ? '#FAF9F7' : '#0F172A',
-            light: '#FFFFFF'
-          }
-        });
-      } catch (error) {
-        console.error('QR code generation failed:', error);
+    // If profile not found in database, try demo fallback
+    if (!data) {
+      console.log('[PDF View] Profile not found in database, checking demo fallback');
+      const demoData = getDemoProfile(slug);
+      if (demoData) {
+        data = demoData;
+        isDemo = true;
+        console.log('[PDF View] Using demo profile fallback for slug:', slug);
+      } else {
+        console.log('[PDF View] Profile not found and no demo fallback available for slug:', slug);
+        return renderSimpleError(res, 404, 'Profile not found', 'The profile "' + slug + '" does not exist.');
       }
     }
 
-    // Get font CSS values
-    const fontCSS = {
-      nameFont: getFontFamilyCSS(mergedTheme.fonts.name),
-      bioFont: getFontFamilyCSS(mergedTheme.fonts.bio),
-      statsFont: getFontFamilyCSS(mergedTheme.fonts.stats)
-    };
-
-    // Generate Google Fonts URL
-    const googleFontsUrl = generateThemeFontsUrl(mergedTheme);
-
-    // Generate layout classes
-    const layoutClasses = generateLayoutClasses(mergedTheme.layout);
-    const imageGridCSS = getImageGridCSS(mergedTheme.layout);
-
-    // Get agency logo (Pro users only)
-    let agencyLogo = null;
-    if (profile.is_pro && customizations && customizations.agencyLogo) {
-      agencyLogo = customizations.agencyLogo;
-    }
-
-    // Disable layout for PDF view - it's a standalone HTML document
-    res.locals.layout = false;
-    return res.render('pdf/compcard', {
-      layout: false,
-      title: `${profile.first_name} ${profile.last_name} - Comp Card`,
-      profile,
-      images: gallery,
-      hero,
-      heightFeet: toFeetInches(profile.height_cm),
-      watermark: !profile.is_pro,
-      theme: mergedTheme,
-      themeKey: themeKey,
-      baseUrl,
-      isPro: profile.is_pro,
-      qrCode: qrCodeDataUrl,
-      portfolioUrl: `${baseUrl}/portfolio/${profile.slug}`,
-      fontCSS,
-      googleFontsUrl,
-      layoutClasses,
-      imageGridCSS,
-      agencyLogo
+    // Render PDF view with profile data
+    console.log('[PDF View] Rendering PDF for profile:', {
+      slug: data.profile.slug,
+      name: data.profile.first_name + ' ' + data.profile.last_name,
+      isDemo: isDemo,
+      imageCount: data.images.length
     });
+
+    return await renderPdfView(req, res, data, isDemo);
   } catch (error) {
-    // Log database connection errors for debugging
+    // Log errors for debugging
     console.error('[PDF View Route] Error:', {
       message: error.message,
       code: error.code,
       name: error.name,
-      stack: error.stack
+      slug: slug
     });
 
-    // Check if it's a missing tables error (needs migrations)
-    if (isMissingTablesError(error)) {
-      console.error('[PDF View Route] Missing tables error detected - migrations need to be run');
-      return res.status(500).render('errors/500', {
-        title: 'Database Setup Required',
-        layout: 'layout',
-        error: {
-          message: 'Database tables do not exist. Please run migrations to set up the database.',
-          code: error.code,
-          name: error.name,
-          details: process.env.NODE_ENV !== 'production' ? error.message : undefined,
-          migrationRequired: true
-        },
-        isDevelopment: process.env.NODE_ENV !== 'production',
-        isDatabaseError: true
-      });
+    // Check if it's a database error and we haven't tried demo fallback yet
+    if ((isMissingTablesError(error) || isDatabaseError(error)) && !isDemo) {
+      const demoData = getDemoProfile(slug);
+      if (demoData) {
+        console.log('[PDF View Route] Using demo fallback in catch handler');
+        try {
+          return await renderPdfView(req, res, demoData, true);
+        } catch (renderError) {
+          console.error('[PDF View Route] Error rendering demo PDF:', renderError.message);
+          return renderSimpleError(res, 500, 'Error', 'Unable to render PDF preview.');
+        }
+      }
     }
 
-    // Check if it's a database connection error
-    if (isDatabaseError(error)) {
-      console.error('[PDF View Route] Database connection error detected');
-      // Return a more helpful error for database connection issues
-      return res.status(500).render('errors/500', {
-        title: 'Database Connection Error',
-        layout: 'layout',
-        error: {
-          message: 'Unable to connect to the database. Please check your database configuration.',
-          code: error.code,
-          name: error.name,
-          details: process.env.NODE_ENV !== 'production' ? error.message : undefined
-        },
-        isDevelopment: process.env.NODE_ENV !== 'production',
-        isDatabaseError: true
-      });
+    // For database errors without demo fallback, return error page
+    if (isMissingTablesError(error) || isDatabaseError(error)) {
+      return renderSimpleError(res, 500, 'Database Error', 'Unable to connect to the database. Please check your database configuration.');
     }
 
     // For other errors, pass to error handler
