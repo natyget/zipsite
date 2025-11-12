@@ -11,6 +11,8 @@ const { v4: uuidv4 } = require('uuid');
 const fs = require('fs').promises;
 const path = require('path');
 const config = require('../config');
+const { getAllThemes, getFreeThemes, getProThemes, getTheme, getDefaultTheme, getAvailableFonts, getAvailableColorPalettes } = require('../lib/themes');
+const { getAllLayoutPresets } = require('../lib/pdf-layouts');
 
 const router = express.Router();
 
@@ -37,6 +39,13 @@ router.get('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =>
     const currentUser = await knex('users')
       .where({ id: req.session.userId })
       .first();
+    
+    // Get themes for PDF theme selector modal
+    const allThemes = getAllThemes();
+    const freeThemes = getFreeThemes();
+    const proThemes = getProThemes();
+    const currentTheme = profile.pdf_theme || getDefaultTheme();
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
 
     return res.render('dashboard/talent', {
       title: 'Talent Dashboard',
@@ -48,7 +57,12 @@ router.get('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =>
       user: currentUser,
       currentUser,
       isDashboard: true,
-      layout: 'layouts/dashboard'
+      layout: 'layouts/dashboard',
+      allThemes,
+      freeThemes,
+      proThemes,
+      currentTheme,
+      baseUrl
     });
   } catch (error) {
     return next(error);
@@ -449,6 +463,75 @@ router.post('/dashboard/agency/application/:action', requireRole('AGENCY'), asyn
     return res.redirect('/dashboard/agency');
   } catch (error) {
     console.error('[Application] Error:', error);
+    return next(error);
+  }
+});
+
+// GET /dashboard/pdf-customizer - PDF Customizer Page (Pro users only)
+router.get('/dashboard/pdf-customizer', requireRole('TALENT'), async (req, res, next) => {
+  try {
+    const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
+    if (!profile) {
+      addMessage(req, 'error', 'Profile not found.');
+      return res.redirect('/apply');
+    }
+    
+    if (!profile.is_pro) {
+      addMessage(req, 'error', 'Pro account required to customize PDF comp cards.');
+      return res.redirect('/dashboard/talent');
+    }
+    
+    // Load customizations
+    let customizations = null;
+    if (profile.pdf_customizations) {
+      try {
+        customizations = typeof profile.pdf_customizations === 'string'
+          ? JSON.parse(profile.pdf_customizations)
+          : profile.pdf_customizations;
+      } catch (err) {
+        console.error('Error parsing customizations:', err);
+        customizations = null;
+      }
+    }
+    
+    // Get current theme
+    const currentTheme = profile.pdf_theme || getDefaultTheme();
+    const theme = getTheme(currentTheme);
+    
+    // Get all themes, fonts, color palettes, and layouts
+    const allThemes = getAllThemes();
+    const freeThemes = getFreeThemes();
+    const proThemes = getProThemes();
+    const availableFonts = getAvailableFonts();
+    const colorPalettes = getAvailableColorPalettes();
+    const layoutPresets = getAllLayoutPresets();
+    
+    const currentUser = await knex('users')
+      .where({ id: req.session.userId })
+      .first();
+    
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    
+    return res.render('dashboard/pdf-customizer', {
+      title: 'PDF Customizer',
+      profile,
+      customizations: customizations || {},
+      currentTheme,
+      theme,
+      allThemes,
+      freeThemes,
+      proThemes,
+      availableFonts,
+      colorPalettes,
+      layoutPresets,
+      user: currentUser,
+      currentUser,
+      isDashboard: true,
+      layout: 'layouts/dashboard',
+      baseUrl,
+      profileSlug: profile.slug
+    });
+  } catch (error) {
     return next(error);
   }
 });

@@ -23,8 +23,9 @@ This error means your function is trying to connect to a local PostgreSQL databa
      ```
      postgresql://username:password@ep-cool-darkness-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
      ```
-   - **Notice**: The hostname is unique (like `ep-cool-darkness-123456.us-east-2.aws.neon.tech`)
-   - **DO NOT** use placeholder values like `host.neon.tech` or `your-host.neon.tech`
+   - **Notice**: The hostname is unique and **MUST start with `ep-`** (like `ep-cool-darkness-123456.us-east-2.aws.neon.tech`)
+   - **⚠️ CRITICAL**: The hostname must start with `ep-` - this is required for Neon databases
+   - **DO NOT** use placeholder values like `host.neon.tech`, `your-host.neon.tech`, or any hostname without the `ep-` prefix
 
 4. **Copy the Complete String**
    - Click the copy button next to the connection string
@@ -42,16 +43,22 @@ This error means your function is trying to connect to a local PostgreSQL databa
    - Should start with `postgresql://` or `postgres://`
    - Should NOT start with `psql`, `PGPASSWORD`, or any command
    - Should NOT have quotes around it (`'...'` or `"..."`)
-   - Should contain your unique hostname (NOT `host.neon.tech`)
+   - Should contain your unique hostname that **starts with `ep-`** (e.g., `ep-xxx-xxx.us-east-2.aws.neon.tech`)
+   - Should NOT contain placeholder hostnames like `host.neon.tech`, `your-host.neon.tech`, or `localhost`
    - Should end with `?sslmode=require`
    - Should be a long string (not a short placeholder)
    
    **What to copy:**
    - ✅ `postgresql://user:pass@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require`
+     - Hostname starts with `ep-` ✓
+     - Hostname includes `.neon.tech` ✓
+     - Includes `?sslmode=require` ✓
    
    **What NOT to copy:**
-   - ❌ `psql 'postgresql://user:pass@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require'`
-   - ❌ `'postgresql://user:pass@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require'`
+   - ❌ `psql 'postgresql://user:pass@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require'` (includes `psql` command)
+   - ❌ `'postgresql://user:pass@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require'` (includes quotes)
+   - ❌ `postgresql://user:pass@host.neon.tech/dbname?sslmode=require` (placeholder hostname, no `ep-` prefix)
+   - ❌ `postgresql://user:pass@localhost/dbname?sslmode=require` (Neon databases are remote, not localhost)
    - ❌ Any command that includes `psql` or `PGPASSWORD`
 
 **Example of CORRECT connection string:**
@@ -61,25 +68,35 @@ postgresql://myuser:mypassword@ep-cool-darkness-123456.us-east-2.aws.neon.tech/n
 
 **Examples of WRONG (will cause errors):**
 
-❌ **Placeholder (wrong hostname):**
+❌ **Placeholder hostname (wrong - no `ep-` prefix):**
 ```
 postgresql://user:password@host.neon.tech/dbname?sslmode=require
 ```
+**Problem**: Hostname doesn't start with `ep-` (Neon hostnames always start with `ep-`)
+
+❌ **Localhost (wrong - Neon databases are remote):**
+```
+postgresql://user:password@localhost/dbname?sslmode=require
+```
+**Problem**: Neon databases are remote, not localhost
 
 ❌ **Includes psql command (wrong - copied entire command):**
 ```
 psql 'postgresql://user:password@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require'
 ```
+**Problem**: Includes `psql` command - should only include the connection string
 
 ❌ **Includes quotes (wrong - quotes should not be included):**
 ```
 'postgresql://user:password@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require'
 ```
+**Problem**: Includes quotes - should only include the connection string
 
 ❌ **Includes PGPASSWORD command (wrong - copied entire command):**
 ```
 PGPASSWORD=password psql -h ep-xxx-xxx.us-east-2.aws.neon.tech -U user -d neondb
 ```
+**Problem**: Includes command - should only include the connection string
 
 ### Step 2: Set Environment Variables in Netlify
 
@@ -105,11 +122,14 @@ PGPASSWORD=password psql -h ep-xxx-xxx.us-east-2.aws.neon.tech -U user -d neondb
    **2. DATABASE_URL**
    - Key: `DATABASE_URL`
    - Value: Your Neon connection string
-   - Example: `postgresql://user:password@host.neon.tech/dbname?sslmode=require`
+   - Example: `postgresql://user:password@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require`
    - **Important**: 
      - Include the full connection string from Neon
      - Must start with `postgresql://` or `postgres://`
+     - Hostname **MUST start with `ep-`** (e.g., `ep-cool-darkness-123456`)
+     - Hostname **MUST include `.neon.tech`** (e.g., `ep-xxx.us-east-2.aws.neon.tech`)
      - Must include `?sslmode=require` for Neon
+     - **DO NOT** use placeholder hostnames like `host.neon.tech` or `localhost`
    - Scopes: All scopes
 
    **3. SESSION_SECRET**
@@ -160,7 +180,14 @@ NODE_ENV = production
 PDF_BASE_URL = https://your-site.netlify.app (optional)
 ```
 
-**⚠️ Important**: Your DATABASE_URL should have a unique hostname (like `ep-xxx-xxx-xxx.us-east-2.aws.neon.tech`), NOT a placeholder like `host.neon.tech`!
+**⚠️ Important**: Your DATABASE_URL should have a unique hostname that **starts with `ep-`** (like `ep-xxx-xxx-xxx.us-east-2.aws.neon.tech`), NOT a placeholder like `host.neon.tech` or `localhost`!
+
+**Verification:**
+- ✅ Hostname starts with `ep-` (e.g., `ep-cool-darkness-123456`)
+- ✅ Hostname includes `.neon.tech` (e.g., `ep-xxx.us-east-2.aws.neon.tech`)
+- ✅ Includes `?sslmode=require` at the end
+- ❌ NOT a placeholder like `host.neon.tech` or `localhost`
+- ❌ Does NOT include `psql` command or quotes
 
 ### Step 4: Redeploy Your Site
 
@@ -180,7 +207,11 @@ After setting environment variables:
 
 - [ ] `DB_CLIENT` is set to `pg`
 - [ ] `DATABASE_URL` is set with your Neon connection string
+- [ ] `DATABASE_URL` hostname **starts with `ep-`** (e.g., `ep-xxx-xxx.us-east-2.aws.neon.tech`)
+- [ ] `DATABASE_URL` hostname includes `.neon.tech` (e.g., `ep-xxx.us-east-2.aws.neon.tech`)
+- [ ] `DATABASE_URL` does NOT contain placeholder hostnames (`host.neon.tech`, `localhost`, etc.)
 - [ ] `DATABASE_URL` includes `?sslmode=require`
+- [ ] `DATABASE_URL` does NOT include `psql` command or quotes
 - [ ] `SESSION_SECRET` is set (random string)
 - [ ] `NODE_ENV` is set to `production`
 - [ ] Site has been redeployed after setting variables
@@ -198,16 +229,31 @@ After setting environment variables:
 2. **Select your project**
 3. **Click "Connection Details"** or **"Connection String"**
 4. **Copy your REAL connection string** (it will have a unique hostname like `ep-xxx-xxx.us-east-2.aws.neon.tech`)
-5. **Update DATABASE_URL in Netlify**:
+5. **Verify the hostname**:
+   - ✅ **MUST start with `ep-`** (e.g., `ep-cool-darkness-123456`)
+   - ✅ **MUST include `.neon.tech`** (e.g., `ep-xxx.us-east-2.aws.neon.tech`)
+   - ❌ **WRONG**: `host.neon.tech`, `your-host.neon.tech`, or any hostname without `ep-` prefix
+6. **Update DATABASE_URL in Netlify**:
    - Go to Netlify Dashboard → Site settings → Environment variables
    - Find `DATABASE_URL`
    - Click "Edit" and paste your REAL connection string
    - Make sure it's the complete string with `?sslmode=require` at the end
-6. **Redeploy your site** after updating
+7. **Redeploy your site** after updating
 
 **What to look for:**
 - ✅ **CORRECT**: `postgresql://user:pass@ep-cool-darkness-123456.us-east-2.aws.neon.tech/neondb?sslmode=require`
-- ❌ **WRONG**: `postgresql://user:pass@host.neon.tech/dbname?sslmode=require` (this is a placeholder!)
+  - Hostname starts with `ep-` ✓
+  - Hostname includes `.neon.tech` ✓
+  - Includes `?sslmode=require` ✓
+- ❌ **WRONG**: `postgresql://user:pass@host.neon.tech/dbname?sslmode=require` (placeholder!)
+- ❌ **WRONG**: `postgresql://user:pass@your-host.neon.tech/dbname?sslmode=require` (placeholder!)
+- ❌ **WRONG**: `postgresql://user:pass@localhost/dbname?sslmode=require` (Neon databases are remote!)
+- ❌ **WRONG**: Hostname without `ep-` prefix (Neon hostnames always start with `ep-`)
+
+**Neon Hostname Format:**
+- All Neon hostnames follow this pattern: `ep-{unique-id}.{region}.aws.neon.tech`
+- Example: `ep-cool-darkness-123456.us-east-2.aws.neon.tech`
+- The `ep-` prefix is **required** and indicates it's a Neon endpoint
 
 ### Issue 2: Still getting `ECONNREFUSED 127.0.0.1:5432`
 
@@ -312,10 +358,17 @@ app.get('/debug/env', (req, res) => {
 
 ```bash
 DB_CLIENT=pg
-DATABASE_URL=postgresql://user:password@host.neon.tech/dbname?sslmode=require
+DATABASE_URL=postgresql://user:password@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
 SESSION_SECRET=<generate-with-openssl-rand-base64-32>
 NODE_ENV=production
 ```
+
+**⚠️ Important Notes:**
+- `DATABASE_URL` hostname **MUST start with `ep-`** (e.g., `ep-cool-darkness-123456`)
+- `DATABASE_URL` hostname **MUST include `.neon.tech`** (e.g., `ep-xxx.us-east-2.aws.neon.tech`)
+- Do NOT use placeholder hostnames like `host.neon.tech` or `localhost`
+- Do NOT include `psql` command or quotes in `DATABASE_URL`
+- Always include `?sslmode=require` at the end
 
 ### Generate SESSION_SECRET
 

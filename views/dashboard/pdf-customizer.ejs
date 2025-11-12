@@ -1,0 +1,280 @@
+<% 
+  const safeProfile = typeof profile !== 'undefined' && profile ? profile : {};
+  const safeCustomizations = typeof customizations !== 'undefined' && customizations ? customizations : {};
+  const safeTheme = typeof theme !== 'undefined' && theme ? theme : {};
+  const safeCurrentTheme = typeof currentTheme !== 'undefined' ? currentTheme : 'classic-serif';
+  const profileSlug = typeof profileSlug !== 'undefined' ? profileSlug : safeProfile.slug || '';
+  const baseUrl = typeof baseUrl !== 'undefined' ? baseUrl : '';
+%>
+
+<section class="pdf-customizer">
+  <div class="pdf-customizer__header">
+    <h1 class="pdf-customizer__title">PDF Comp Card Customizer</h1>
+    <p class="pdf-customizer__subtitle">Customize your PDF comp card theme, fonts, colors, layout, and branding</p>
+  </div>
+
+  <div class="pdf-customizer__main">
+    <!-- Left Side: Live PDF Preview -->
+    <div class="pdf-customizer__preview">
+      <div class="pdf-customizer__preview-header">
+        <h2 class="pdf-customizer__preview-title">Live Preview</h2>
+        <div class="pdf-customizer__preview-actions">
+          <button type="button" class="pdf-customizer__button pdf-customizer__button--secondary" id="refresh-preview">Refresh</button>
+          <a href="<%= baseUrl %>/pdf/<%= profileSlug %>?download=1" target="_blank" class="pdf-customizer__button pdf-customizer__button--primary" id="download-pdf">Download PDF</a>
+        </div>
+      </div>
+      <div class="pdf-customizer__preview-container">
+        <iframe 
+          id="pdf-preview-iframe"
+          src="<%= baseUrl %>/pdf/view/<%= profileSlug %>?theme=<%= safeCurrentTheme %>"
+          class="pdf-customizer__preview-iframe"
+          title="PDF Comp Card Preview"
+          loading="lazy">
+        </iframe>
+        <div class="pdf-customizer__preview-loading" id="preview-loading" style="display: none;">
+          <p>Loading preview...</p>
+        </div>
+        <div class="pdf-customizer__preview-error" id="preview-error" style="display: none;">
+          <p>Preview unavailable. Please try again.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side: Customizer Controls -->
+    <div class="pdf-customizer__controls">
+      <!-- Tabs -->
+      <div class="pdf-customizer__tabs">
+        <button type="button" class="pdf-customizer__tab pdf-customizer__tab--active" data-tab="theme">Theme</button>
+        <button type="button" class="pdf-customizer__tab" data-tab="fonts">Fonts</button>
+        <button type="button" class="pdf-customizer__tab" data-tab="colors">Colors</button>
+        <button type="button" class="pdf-customizer__tab" data-tab="layout">Layout</button>
+        <button type="button" class="pdf-customizer__tab" data-tab="branding">Branding</button>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="pdf-customizer__tab-content">
+        <!-- Theme Tab -->
+        <div class="pdf-customizer__tab-panel pdf-customizer__tab-panel--active" data-panel="theme">
+          <h3 class="pdf-customizer__panel-title">Select Theme</h3>
+          <div class="pdf-customizer__theme-grid">
+            <% Object.values(typeof allThemes !== 'undefined' ? allThemes : {}).forEach((themeItem) => { %>
+              <div class="pdf-customizer__theme-card <%= themeItem.key === safeCurrentTheme ? 'pdf-customizer__theme-card--active' : '' %> <%= themeItem.isPro ? 'pdf-customizer__theme-card--pro' : '' %>" data-theme="<%= themeItem.key %>">
+                <div class="pdf-customizer__theme-card-preview" style="background: <%= themeItem.colors.background %>; color: <%= themeItem.colors.text %>;">
+                  <div class="pdf-customizer__theme-card-name" style="font-family: var(--font-serif, serif);"><%= themeItem.name %></div>
+                  <div class="pdf-customizer__theme-card-description"><%= themeItem.description || themeItem.personality %></div>
+                </div>
+                <div class="pdf-customizer__theme-card-info">
+                  <span class="pdf-customizer__theme-card-label"><%= themeItem.name %></span>
+                  <% if (themeItem.isPro) { %>
+                    <span class="pdf-customizer__theme-card-badge">Pro</span>
+                  <% } else { %>
+                    <span class="pdf-customizer__theme-card-badge pdf-customizer__theme-card-badge--free">Free</span>
+                  <% } %>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+
+        <!-- Fonts Tab -->
+        <div class="pdf-customizer__tab-panel" data-panel="fonts">
+          <h3 class="pdf-customizer__panel-title">Customize Fonts</h3>
+          
+          <div class="pdf-customizer__form-group">
+            <label class="pdf-customizer__label" for="font-name">Name Font</label>
+            <select class="pdf-customizer__select" id="font-name" name="font-name">
+              <% if (typeof availableFonts !== 'undefined' && availableFonts) { %>
+                <% Object.values(availableFonts).forEach(category => { %>
+                  <% category.forEach(font => { %>
+                    <option value="<%= font.name %>" <%= (safeCustomizations.fonts && safeCustomizations.fonts.name === font.name) || (safeTheme.fonts && safeTheme.fonts.name === font.name) ? 'selected' : '' %>><%= font.name %></option>
+                  <% }); %>
+                <% }); %>
+              <% } %>
+            </select>
+          </div>
+
+          <div class="pdf-customizer__form-group">
+            <label class="pdf-customizer__label" for="font-bio">Bio Font</label>
+            <select class="pdf-customizer__select" id="font-bio" name="font-bio">
+              <% if (typeof availableFonts !== 'undefined' && availableFonts) { %>
+                <% Object.values(availableFonts).forEach(category => { %>
+                  <% category.forEach(font => { %>
+                    <option value="<%= font.name %>" <%= (safeCustomizations.fonts && safeCustomizations.fonts.bio === font.name) || (safeTheme.fonts && safeTheme.fonts.bio === font.name) ? 'selected' : '' %>><%= font.name %></option>
+                  <% }); %>
+                <% }); %>
+              <% } %>
+            </select>
+          </div>
+
+          <div class="pdf-customizer__form-group">
+            <label class="pdf-customizer__label" for="font-stats">Stats Font</label>
+            <select class="pdf-customizer__select" id="font-stats" name="font-stats">
+              <% if (typeof availableFonts !== 'undefined' && availableFonts) { %>
+                <% Object.values(availableFonts).forEach(category => { %>
+                  <% category.forEach(font => { %>
+                    <option value="<%= font.name %>" <%= (safeCustomizations.fonts && safeCustomizations.fonts.stats === font.name) || (safeTheme.fonts && safeTheme.fonts.stats === font.name) ? 'selected' : '' %>><%= font.name %></option>
+                  <% }); %>
+                <% }); %>
+              <% } %>
+            </select>
+          </div>
+        </div>
+
+        <!-- Colors Tab -->
+        <div class="pdf-customizer__tab-panel" data-panel="colors">
+          <h3 class="pdf-customizer__panel-title">Customize Colors</h3>
+          
+          <div class="pdf-customizer__form-group">
+            <label class="pdf-customizer__label" for="color-background">Background Color</label>
+            <div class="pdf-customizer__color-input-wrapper">
+              <input type="color" class="pdf-customizer__color-input" id="color-background" name="color-background" value="<%= (safeCustomizations.colors && safeCustomizations.colors.background) || (safeTheme.colors && safeTheme.colors.background) || '#FAF9F7' %>">
+              <input type="text" class="pdf-customizer__color-text" id="color-background-text" value="<%= (safeCustomizations.colors && safeCustomizations.colors.background) || (safeTheme.colors && safeTheme.colors.background) || '#FAF9F7' %>" placeholder="#FAF9F7">
+            </div>
+          </div>
+
+          <div class="pdf-customizer__form-group">
+            <label class="pdf-customizer__label" for="color-text">Text Color</label>
+            <div class="pdf-customizer__color-input-wrapper">
+              <input type="color" class="pdf-customizer__color-input" id="color-text" name="color-text" value="<%= (safeCustomizations.colors && safeCustomizations.colors.text) || (safeTheme.colors && safeTheme.colors.text) || '#2D2D2D' %>">
+              <input type="text" class="pdf-customizer__color-text" id="color-text-text" value="<%= (safeCustomizations.colors && safeCustomizations.colors.text) || (safeTheme.colors && safeTheme.colors.text) || '#2D2D2D' %>" placeholder="#2D2D2D">
+            </div>
+          </div>
+
+          <div class="pdf-customizer__form-group">
+            <label class="pdf-customizer__label" for="color-accent">Accent Color</label>
+            <div class="pdf-customizer__color-input-wrapper">
+              <input type="color" class="pdf-customizer__color-input" id="color-accent" name="color-accent" value="<%= (safeCustomizations.colors && safeCustomizations.colors.accent) || (safeTheme.colors && safeTheme.colors.accent) || '#C9A55A' %>">
+              <input type="text" class="pdf-customizer__color-text" id="color-accent-text" value="<%= (safeCustomizations.colors && safeCustomizations.colors.accent) || (safeTheme.colors && safeTheme.colors.accent) || '#C9A55A' %>" placeholder="#C9A55A">
+            </div>
+          </div>
+        </div>
+
+        <!-- Layout Tab -->
+        <div class="pdf-customizer__tab-panel" data-panel="layout">
+          <h3 class="pdf-customizer__panel-title">Customize Layout</h3>
+          
+          <div class="pdf-customizer__form-group">
+            <label class="pdf-customizer__label" for="layout-header">Header Position</label>
+            <select class="pdf-customizer__select" id="layout-header" name="layout-header">
+              <option value="top" <%= (safeCustomizations.layout && safeCustomizations.layout.headerPosition === 'top') || (safeTheme.layout && safeTheme.layout.headerPosition === 'top') ? 'selected' : '' %>>Top</option>
+              <option value="sidebar" <%= (safeCustomizations.layout && safeCustomizations.layout.headerPosition === 'sidebar') || (safeTheme.layout && safeTheme.layout.headerPosition === 'sidebar') ? 'selected' : '' %>>Sidebar</option>
+              <option value="overlay" <%= (safeCustomizations.layout && safeCustomizations.layout.headerPosition === 'overlay') || (safeTheme.layout && safeTheme.layout.headerPosition === 'overlay') ? 'selected' : '' %>>Overlay</option>
+            </select>
+          </div>
+
+          <div class="pdf-customizer__form-group">
+            <label class="pdf-customizer__label" for="layout-grid-cols">Image Grid Columns</label>
+            <input type="number" class="pdf-customizer__input" id="layout-grid-cols" name="layout-grid-cols" min="1" max="4" value="<%= (safeCustomizations.layout && safeCustomizations.layout.imageGrid && safeCustomizations.layout.imageGrid.cols) || (safeTheme.layout && safeTheme.layout.imageGrid && safeTheme.layout.imageGrid.cols) || 2 %>">
+          </div>
+
+          <div class="pdf-customizer__form-group">
+            <label class="pdf-customizer__label" for="layout-grid-rows">Image Grid Rows</label>
+            <input type="number" class="pdf-customizer__input" id="layout-grid-rows" name="layout-grid-rows" min="1" max="4" value="<%= (safeCustomizations.layout && safeCustomizations.layout.imageGrid && safeCustomizations.layout.imageGrid.rows) || (safeTheme.layout && safeTheme.layout.imageGrid && safeTheme.layout.imageGrid.rows) || 2 %>">
+          </div>
+
+          <div class="pdf-customizer__form-group">
+            <label class="pdf-customizer__label" for="layout-bio">Bio Position</label>
+            <select class="pdf-customizer__select" id="layout-bio" name="layout-bio">
+              <option value="bottom-center" <%= (safeCustomizations.layout && safeCustomizations.layout.bioPosition === 'bottom-center') || (safeTheme.layout && safeTheme.layout.bioPosition === 'bottom-center') ? 'selected' : '' %>>Bottom Center</option>
+              <option value="bottom-left" <%= (safeCustomizations.layout && safeCustomizations.layout.bioPosition === 'bottom-left') || (safeTheme.layout && safeTheme.layout.bioPosition === 'bottom-left') ? 'selected' : '' %>>Bottom Left</option>
+              <option value="bottom-right" <%= (safeCustomizations.layout && safeCustomizations.layout.bioPosition === 'bottom-right') || (safeTheme.layout && safeTheme.layout.bioPosition === 'bottom-right') ? 'selected' : '' %>>Bottom Right</option>
+              <option value="bottom-full" <%= (safeCustomizations.layout && safeCustomizations.layout.bioPosition === 'bottom-full') || (safeTheme.layout && safeTheme.layout.bioPosition === 'bottom-full') ? 'selected' : '' %>>Bottom Full</option>
+              <option value="left" <%= (safeCustomizations.layout && safeCustomizations.layout.bioPosition === 'left') || (safeTheme.layout && safeTheme.layout.bioPosition === 'left') ? 'selected' : '' %>>Left</option>
+              <option value="right" <%= (safeCustomizations.layout && safeCustomizations.layout.bioPosition === 'right') || (safeTheme.layout && safeTheme.layout.bioPosition === 'right') ? 'selected' : '' %>>Right</option>
+            </select>
+          </div>
+
+          <div class="pdf-customizer__form-group">
+            <label class="pdf-customizer__label" for="layout-stats">Stats Position</label>
+            <select class="pdf-customizer__select" id="layout-stats" name="layout-stats">
+              <option value="header-right" <%= (safeCustomizations.layout && safeCustomizations.layout.statsPosition === 'header-right') || (safeTheme.layout && safeTheme.layout.statsPosition === 'header-right') ? 'selected' : '' %>>Header Right</option>
+              <option value="header-left" <%= (safeCustomizations.layout && safeCustomizations.layout.statsPosition === 'header-left') || (safeTheme.layout && safeTheme.layout.statsPosition === 'header-left') ? 'selected' : '' %>>Header Left</option>
+              <option value="header-bottom" <%= (safeCustomizations.layout && safeCustomizations.layout.statsPosition === 'header-bottom') || (safeTheme.layout && safeTheme.layout.statsPosition === 'header-bottom') ? 'selected' : '' %>>Header Bottom</option>
+              <option value="sidebar-bottom" <%= (safeCustomizations.layout && safeCustomizations.layout.statsPosition === 'sidebar-bottom') || (safeTheme.layout && safeTheme.layout.statsPosition === 'sidebar-bottom') ? 'selected' : '' %>>Sidebar Bottom</option>
+              <option value="overlay-top-right" <%= (safeCustomizations.layout && safeCustomizations.layout.statsPosition === 'overlay-top-right') || (safeTheme.layout && safeTheme.layout.statsPosition === 'overlay-top-right') ? 'selected' : '' %>>Overlay Top Right</option>
+              <option value="overlay-top-left" <%= (safeCustomizations.layout && safeCustomizations.layout.statsPosition === 'overlay-top-left') || (safeTheme.layout && safeTheme.layout.statsPosition === 'overlay-top-left') ? 'selected' : '' %>>Overlay Top Left</option>
+              <option value="overlay-bottom-right" <%= (safeCustomizations.layout && safeCustomizations.layout.statsPosition === 'overlay-bottom-right') || (safeTheme.layout && safeTheme.layout.statsPosition === 'overlay-bottom-right') ? 'selected' : '' %>>Overlay Bottom Right</option>
+              <option value="overlay-bottom-left" <%= (safeCustomizations.layout && safeCustomizations.layout.statsPosition === 'overlay-bottom-left') || (safeTheme.layout && safeTheme.layout.statsPosition === 'overlay-bottom-left') ? 'selected' : '' %>>Overlay Bottom Left</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Branding Tab -->
+        <div class="pdf-customizer__tab-panel" data-panel="branding">
+          <h3 class="pdf-customizer__panel-title">Agency Logo</h3>
+          
+          <div class="pdf-customizer__form-group">
+            <label class="pdf-customizer__label">Logo Source</label>
+            <div class="pdf-customizer__radio-group">
+              <label class="pdf-customizer__radio-label">
+                <input type="radio" name="logo-source" value="upload" class="pdf-customizer__radio" <%= (safeCustomizations.agencyLogo && safeCustomizations.agencyLogo.type === 'upload') || !safeCustomizations.agencyLogo ? 'checked' : '' %>>
+                <span>Upload Logo</span>
+              </label>
+              <label class="pdf-customizer__radio-label">
+                <input type="radio" name="logo-source" value="url" class="pdf-customizer__radio" <%= (safeCustomizations.agencyLogo && safeCustomizations.agencyLogo.type === 'url') ? 'checked' : '' %>>
+                <span>Logo URL</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="pdf-customizer__form-group" id="logo-upload-group">
+            <label class="pdf-customizer__label" for="logo-upload">Upload Logo</label>
+            <input type="file" class="pdf-customizer__file-input" id="logo-upload" name="logo" accept="image/jpeg,image/png,image/svg+xml,image/webp">
+            <button type="button" class="pdf-customizer__button pdf-customizer__button--secondary" id="upload-logo-btn">Upload</button>
+            <% if (safeCustomizations.agencyLogo && safeCustomizations.agencyLogo.type === 'upload' && safeCustomizations.agencyLogo.path) { %>
+              <div class="pdf-customizer__logo-preview">
+                <img src="<%= baseUrl %><%= safeCustomizations.agencyLogo.path %>" alt="Agency Logo" class="pdf-customizer__logo-preview-image">
+                <button type="button" class="pdf-customizer__button pdf-customizer__button--danger" id="remove-logo-btn">Remove Logo</button>
+              </div>
+            <% } %>
+          </div>
+
+          <div class="pdf-customizer__form-group" id="logo-url-group" style="display: none;">
+            <label class="pdf-customizer__label" for="logo-url">Logo URL</label>
+            <input type="url" class="pdf-customizer__input" id="logo-url" name="logo-url" value="<%= (safeCustomizations.agencyLogo && safeCustomizations.agencyLogo.type === 'url' && safeCustomizations.agencyLogo.path) || '' %>" placeholder="https://example.com/logo.png">
+            <button type="button" class="pdf-customizer__button pdf-customizer__button--secondary" id="save-logo-url-btn">Save URL</button>
+          </div>
+
+          <div class="pdf-customizer__form-group">
+            <label class="pdf-customizer__label" for="logo-position">Logo Position</label>
+            <select class="pdf-customizer__select" id="logo-position" name="logo-position">
+              <option value="top-left" <%= (safeCustomizations.agencyLogo && safeCustomizations.agencyLogo.position === 'top-left') || 'bottom-right' === 'top-left' ? 'selected' : '' %>>Top Left</option>
+              <option value="top-right" <%= (safeCustomizations.agencyLogo && safeCustomizations.agencyLogo.position === 'top-right') || 'bottom-right' === 'top-right' ? 'selected' : '' %>>Top Right</option>
+              <option value="bottom-left" <%= (safeCustomizations.agencyLogo && safeCustomizations.agencyLogo.position === 'bottom-left') || 'bottom-right' === 'bottom-left' ? 'selected' : '' %>>Bottom Left</option>
+              <option value="bottom-right" <%= (safeCustomizations.agencyLogo && safeCustomizations.agencyLogo.position === 'bottom-right') || !safeCustomizations.agencyLogo || 'bottom-right' === 'bottom-right' ? 'selected' : '' %>>Bottom Right</option>
+            </select>
+          </div>
+
+          <div class="pdf-customizer__form-group">
+            <label class="pdf-customizer__label" for="logo-size">Logo Size</label>
+            <select class="pdf-customizer__select" id="logo-size" name="logo-size">
+              <option value="small" <%= (safeCustomizations.agencyLogo && safeCustomizations.agencyLogo.size === 'small') || !safeCustomizations.agencyLogo || 'small' === 'small' ? 'selected' : '' %>>Small</option>
+              <option value="medium" <%= (safeCustomizations.agencyLogo && safeCustomizations.agencyLogo.size === 'medium') || 'small' === 'medium' ? 'selected' : '' %>>Medium</option>
+              <option value="large" <%= (safeCustomizations.agencyLogo && safeCustomizations.agencyLogo.size === 'large') || 'small' === 'large' ? 'selected' : '' %>>Large</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pdf-customizer__actions">
+        <button type="button" class="pdf-customizer__button pdf-customizer__button--secondary" id="reset-customizations">Reset</button>
+        <button type="button" class="pdf-customizer__button pdf-customizer__button--primary" id="save-customizations">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<link rel="stylesheet" href="/styles/pdf-customizer.css?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>">
+<script src="/scripts/pdf-customizer.js?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>" defer></script>
+<script>
+  // Pass data to JavaScript
+  window.PDF_CUSTOMIZER_DATA = {
+    profileSlug: '<%= profileSlug %>',
+    baseUrl: '<%= baseUrl %>',
+    currentTheme: '<%= safeCurrentTheme %>',
+    customizations: <%- JSON.stringify(safeCustomizations) %>,
+    theme: <%- JSON.stringify(safeTheme) %>
+  };
+</script>
+

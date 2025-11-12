@@ -101,12 +101,54 @@ if (client === 'pg') {
     '127.0.0.1',
     'placeholder',
     'your-database',
-    'your-host'
+    'your-host',
+    'neon.tech', // Catch bare neon.tech without ep- prefix
+    'placeholder.neon.tech',
+    'demo.neon.tech'
   ];
 
   const containsPlaceholder = placeholderPatterns.some(pattern => dbUrl.includes(pattern));
 
+  // Extract hostname from connection string for validation
+  let hostname = null;
+  try {
+    const urlMatch = cleanedUrl.match(/@([^/]+)/);
+    if (urlMatch && urlMatch[1]) {
+      hostname = urlMatch[1].split(':')[0]; // Remove port if present
+    }
+  } catch (error) {
+    // If we can't parse the URL, continue with placeholder check
+  }
+
+  // Check if hostname looks like a Neon hostname (should start with ep-)
+  const isLikelyNeonHostname = hostname && hostname.startsWith('ep-') && hostname.includes('.neon.tech');
+
+  // For Neon deployments, validate that hostname follows Neon format
+  // Neon hostnames always start with 'ep-' followed by a unique identifier
+  if (hostname && !containsPlaceholder) {
+    // If it contains .neon.tech but doesn't start with ep-, it's likely a placeholder
+    if (hostname.includes('.neon.tech') && !hostname.startsWith('ep-')) {
+      throw new Error(
+        'DATABASE_URL contains an invalid Neon hostname format.\n\n' +
+        '❌ ERROR: Your Neon hostname should start with "ep-" (e.g., "ep-xxx-xxx.us-east-2.aws.neon.tech").\n\n' +
+        '✅ SOLUTION:\n' +
+        '1. Go to https://console.neon.tech\n' +
+        '2. Select your project\n' +
+        '3. Click on "Connection Details" or "Connection String"\n' +
+        '4. Copy the COMPLETE connection string (it will have a unique hostname starting with "ep-")\n' +
+        '5. Paste the REAL connection string in Netlify environment variables\n' +
+        '6. Make sure it includes ?sslmode=require at the end\n\n' +
+        `Current hostname: ${hostname}\n\n` +
+        'Your real Neon connection string should look like:\n' +
+        'postgresql://username:password@ep-xxx-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require'
+      );
+    }
+  }
+
   if (containsPlaceholder) {
+    const originalUrl = process.env.DATABASE_URL;
+    const originalPreview = originalUrl ? originalUrl.substring(0, 80) + (originalUrl.length > 80 ? '...' : '') : 'not set';
+
     throw new Error(
       'DATABASE_URL contains a placeholder value instead of your actual Neon connection string.\n\n' +
       '❌ ERROR: You used a placeholder like "host.neon.tech" instead of your real database hostname.\n\n' +
@@ -116,10 +158,15 @@ if (client === 'pg') {
       '3. Click on "Connection Details" or "Connection String"\n' +
       '4. Copy the COMPLETE connection string (it will have a unique hostname like "ep-xxx-xxx.us-east-2.aws.neon.tech")\n' +
       '5. Paste the REAL connection string in Netlify environment variables\n' +
-      '6. Make sure it includes ?sslmode=require at the end\n\n' +
-      `Current DATABASE_URL starts with: ${process.env.DATABASE_URL.substring(0, 50)}...\n\n` +
+      '6. Make sure it includes ?sslmode=require at the end\n' +
+      '7. Make sure the hostname starts with "ep-" (this is required for Neon databases)\n\n' +
+      `What you provided: ${originalPreview}\n\n` +
       'Your real Neon connection string should look like:\n' +
-      'postgresql://username:password@ep-xxx-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require'
+      'postgresql://username:password@ep-xxx-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require\n\n' +
+      'Common mistakes:\n' +
+      '- Using "host.neon.tech" or "your-host.neon.tech" (these are placeholders)\n' +
+      '- Using "localhost" or "127.0.0.1" (Neon databases are remote)\n' +
+      '- Hostname doesn\'t start with "ep-" (Neon hostnames always start with "ep-")'
     );
   }
 

@@ -99,11 +99,14 @@
       </div>
 
       <div class="dash-hero__actions">
-        <button type="button" class="button-primary" id="pdf-download-btn" data-slug="<%= slug %>" data-theme="<%= safeProfile.pdf_theme || 'ink' %>" data-is-pro="<%= safeProfile.is_pro ? 'true' : 'false' %>">Download Comp Card</button>
+        <button type="button" class="button-primary" id="pdf-download-btn" data-slug="<%= slug %>" data-theme="<%= (typeof currentTheme !== 'undefined' ? currentTheme : safeProfile.pdf_theme) || 'classic-serif' %>" data-is-pro="<%= safeProfile.is_pro ? 'true' : 'false' %>">Download Comp Card</button>
+        <% if (safeProfile.is_pro) { %>
+          <a href="/dashboard/pdf-customizer" class="button-secondary">Customize PDF</a>
+        <% } %>
         <a href="/portfolio/<%= slug %>" class="button-secondary" target="_blank" rel="noopener">View Portfolio</a>
         <% if (!safeProfile.is_pro) { %>
           <a href="/pro/upgrade" class="button-primary">Upgrade to Pro</a>
-          <% } %>
+        <% } %>
       </div>
     </div>
   </section>
@@ -326,17 +329,50 @@
     <div class="pdf-theme-modal__backdrop"></div>
     <div class="pdf-theme-modal__content">
       <header class="pdf-theme-modal__header">
-        <h2>Select PDF Theme</h2>
+        <div class="pdf-theme-modal__header-content">
+          <h2 class="pdf-theme-modal__title">Select PDF Theme</h2>
+          <p class="pdf-theme-modal__subtitle">Choose a theme for your comp card PDF</p>
+        </div>
         <button type="button" class="pdf-theme-modal__close" aria-label="Close">&times;</button>
       </header>
       <div class="pdf-theme-modal__body">
+        <div class="pdf-theme-modal__tabs">
+          <button type="button" class="pdf-theme-modal__tab pdf-theme-modal__tab--active" data-theme-filter="all">All Themes</button>
+          <button type="button" class="pdf-theme-modal__tab" data-theme-filter="free">Free</button>
+          <button type="button" class="pdf-theme-modal__tab" data-theme-filter="pro">Pro</button>
+        </div>
         <div class="pdf-theme-grid" id="pdf-theme-grid">
           <!-- Themes will be populated by JavaScript -->
+        </div>
+        <div class="pdf-theme-modal__preview" id="pdf-theme-preview" style="display: none;">
+          <div class="pdf-theme-modal__preview-header">
+            <h3 class="pdf-theme-modal__preview-title">Live Preview</h3>
+          </div>
+          <div class="pdf-theme-modal__preview-container">
+            <iframe id="pdf-theme-preview-iframe" class="pdf-theme-modal__preview-iframe" title="Theme Preview" loading="lazy"></iframe>
+          </div>
         </div>
       </div>
       <footer class="pdf-theme-modal__footer">
         <button type="button" class="button button-secondary" id="pdf-theme-cancel">Cancel</button>
+        <% if (safeProfile.is_pro) { %>
+          <a href="/dashboard/pdf-customizer" class="button button-secondary" id="pdf-theme-customize" style="display: none;">Customize</a>
+        <% } %>
+        <button type="button" class="button button-primary" id="pdf-theme-apply">Apply Theme</button>
         <a href="#" class="button button-primary" id="pdf-theme-download">Download PDF</a>
       </footer>
     </div>
   </div>
+  
+  <script>
+    // Pass theme data to JavaScript
+    window.PDF_THEME_DATA = {
+      allThemes: <%- JSON.stringify(typeof allThemes !== 'undefined' ? allThemes : {}) %>,
+      freeThemes: <%- JSON.stringify(typeof freeThemes !== 'undefined' ? freeThemes : []) %>,
+      proThemes: <%- JSON.stringify(typeof proThemes !== 'undefined' ? proThemes : []) %>,
+      currentTheme: '<%= (typeof currentTheme !== 'undefined' ? currentTheme : safeProfile.pdf_theme) || 'classic-serif' %>',
+      isPro: <%= safeProfile.is_pro ? 'true' : 'false' %>,
+      profileSlug: '<%= slug %>',
+      baseUrl: '<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>'
+    };
+  </script>

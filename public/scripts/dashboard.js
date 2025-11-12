@@ -308,8 +308,13 @@
     const backdrop = modal?.querySelector('.pdf-theme-modal__backdrop');
     const closeBtn = modal?.querySelector('.pdf-theme-modal__close');
     const cancelBtn = document.getElementById('pdf-theme-cancel');
+    const applyBtn = document.getElementById('pdf-theme-apply');
     const downloadBtn = document.getElementById('pdf-theme-download');
+    const customizeBtn = document.getElementById('pdf-theme-customize');
     const themeGrid = document.getElementById('pdf-theme-grid');
+    const themePreview = document.getElementById('pdf-theme-preview');
+    const previewIframe = document.getElementById('pdf-theme-preview-iframe');
+    const themeTabs = document.querySelectorAll('.pdf-theme-modal__tab');
     
     if (!pdfBtn) {
       console.warn('[PDF Modal] PDF download button not found');
@@ -321,46 +326,56 @@
       return;
     }
 
-    const themes = {
-      ink: { name: 'Ink', bg: '#FAF9F7', text: '#0F172A', accent: '#1C1C1C', isPro: false },
-      noir: { name: 'Noir', bg: '#0A0A0A', text: '#FAF9F7', accent: '#E5E5E5', isPro: true },
-      studio: { name: 'Studio', bg: '#F4F2F0', text: '#2D2D2D', accent: '#C9A55A', isPro: true },
-      paper: { name: 'Paper', bg: '#FAF9F7', text: '#3A3A3A', accent: '#8B7355', isPro: false },
-      slate: { name: 'Slate', bg: '#1A1A1A', text: '#ECF0F1', accent: '#95A5A6', isPro: true },
-      archive: { name: 'Archive', bg: '#F5E6D3', text: '#3D2817', accent: '#8B6F47', isPro: true }
-    };
-
-    const slug = pdfBtn.dataset.slug;
-    const savedTheme = pdfBtn.dataset.theme || 'ink';
-    const isPro = pdfBtn.dataset.isPro === 'true';
+    // Get theme data from window
+    const themeData = window.PDF_THEME_DATA || {};
+    const allThemes = themeData.allThemes || {};
+    const freeThemes = themeData.freeThemes || [];
+    const proThemes = themeData.proThemes || [];
+    const slug = themeData.profileSlug || pdfBtn.dataset.slug;
+    const savedTheme = themeData.currentTheme || pdfBtn.dataset.theme || 'classic-serif';
+    const isPro = themeData.isPro === true || pdfBtn.dataset.isPro === 'true';
+    const baseUrl = themeData.baseUrl || '';
+    
     let selectedTheme = savedTheme;
+    let currentFilter = 'all';
+    let previewTimeout = null;
 
     // Populate theme grid
-    function renderThemes() {
+    function renderThemes(filter = 'all') {
       if (!themeGrid) return;
       themeGrid.innerHTML = '';
       
-      Object.entries(themes).forEach(([key, theme]) => {
+      const themesToRender = filter === 'free' ? freeThemes : filter === 'pro' ? proThemes : Object.values(allThemes);
+      
+      themesToRender.forEach((theme) => {
         const isLocked = theme.isPro && !isPro;
-        const isSelected = key === selectedTheme;
+        const isSelected = theme.key === selectedTheme;
         
         const themeCard = document.createElement('button');
         themeCard.type = 'button';
-        themeCard.className = `pdf-theme-card ${isSelected ? 'is-selected' : ''} ${isLocked ? 'is-locked' : ''}`;
-        themeCard.dataset.theme = key;
+        themeCard.className = `pdf-theme-card ${isSelected ? 'is-selected' : ''} ${isLocked ? 'is-locked' : ''} ${theme.isPro ? 'is-pro' : ''}`;
+        themeCard.dataset.theme = theme.key;
         if (isLocked) {
           themeCard.disabled = true;
         }
         
         themeCard.innerHTML = `
-          <div class="pdf-theme-card__swatches">
-            <div class="pdf-theme-card__swatch" style="background: ${theme.bg};"></div>
-            <div class="pdf-theme-card__swatch" style="background: ${theme.text};"></div>
-            <div class="pdf-theme-card__swatch" style="background: ${theme.accent};"></div>
+          <div class="pdf-theme-card__preview" style="background: ${theme.colors.background}; color: ${theme.colors.text};">
+            <div class="pdf-theme-card__preview-name" style="font-family: ${theme.fonts.name || 'serif'}, serif;">
+              ${theme.name}
+            </div>
+            <div class="pdf-theme-card__preview-colors">
+              <div class="pdf-theme-card__swatch" style="background: ${theme.colors.background};"></div>
+              <div class="pdf-theme-card__swatch" style="background: ${theme.colors.text};"></div>
+              <div class="pdf-theme-card__swatch" style="background: ${theme.colors.accent};"></div>
+            </div>
           </div>
-          <div class="pdf-theme-card__name">
-            ${theme.name}
-            ${theme.isPro ? '<span class="pdf-theme-card__badge">PRO</span>' : ''}
+          <div class="pdf-theme-card__info">
+            <div class="pdf-theme-card__name">
+              ${theme.name}
+              ${theme.isPro ? '<span class="pdf-theme-card__badge pdf-theme-card__badge--pro">Pro</span>' : '<span class="pdf-theme-card__badge pdf-theme-card__badge--free">Free</span>'}
+            </div>
+            <div class="pdf-theme-card__description">${theme.personality || theme.description || ''}</div>
           </div>
         `;
         
@@ -368,13 +383,30 @@
           themeCard.addEventListener('click', () => {
             document.querySelectorAll('.pdf-theme-card').forEach(card => card.classList.remove('is-selected'));
             themeCard.classList.add('is-selected');
-            selectedTheme = key;
-            updateDownloadLink();
+            selectedTheme = theme.key;
+            updatePreview();
+            updateButtons();
+          });
+          
+          // Live preview on hover
+          themeCard.addEventListener('mouseenter', () => {
+            if (previewTimeout) clearTimeout(previewTimeout);
+            previewTimeout = setTimeout(() => {
+              showPreview(theme.key);
+            }, 300);
+          });
+          
+          themeCard.addEventListener('mouseleave', () => {
+            if (previewTimeout) clearTimeout(previewTimeout);
+            // Don't hide preview if this is the selected theme
+            if (theme.key !== selectedTheme) {
+              hidePreview();
+            }
           });
         } else {
           // Show upgrade prompt for locked themes
           themeCard.addEventListener('click', () => {
-            const upgradeMsg = 'This theme is available for Pro members. Upgrade to unlock all themes.';
+            const upgradeMsg = 'This theme is available for Pro members. Upgrade to unlock all themes and customization options.';
             if (confirm(upgradeMsg)) {
               window.location.href = '/pro/upgrade';
             }
@@ -383,28 +415,104 @@
         
         themeGrid.appendChild(themeCard);
       });
+      
+      // Show preview for selected theme
+      if (selectedTheme) {
+        showPreview(selectedTheme);
+      }
     }
 
-    function updateDownloadLink() {
+    // Show preview
+    function showPreview(themeKey) {
+      if (!themePreview || !previewIframe) return;
+      
+      const previewUrl = `${baseUrl}/pdf/view/${slug}?theme=${themeKey}&_=${Date.now()}`;
+      previewIframe.src = previewUrl;
+      themePreview.style.display = 'block';
+    }
+
+    // Hide preview
+    function hidePreview() {
+      if (!themePreview) return;
+      themePreview.style.display = 'none';
+    }
+
+    // Update preview
+    function updatePreview() {
+      if (selectedTheme) {
+        showPreview(selectedTheme);
+      }
+    }
+
+    // Update buttons
+    function updateButtons() {
       if (downloadBtn) {
-        downloadBtn.href = `/pdf/${slug}?theme=${selectedTheme}&download=1`;
-        downloadBtn.onclick = function(e) {
-          e.preventDefault();
-          // Show loading state
-          const originalText = downloadBtn.textContent;
-          downloadBtn.textContent = 'Generating PDF...';
-          downloadBtn.style.pointerEvents = 'none';
+        downloadBtn.href = `${baseUrl}/pdf/${slug}?theme=${selectedTheme}&download=1`;
+      }
+      
+      if (applyBtn) {
+        applyBtn.style.display = selectedTheme !== savedTheme ? 'inline-block' : 'none';
+      }
+      
+      if (customizeBtn && isPro) {
+        customizeBtn.style.display = 'inline-block';
+        customizeBtn.href = `${baseUrl}/dashboard/pdf-customizer?theme=${selectedTheme}`;
+      }
+    }
+
+    // Filter themes
+    function initThemeFilter() {
+      themeTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const filter = tab.getAttribute('data-theme-filter');
+          currentFilter = filter;
           
-          // Trigger download
-          window.location.href = downloadBtn.href;
+          // Update active tab
+          themeTabs.forEach(t => t.classList.remove('pdf-theme-modal__tab--active'));
+          tab.classList.add('pdf-theme-modal__tab--active');
           
-          // Reset after a delay
-          setTimeout(() => {
-            downloadBtn.textContent = originalText;
-            downloadBtn.style.pointerEvents = '';
-            closeModal();
-          }, 2000);
-        };
+          // Re-render themes
+          renderThemes(filter);
+        });
+      });
+    }
+
+    // Apply theme
+    async function applyTheme() {
+      if (!applyBtn) return;
+      
+      try {
+        applyBtn.disabled = true;
+        applyBtn.textContent = 'Applying...';
+        
+        const response = await fetch(`/api/pdf/customize/${slug}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            theme: selectedTheme
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.ok) {
+          // Update saved theme
+          pdfBtn.dataset.theme = selectedTheme;
+          applyBtn.style.display = 'none';
+          
+          // Reload page to show updated theme
+          window.location.reload();
+        } else {
+          alert('Error applying theme: ' + (result.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error applying theme:', error);
+        alert('Error applying theme');
+      } finally {
+        applyBtn.disabled = false;
+        applyBtn.textContent = 'Apply Theme';
       }
     }
 
@@ -414,12 +522,12 @@
         return;
       }
       selectedTheme = savedTheme;
-      renderThemes();
-      updateDownloadLink();
+      currentFilter = 'all';
+      renderThemes('all');
+      updateButtons();
       modal.hidden = false;
       modal.style.display = 'flex';
       document.body.style.overflow = 'hidden';
-      console.log('[PDF Modal] Modal opened');
     }
 
     function closeModal() {
@@ -427,18 +535,49 @@
       modal.hidden = true;
       modal.style.display = 'none';
       document.body.style.overflow = '';
+      hidePreview();
     }
 
+    // Event listeners
     pdfBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      console.log('[PDF Modal] Button clicked, opening modal');
       openModal();
     });
 
     if (backdrop) backdrop.addEventListener('click', closeModal);
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
     if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    
+    if (applyBtn) {
+      applyBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        applyTheme();
+      });
+    }
+    
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Show loading state
+        const originalText = downloadBtn.textContent;
+        downloadBtn.textContent = 'Generating PDF...';
+        downloadBtn.style.pointerEvents = 'none';
+        
+        // Trigger download
+        window.location.href = downloadBtn.href;
+        
+        // Reset after a delay
+        setTimeout(() => {
+          downloadBtn.textContent = originalText;
+          downloadBtn.style.pointerEvents = '';
+          closeModal();
+        }, 2000);
+      });
+    }
+    
+    // Initialize theme filter
+    initThemeFilter();
     
     // Close on Escape key
     document.addEventListener('keydown', (e) => {
@@ -447,7 +586,7 @@
       }
     });
 
-    updateDownloadLink();
+    updateButtons();
   }
 
   // Initialize PDF modal when DOM is ready

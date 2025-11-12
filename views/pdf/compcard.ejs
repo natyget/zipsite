@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <% if (typeof googleFontsUrl !== 'undefined' && googleFontsUrl) { %>
+  <link href="<%= googleFontsUrl %>" rel="stylesheet">
+  <% } else { %>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <% } %>
   <style>
     @page { 
       size: 5.5in 8.5in; 
@@ -15,43 +19,23 @@
       box-sizing: border-box;
     }
     
+    :root {
+      --bg-color: #FAF9F7;
+      --text-color: #2D2D2D;
+      --accent-color: #C9A55A;
+      --name-font: "Playfair Display", serif;
+      --bio-font: "Lora", serif;
+      --stats-font: "Inter", sans-serif;
+      --grid-cols: 2;
+      --grid-rows: 2;
+    }
+    
     body {
       margin: 0;
       padding: 0;
-      font-family: "Inter", "Helvetica Neue", "Arial", sans-serif;
+      font-family: var(--stats-font);
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-    }
-    
-    /* Base Theme Styles */
-    .theme-ink {
-      background: #FAF9F7;
-      color: #0F172A;
-    }
-    
-    .theme-noir {
-      background: #0A0A0A;
-      color: #FAF9F7;
-    }
-    
-    .theme-studio {
-      background: #F4F2F0;
-      color: #2D2D2D;
-    }
-    
-    .theme-paper {
-      background: #FAF9F7;
-      color: #3A3A3A;
-    }
-    
-    .theme-slate {
-      background: #1A1A1A;
-      color: #ECF0F1;
-    }
-    
-    .theme-archive {
-      background: #F5E6D3;
-      color: #3D2817;
     }
     
     /* Container */
@@ -62,92 +46,98 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      background: var(--bg-color);
+      color: var(--text-color);
     }
     
-    /* Header Section - Name, Location, Stats at Top */
+    /* Layout Variations - Header Position */
+    .comp-card.layout-header-top {
+      flex-direction: column;
+    }
+    
+    .comp-card.layout-header-sidebar {
+      flex-direction: row;
+    }
+    
+    .comp-card.layout-header-overlay {
+      flex-direction: column;
+    }
+    
+    /* Header Section */
     .comp-card__header {
       padding: 0.35in 0.35in 0.2in;
       position: relative;
     }
     
-    /* Magazine Typography - Serif Name */
+    .comp-card.layout-header-sidebar .comp-card__header {
+      width: 1.8in;
+      padding: 0.35in 0.25in;
+      border-right: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .comp-card.layout-header-overlay .comp-card__header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+      padding: 0.25in 0.35in;
+    }
+    
+    /* Name Typography */
     .comp-card__name {
-      font-family: "Playfair Display", "Georgia", serif;
+      font-family: var(--name-font);
       font-size: 52px;
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       line-height: 1;
       margin-bottom: 0.06in;
+      color: var(--text-color);
     }
     
-    .theme-ink .comp-card__name {
-      color: #0F172A;
+    .comp-card.layout-header-overlay .comp-card__name {
+      color: #FFFFFF;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     }
     
-    .theme-noir .comp-card__name {
-      color: #FAF9F7;
-    }
-    
-    .theme-studio .comp-card__name {
-      color: #2D2D2D;
-    }
-    
-    .theme-paper .comp-card__name {
-      color: #3A3A3A;
-    }
-    
-    .theme-slate .comp-card__name {
-      color: #ECF0F1;
-    }
-    
-    .theme-archive .comp-card__name {
-      color: #3D2817;
-    }
-    
-    /* Location - Sans-serif, subtle */
+    /* Location */
     .comp-card__location {
-      font-family: "Inter", "Helvetica Neue", "Arial", sans-serif;
+      font-family: var(--stats-font);
       font-size: 9px;
       letter-spacing: 0.15em;
       text-transform: uppercase;
       font-weight: 500;
       margin-bottom: 0.12in;
+      color: var(--text-color);
+      opacity: 0.7;
     }
     
-    .theme-ink .comp-card__location {
-      color: #475569;
+    .comp-card.layout-header-overlay .comp-card__location {
+      color: #FFFFFF;
+      opacity: 0.9;
     }
     
-    .theme-noir .comp-card__location {
-      color: rgba(250, 249, 247, 0.7);
-    }
-    
-    .theme-studio .comp-card__location {
-      color: #6B6B6B;
-    }
-    
-    .theme-paper .comp-card__location {
-      color: #6B6B6B;
-    }
-    
-    .theme-slate .comp-card__location {
-      color: #BDC3C7;
-    }
-    
-    .theme-archive .comp-card__location {
-      color: #6B5D47;
-    }
-    
-    /* Stats - Clean Sans-serif, Perfectly Aligned */
+    /* Stats */
     .comp-card__stats {
       display: flex;
       gap: 0.3in;
-      font-family: "Inter", "Helvetica Neue", "Arial", sans-serif;
+      font-family: var(--stats-font);
       font-size: 9px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       font-weight: 500;
+      flex-wrap: wrap;
+    }
+    
+    .comp-card.layout-header-sidebar .comp-card__stats {
+      flex-direction: column;
+      gap: 0.15in;
+    }
+    
+    .comp-card.layout-header-overlay .comp-card__stats {
+      color: #FFFFFF;
     }
     
     .comp-card__stat {
@@ -164,33 +154,57 @@
     .comp-card__stat-value {
       font-weight: 600;
       letter-spacing: 0.05em;
+      color: var(--text-color);
     }
     
-    .theme-ink .comp-card__stat-value {
-      color: #0F172A;
+    .comp-card.layout-header-overlay .comp-card__stat-value {
+      color: #FFFFFF;
     }
     
-    .theme-noir .comp-card__stat-value {
-      color: #FAF9F7;
+    /* Stats Position - Overlay */
+    .comp-card.layout-stats-overlay_top_right .comp-card__stats {
+      position: absolute;
+      top: 0.25in;
+      right: 0.35in;
+      z-index: 15;
+      color: #FFFFFF;
     }
     
-    .theme-studio .comp-card__stat-value {
-      color: #C9A55A;
+    .comp-card.layout-stats-overlay_top_left .comp-card__stats {
+      position: absolute;
+      top: 0.25in;
+      left: 0.35in;
+      z-index: 15;
+      color: #FFFFFF;
     }
     
-    .theme-paper .comp-card__stat-value {
-      color: #8B7355;
+    .comp-card.layout-stats-overlay_bottom_right .comp-card__stats {
+      position: absolute;
+      bottom: 0.25in;
+      right: 0.35in;
+      z-index: 15;
+      color: #FFFFFF;
     }
     
-    .theme-slate .comp-card__stat-value {
-      color: #95A5A6;
+    .comp-card.layout-stats-overlay_bottom_left .comp-card__stats {
+      position: absolute;
+      bottom: 0.25in;
+      left: 0.35in;
+      z-index: 15;
+      color: #FFFFFF;
     }
     
-    .theme-archive .comp-card__stat-value {
-      color: #8B6F47;
+    .comp-card.layout-stats-header_bottom .comp-card__stats {
+      margin-top: 0.1in;
     }
     
-    /* Main Content Area - Balanced Editorial Layout */
+    .comp-card.layout-stats-sidebar_bottom .comp-card__stats {
+      margin-top: auto;
+      padding-top: 0.2in;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Main Content Area */
     .comp-card__content {
       flex: 1;
       display: flex;
@@ -199,7 +213,16 @@
       overflow: hidden;
     }
     
-    /* Hero Image - Full Width Below Header */
+    .comp-card.layout-header-sidebar .comp-card__content {
+      flex: 1;
+      padding: 0.2in 0.25in 0.15in 0.35in;
+    }
+    
+    .comp-card.layout-header-overlay .comp-card__content {
+      padding-top: 0;
+    }
+    
+    /* Hero Image */
     .comp-card__hero {
       width: 100%;
       height: 3.5in;
@@ -209,6 +232,15 @@
       margin-bottom: 0.12in;
     }
     
+    .comp-card.layout-header-overlay .comp-card__hero {
+      height: 4.5in;
+      margin-bottom: 0;
+    }
+    
+    .comp-card.layout-header-sidebar .comp-card__hero {
+      height: 2.5in;
+    }
+    
     .comp-card__hero img {
       width: 100%;
       height: 100%;
@@ -216,18 +248,14 @@
       display: block;
     }
     
-    /* Gallery - 2x2 Grid Below Hero (Free) or 2x4 Grid (Pro) */
+    /* Gallery - Dynamic Grid */
     .comp-card__gallery {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      grid-template-rows: repeat(2, 1fr);
+      grid-template-columns: repeat(var(--grid-cols), 1fr);
+      grid-template-rows: repeat(var(--grid-rows), 1fr);
       gap: 0.1in;
       flex: 1;
       min-height: 0;
-    }
-    
-    .comp-card__gallery--pro {
-      grid-template-rows: repeat(4, 1fr);
     }
     
     .comp-card__gallery-item {
@@ -243,145 +271,125 @@
       display: block;
     }
     
-    /* Image Enhancement - Pro Only */
-    .comp-card--pro .comp-card__hero img,
-    .comp-card--pro .comp-card__gallery-item img {
-      filter: contrast(1.05) saturate(1.1) brightness(1.02);
-    }
-    
-    .comp-card--pro .comp-card__hero {
-      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05);
-    }
-    
-    .comp-card--pro .comp-card__gallery-item {
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      transition: transform 0.2s;
-    }
-    
-    /* Bio Section - If Space Allows */
+    /* Bio Section - Dynamic Position */
     .comp-card__bio {
       padding: 0.12in 0 0;
       margin-top: 0.1in;
-      font-family: "Inter", "Helvetica Neue", "Arial", sans-serif;
+      font-family: var(--bio-font);
       font-size: 8px;
       line-height: 1.6;
       letter-spacing: 0.02em;
-      border-top: 1px solid;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      color: var(--text-color);
+      opacity: 0.8;
     }
     
-    .theme-ink .comp-card__bio {
-      border-color: rgba(15, 23, 42, 0.1);
-      color: #475569;
+    /* Bio Position Classes */
+    .comp-card.layout-bio-bottom_center .comp-card__bio {
+      text-align: center;
     }
     
-    .theme-noir .comp-card__bio {
-      border-color: rgba(250, 249, 247, 0.15);
-      color: rgba(250, 249, 247, 0.8);
+    .comp-card.layout-bio-bottom_left .comp-card__bio {
+      text-align: left;
     }
     
-    .theme-studio .comp-card__bio {
-      border-color: rgba(45, 45, 45, 0.12);
-      color: #4A4A4A;
+    .comp-card.layout-bio-bottom_right .comp-card__bio {
+      text-align: right;
     }
     
-    .theme-paper .comp-card__bio {
-      border-color: rgba(58, 58, 58, 0.1);
-      color: #4A4A4A;
+    .comp-card.layout-bio-bottom_full .comp-card__bio {
+      width: 100%;
+      padding: 0.15in 0;
     }
     
-    .theme-slate .comp-card__bio {
-      border-color: rgba(236, 240, 241, 0.15);
-      color: #BDC3C7;
+    .comp-card.layout-bio-left .comp-card__bio {
+      width: 40%;
+      float: left;
+      margin-right: 0.2in;
+      border-top: none;
+      border-right: 1px solid rgba(0, 0, 0, 0.1);
+      padding-right: 0.15in;
+      padding-top: 0;
+      margin-top: 0;
     }
     
-    .theme-archive .comp-card__bio {
-      border-color: rgba(61, 40, 23, 0.15);
-      color: #5A4A3A;
+    .comp-card.layout-bio-right .comp-card__bio {
+      width: 40%;
+      float: right;
+      margin-left: 0.2in;
+      border-top: none;
+      border-left: 1px solid rgba(0, 0, 0, 0.1);
+      padding-left: 0.15in;
+      padding-top: 0;
+      margin-top: 0;
     }
     
-    /* Subtle Branding - Bottom Right Corner */
-    .comp-card__branding {
+    /* Watermark - Free Users Only (Bottom Right Corner) */
+    .comp-card__watermark {
       position: absolute;
       bottom: 0.15in;
       right: 0.35in;
-      font-family: "Inter", "Helvetica Neue", "Arial", sans-serif;
+      font-family: var(--stats-font);
       font-size: 6px;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       font-weight: 500;
+      color: var(--text-color);
+      opacity: 0.35;
       pointer-events: none;
-    }
-    
-    .theme-ink .comp-card__branding {
-      color: rgba(15, 23, 42, 0.4);
-    }
-    
-    .theme-noir .comp-card__branding {
-      color: rgba(250, 249, 247, 0.35);
-    }
-    
-    .theme-studio .comp-card__branding {
-      color: rgba(45, 45, 45, 0.4);
-    }
-    
-    .theme-paper .comp-card__branding {
-      color: rgba(58, 58, 58, 0.4);
-    }
-    
-    .theme-slate .comp-card__branding {
-      color: rgba(236, 240, 241, 0.35);
-    }
-    
-    .theme-archive .comp-card__branding {
-      color: rgba(61, 40, 23, 0.4);
-    }
-    
-    /* Watermark - More Subtle */
-    .comp-card__watermark {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(-45deg);
-      font-family: "Inter", "Helvetica Neue", "Arial", sans-serif;
-      font-size: 42px;
-      font-weight: 300;
-      letter-spacing: 0.3em;
-      text-transform: uppercase;
-      pointer-events: none;
-      white-space: nowrap;
       z-index: 10;
     }
     
-    .theme-ink .comp-card__watermark {
-      color: rgba(15, 23, 42, 0.06);
+    /* Agency Logo - Pro Users Only */
+    .comp-card__agency-logo {
+      position: absolute;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.9;
     }
     
-    .theme-noir .comp-card__watermark {
-      color: rgba(250, 249, 247, 0.04);
+    .comp-card__agency-logo--top-left {
+      top: 0.2in;
+      left: 0.35in;
     }
     
-    .theme-studio .comp-card__watermark {
-      color: rgba(45, 45, 45, 0.06);
+    .comp-card__agency-logo--top-right {
+      top: 0.2in;
+      right: 0.35in;
     }
     
-    .theme-paper .comp-card__watermark {
-      color: rgba(58, 58, 58, 0.06);
+    .comp-card__agency-logo--bottom-left {
+      bottom: 0.15in;
+      left: 0.35in;
     }
     
-    .theme-slate .comp-card__watermark {
-      color: rgba(236, 240, 241, 0.04);
+    .comp-card__agency-logo--bottom-right {
+      bottom: 0.15in;
+      right: 0.35in;
     }
     
-    .theme-archive .comp-card__watermark {
-      color: rgba(61, 40, 23, 0.06);
+    .comp-card__agency-logo--small {
+      max-width: 0.8in;
+      max-height: 0.4in;
     }
     
-    /* Accent Line - Removed from header, can be added to hero if needed */
-    .comp-card__accent {
-      display: none;
+    .comp-card__agency-logo--medium {
+      max-width: 1.2in;
+      max-height: 0.6in;
     }
     
-    /* QR Code - Pro Only */
+    .comp-card__agency-logo--large {
+      max-width: 1.6in;
+      max-height: 0.8in;
+    }
+    
+    .comp-card__agency-logo img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    
+    /* QR Code - Pro Only (Bottom Left) */
     .comp-card__qr {
       position: absolute;
       bottom: 0.15in;
@@ -390,6 +398,7 @@
       flex-direction: column;
       align-items: center;
       gap: 4px;
+      z-index: 5;
     }
     
     .comp-card__qr-code {
@@ -407,131 +416,35 @@
     }
     
     .comp-card__qr-label {
-      font-family: "Inter", "Helvetica Neue", "Arial", sans-serif;
+      font-family: var(--stats-font);
       font-size: 5px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       font-weight: 500;
       text-align: center;
+      color: var(--text-color);
+      opacity: 0.6;
     }
     
-    .theme-ink .comp-card__qr-label {
-      color: rgba(15, 23, 42, 0.6);
+    /* Image Enhancement - Pro Only */
+    .comp-card--pro .comp-card__hero img,
+    .comp-card--pro .comp-card__gallery-item img {
+      filter: contrast(1.05) saturate(1.1) brightness(1.02);
     }
     
-    .theme-noir .comp-card__qr-label {
-      color: rgba(250, 249, 247, 0.6);
+    .comp-card--pro .comp-card__hero {
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.05);
     }
     
-    .theme-studio .comp-card__qr-label {
-      color: rgba(45, 45, 45, 0.6);
-    }
-    
-    .theme-paper .comp-card__qr-label {
-      color: rgba(58, 58, 58, 0.6);
-    }
-    
-    .theme-slate .comp-card__qr-label {
-      color: rgba(236, 240, 241, 0.6);
-    }
-    
-    .theme-archive .comp-card__qr-label {
-      color: rgba(61, 40, 23, 0.6);
-    }
-    
-    /* Pro Badge / Upgrade Prompt - Free Users Only */
-    .comp-card__pro-badge {
-      position: absolute;
-      top: 0.2in;
-      right: 0.35in;
-      background: linear-gradient(135deg, rgba(201, 165, 90, 0.2), rgba(201, 165, 90, 0.1));
-      border: 1.5px solid rgba(201, 165, 90, 0.5);
-      padding: 0.08in 0.12in;
-      border-radius: 4px;
-      font-family: "Inter", "Helvetica Neue", "Arial", sans-serif;
-      font-size: 7px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      font-weight: 700;
-      color: #C9A55A;
-      pointer-events: none;
-      z-index: 20;
-      box-shadow: 0 2px 8px rgba(201, 165, 90, 0.2);
-    }
-    
-    .comp-card__pro-badge::before {
-      content: "🔒 ";
-      margin-right: 2px;
-    }
-    
-    /* Locked Theme Preview - Free Users Only */
-    .comp-card__theme-preview {
-      position: absolute;
-      bottom: 0.15in;
-      left: 0.35in;
-      font-family: "Inter", "Helvetica Neue", "Arial", sans-serif;
-      font-size: 5px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      font-weight: 600;
-      opacity: 0.5;
-      pointer-events: none;
-      z-index: 15;
-    }
-    
-    .theme-ink .comp-card__theme-preview {
-      color: rgba(15, 23, 42, 0.4);
-    }
-    
-    .theme-noir .comp-card__theme-preview {
-      color: rgba(250, 249, 247, 0.3);
-    }
-    
-    .theme-studio .comp-card__theme-preview {
-      color: rgba(45, 45, 45, 0.4);
-    }
-    
-    .theme-paper .comp-card__theme-preview {
-      color: rgba(58, 58, 58, 0.4);
-    }
-    
-    .theme-slate .comp-card__theme-preview {
-      color: rgba(236, 240, 241, 0.3);
-    }
-    
-    .theme-archive .comp-card__theme-preview {
-      color: rgba(61, 40, 23, 0.4);
+    .comp-card--pro .comp-card__gallery-item {
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
     
     /* Extended Content Sections - Pro Only */
     .comp-card__extended {
       margin-top: 0.1in;
       padding-top: 0.1in;
-      border-top: 1px solid;
-    }
-    
-    .theme-ink .comp-card__extended {
-      border-color: rgba(15, 23, 42, 0.1);
-    }
-    
-    .theme-noir .comp-card__extended {
-      border-color: rgba(250, 249, 247, 0.15);
-    }
-    
-    .theme-studio .comp-card__extended {
-      border-color: rgba(45, 45, 45, 0.12);
-    }
-    
-    .theme-paper .comp-card__extended {
-      border-color: rgba(58, 58, 58, 0.1);
-    }
-    
-    .theme-slate .comp-card__extended {
-      border-color: rgba(236, 240, 241, 0.15);
-    }
-    
-    .theme-archive .comp-card__extended {
-      border-color: rgba(61, 40, 23, 0.15);
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
     }
     
     .comp-card__section {
@@ -539,67 +452,22 @@
     }
     
     .comp-card__section-title {
-      font-family: "Inter", "Helvetica Neue", "Arial", sans-serif;
+      font-family: var(--stats-font);
       font-size: 7px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       font-weight: 600;
       margin-bottom: 3px;
-    }
-    
-    .theme-ink .comp-card__section-title {
-      color: #0F172A;
-    }
-    
-    .theme-noir .comp-card__section-title {
-      color: #FAF9F7;
-    }
-    
-    .theme-studio .comp-card__section-title {
-      color: #2D2D2D;
-    }
-    
-    .theme-paper .comp-card__section-title {
-      color: #3A3A3A;
-    }
-    
-    .theme-slate .comp-card__section-title {
-      color: #ECF0F1;
-    }
-    
-    .theme-archive .comp-card__section-title {
-      color: #3D2817;
+      color: var(--text-color);
     }
     
     .comp-card__section-content {
-      font-family: "Inter", "Helvetica Neue", "Arial", sans-serif;
+      font-family: var(--stats-font);
       font-size: 7px;
       line-height: 1.5;
       letter-spacing: 0.02em;
-    }
-    
-    .theme-ink .comp-card__section-content {
-      color: #475569;
-    }
-    
-    .theme-noir .comp-card__section-content {
-      color: rgba(250, 249, 247, 0.8);
-    }
-    
-    .theme-studio .comp-card__section-content {
-      color: #4A4A4A;
-    }
-    
-    .theme-paper .comp-card__section-content {
-      color: #4A4A4A;
-    }
-    
-    .theme-slate .comp-card__section-content {
-      color: #BDC3C7;
-    }
-    
-    .theme-archive .comp-card__section-content {
-      color: #5A4A3A;
+      color: var(--text-color);
+      opacity: 0.8;
     }
     
     /* Advanced Stats - Pro Only */
@@ -618,25 +486,33 @@
   </style>
 </head>
 <body>
-  <div class="comp-card theme-<%= typeof theme !== 'undefined' ? theme : 'ink' %> <%= isPro ? 'comp-card--pro' : '' %>">
-    <!-- Pro Badge / Upgrade Prompt - Free Users Only -->
-    <% if (!isPro) { %>
-    <div class="comp-card__pro-badge">Upgrade to Pro</div>
-    <% } %>
+  <div class="comp-card <%= typeof layoutClasses !== 'undefined' ? layoutClasses : '' %> <%= isPro ? 'comp-card--pro' : '' %>" 
+       style="
+         --bg-color: <%= typeof theme !== 'undefined' && theme.colors ? theme.colors.background : '#FAF9F7' %>;
+         --text-color: <%= typeof theme !== 'undefined' && theme.colors ? theme.colors.text : '#2D2D2D' %>;
+         --accent-color: <%= typeof theme !== 'undefined' && theme.colors ? theme.colors.accent : '#C9A55A' %>;
+         --name-font: <%= typeof fontCSS !== 'undefined' && fontCSS.nameFont ? fontCSS.nameFont : '"Playfair Display", serif' %>;
+         --bio-font: <%= typeof fontCSS !== 'undefined' && fontCSS.bioFont ? fontCSS.bioFont : '"Lora", serif' %>;
+         --stats-font: <%= typeof fontCSS !== 'undefined' && fontCSS.statsFont ? fontCSS.statsFont : '"Inter", sans-serif' %>;
+         --grid-cols: <%= typeof theme !== 'undefined' && theme.layout && theme.layout.imageGrid ? theme.layout.imageGrid.cols : 2 %>;
+         --grid-rows: <%= typeof theme !== 'undefined' && theme.layout && theme.layout.imageGrid ? theme.layout.imageGrid.rows : 2 %>;
+         background: var(--bg-color);
+         color: var(--text-color);
+       ">
     
     <!-- Header: Name, Location, Stats -->
     <header class="comp-card__header">
-      <h1 class="comp-card__name"><%= profile.first_name %> <%= profile.last_name %></h1>
-      <div class="comp-card__location"><%= profile.city || 'Location' %></div>
-      <div class="comp-card__stats <%= isPro ? 'comp-card__stats--advanced' : '' %>">
+      <h1 class="comp-card__name" style="font-family: var(--name-font); color: var(--text-color);"><%= profile.first_name %> <%= profile.last_name %></h1>
+      <div class="comp-card__location" style="font-family: var(--stats-font);"><%= profile.city || 'Location' %></div>
+      <div class="comp-card__stats <%= isPro ? 'comp-card__stats--advanced' : '' %>" style="font-family: var(--stats-font);">
         <div class="comp-card__stat <%= isPro ? 'comp-card__stat--advanced' : '' %>">
           <span class="comp-card__stat-label">Height</span>
-          <span class="comp-card__stat-value"><%= heightFeet %> (<%= profile.height_cm %> cm)</span>
+          <span class="comp-card__stat-value" style="color: var(--text-color);"><%= heightFeet %> (<%= profile.height_cm %> cm)</span>
         </div>
         <% if (profile.measurements) { %>
         <div class="comp-card__stat <%= isPro ? 'comp-card__stat--advanced' : '' %>">
           <span class="comp-card__stat-label">Measurements</span>
-          <span class="comp-card__stat-value"><%= profile.measurements %></span>
+          <span class="comp-card__stat-value" style="color: var(--text-color);"><%= profile.measurements %></span>
         </div>
         <% } %>
         <% if (isPro) { %>
@@ -644,49 +520,50 @@
         <% if (profile.shoe_size) { %>
         <div class="comp-card__stat comp-card__stat--advanced">
           <span class="comp-card__stat-label">Shoe Size</span>
-          <span class="comp-card__stat-value"><%= profile.shoe_size %></span>
+          <span class="comp-card__stat-value" style="color: var(--text-color);"><%= profile.shoe_size %></span>
         </div>
         <% } %>
         <% if (profile.hair_color) { %>
         <div class="comp-card__stat comp-card__stat--advanced">
           <span class="comp-card__stat-label">Hair</span>
-          <span class="comp-card__stat-value"><%= profile.hair_color %></span>
+          <span class="comp-card__stat-value" style="color: var(--text-color);"><%= profile.hair_color %></span>
         </div>
         <% } %>
         <% if (profile.eye_color) { %>
         <div class="comp-card__stat comp-card__stat--advanced">
           <span class="comp-card__stat-label">Eyes</span>
-          <span class="comp-card__stat-value"><%= profile.eye_color %></span>
+          <span class="comp-card__stat-value" style="color: var(--text-color);"><%= profile.eye_color %></span>
         </div>
         <% } %>
         <% if (profile.age_range) { %>
         <div class="comp-card__stat comp-card__stat--advanced">
           <span class="comp-card__stat-label">Age Range</span>
-          <span class="comp-card__stat-value"><%= profile.age_range %></span>
+          <span class="comp-card__stat-value" style="color: var(--text-color);"><%= profile.age_range %></span>
         </div>
         <% } %>
         <% } %>
       </div>
     </header>
     
-    <!-- Main Content: Hero + 2x2 Gallery -->
+    <!-- Main Content: Hero + Gallery -->
     <div class="comp-card__content">
-      <!-- Hero Image - Full Width -->
+      <!-- Hero Image -->
       <% if (hero) { %>
       <div class="comp-card__hero">
         <% const heroUrl = hero.startsWith('http') ? hero : baseUrl + (hero.startsWith('/') ? hero : '/' + hero); %>
         <img src="<%= heroUrl %>" alt="<%= profile.first_name %> <%= profile.last_name %>">
-        <% if (watermark) { %>
-        <div class="comp-card__watermark">Refined by ZipSite</div>
-        <% } %>
       </div>
       <% } %>
       
-      <!-- Gallery Images - 2x2 Grid (Free) or 2x4 Grid (Pro) -->
+      <!-- Gallery Images - Dynamic Grid -->
       <% if (images && images.length > 0) { %>
-      <div class="comp-card__gallery <%= isPro ? 'comp-card__gallery--pro' : '' %>">
-        <% const maxImages = isPro ? 8 : 4; %>
-        <% images.slice(0, maxImages).forEach((item) => { %>
+      <div class="comp-card__gallery" style="grid-template-columns: repeat(var(--grid-cols), 1fr); grid-template-rows: repeat(var(--grid-rows), 1fr);">
+        <% 
+          const gridCols = typeof theme !== 'undefined' && theme.layout && theme.layout.imageGrid ? theme.layout.imageGrid.cols : 2;
+          const gridRows = typeof theme !== 'undefined' && theme.layout && theme.layout.imageGrid ? theme.layout.imageGrid.rows : 2;
+          const maxImages = gridCols * gridRows;
+          images.slice(0, maxImages).forEach((item) => { 
+        %>
         <div class="comp-card__gallery-item">
           <% const imageUrl = item.path.startsWith('http') ? item.path : baseUrl + (item.path.startsWith('/') ? item.path : '/' + item.path); %>
           <img src="<%= imageUrl %>" alt="<%= item.label || 'Portfolio image' %>">
@@ -695,9 +572,9 @@
       </div>
       <% } %>
       
-      <!-- Bio - If Space Allows -->
+      <!-- Bio - Dynamic Position -->
       <% if (profile.bio_curated) { %>
-      <div class="comp-card__bio">
+      <div class="comp-card__bio" style="font-family: var(--bio-font); color: var(--text-color);">
         <%= profile.bio_curated %>
       </div>
       <% } %>
@@ -707,20 +584,20 @@
       <div class="comp-card__extended">
         <% if (profile.specializations) { %>
         <div class="comp-card__section">
-          <div class="comp-card__section-title">Specializations</div>
-          <div class="comp-card__section-content"><%= profile.specializations %></div>
+          <div class="comp-card__section-title" style="font-family: var(--stats-font); color: var(--text-color);">Specializations</div>
+          <div class="comp-card__section-content" style="font-family: var(--stats-font); color: var(--text-color);"><%= profile.specializations %></div>
         </div>
         <% } %>
         <% if (profile.achievements) { %>
         <div class="comp-card__section">
-          <div class="comp-card__section-title">Notable Work</div>
-          <div class="comp-card__section-content"><%= profile.achievements %></div>
+          <div class="comp-card__section-title" style="font-family: var(--stats-font); color: var(--text-color);">Notable Work</div>
+          <div class="comp-card__section-content" style="font-family: var(--stats-font); color: var(--text-color);"><%= profile.achievements %></div>
         </div>
         <% } %>
         <% if (profile.agency_affiliation) { %>
         <div class="comp-card__section">
-          <div class="comp-card__section-title">Representation</div>
-          <div class="comp-card__section-content"><%= profile.agency_affiliation %></div>
+          <div class="comp-card__section-title" style="font-family: var(--stats-font); color: var(--text-color);">Representation</div>
+          <div class="comp-card__section-content" style="font-family: var(--stats-font); color: var(--text-color);"><%= profile.agency_affiliation %></div>
         </div>
         <% } %>
       </div>
@@ -733,15 +610,26 @@
       <div class="comp-card__qr-code">
         <img src="<%= qrCode %>" alt="Portfolio QR Code">
       </div>
-      <div class="comp-card__qr-label">Scan for Portfolio</div>
+      <div class="comp-card__qr-label" style="font-family: var(--stats-font); color: var(--text-color);">Scan for Portfolio</div>
     </div>
-    <% } else { %>
-    <!-- Locked Theme Preview - Free Users Only -->
-    <div class="comp-card__theme-preview">🔒 Pro Themes Available</div>
     <% } %>
     
-    <!-- Subtle Branding - Bottom Right -->
-    <div class="comp-card__branding">Curated by ZIPSITE</div>
+    <!-- Watermark - Free Users Only (Bottom Right Corner) -->
+    <% if (watermark) { %>
+    <div class="comp-card__watermark" style="font-family: var(--stats-font); color: var(--text-color);">ZipSite</div>
+    <% } %>
+    
+    <!-- Agency Logo - Pro Users Only -->
+    <% if (isPro && agencyLogo && agencyLogo.path) { %>
+    <div class="comp-card__agency-logo comp-card__agency-logo--<%= agencyLogo.position || 'bottom-right' %> comp-card__agency-logo--<%= agencyLogo.size || 'small' %>">
+      <% 
+        const logoUrl = agencyLogo.type === 'url' 
+          ? agencyLogo.path 
+          : (agencyLogo.path.startsWith('http') ? agencyLogo.path : baseUrl + (agencyLogo.path.startsWith('/') ? agencyLogo.path : '/' + agencyLogo.path));
+      %>
+      <img src="<%= logoUrl %>" alt="Agency Logo" onerror="this.style.display='none';">
+    </div>
+    <% } %>
   </div>
 </body>
 </html>
