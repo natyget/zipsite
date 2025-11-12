@@ -1125,14 +1125,6 @@ div[data-section] {
   opacity: 0.6;
 }
 
-.form-field input:focus,
-.form-field textarea:focus,
-.form-field select:focus {
-  outline: none;
-  border-color: var(--accent-gold);
-  box-shadow: 0 0 0 3px rgba(201, 165, 90, 0.12), 0 2px 8px rgba(201, 165, 90, 0.08);
-  background: var(--bg-surface);
-}
 
 .form-field textarea {
   resize: vertical;
