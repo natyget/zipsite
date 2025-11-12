@@ -13,6 +13,7 @@ const path = require('path');
 const config = require('../config');
 const { getAllThemes, getFreeThemes, getProThemes, getTheme, getDefaultTheme, getAvailableFonts, getAvailableColorPalettes } = require('../lib/themes');
 const { getAllLayoutPresets } = require('../lib/pdf-layouts');
+const { ensureUniqueSlug } = require('../lib/slugify');
 
 const router = express.Router();
 
@@ -306,12 +307,66 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
       return res.redirect('/login');
     }
     
-    const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
+    // Get user record for profile creation if needed
+    const currentUser = await knex('users').where({ id: req.session.userId }).first();
+    if (!currentUser) {
+      console.error('[Dashboard/Talent POST] User not found:', req.session.userId);
+      addMessage(req, 'error', 'User account not found. Please log in again.');
+      return res.redirect('/login');
+    }
+    
+    let profile = await knex('profiles').where({ user_id: req.session.userId }).first();
+    
+    // If profile doesn't exist, create a minimal one with placeholder names
+    // The user can update first_name/last_name later via /apply or a full profile form
     if (!profile) {
-      addMessage(req, 'error', 'Profile not found. Please complete your profile.');
+      console.log('[Dashboard/Talent POST] Profile not found, creating minimal profile for user:', req.session.userId);
+      
+      // Extract a name from email as placeholder (e.g., "john@example.com" -> "John User")
+      const emailParts = currentUser.email.split('@')[0];
+      const placeholderFirstName = emailParts.charAt(0).toUpperCase() + emailParts.slice(1).split('.')[0];
+      const placeholderLastName = 'User';
+      
+      const profileId = uuidv4();
+      const slug = await ensureUniqueSlug(knex, 'profiles', `${placeholderFirstName}-${placeholderLastName}`);
+      
+      const { city, height_cm, measurements, bio } = parsed.data;
+      const curatedBio = curateBio(bio, placeholderFirstName, placeholderLastName);
+      const cleanedMeasurements = normalizeMeasurements(measurements);
+      
+      // Create minimal profile with the form data
+      await knex('profiles').insert({
+        id: profileId,
+        user_id: req.session.userId,
+        slug,
+        first_name: placeholderFirstName,
+        last_name: placeholderLastName,
+        city,
+        height_cm,
+        measurements: cleanedMeasurements,
+        bio_raw: bio,
+        bio_curated: curatedBio,
+        is_pro: false,
+        pdf_theme: null,
+        pdf_customizations: null
+      });
+      
+      console.log('[Dashboard/Talent POST] Created minimal profile:', {
+        profileId,
+        userId: req.session.userId,
+        slug,
+        firstName: placeholderFirstName,
+        lastName: placeholderLastName
+      });
+      
+      // Reload profile
+      profile = await knex('profiles').where({ id: profileId }).first();
+      
+      addMessage(req, 'success', 'Profile created! You can update your name and other details anytime.');
       return res.redirect('/dashboard/talent');
     }
 
+    // Profile exists - update it
     const { city, height_cm, measurements, bio } = parsed.data;
     const curatedBio = curateBio(bio, profile.first_name, profile.last_name);
     const cleanedMeasurements = normalizeMeasurements(measurements);

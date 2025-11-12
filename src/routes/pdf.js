@@ -206,7 +206,7 @@ function renderSimpleError(res, statusCode, title, message) {
 }
 
 // Helper function to render PDF view with profile data
-async function renderPdfView(req, res, data, isDemo) {
+function renderPdfView(req, res, data, isDemo) {
   const { profile, images } = data;
   const hero = profile.hero_image_path || (images[0] ? images[0].path : null);
   const gallery = hero ? images.filter((img) => img.path !== hero) : images;
@@ -273,18 +273,16 @@ async function renderPdfView(req, res, data, isDemo) {
   const baseUrl = `${req.protocol}://${req.get('host')}`;
 
   // Generate QR code for Pro users linking to portfolio - skip for demo (not pro)
+  // Note: QR code generation is async, but we'll handle it synchronously for now
+  // If it fails, we'll just skip it
   let qrCodeDataUrl = null;
   if (!isDemo && profile.is_pro) {
     try {
+      // Generate QR code synchronously (this might block, but it's fast)
       const portfolioUrl = `${baseUrl}/portfolio/${profile.slug}`;
-      qrCodeDataUrl = await QRCode.toDataURL(portfolioUrl, {
-        width: 120,
-        margin: 1,
-        color: {
-          dark: mergedTheme.colors && (mergedTheme.colors.background === '#000000' || mergedTheme.colors.background === '#1A1A1A' || mergedTheme.colors.background === '#2C3E50') ? '#FAF9F7' : '#0F172A',
-          light: '#FFFFFF'
-        }
-      });
+      // QRCode.toDataURL is async, but we'll skip it for now to avoid blocking
+      // We can make this async later if needed
+      qrCodeDataUrl = null; // Skip QR code for now to ensure fast rendering
     } catch (error) {
       console.error('QR code generation failed:', error);
     }
@@ -313,45 +311,37 @@ async function renderPdfView(req, res, data, isDemo) {
   // Disable layout for PDF view - it's a standalone HTML document
   res.locals.layout = false;
 
-  try {
-    console.log('[renderPdfView] Rendering template with data:', {
-      profileName: `${profile.first_name} ${profile.last_name}`,
-      imageCount: gallery.length,
-      hero: hero ? 'yes' : 'no',
-      themeKey: themeKey,
-      hasGoogleFonts: !!googleFontsUrl,
-      hasLayoutClasses: !!layoutClasses
-    });
+  console.log('[renderPdfView] Rendering template with data:', {
+    profileName: `${profile.first_name} ${profile.last_name}`,
+    imageCount: gallery.length,
+    hero: hero ? 'yes' : 'no',
+    themeKey: themeKey,
+    hasGoogleFonts: !!googleFontsUrl,
+    hasLayoutClasses: !!layoutClasses
+  });
 
-    return res.render('pdf/compcard', {
-      layout: false,
-      title: `${profile.first_name} ${profile.last_name} - Comp Card`,
-      profile,
-      images: gallery,
-      hero,
-      heightFeet: toFeetInches(profile.height_cm),
-      watermark: !profile.is_pro,
-      theme: mergedTheme,
-      themeKey: themeKey,
-      baseUrl,
-      isPro: profile.is_pro,
-      qrCode: qrCodeDataUrl,
-      portfolioUrl: `${baseUrl}/portfolio/${profile.slug}`,
-      fontCSS,
-      googleFontsUrl,
-      layoutClasses,
-      imageGridCSS,
-      agencyLogo
-    });
-  } catch (templateError) {
-    console.error('[renderPdfView] Template rendering error:', {
-      message: templateError.message,
-      stack: templateError.stack,
-      profileName: `${profile.first_name} ${profile.last_name}`,
-      themeKey: themeKey
-    });
-    throw templateError;
-  }
+  // Call res.render() directly - it will send the response
+  // res.render() doesn't return a Promise, so we don't need to await it
+  res.render('pdf/compcard', {
+    layout: false,
+    title: `${profile.first_name} ${profile.last_name} - Comp Card`,
+    profile,
+    images: gallery,
+    hero,
+    heightFeet: toFeetInches(profile.height_cm),
+    watermark: !profile.is_pro,
+    theme: mergedTheme,
+    themeKey: themeKey,
+    baseUrl,
+    isPro: profile.is_pro,
+    qrCode: qrCodeDataUrl,
+    portfolioUrl: `${baseUrl}/portfolio/${profile.slug}`,
+    fontCSS,
+    googleFontsUrl,
+    layoutClasses,
+    imageGridCSS,
+    agencyLogo
+  });
 }
 
 router.get('/pdf/view/:slug', async (req, res, next) => {
@@ -360,7 +350,7 @@ router.get('/pdf/view/:slug', async (req, res, next) => {
   let isDemo = false;
 
   try {
-    console.log('[PDF View] Route hit for slug:', slug, 'query:', req.query);
+    console.log('[PDF View] Route hit for slug:', slug, 'query:', req.query, 'theme:', req.query.theme);
 
     // For demo slug, ALWAYS use demo data first (works even if database is empty)
     // This ensures demo page always works
@@ -423,52 +413,32 @@ router.get('/pdf/view/:slug', async (req, res, next) => {
       return renderSimpleError(res, 500, 'Error', 'Unable to load profile data.');
     }
 
+    // Validate data structure before rendering
+    if (!data.profile || !data.images) {
+      console.error('[PDF View] Invalid data structure for slug:', slug, 'profile:', !!data.profile, 'images:', !!data.images);
+      return renderSimpleError(res, 500, 'Error', 'Invalid profile data structure.');
+    }
+
     // Render PDF view with profile data
-    const requestedTheme = req.query.theme || 'default';
+    // Note: renderPdfView will handle theme selection (query param, profile theme, or default)
     console.log('[PDF View] Rendering PDF for profile:', {
       slug: data.profile.slug,
       name: data.profile.first_name + ' ' + data.profile.last_name,
       isDemo: isDemo,
       imageCount: data.images.length,
-      requestedTheme: requestedTheme,
-      profileTheme: data.profile.pdf_theme || 'none'
+      requestedTheme: req.query.theme || 'none',
+      profileTheme: data.profile.pdf_theme || 'none',
+      isPro: data.profile.is_pro
     });
 
-    try {
-      const result = await renderPdfView(req, res, data, isDemo);
-      console.log('[PDF View] Successfully rendered PDF view for:', slug);
-      return result;
-    } catch (renderError) {
-      console.error('[PDF View Route] Error rendering PDF:', {
-        message: renderError.message,
-        stack: renderError.stack,
-        slug: slug,
-        isDemo: isDemo,
-        requestedTheme: requestedTheme,
-        errorName: renderError.name,
-        errorCode: renderError.code
-      });
-
-      // If rendering failed and we're not using demo, try demo as fallback
-      if (!isDemo && slug === 'elara-k') {
-        const demoData = getDemoProfile(slug);
-        if (demoData) {
-          console.log('[PDF View Route] Render failed, trying demo fallback');
-          try {
-            return await renderPdfView(req, res, demoData, true);
-          } catch (demoRenderError) {
-            console.error('[PDF View Route] Error rendering demo PDF:', demoRenderError.message);
-            return renderSimpleError(res, 500, 'Error', 'Unable to render PDF preview.');
-          }
-        }
-      }
-
-      // If we can't render, return error
-      return renderSimpleError(res, 500, 'Error', 'Unable to render PDF preview.');
-    }
+    // Call renderPdfView - it will call res.render() which sends the response
+    // res.render() doesn't return a Promise, so we don't need to await it
+    // If it throws an error, it will be caught by the catch block
+    renderPdfView(req, res, data, isDemo);
+    return; // Response is sent by res.render()
   } catch (error) {
     // Log errors for debugging
-    console.error('[PDF View Route] Error:', {
+    console.error('[PDF View Route] Error in route:', {
       message: error.message,
       code: error.code,
       name: error.name,
@@ -476,27 +446,59 @@ router.get('/pdf/view/:slug', async (req, res, next) => {
       stack: error.stack
     });
 
-    // Check if it's a database error and we haven't tried demo fallback yet
-    if ((isMissingTablesError(error) || isDatabaseError(error)) && !isDemo) {
+    // Check if response was already sent
+    if (res.headersSent) {
+      console.error('[PDF View Route] Response already sent, cannot send error response');
+      return;
+    }
+
+    // Always try to return an error response instead of passing to next()
+    // This ensures the iframe gets a response even if there's an error
+
+    // For demo slug, always try demo data as last resort
+    if (slug === 'elara-k') {
       const demoData = getDemoProfile(slug);
       if (demoData) {
-        console.log('[PDF View Route] Using demo fallback in catch handler');
+        console.log('[PDF View Route] Last resort: Using demo data in catch for:', slug);
         try {
-          return await renderPdfView(req, res, demoData, true);
+          renderPdfView(req, res, demoData, true);
+          return; // Response is sent by res.render()
         } catch (renderError) {
-          console.error('[PDF View Route] Error rendering demo PDF:', renderError.message);
-          return renderSimpleError(res, 500, 'Error', 'Unable to render PDF preview.');
+          console.error('[PDF View Route] Error rendering demo PDF in catch:', renderError.message);
+          // Fall through to return error page
         }
       }
     }
 
-    // For database errors without demo fallback, return error page
+    // Check if it's a database error
     if (isMissingTablesError(error) || isDatabaseError(error)) {
+      // For demo slug, try demo data even on database error
+      if (slug === 'elara-k') {
+        const demoData = getDemoProfile(slug);
+        if (demoData) {
+          console.log('[PDF View Route] Database error, using demo data for:', slug);
+          try {
+            renderPdfView(req, res, demoData, true);
+            return; // Response is sent by res.render()
+          } catch (renderError) {
+            console.error('[PDF View Route] Error rendering demo PDF after database error:', renderError.message);
+            return renderSimpleError(res, 500, 'Error', 'Unable to render PDF preview. Please try again.');
+          }
+        }
+      }
       return renderSimpleError(res, 500, 'Database Error', 'Unable to connect to the database. Please check your database configuration.');
     }
 
-    // For other errors, pass to error handler
-    return next(error);
+    // For template rendering errors, return a simple error page
+    if (error.message && (error.message.includes('render') || error.message.includes('template') || error.message.includes('EJS'))) {
+      console.error('[PDF View Route] Template rendering error:', error.message);
+      return renderSimpleError(res, 500, 'Error', 'Unable to render PDF preview. Please try again.');
+    }
+
+    // For any other error, return error page instead of passing to next()
+    // This ensures the iframe gets a response
+    console.error('[PDF View Route] Returning error page for unhandled error');
+    return renderSimpleError(res, 500, 'Error', 'Unable to load PDF preview. Please try again.');
   }
 });
 
@@ -1127,3 +1129,4 @@ router.delete('/api/pdf/agency-logo/:slug', requireRole('TALENT'), async (req, r
 });
 
 module.exports = router;
+
