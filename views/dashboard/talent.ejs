@@ -891,102 +891,77 @@
       </div>
     </div>
 
-    <!-- Right Column: Quick Actions Sidebar -->
+    <!-- Right Column: Sidebar -->
     <div class="dash-grid__column dash-sidebar">
-      <!-- Quick Stats -->
-      <div class="dash-panel dash-panel--compact dash-sidebar__stats">
-        <header class="dash-panel__header">
-          <h3>Quick Stats</h3>
-        </header>
-        <div class="dash-panel__body">
-          <div class="dash-sidebar__stat">
-            <span class="dash-sidebar__stat-label">Images</span>
-            <span class="dash-sidebar__stat-value" id="sidebar-image-count"><%= safeMedia.length %></span>
-          </div>
-          <% if (safeCompleteness && safeCompleteness.percentage !== undefined) { %>
-            <div class="dash-sidebar__stat">
-              <span class="dash-sidebar__stat-label">Profile</span>
-              <span class="dash-sidebar__stat-value"><%= Math.round(safeCompleteness.percentage) %>%</span>
-            </div>
-          <% } %>
-          <% if (safeProfile.updated_at) { %>
-            <div class="dash-sidebar__stat">
-              <span class="dash-sidebar__stat-label">Last Updated</span>
-              <span class="dash-sidebar__stat-value" style="font-size: 12px;">
-                <%= new Date(safeProfile.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %>
-              </span>
-            </div>
-          <% } %>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="dash-panel dash-panel--compact dash-sidebar__actions">
-        <header class="dash-panel__header">
-          <h3>Quick Actions</h3>
-        </header>
-        <div class="dash-panel__body">
-          <% if (typeof profile !== 'undefined' && profile && profile.id && safeProfile.slug) { %>
-            <div class="dash-sidebar__action-buttons">
-              <button type="button" class="button button-primary dash-sidebar__action-btn" id="sidebar-pdf-download-btn" data-slug="<%= slug %>" data-theme="<%= (typeof currentTheme !== 'undefined' ? currentTheme : safeProfile.pdf_theme) || 'classic-serif' %>" data-is-pro="<%= safeProfile.is_pro ? 'true' : 'false' %>">
-                <span>📄</span>
-                <span>Download PDF</span>
-              </button>
-              <a href="/portfolio/<%= slug %>" class="button button-secondary dash-sidebar__action-btn" target="_blank" rel="noopener noreferrer">
-                <span>👁️</span>
-                <span>View Portfolio</span>
-              </a>
-              <button type="button" class="button button-secondary dash-sidebar__action-btn" data-copy-target="[data-share-url]">
-                <span>🔗</span>
-                <span>Share Link</span>
-              </button>
-              <% if (safeProfile.is_pro) { %>
-                <a href="/dashboard/pdf-customizer" class="button button-secondary dash-sidebar__action-btn">
-                  <span>🎨</span>
-                  <span>Customize PDF</span>
-                </a>
-              <% } %>
-            </div>
-          <% } else { %>
-            <p class="form-field__help" style="margin-bottom: 16px; text-align: center;">
-              Complete your profile to unlock quick actions
-            </p>
-          <% } %>
-        </div>
-      </div>
-
-      <!-- Profile Status -->
-      <div class="dash-panel dash-panel--compact">
+      <!-- Profile Status & Stats (Consolidated) -->
+      <div class="dash-panel dash-panel--compact dash-sidebar__status">
         <header class="dash-panel__header">
           <h3>Profile Status</h3>
         </header>
         <div class="dash-panel__body">
-          <p class="form-field__help" style="margin-bottom: 16px;">
-            Complete all requirements to activate your profile for agencies
-          </p>
-          <div class="completion-chips">
-            <span class="chip <%= safeCompleteness.basics ? 'is-complete' : '' %>">
-              Profile Details
-            </span>
-            <span class="chip <%= safeCompleteness.imagery ? 'is-complete' : '' %>">
-              2+ Images
-            </span>
-            <span class="chip <%= safeCompleteness.hero ? 'is-complete' : '' %>">
-              Hero Image
-            </span>
-          </div>
-        </div>
-      </div>
+          <!-- Progress Bar -->
+          <% if (safeCompleteness && safeCompleteness.percentage !== undefined) { %>
+            <div class="profile-progress">
+              <div class="profile-progress__header">
+                <span class="profile-progress__label">Profile Complete</span>
+                <span class="profile-progress__percentage"><%= Math.round(safeCompleteness.percentage) %>%</span>
+              </div>
+              <div class="profile-progress__bar">
+                <div class="profile-progress__fill" style="width: <%= safeCompleteness.percentage %>%"></div>
+              </div>
+            </div>
+          <% } %>
 
-      <!-- Share Portfolio -->
-      <div class="dash-panel dash-panel--compact">
-        <header class="dash-panel__header">
-          <h3>Share Portfolio</h3>
-        </header>
-        <div class="dash-panel__body">
-          <div class="share-url" data-share-url>
-            <%= effectiveShareUrl %>
+          <!-- Quick Stats -->
+          <div class="profile-quick-stats">
+            <div class="profile-quick-stat">
+              <span class="profile-quick-stat__value" id="sidebar-image-count"><%= safeMedia.length %></span>
+              <span class="profile-quick-stat__label">Images</span>
+            </div>
+            <% if (safeProfile.updated_at) { %>
+              <div class="profile-quick-stat">
+                <span class="profile-quick-stat__value" style="font-size: 13px;">
+                  <%= new Date(safeProfile.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %>
+                </span>
+                <span class="profile-quick-stat__label">Updated</span>
+              </div>
+            <% } %>
           </div>
+
+          <!-- Completion Checklist -->
+          <div class="completion-checklist">
+            <div class="completion-item <%= safeCompleteness.basics ? 'is-complete' : '' %>">
+              <span class="completion-item__icon"><%= safeCompleteness.basics ? '✓' : '○' %></span>
+              <span class="completion-item__label">Profile Details</span>
+            </div>
+            <div class="completion-item <%= safeCompleteness.imagery ? 'is-complete' : '' %>">
+              <span class="completion-item__icon"><%= safeCompleteness.imagery ? '✓' : '○' %></span>
+              <span class="completion-item__label">2+ Images</span>
+            </div>
+            <div class="completion-item <%= safeCompleteness.hero ? 'is-complete' : '' %>">
+              <span class="completion-item__icon"><%= safeCompleteness.hero ? '✓' : '○' %></span>
+              <span class="completion-item__label">Hero Image</span>
+            </div>
+          </div>
+
+          <!-- Share Portfolio (if profile exists) -->
+          <% if (typeof profile !== 'undefined' && profile && profile.id && safeProfile.slug) { %>
+            <div class="share-section">
+              <label class="share-section__label">Share Portfolio</label>
+              <div class="share-url-wrapper">
+                <input type="text" class="share-url-input" value="<%= effectiveShareUrl %>" readonly data-share-url>
+                <button type="button" class="share-copy-btn" data-copy-target="[data-share-url]" title="Copy link">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5.5 4.5V3.5C5.5 2.39543 6.39543 1.5 7.5 1.5H12.5C13.6046 1.5 14.5 2.39543 14.5 3.5V8.5C14.5 9.60457 13.6046 10.5 12.5 10.5H11.5M5.5 4.5H3.5C2.39543 4.5 1.5 5.39543 1.5 6.5V11.5C1.5 12.6046 2.39543 13.5 3.5 13.5H8.5C9.60457 13.5 10.5 12.6046 10.5 11.5V9.5M5.5 4.5C5.5 5.60457 6.39543 6.5 7.5 6.5H9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          <% } else { %>
+            <div class="empty-state-message">
+              <p>Complete your profile below to unlock portfolio sharing and quick actions.</p>
+            </div>
+          <% } %>
         </div>
       </div>
 

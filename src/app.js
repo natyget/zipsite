@@ -23,6 +23,27 @@ const proRoutes = require('./routes/pro');
 
 const app = express();
 
+// Handle unhandled promise rejections gracefully (especially for session cleanup)
+// This prevents crashes from cleanup errors in serverless environments
+process.on('unhandledRejection', (reason, promise) => {
+  // Check if it's a session cleanup error (expected in serverless)
+  if (reason && typeof reason === 'object' && reason.message) {
+    if (
+      reason.message.includes('Connection terminated') ||
+      reason.message.includes('delete from "sessions"') ||
+      reason.message.includes('expired') ||
+      (reason.message.includes('connection') && reason.message.includes('unexpectedly'))
+    ) {
+      // Log session cleanup errors but don't crash (non-critical)
+      console.error('[Unhandled Rejection] Session cleanup error (expected in serverless):', reason.message);
+      return; // Don't crash - this is expected behavior in serverless
+    }
+  }
+
+  // For other unhandled rejections, log them but don't crash
+  console.error('[Unhandled Rejection]', reason);
+});
+
 // Only create uploads directory if not in serverless environment
 // In serverless, we use /tmp which is already available
 if (!config.isServerless) {
@@ -57,7 +78,7 @@ app.use((req, res, next) => {
   // Express should set req.ip automatically with trust proxy, but verify it's set
   // In serverless, we need to manually extract IP from headers
   let ip = req.ip;
-  
+
   // If req.ip is not set or invalid, get it from headers
   if (!ip || ip === undefined || ip === null || ip === '') {
     // Netlify Functions provide x-forwarded-for header with client IP
@@ -68,15 +89,15 @@ app.use((req, res, next) => {
       ip = forwardedFor.split(',')[0]?.trim();
     }
   }
-  
+
   // Fallback to other headers if still no IP
   if (!ip || ip === undefined || ip === null || ip === '') {
-    ip = req.headers['x-real-ip'] || 
-         req.headers['cf-connecting-ip'] ||
-         req.headers['x-client-ip'] ||
-         null;
+    ip = req.headers['x-real-ip'] ||
+      req.headers['cf-connecting-ip'] ||
+      req.headers['x-client-ip'] ||
+      null;
   }
-  
+
   // Clean up IP if we have one (remove IPv6 prefix, port, brackets, etc.)
   if (ip && typeof ip === 'string') {
     // Remove brackets if present (e.g., "[2001:db8::1]" -> "2001:db8::1")
@@ -100,11 +121,11 @@ app.use((req, res, next) => {
       }
     }
   }
-  
+
   // CRITICAL: Always set req.ip to a valid string value
   // express-rate-limit requires req.ip to be defined, even if we use a custom keyGenerator
   req.ip = (ip && typeof ip === 'string' && ip !== '') ? ip : '127.0.0.1';
-  
+
   // Also ensure req.connection.remoteAddress is set (some libraries check this)
   if (!req.connection) {
     req.connection = {};
@@ -112,7 +133,7 @@ app.use((req, res, next) => {
   if (!req.connection.remoteAddress) {
     req.connection.remoteAddress = req.ip;
   }
-  
+
   // Ensure req.socket.remoteAddress is set (additional fallback)
   if (!req.socket) {
     req.socket = {};
@@ -120,7 +141,7 @@ app.use((req, res, next) => {
   if (!req.socket.remoteAddress) {
     req.socket.remoteAddress = req.ip;
   }
-  
+
   next();
 });
 
@@ -130,7 +151,7 @@ function rateLimitKeyGenerator(req) {
   // Use req.ip (which we ensure is set above) as primary identifier
   // This should now always be set thanks to our middleware
   let ip = req.ip;
-  
+
   // Clean up IP if needed (remove IPv6 prefix, port, etc.)
   if (ip && ip !== '0.0.0.0') {
     // Remove IPv6 prefix if present
@@ -146,17 +167,17 @@ function rateLimitKeyGenerator(req) {
     }
     return ip;
   }
-  
+
   // Fallback to session ID if available (more reliable in serverless)
   if (req.session && req.sessionID) {
     return `session:${req.sessionID}`;
   }
-  
+
   // Fallback to user ID if authenticated
   if (req.session && req.session.userId) {
     return `user:${req.session.userId}`;
   }
-  
+
   // Final fallback: use a combination that's unique enough
   // This should rarely be used since we ensure req.ip is set
   const userAgent = (req.headers['user-agent'] || 'unknown').substring(0, 50);
@@ -189,9 +210,50 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-const sessionStore = new KnexSessionStore({
+// Configure session store with serverless-friendly settings
+const sessionStoreConfig = {
   knex,
   tablename: 'sessions'
+};
+
+// In serverless environments, disable automatic cleanup to prevent connection errors
+// Automatic cleanup runs on a timer and can execute after connections are closed
+// In serverless, functions are short-lived and connections can terminate unexpectedly
+if (config.isServerless) {
+  // Disable automatic cleanup in serverless to prevent connection errors
+  // In connect-session-knex, cleanupInterval defaults to 15 minutes (900000 ms)
+  // Setting it to 0 explicitly disables the cleanup interval
+  sessionStoreConfig.cleanupInterval = 0; // 0 = disabled (no cleanup)
+
+  console.log('[Session Store] Automatic cleanup disabled for serverless environment (cleanupInterval: 0)');
+}
+
+const sessionStore = new KnexSessionStore(sessionStoreConfig);
+
+// Add error handler for session store events (safety net)
+// This catches any errors during session operations, including cleanup if it runs
+sessionStore.on('error', (error) => {
+  // Log session store errors but don't crash
+  // Connection errors are expected in serverless environments when functions end
+  if (error && error.message) {
+    const isCleanupError = (
+      error.message.includes('Connection terminated') ||
+      error.message.includes('delete from "sessions"') ||
+      error.message.includes('expired') ||
+      (error.message.includes('connection') && error.message.includes('unexpectedly'))
+    );
+
+    if (isCleanupError) {
+      // These are expected in serverless - connections close when functions end
+      // Log but don't throw - cleanup errors are non-critical
+      console.error('[Session Store] Cleanup error (expected in serverless, ignored):', error.message);
+    } else {
+      // Other errors should be logged but not cause crashes
+      console.error('[Session Store] Error:', error.message);
+    }
+  } else {
+    console.error('[Session Store] Unknown error:', error);
+  }
 });
 
 app.use(
@@ -216,18 +278,18 @@ app.use(attachLocals);
 // In serverless environments (Netlify Functions), req.ip might be undefined initially
 // We provide a custom keyGenerator that always returns a valid key, so we can safely
 // disable IP validation to prevent "undefined request.ip" errors
-const authLimiter = rateLimit({ 
-  windowMs: 60 * 1000, 
-  max: 10, 
-  standardHeaders: true, 
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: rateLimitKeyGenerator
   // Note: We don't disable validation because express-rate-limit v7 requires req.ip
   // Our middleware above ensures req.ip is always set before this runs
 });
 
-const uploadLimiter = rateLimit({ 
-  windowMs: 60 * 1000, 
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 1000,
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
@@ -246,7 +308,7 @@ app.get('/', async (req, res, next) => {
     // Use fallback data if database query fails
     let elaraProfile = null;
     let elaraImages = [];
-    
+
     try {
       elaraProfile = await knex('profiles').where({ slug: 'elara-k' }).first();
       if (elaraProfile) {
@@ -261,7 +323,7 @@ app.get('/', async (req, res, next) => {
     // Use database-agnostic random ordering
     let floatingTalents = [];
     let floatingTalentsWithImages = [];
-    
+
     try {
       if (config.dbClient === 'pg') {
         floatingTalents = await knex('profiles')
@@ -279,7 +341,7 @@ app.get('/', async (req, res, next) => {
         // Shuffle and take first 4
         floatingTalents = floatingTalents.sort(() => Math.random() - 0.5).slice(0, 4);
       }
-      
+
       // For each floating talent, get their first image
       floatingTalentsWithImages = await Promise.all(
         floatingTalents.map(async (talent) => {
@@ -317,8 +379,8 @@ app.get('/', async (req, res, next) => {
       last_name: 'Keats',
       city: 'Los Angeles, CA',
       slug: 'elara-k',
-          bio_raw: 'hi!!!\n\ni saw on insta you guys are looking for new faces?? im elara keats and im a model based in LA (but i can travel anywhere, i have a passport!!) im really looking to get into more editorial and runway work.\n\na bit about me:\n\nim 5\'11"\nmy measurements are 32-25-35\nmy shoe is a 9\ni have brown hair/green eyes.\n\nMy insta is @elara.k -- i post most of my new work there. im a super hard worker and everyone says im professional, i have a background in some smaller campaigns. i was with [Agency Name] last year but left, it wasnt a good fit.\n\nI put my best photos (some are digitals my friend took, some are from real shoots but they are not edited yet) in this google drive. hope you can see them?\n\nhere is the link:\n\nhttps://www.google.com/search?q=https://drive.google.com/drive/folders/1aBcD-THIS-IS-A-MESSY-LINK-xyz\n\nI also have a portfolio on a wix site i made, i think this is the link:\n\nhttps://www.google.com/search?q=elara-portfolio.wixsite.com/mysite\n\nLet me know what you think! Thx so much!! 🙏 I\'m free for a meeting basically any time next week.\n\n-Elara K.',
-          bio_curated: 'Elara Keats is an emerging model based in Los Angeles with a strong foundation in editorial and runway work. Standing at 5\'11" with measurements of 32-25-35, she brings a commanding presence to both high-fashion editorials and commercial campaigns. With brown hair and green eyes, Elara\'s versatile look has made her a sought-after talent for diverse creative projects. Her professional approach and extensive experience in smaller campaigns demonstrate her commitment to excellence. Elara is available for travel and actively seeking opportunities in editorial and runway work, bringing dedication and professionalism to every project.',
+      bio_raw: 'hi!!!\n\ni saw on insta you guys are looking for new faces?? im elara keats and im a model based in LA (but i can travel anywhere, i have a passport!!) im really looking to get into more editorial and runway work.\n\na bit about me:\n\nim 5\'11"\nmy measurements are 32-25-35\nmy shoe is a 9\ni have brown hair/green eyes.\n\nMy insta is @elara.k -- i post most of my new work there. im a super hard worker and everyone says im professional, i have a background in some smaller campaigns. i was with [Agency Name] last year but left, it wasnt a good fit.\n\nI put my best photos (some are digitals my friend took, some are from real shoots but they are not edited yet) in this google drive. hope you can see them?\n\nhere is the link:\n\nhttps://www.google.com/search?q=https://drive.google.com/drive/folders/1aBcD-THIS-IS-A-MESSY-LINK-xyz\n\nI also have a portfolio on a wix site i made, i think this is the link:\n\nhttps://www.google.com/search?q=elara-portfolio.wixsite.com/mysite\n\nLet me know what you think! Thx so much!! 🙏 I\'m free for a meeting basically any time next week.\n\n-Elara K.',
+      bio_curated: 'Elara Keats is an emerging model based in Los Angeles with a strong foundation in editorial and runway work. Standing at 5\'11" with measurements of 32-25-35, she brings a commanding presence to both high-fashion editorials and commercial campaigns. With brown hair and green eyes, Elara\'s versatile look has made her a sought-after talent for diverse creative projects. Her professional approach and extensive experience in smaller campaigns demonstrate her commitment to excellence. Elara is available for travel and actively seeking opportunities in editorial and runway work, bringing dedication and professionalism to every project.',
       hero_image_path: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=2000&q=80',
       height_cm: 180,
       measurements: '32-25-35'
@@ -388,7 +450,7 @@ app.get('/demo', async (req, res) => {
     const freeThemes = getFreeThemes();
     const proThemes = getProThemes();
     const baseUrl = `${req.protocol}://${req.get('host')}`;
-    
+
     res.locals.currentPage = 'demo';
     res.render('public/demo', {
       title: 'Demo — ZipSite',
@@ -424,9 +486,9 @@ app.post('/api/migrate', async (req, res) => {
     // Check for migration secret (required for security)
     const migrationSecret = process.env.MIGRATION_SECRET;
     const providedSecret = req.query.secret || req.headers['x-migration-secret'];
-    
+
     if (migrationSecret && providedSecret !== migrationSecret) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         error: 'Unauthorized',
         message: 'Invalid migration secret. Set MIGRATION_SECRET in environment variables and provide it as ?secret=... or X-Migration-Secret header.'
       });
@@ -438,10 +500,10 @@ app.post('/api/migrate', async (req, res) => {
     }
 
     console.log('[Migration] Starting database migrations...');
-    
+
     // Run migrations
     const [batchNo, log] = await knex.migrate.latest();
-    
+
     console.log('[Migration] Migrations completed:', {
       batchNo,
       migrationsRun: log.length,
@@ -451,7 +513,7 @@ app.post('/api/migrate', async (req, res) => {
     // Get migration status
     const currentVersion = await knex.migrate.currentVersion();
     const status = await knex.migrate.status();
-    
+
     return res.json({
       success: true,
       message: 'Migrations completed successfully',
@@ -485,7 +547,7 @@ app.get('/api/migrate/status', async (req, res) => {
     const currentVersion = await knex.migrate.currentVersion();
     const status = await knex.migrate.status();
     const list = await knex.migrate.list();
-    
+
     return res.json({
       currentVersion,
       status: status === 0 ? 'up to date' : `${Math.abs(status)} migrations ${status > 0 ? 'pending' : 'ahead'}`,
@@ -565,40 +627,40 @@ app.use((err, req, res, next) => {
     url: req.url,
     method: req.method
   });
-  
+
   if (res.headersSent) {
     return next(err);
   }
-  
+
   // Check if it's a missing tables error (needs migrations)
-  const isMissingTablesError = err.code === '42P01' || 
-                                (err.message && (
-                                  err.message.includes('relation') && err.message.includes('does not exist') ||
-                                  err.message.includes('table') && err.message.includes('does not exist')
-                                ));
-  
+  const isMissingTablesError = err.code === '42P01' ||
+    (err.message && (
+      err.message.includes('relation') && err.message.includes('does not exist') ||
+      err.message.includes('table') && err.message.includes('does not exist')
+    ));
+
   // Check if it's a database connection error
-  const isDatabaseError = err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' || 
-                          err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET' ||
-                          err.code === '42P01' || // PostgreSQL: relation does not exist
-                          err.code === '42P07' || // PostgreSQL: relation already exists
-                          err.code === '3D000' || // PostgreSQL: database does not exist
-                          err.code === '28P01' || // PostgreSQL: authentication failed
-                          (err.message && (
-                            err.message.includes('DATABASE_URL') ||
-                            err.message.includes('database') ||
-                            err.message.includes('connect') ||
-                            err.message.includes('connection') ||
-                            err.message.includes('Cannot find module \'pg\'') ||
-                            err.message.includes('Knex: run') ||
-                            (err.message.includes('relation') && err.message.includes('does not exist'))
-                          ));
-  
+  const isDatabaseError = err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' ||
+    err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET' ||
+    err.code === '42P01' || // PostgreSQL: relation does not exist
+    err.code === '42P07' || // PostgreSQL: relation already exists
+    err.code === '3D000' || // PostgreSQL: database does not exist
+    err.code === '28P01' || // PostgreSQL: authentication failed
+    (err.message && (
+      err.message.includes('DATABASE_URL') ||
+      err.message.includes('database') ||
+      err.message.includes('connect') ||
+      err.message.includes('connection') ||
+      err.message.includes('Cannot find module \'pg\'') ||
+      err.message.includes('Knex: run') ||
+      (err.message.includes('relation') && err.message.includes('does not exist'))
+    ));
+
   // In production, show generic error; in development, show more details
   // BUT: Always show database connection errors with helpful messages
   const isDevelopment = config.nodeEnv !== 'production';
   const showErrorDetails = isDevelopment || isDatabaseError;
-  
+
   const errorDetails = showErrorDetails ? {
     message: err.message,
     code: err.code,
@@ -606,7 +668,7 @@ app.use((err, req, res, next) => {
     stack: isDevelopment ? err.stack : undefined,
     migrationRequired: isMissingTablesError
   } : null;
-  
+
   if (req.accepts('html')) {
     // Tell 500 page to use the old 'layout' file
     let title = 'Server error';
@@ -615,7 +677,7 @@ app.use((err, req, res, next) => {
     } else if (isDatabaseError) {
       title = 'Database Connection Error';
     }
-    
+
     return res.status(500).render('errors/500', {
       title: title,
       layout: 'layout', // Use simple layout for error
@@ -624,10 +686,10 @@ app.use((err, req, res, next) => {
       isDatabaseError: isDatabaseError
     });
   }
-  
+
   // JSON error response
   if (isMissingTablesError) {
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: 'Database setup required',
       message: 'Database tables do not exist. Please run migrations to set up the database.',
       code: err.code,
@@ -635,8 +697,8 @@ app.use((err, req, res, next) => {
       instructions: 'Call POST /api/migrate to run database migrations.'
     });
   }
-  
-  return res.status(500).json({ 
+
+  return res.status(500).json({
     error: isDatabaseError ? 'Database connection error' : 'Server error',
     message: showErrorDetails ? err.message : undefined,
     code: showErrorDetails ? err.code : undefined
