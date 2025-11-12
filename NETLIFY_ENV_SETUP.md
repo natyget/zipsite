@@ -6,16 +6,50 @@ This error means your function is trying to connect to a local PostgreSQL databa
 
 ## Solution: Set Environment Variables in Netlify
 
-### Step 1: Get Your Neon Connection String
+### Step 1: Get Your REAL Neon Connection String
 
-1. Go to [Neon Console](https://console.neon.tech)
-2. Select your project
-3. Click on "Connection Details" or "Connection String"
-4. Copy the connection string (it should look like):
-   ```
-   postgresql://user:password@host.neon.tech/dbname?sslmode=require
-   ```
-5. **Important**: Make sure it includes `?sslmode=require` at the end
+**⚠️ CRITICAL: You must use your ACTUAL connection string from Neon, not a placeholder!**
+
+1. **Go to [Neon Console](https://console.neon.tech)**
+   - Log in to your Neon account
+   - If you don't have an account, sign up for free
+
+2. **Select Your Project**
+   - Click on your project (or create a new one if you haven't)
+
+3. **Get Connection String**
+   - Click on **"Connection Details"** or **"Connection String"** in the dashboard
+   - You'll see your connection string - it will look something like:
+     ```
+     postgresql://username:password@ep-cool-darkness-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
+     ```
+   - **Notice**: The hostname is unique (like `ep-cool-darkness-123456.us-east-2.aws.neon.tech`)
+   - **DO NOT** use placeholder values like `host.neon.tech` or `your-host.neon.tech`
+
+4. **Copy the Complete String**
+   - Click the copy button next to the connection string
+   - Make sure you copy the ENTIRE string including:
+     - `postgresql://` prefix
+     - Username and password
+     - Your unique hostname (starts with `ep-`)
+     - Database name
+     - `?sslmode=require` at the end
+
+5. **Verify the Format**
+   - Should start with `postgresql://` or `postgres://`
+   - Should contain your unique hostname (NOT `host.neon.tech`)
+   - Should end with `?sslmode=require`
+   - Should be a long string (not a short placeholder)
+
+**Example of CORRECT connection string:**
+```
+postgresql://myuser:mypassword@ep-cool-darkness-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
+```
+
+**Example of WRONG (placeholder - will cause errors):**
+```
+postgresql://user:password@host.neon.tech/dbname?sslmode=require  ❌ DON'T USE THIS!
+```
 
 ### Step 2: Set Environment Variables in Netlify
 
@@ -90,11 +124,13 @@ After adding all variables, you should see:
 
 ```
 DB_CLIENT = pg
-DATABASE_URL = postgresql://user:password@host.neon.tech/dbname?sslmode=require
+DATABASE_URL = postgresql://username:password@ep-xxx-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
 SESSION_SECRET = <your-secret>
 NODE_ENV = production
 PDF_BASE_URL = https://your-site.netlify.app (optional)
 ```
+
+**⚠️ Important**: Your DATABASE_URL should have a unique hostname (like `ep-xxx-xxx-xxx.us-east-2.aws.neon.tech`), NOT a placeholder like `host.neon.tech`!
 
 ### Step 4: Redeploy Your Site
 
@@ -123,15 +159,35 @@ After setting environment variables:
 
 ## Common Issues
 
-### Issue 1: Still getting `ECONNREFUSED 127.0.0.1:5432`
+### Issue 1: Error `getaddrinfo ENOTFOUND host.neon.tech`
+
+**Problem**: Your DATABASE_URL contains a placeholder instead of your actual Neon connection string.
+
+**Solution**: 
+1. **Go to Neon Console** (https://console.neon.tech)
+2. **Select your project**
+3. **Click "Connection Details"** or **"Connection String"**
+4. **Copy your REAL connection string** (it will have a unique hostname like `ep-xxx-xxx.us-east-2.aws.neon.tech`)
+5. **Update DATABASE_URL in Netlify**:
+   - Go to Netlify Dashboard → Site settings → Environment variables
+   - Find `DATABASE_URL`
+   - Click "Edit" and paste your REAL connection string
+   - Make sure it's the complete string with `?sslmode=require` at the end
+6. **Redeploy your site** after updating
+
+**What to look for:**
+- ✅ **CORRECT**: `postgresql://user:pass@ep-cool-darkness-123456.us-east-2.aws.neon.tech/neondb?sslmode=require`
+- ❌ **WRONG**: `postgresql://user:pass@host.neon.tech/dbname?sslmode=require` (this is a placeholder!)
+
+### Issue 2: Still getting `ECONNREFUSED 127.0.0.1:5432`
 
 **Solution**: 
 - Verify `DB_CLIENT=pg` is set
-- Verify `DATABASE_URL` is set and correct
+- Verify `DATABASE_URL` is set and correct (use your REAL Neon connection string, not a placeholder)
 - Make sure you redeployed after setting variables
 - Check that variables are set for the correct scope (Production, Preview, etc.)
 
-### Issue 2: Invalid DATABASE_URL format
+### Issue 3: Invalid DATABASE_URL format
 
 **Solution**:
 - Ensure DATABASE_URL starts with `postgresql://` or `postgres://`
@@ -139,7 +195,7 @@ After setting environment variables:
 - Verify there are no extra spaces or quotes
 - Copy the connection string directly from Neon dashboard
 
-### Issue 3: Environment variables not taking effect
+### Issue 4: Environment variables not taking effect
 
 **Solution**:
 - Environment variables only apply to new deploys
@@ -147,7 +203,7 @@ After setting environment variables:
 - Check that variables are set for the correct scope
 - Verify variables are not being overridden elsewhere
 
-### Issue 4: SSL connection error
+### Issue 5: SSL connection error
 
 **Solution**:
 - Ensure `?sslmode=require` is in your DATABASE_URL

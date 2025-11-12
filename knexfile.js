@@ -40,6 +40,38 @@ if (client === 'pg') {
       'Example: DATABASE_URL=postgresql://user:password@host:5432/dbname?sslmode=require'
     );
   }
+  
+  // Detect common placeholder patterns in DATABASE_URL
+  const dbUrl = process.env.DATABASE_URL.toLowerCase();
+  const placeholderPatterns = [
+    'host.neon.tech',
+    'your-host.neon.tech',
+    'example.com',
+    'localhost',
+    '127.0.0.1',
+    'placeholder',
+    'your-database',
+    'your-host'
+  ];
+  
+  const containsPlaceholder = placeholderPatterns.some(pattern => dbUrl.includes(pattern));
+  
+  if (containsPlaceholder) {
+    throw new Error(
+      'DATABASE_URL contains a placeholder value instead of your actual Neon connection string.\n\n' +
+      '❌ ERROR: You used a placeholder like "host.neon.tech" instead of your real database hostname.\n\n' +
+      '✅ SOLUTION:\n' +
+      '1. Go to https://console.neon.tech\n' +
+      '2. Select your project\n' +
+      '3. Click on "Connection Details" or "Connection String"\n' +
+      '4. Copy the COMPLETE connection string (it will have a unique hostname like "ep-xxx-xxx.us-east-2.aws.neon.tech")\n' +
+      '5. Paste the REAL connection string in Netlify environment variables\n' +
+      '6. Make sure it includes ?sslmode=require at the end\n\n' +
+      `Current DATABASE_URL starts with: ${process.env.DATABASE_URL.substring(0, 50)}...\n\n` +
+      'Your real Neon connection string should look like:\n' +
+      'postgresql://username:password@ep-xxx-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require'
+    );
+  }
 }
 
 const pg = {
