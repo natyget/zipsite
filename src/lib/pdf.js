@@ -91,7 +91,21 @@ async function renderCompCard(slug, theme = null) {
     if (config.isServerless && chromium) {
       // Use @sparticuz/chromium for Netlify Functions
       console.log('[renderCompCard] Using @sparticuz/chromium for serverless environment');
-      launchOptions.executablePath = chromium.executablePath();
+      
+      // executablePath() may be async in newer versions, handle both cases
+      let executablePath;
+      try {
+        executablePath = chromium.executablePath();
+        // If it's a Promise, await it
+        if (executablePath && typeof executablePath.then === 'function') {
+          executablePath = await executablePath;
+        }
+      } catch (error) {
+        console.error('[renderCompCard] Error getting Chromium executable path:', error);
+        throw new Error('Failed to get Chromium executable path for serverless environment.');
+      }
+      
+      launchOptions.executablePath = executablePath;
       // Add serverless-specific args (chromium.args is already optimized for serverless)
       launchOptions.args = [
         ...chromium.args,
@@ -108,7 +122,8 @@ async function renderCompCard(slug, theme = null) {
       console.log('[renderCompCard] Launching Puppeteer:', {
         isServerless: config.isServerless,
         hasChromium: !!chromium,
-        executablePath: launchOptions.executablePath ? 'set' : 'default'
+        executablePath: launchOptions.executablePath ? 'set' : 'default',
+        executablePathType: typeof launchOptions.executablePath
       });
       
       browser = await puppeteer.launch(launchOptions);
