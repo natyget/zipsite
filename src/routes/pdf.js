@@ -10,7 +10,10 @@ router.get('/pdf/view/:slug', async (req, res, next) => {
   try {
     const data = await loadProfile(req.params.slug);
     if (!data) {
-      return res.status(404).render('errors/404', { title: 'Profile not found' });
+      return res.status(404).render('errors/404', { 
+        title: 'Profile not found',
+        layout: 'layout'
+      });
     }
     const { profile, images } = data;
     const hero = profile.hero_image_path || (images[0] ? images[0].path : null);

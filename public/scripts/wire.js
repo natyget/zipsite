@@ -459,6 +459,49 @@
     });
   }
 
+  function initUniversalHeaderMenu() {
+    const menuToggle = document.querySelector('.universal-header__menu-toggle');
+    const navPanel = document.getElementById('universalNav');
+
+    if (menuToggle && navPanel) {
+      const toggleMenu = () => {
+        const expanded = menuToggle.getAttribute('aria-expanded') === 'true';
+        menuToggle.setAttribute('aria-expanded', String(!expanded));
+        if (expanded) {
+          navPanel.setAttribute('hidden', '');
+        } else {
+          navPanel.removeAttribute('hidden');
+        }
+      };
+
+      menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu();
+      });
+
+      const navLinks = navPanel.querySelectorAll('a');
+      navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+          toggleMenu();
+        });
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!navPanel.hidden && !navPanel.contains(e.target) && !menuToggle.contains(e.target)) {
+          if (menuToggle.getAttribute('aria-expanded') === 'true') {
+            toggleMenu();
+          }
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !navPanel.hidden) {
+          toggleMenu();
+        }
+      });
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     hydrateFlash();
     handleAsyncForms();
@@ -466,5 +509,6 @@
     handleCopyLinks();
     handlePdfButtons();
     wireMobileNav();
+    initUniversalHeaderMenu();
   });
 })();

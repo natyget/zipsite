@@ -27,12 +27,47 @@
     const frame = document.getElementById('portfolio-preview-frame');
     const controlBtns = document.querySelectorAll('.demo-portfolio-preview__control-btn');
     const iframe = document.querySelector('.demo-portfolio-preview__iframe');
+    const errorDiv = document.getElementById('portfolio-iframe-error');
 
     if (!frame || !controlBtns.length) return;
 
     // Set default view to desktop
     frame.setAttribute('data-view', 'desktop');
     controlBtns[0]?.classList.add('is-active');
+
+    // Handle iframe load errors
+    if (iframe) {
+      iframe.addEventListener('error', () => {
+        console.warn('[Demo] Portfolio iframe failed to load');
+        if (iframe) iframe.style.display = 'none';
+        if (errorDiv) errorDiv.style.display = 'block';
+      });
+
+      // Check if iframe loaded successfully after a timeout
+      iframe.addEventListener('load', () => {
+        // Iframe loaded successfully
+        if (errorDiv) errorDiv.style.display = 'none';
+      });
+
+      // Fallback: check after 5 seconds if iframe is still loading
+      setTimeout(() => {
+        try {
+          // Try to access iframe content - if it fails, show error
+          if (iframe.contentWindow && iframe.contentWindow.document) {
+            // Iframe loaded successfully
+            if (errorDiv) errorDiv.style.display = 'none';
+          }
+        } catch (e) {
+          // Cross-origin or error - this is expected for external content
+          // But if we get here and the iframe is blank, it might be an error
+          if (iframe.src && iframe.src !== 'about:blank') {
+            // Iframe might have failed - check if it's showing an error page
+            // We can't check content due to CORS, so we'll assume it's working
+            // unless we get an explicit error event
+          }
+        }
+      }, 5000);
+    }
 
     controlBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -142,17 +177,53 @@
         closeBtn.hidden = false;
       }
 
-      // Create iframe preview
+      // Create iframe preview with error handling
       const previewUrl = `/pdf/view/${demoSlug}?theme=${themeKey}`;
       
       previewContent.innerHTML = `
+        <div class="demo-pdf-themes__preview-loading" style="padding: 2rem; text-align: center; color: #666;">
+          <p>Loading preview...</p>
+        </div>
         <iframe 
           src="${previewUrl}" 
           class="demo-pdf-themes__preview-iframe"
           title="PDF ${theme.name} Theme Preview"
-          loading="lazy">
+          loading="lazy"
+          style="display: none;">
         </iframe>
+        <div class="demo-pdf-themes__preview-error" style="display: none; padding: 2rem; text-align: center; color: #666;">
+          <p>PDF preview unavailable</p>
+          <p style="font-size: 0.9rem; margin-top: 0.5rem;">The demo PDF is not available at this time.</p>
+        </div>
       `;
+
+      const iframe = previewContent.querySelector('.demo-pdf-themes__preview-iframe');
+      const loadingDiv = previewContent.querySelector('.demo-pdf-themes__preview-loading');
+      const errorDiv = previewContent.querySelector('.demo-pdf-themes__preview-error');
+
+      if (iframe) {
+        iframe.addEventListener('load', () => {
+          if (loadingDiv) loadingDiv.style.display = 'none';
+          if (errorDiv) errorDiv.style.display = 'none';
+          iframe.style.display = 'block';
+        });
+
+        iframe.addEventListener('error', () => {
+          if (loadingDiv) loadingDiv.style.display = 'none';
+          if (iframe) iframe.style.display = 'none';
+          if (errorDiv) errorDiv.style.display = 'block';
+        });
+
+        // Fallback: if iframe doesn't load within 5 seconds, show error
+        setTimeout(() => {
+          if (loadingDiv && loadingDiv.style.display !== 'none') {
+            loadingDiv.style.display = 'none';
+            if (iframe && iframe.style.display === 'none') {
+              if (errorDiv) errorDiv.style.display = 'block';
+            }
+          }
+        }, 5000);
+      }
 
       // Update download button
       if (downloadBtn) {

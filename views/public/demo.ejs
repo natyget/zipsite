@@ -57,8 +57,14 @@
               class="demo-portfolio-preview__iframe"
               title="Pro Portfolio Preview"
               loading="lazy"
-              allow="fullscreen">
+              allow="fullscreen"
+              onerror="this.onerror=null; this.src='about:blank'; this.parentElement.innerHTML='<div style=\'padding: 2rem; text-align: center; color: #666;\'><p>Portfolio preview unavailable</p><p style=\'font-size: 0.9rem; margin-top: 0.5rem;\'>The demo portfolio is not available at this time.</p></div>';">
             </iframe>
+            <div class="demo-portfolio-preview__iframe-error" id="portfolio-iframe-error" style="display: none; padding: 2rem; text-align: center; color: #666;">
+              <p>Portfolio preview unavailable</p>
+              <p style="font-size: 0.9rem; margin-top: 0.5rem;">The demo portfolio is not available at this time.</p>
+              <a href="/apply" class="button button-secondary" style="margin-top: 1rem; display: inline-block;">Create Your Own Portfolio</a>
+            </div>
           </div>
           <div class="demo-portfolio-preview__overlay">
             <div class="demo-portfolio-preview__url-display">
