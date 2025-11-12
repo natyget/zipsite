@@ -298,27 +298,99 @@
       const errorDiv = previewContent.querySelector('.demo-pdf-themes__preview-error');
 
       if (iframe) {
+        let hasLoaded = false;
+        let loadTimeout = null;
+
+        // Check if iframe content loaded successfully
+        const checkIframeContent = () => {
+          try {
+            // Try to access iframe content to check if it loaded
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+            if (iframeDoc && iframeDoc.body) {
+              // Check if it's an error page (simple check - if body has very little content or error text)
+              const bodyText = iframeDoc.body.textContent || '';
+              const bodyHTML = iframeDoc.body.innerHTML || '';
+              
+              // If it's an error page, it will have minimal content
+              // If it's the PDF view, it should have the comp-card class
+              if (bodyHTML.includes('comp-card') || bodyHTML.includes('comp-card__') || bodyHTML.length > 500) {
+                // Successfully loaded PDF view
+                hasLoaded = true;
+                if (loadingDiv) loadingDiv.style.display = 'none';
+                if (errorDiv) errorDiv.style.display = 'none';
+                iframe.style.display = 'block';
+                if (loadTimeout) clearTimeout(loadTimeout);
+                return true;
+              } else if (bodyText.includes('Error') || bodyText.includes('unavailable') || bodyText.includes('not found')) {
+                // Error page detected
+                if (loadingDiv) loadingDiv.style.display = 'none';
+                if (iframe) iframe.style.display = 'none';
+                if (errorDiv) errorDiv.style.display = 'block';
+                if (loadTimeout) clearTimeout(loadTimeout);
+                return false;
+              }
+            }
+          } catch (e) {
+            // Cross-origin or other error - can't check content
+            // This is expected for same-origin, so we'll rely on load event
+          }
+          return null;
+        };
+
+        // Handle iframe load event
         iframe.addEventListener('load', () => {
-          if (loadingDiv) loadingDiv.style.display = 'none';
-          if (errorDiv) errorDiv.style.display = 'none';
-          iframe.style.display = 'block';
+          console.log('[Demo] PDF iframe load event fired for:', previewUrl);
+          
+          // Wait a bit for content to render, then check
+          setTimeout(() => {
+            const contentCheck = checkIframeContent();
+            if (contentCheck === null) {
+              // Can't check content (same-origin or other issue)
+              // Assume it loaded successfully if load event fired
+              hasLoaded = true;
+              if (loadingDiv) loadingDiv.style.display = 'none';
+              if (errorDiv) errorDiv.style.display = 'none';
+              iframe.style.display = 'block';
+              if (loadTimeout) clearTimeout(loadTimeout);
+            }
+          }, 500);
         });
 
+        // Handle iframe error event
         iframe.addEventListener('error', () => {
+          console.error('[Demo] PDF iframe error event fired for:', previewUrl);
           if (loadingDiv) loadingDiv.style.display = 'none';
           if (iframe) iframe.style.display = 'none';
           if (errorDiv) errorDiv.style.display = 'block';
+          if (loadTimeout) clearTimeout(loadTimeout);
         });
 
-        // Fallback: if iframe doesn't load within 5 seconds, show error
-        setTimeout(() => {
-          if (loadingDiv && loadingDiv.style.display !== 'none') {
-            loadingDiv.style.display = 'none';
-            if (iframe && iframe.style.display === 'none') {
-              if (errorDiv) errorDiv.style.display = 'block';
+        // Fallback: if iframe doesn't load within 10 seconds, check content or show error
+        loadTimeout = setTimeout(() => {
+          if (!hasLoaded) {
+            console.warn('[Demo] PDF iframe load timeout for:', previewUrl);
+            const contentCheck = checkIframeContent();
+            if (contentCheck === false || contentCheck === null) {
+              // Still loading or error detected
+              if (loadingDiv) loadingDiv.style.display = 'none';
+              if (iframe && iframe.style.display === 'none') {
+                if (errorDiv) errorDiv.style.display = 'block';
+              } else {
+                // Iframe is displayed but we're not sure if it's valid
+                // Give it a bit more time
+                setTimeout(() => {
+                  if (!hasLoaded) {
+                    const finalCheck = checkIframeContent();
+                    if (finalCheck === false || finalCheck === null) {
+                      if (iframe) iframe.style.display = 'none';
+                      if (errorDiv) errorDiv.style.display = 'block';
+                    }
+                  }
+                }, 2000);
+              }
             }
           }
-        }, 5000);
+        }, 10000);
       }
 
       // Update download button

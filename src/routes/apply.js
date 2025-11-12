@@ -165,15 +165,32 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       role: signupParsed.data.role
     });
 
-    // Validate profile fields
+    // Handle specialties - convert to array if it's a single value or array
+    // This must happen BEFORE profile validation
+    let specialtiesArray = [];
+    if (req.body.specialties) {
+      if (Array.isArray(req.body.specialties)) {
+        specialtiesArray = req.body.specialties;
+      } else {
+        specialtiesArray = [req.body.specialties];
+      }
+    }
+
+    // Prepare body for validation (convert specialties to array)
+    const bodyForValidation = {
+      ...req.body,
+      specialties: specialtiesArray.length > 0 ? specialtiesArray : undefined
+    };
+
+    // Validate profile fields (with specialties already converted to array)
     console.log('[Apply] Validating profile schema...');
-    const applyParsed = applyProfileSchema.safeParse(req.body);
+    const applyParsed = applyProfileSchema.safeParse(bodyForValidation);
     if (!applyParsed.success) {
       const profileErrors = applyParsed.error.flatten().fieldErrors;
       console.log('[Apply] Profile validation failed:', profileErrors);
       return res.status(422).render('apply/index', {
         title: 'Start your ZipSite profile',
-        values: req.body,
+        values: { ...req.body, specialties: specialtiesArray },
         errors: profileErrors,
         layout: 'layout',
         isLoggedIn: false
@@ -181,6 +198,25 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     }
 
     console.log('[Apply] Profile validation passed');
+
+    // Extract profile data from validated result (specialties is already an array)
+    const {
+      first_name,
+      last_name,
+      city,
+      phone,
+      height_cm,
+      bust,
+      waist,
+      hips,
+      shoe_size,
+      eye_color,
+      hair_color,
+      measurements,
+      bio,
+      specialties,
+      partner_agency_email
+    } = applyParsed.data;
 
     // Create account
     try {
@@ -280,53 +316,52 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       return res.redirect('/');
     }
     userId = user.id;
-  }
 
-  // Handle specialties - convert to array if it's a single value or array
-  let specialtiesArray = [];
-  if (req.body.specialties) {
-    if (Array.isArray(req.body.specialties)) {
-      specialtiesArray = req.body.specialties;
-    } else {
-      specialtiesArray = [req.body.specialties];
+    // Handle specialties - convert to array if it's a single value or array
+    let specialtiesArray = [];
+    if (req.body.specialties) {
+      if (Array.isArray(req.body.specialties)) {
+        specialtiesArray = req.body.specialties;
+      } else {
+        specialtiesArray = [req.body.specialties];
+      }
     }
+
+    // Prepare body for validation (convert specialties to array)
+    const bodyForValidation = {
+      ...req.body,
+      specialties: specialtiesArray.length > 0 ? specialtiesArray : undefined
+    };
+
+    // Validate profile data
+    const parsed = applyProfileSchema.safeParse(bodyForValidation);
+    if (!parsed.success) {
+      return res.status(422).render('apply/index', {
+        title: 'Start your ZipSite profile',
+        values: { ...req.body, specialties: specialtiesArray },
+        errors: parsed.error.flatten().fieldErrors,
+        layout: 'layout',
+        isLoggedIn
+      });
+    }
+
+    // Extract profile data from validated result
+    var first_name = parsed.data.first_name;
+    var last_name = parsed.data.last_name;
+    var city = parsed.data.city;
+    var phone = parsed.data.phone;
+    var height_cm = parsed.data.height_cm;
+    var bust = parsed.data.bust;
+    var waist = parsed.data.waist;
+    var hips = parsed.data.hips;
+    var shoe_size = parsed.data.shoe_size;
+    var eye_color = parsed.data.eye_color;
+    var hair_color = parsed.data.hair_color;
+    var measurements = parsed.data.measurements;
+    var bio = parsed.data.bio;
+    var specialties = parsed.data.specialties;
+    var partner_agency_email = parsed.data.partner_agency_email;
   }
-
-  // Prepare body for validation (convert specialties to array)
-  const bodyForValidation = {
-    ...req.body,
-    specialties: specialtiesArray.length > 0 ? specialtiesArray : undefined
-  };
-
-  // Validate profile data
-  const parsed = applyProfileSchema.safeParse(bodyForValidation);
-  if (!parsed.success) {
-    return res.status(422).render('apply/index', {
-      title: 'Start your ZipSite profile',
-      values: { ...req.body, specialties: specialtiesArray },
-      errors: parsed.error.flatten().fieldErrors,
-      layout: 'layout',
-      isLoggedIn
-    });
-  }
-
-  const {
-    first_name,
-    last_name,
-    city,
-    phone,
-    height_cm,
-    bust,
-    waist,
-    hips,
-    shoe_size,
-    eye_color,
-    hair_color,
-    measurements,
-    bio,
-    specialties,
-    partner_agency_email
-  } = parsed.data;
 
   let partnerAgencyId = null;
     if (partner_agency_email) {

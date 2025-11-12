@@ -316,31 +316,43 @@ router.get('/pdf/view/:slug', async (req, res, next) => {
   try {
     console.log('[PDF View] Loading profile for slug:', slug);
 
-    // Try to load from database first
-    try {
-      data = await loadProfile(slug);
-      console.log('[PDF View] Profile loaded from database:', data ? 'found' : 'not found');
-    } catch (dbError) {
-      // If database error, check if it's a missing tables error or connection error
-      if (isMissingTablesError(dbError) || isDatabaseError(dbError)) {
-        console.log('[PDF View] Database error, checking demo fallback for:', slug);
-        // For demo slug, use fallback data
-        const demoData = getDemoProfile(slug);
-        if (demoData) {
-          data = demoData;
-          isDemo = true;
-          console.log('[PDF View] Using demo profile data due to database error');
-        } else {
-          // Not a demo slug and database is unavailable - return error
-          return renderSimpleError(res, 500, 'Database Error', 'Unable to connect to the database. Please check your database configuration.');
-        }
-      } else {
-        // Other database errors - rethrow to be caught by outer catch
-        throw dbError;
+    // For demo slug, try demo data first (works even if database is empty)
+    if (slug === 'elara-k') {
+      const demoData = getDemoProfile(slug);
+      if (demoData) {
+        console.log('[PDF View] Using demo profile data for demo slug:', slug);
+        data = demoData;
+        isDemo = true;
       }
     }
 
-    // If profile not found in database, try demo fallback
+    // Try to load from database (only if not already using demo data)
+    if (!data) {
+      try {
+        data = await loadProfile(slug);
+        console.log('[PDF View] Profile loaded from database:', data ? 'found' : 'not found');
+      } catch (dbError) {
+        // If database error, check if it's a missing tables error or connection error
+        if (isMissingTablesError(dbError) || isDatabaseError(dbError)) {
+          console.log('[PDF View] Database error, checking demo fallback for:', slug);
+          // For demo slug, use fallback data
+          const demoData = getDemoProfile(slug);
+          if (demoData) {
+            data = demoData;
+            isDemo = true;
+            console.log('[PDF View] Using demo profile data due to database error');
+          } else {
+            // Not a demo slug and database is unavailable - return error
+            return renderSimpleError(res, 500, 'Database Error', 'Unable to connect to the database. Please check your database configuration.');
+          }
+        } else {
+          // Other database errors - rethrow to be caught by outer catch
+          throw dbError;
+        }
+      }
+    }
+
+    // If profile not found in database and not using demo, try demo fallback
     if (!data) {
       console.log('[PDF View] Profile not found in database, checking demo fallback');
       const demoData = getDemoProfile(slug);
@@ -359,17 +371,45 @@ router.get('/pdf/view/:slug', async (req, res, next) => {
       slug: data.profile.slug,
       name: data.profile.first_name + ' ' + data.profile.last_name,
       isDemo: isDemo,
-      imageCount: data.images.length
+      imageCount: data.images.length,
+      theme: req.query.theme || 'default'
     });
 
-    return await renderPdfView(req, res, data, isDemo);
+    try {
+      return await renderPdfView(req, res, data, isDemo);
+    } catch (renderError) {
+      console.error('[PDF View Route] Error rendering PDF:', {
+        message: renderError.message,
+        stack: renderError.stack,
+        slug: slug,
+        isDemo: isDemo
+      });
+
+      // If rendering failed and we're not using demo, try demo as fallback
+      if (!isDemo && slug === 'elara-k') {
+        const demoData = getDemoProfile(slug);
+        if (demoData) {
+          console.log('[PDF View Route] Render failed, trying demo fallback');
+          try {
+            return await renderPdfView(req, res, demoData, true);
+          } catch (demoRenderError) {
+            console.error('[PDF View Route] Error rendering demo PDF:', demoRenderError.message);
+            return renderSimpleError(res, 500, 'Error', 'Unable to render PDF preview.');
+          }
+        }
+      }
+
+      // If we can't render, return error
+      return renderSimpleError(res, 500, 'Error', 'Unable to render PDF preview.');
+    }
   } catch (error) {
     // Log errors for debugging
     console.error('[PDF View Route] Error:', {
       message: error.message,
       code: error.code,
       name: error.name,
-      slug: slug
+      slug: slug,
+      stack: error.stack
     });
 
     // Check if it's a database error and we haven't tried demo fallback yet
