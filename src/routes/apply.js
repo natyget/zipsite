@@ -365,16 +365,21 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     };
 
     // Validate profile data
+    console.log('[Apply] Validating profile schema for logged-in user...');
     const parsed = applyProfileSchema.safeParse(bodyForValidation);
     if (!parsed.success) {
+      const profileErrors = parsed.error.flatten().fieldErrors;
+      console.log('[Apply] Profile validation failed for logged-in user:', profileErrors);
       return res.status(422).render('apply/index', {
         title: 'Start your ZipSite profile',
         values: { ...req.body, specialties: specialtiesArray },
-        errors: parsed.error.flatten().fieldErrors,
+        errors: profileErrors,
         layout: 'layout',
         isLoggedIn
       });
     }
+
+    console.log('[Apply] Profile validation passed for logged-in user');
 
     // Extract profile data from validated result
     // Assign to function-scope variables (already declared above)
@@ -393,6 +398,13 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     bio = parsed.data.bio;
     specialties = parsed.data.specialties;
     partner_agency_email = parsed.data.partner_agency_email;
+    
+    console.log('[Apply] Extracted profile data for logged-in user:', {
+      name: `${first_name} ${last_name}`,
+      city: city,
+      hasBio: !!bio,
+      hasSpecialties: !!specialties
+    });
   }
 
   let partnerAgencyId = null;
@@ -409,7 +421,10 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       partnerAgencyId = agency.id;
     }
 
+    console.log('[Apply] Checking for existing profile for user:', userId);
     const existingProfile = await knex('profiles').where({ user_id: userId }).first();
+    console.log('[Apply] Existing profile:', existingProfile ? 'found' : 'not found');
+    
     const curatedBio = curateBio(bio, first_name, last_name);
     const cleanedMeasurements = normalizeMeasurements(measurements);
     const specialtiesJson = specialties && Array.isArray(specialties) && specialties.length > 0 
@@ -418,6 +433,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
 
     let profileId;
     if (existingProfile) {
+      console.log('[Apply] Updating existing profile:', existingProfile.id);
       let slug = existingProfile.slug;
       if (!slug) {
         slug = await ensureUniqueSlug(knex, 'profiles', `${first_name}-${last_name}`);
@@ -445,7 +461,9 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
           slug,
           updated_at: knex.fn.now()
         });
+      console.log('[Apply] Profile updated successfully:', profileId);
     } else {
+      console.log('[Apply] Creating new profile for logged-in user');
       const slug = await ensureUniqueSlug(knex, 'profiles', `${first_name}-${last_name}`);
       profileId = uuidv4();
       await knex('profiles').insert({
@@ -469,6 +487,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         specialties: specialtiesJson,
         partner_agency_id: partnerAgencyId
       });
+      console.log('[Apply] Profile created successfully:', profileId);
     }
 
     // Process and save uploaded images
@@ -535,7 +554,14 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       });
     } else {
       // Existing user updating profile
-      addMessage(req, 'success', '✅ Application saved successfully! Upload media to finish your comp card.');
+      const successMessage = `✅ Profile updated successfully, ${first_name}! Upload media to complete your comp card.`;
+      addMessage(req, 'success', successMessage);
+      console.log('[Apply] Logged-in user profile update completed:', {
+        userId: userId,
+        profileId: profileId,
+        name: `${first_name} ${last_name}`,
+        message: successMessage
+      });
     }
     
     // Ensure session is saved with all data (userId, role, profileId) before redirect
@@ -553,7 +579,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     
     // Use 303 See Other for POST redirect (best practice)
     // This ensures the message is displayed on the dashboard
-    console.log('[Apply] Redirecting to dashboard with success message');
+    console.log('[Apply] Redirecting to dashboard:', '/dashboard/talent');
     return res.redirect(303, '/dashboard/talent');
   } catch (error) {
     console.error('[Apply] Error in POST /apply:', {
