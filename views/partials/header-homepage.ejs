@@ -1,8 +1,0 @@
-<% 
-  // Use universal header for homepage
-  const user = typeof currentUser !== 'undefined' && currentUser ? currentUser : null;
-  const page = typeof currentPage !== 'undefined' ? currentPage : 'home';
-  const isHomepage = true;
-%>
-<%- include('header-universal', { currentUser: user, currentPage: page, isHomepage: isHomepage }) %>
-
