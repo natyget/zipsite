@@ -176,10 +176,24 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       }
     }
 
-    // Prepare body for validation (convert specialties to array)
+    // Prepare body for validation - only include fields that are in the schema
+    // The schema uses .strict() so we must exclude extra fields like password, email, etc.
     const bodyForValidation = {
-      ...req.body,
-      specialties: specialtiesArray.length > 0 ? specialtiesArray : undefined
+      first_name: req.body.first_name,
+      last_name: req.body.last_name,
+      city: req.body.city,
+      phone: req.body.phone,
+      height_cm: req.body.height_cm,
+      bust: req.body.bust,
+      waist: req.body.waist,
+      hips: req.body.hips,
+      shoe_size: req.body.shoe_size,
+      eye_color: req.body.eye_color,
+      hair_color: req.body.hair_color,
+      measurements: req.body.measurements,
+      bio: req.body.bio,
+      specialties: specialtiesArray.length > 0 ? specialtiesArray : undefined,
+      partner_agency_email: req.body.partner_agency_email
     };
 
     // Validate profile fields (with specialties already converted to array)
@@ -327,10 +341,24 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       }
     }
 
-    // Prepare body for validation (convert specialties to array)
+    // Prepare body for validation - only include fields that are in the schema
+    // The schema uses .strict() so we must exclude extra fields
     const bodyForValidation = {
-      ...req.body,
-      specialties: specialtiesArray.length > 0 ? specialtiesArray : undefined
+      first_name: req.body.first_name,
+      last_name: req.body.last_name,
+      city: req.body.city,
+      phone: req.body.phone,
+      height_cm: req.body.height_cm,
+      bust: req.body.bust,
+      waist: req.body.waist,
+      hips: req.body.hips,
+      shoe_size: req.body.shoe_size,
+      eye_color: req.body.eye_color,
+      hair_color: req.body.hair_color,
+      measurements: req.body.measurements,
+      bio: req.body.bio,
+      specialties: specialtiesArray.length > 0 ? specialtiesArray : undefined,
+      partner_agency_email: req.body.partner_agency_email
     };
 
     // Validate profile data

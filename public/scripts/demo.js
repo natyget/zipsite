@@ -310,19 +310,39 @@
               // Check if it's an error page (simple check - if body has very little content or error text)
               const bodyText = iframeDoc.body.textContent || '';
               const bodyHTML = iframeDoc.body.innerHTML || '';
+              const bodyClasses = iframeDoc.body.className || '';
               
-              // If it's an error page, it will have minimal content
-              // If it's the PDF view, it should have the comp-card class
-              if (bodyHTML.includes('comp-card') || bodyHTML.includes('comp-card__') || bodyHTML.length > 500) {
+              // Check for PDF comp card indicators
+              const hasCompCard = bodyHTML.includes('comp-card') || 
+                                 bodyHTML.includes('comp-card__') ||
+                                 bodyClasses.includes('comp-card') ||
+                                 iframeDoc.querySelector('.comp-card') !== null;
+              
+              // Check for error indicators
+              const hasError = bodyText.includes('Error') || 
+                              bodyText.includes('unavailable') || 
+                              bodyText.includes('not found') ||
+                              bodyText.includes('Database Error') ||
+                              bodyHTML.includes('error') && bodyHTML.length < 500;
+              
+              // If it's the PDF view, it should have the comp-card class and substantial content
+              if (hasCompCard && bodyHTML.length > 1000 && !hasError) {
                 // Successfully loaded PDF view
+                console.log('[Demo] PDF iframe content check: SUCCESS (comp-card found)');
                 hasLoaded = true;
                 if (loadingDiv) loadingDiv.style.display = 'none';
                 if (errorDiv) errorDiv.style.display = 'none';
                 iframe.style.display = 'block';
                 if (loadTimeout) clearTimeout(loadTimeout);
                 return true;
-              } else if (bodyText.includes('Error') || bodyText.includes('unavailable') || bodyText.includes('not found')) {
+              } else if (hasError || (bodyHTML.length < 500 && !hasCompCard)) {
                 // Error page detected
+                console.log('[Demo] PDF iframe content check: ERROR detected', {
+                  hasError,
+                  bodyLength: bodyHTML.length,
+                  hasCompCard,
+                  bodyText: bodyText.substring(0, 100)
+                });
                 if (loadingDiv) loadingDiv.style.display = 'none';
                 if (iframe) iframe.style.display = 'none';
                 if (errorDiv) errorDiv.style.display = 'block';
@@ -333,6 +353,7 @@
           } catch (e) {
             // Cross-origin or other error - can't check content
             // This is expected for same-origin, so we'll rely on load event
+            console.log('[Demo] PDF iframe content check: Cannot access (same-origin or other issue)', e.message);
           }
           return null;
         };
@@ -344,16 +365,52 @@
           // Wait a bit for content to render, then check
           setTimeout(() => {
             const contentCheck = checkIframeContent();
-            if (contentCheck === null) {
+            if (contentCheck === true) {
+              // Successfully loaded - already handled in checkIframeContent
+              return;
+            } else if (contentCheck === false) {
+              // Error detected - already handled in checkIframeContent
+              return;
+            } else {
               // Can't check content (same-origin or other issue)
-              // Assume it loaded successfully if load event fired
-              hasLoaded = true;
-              if (loadingDiv) loadingDiv.style.display = 'none';
-              if (errorDiv) errorDiv.style.display = 'none';
-              iframe.style.display = 'block';
-              if (loadTimeout) clearTimeout(loadTimeout);
+              // Try to check iframe src to see if it's still loading
+              console.log('[Demo] PDF iframe content check: Cannot verify, assuming success');
+              // For same-origin, if load event fired, assume success
+              // But also check iframe dimensions/content to be sure
+              try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                if (iframeDoc && iframeDoc.body && iframeDoc.body.scrollHeight > 100) {
+                  // Has content, assume it's valid
+                  hasLoaded = true;
+                  if (loadingDiv) loadingDiv.style.display = 'none';
+                  if (errorDiv) errorDiv.style.display = 'none';
+                  iframe.style.display = 'block';
+                  if (loadTimeout) clearTimeout(loadTimeout);
+                } else {
+                  // No content or very little content - might be an error
+                  console.warn('[Demo] PDF iframe has no substantial content');
+                  // Give it more time
+                  setTimeout(() => {
+                    if (!hasLoaded) {
+                      const retryCheck = checkIframeContent();
+                      if (retryCheck !== true) {
+                        if (loadingDiv) loadingDiv.style.display = 'none';
+                        if (iframe) iframe.style.display = 'none';
+                        if (errorDiv) errorDiv.style.display = 'block';
+                      }
+                    }
+                  }, 2000);
+                }
+              } catch (e) {
+                // Can't access - assume success for same-origin
+                hasLoaded = true;
+                if (loadingDiv) loadingDiv.style.display = 'none';
+                if (errorDiv) errorDiv.style.display = 'none';
+                iframe.style.display = 'block';
+                if (loadTimeout) clearTimeout(loadTimeout);
+              }
             }
-          }, 500);
+          }, 1000); // Increased wait time for content to render
         });
 
         // Handle iframe error event

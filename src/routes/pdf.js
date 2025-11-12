@@ -213,19 +213,33 @@ async function renderPdfView(req, res, data, isDemo) {
 
   // Get theme from query parameter, default to profile's saved theme or default
   let themeKey = req.query.theme || profile.pdf_theme || getDefaultTheme();
+  console.log('[renderPdfView] Theme selection:', {
+    requested: req.query.theme,
+    profileTheme: profile.pdf_theme,
+    selected: themeKey,
+    isDemo: isDemo
+  });
 
   // Validate theme exists
   let theme = getTheme(themeKey);
   if (!theme) {
+    console.warn('[renderPdfView] Theme not found, using default:', themeKey);
     themeKey = getDefaultTheme();
     theme = getTheme(themeKey);
   }
 
   // Check if Pro theme is selected but user is not Pro
   if (isProTheme(themeKey) && !profile.is_pro) {
+    console.warn('[renderPdfView] Pro theme selected for non-Pro user, using default:', themeKey);
     themeKey = getDefaultTheme();
     theme = getTheme(themeKey);
   }
+
+  console.log('[renderPdfView] Final theme:', {
+    key: themeKey,
+    name: theme.name,
+    isPro: theme.isPro
+  });
 
   // Load customizations from database (Pro users only) - skip for demo
   let customizations = null;
@@ -367,22 +381,29 @@ router.get('/pdf/view/:slug', async (req, res, next) => {
     }
 
     // Render PDF view with profile data
+    const requestedTheme = req.query.theme || 'default';
     console.log('[PDF View] Rendering PDF for profile:', {
       slug: data.profile.slug,
       name: data.profile.first_name + ' ' + data.profile.last_name,
       isDemo: isDemo,
       imageCount: data.images.length,
-      theme: req.query.theme || 'default'
+      requestedTheme: requestedTheme,
+      profileTheme: data.profile.pdf_theme || 'none'
     });
 
     try {
-      return await renderPdfView(req, res, data, isDemo);
+      const result = await renderPdfView(req, res, data, isDemo);
+      console.log('[PDF View] Successfully rendered PDF view for:', slug);
+      return result;
     } catch (renderError) {
       console.error('[PDF View Route] Error rendering PDF:', {
         message: renderError.message,
         stack: renderError.stack,
         slug: slug,
-        isDemo: isDemo
+        isDemo: isDemo,
+        requestedTheme: requestedTheme,
+        errorName: renderError.name,
+        errorCode: renderError.code
       });
 
       // If rendering failed and we're not using demo, try demo as fallback
