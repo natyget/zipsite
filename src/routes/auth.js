@@ -41,6 +41,7 @@ router.get('/login', (req, res) => {
 router.post('/login', async (req, res, next) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
+    console.log('[Login] Validation failed:', parsed.error.flatten().fieldErrors);
     res.locals.currentPage = 'login';
     return res.status(422).render('auth/login', {
       title: 'Sign in',
@@ -54,9 +55,40 @@ router.post('/login', async (req, res, next) => {
   const { email, password } = parsed.data;
   const nextPath = safeNext(req.body.next);
 
+  // Normalize email (lowercase, trim)
+  const normalizedEmail = email.toLowerCase().trim();
+
+  console.log('[Login] Attempting login for email:', normalizedEmail);
+
   try {
-    const user = await knex('users').where({ email }).first();
+    const user = await knex('users').where({ email: normalizedEmail }).first();
+    
     if (!user) {
+      console.log('[Login] User not found for email:', normalizedEmail);
+      // Also check if there are any users in the database (for debugging)
+      const userCount = await knex('users').count('id as count').first();
+      console.log('[Login] Total users in database:', userCount?.count || 0);
+      
+      res.locals.currentPage = 'login';
+      return res.status(401).render('auth/login', {
+        title: 'Sign in',
+        values: req.body,
+        errors: { email: ['Invalid credentials'] },
+        layout: 'layout',
+        currentPage: 'login'
+      });
+    }
+
+    console.log('[Login] User found:', {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      hasPasswordHash: !!user.password_hash,
+      passwordHashLength: user.password_hash?.length || 0
+    });
+
+    if (!user.password_hash) {
+      console.error('[Login] User has no password hash!', { userId: user.id, email: user.email });
       res.locals.currentPage = 'login';
       return res.status(401).render('auth/login', {
         title: 'Sign in',
@@ -68,7 +100,10 @@ router.post('/login', async (req, res, next) => {
     }
 
     const valid = await bcrypt.compare(password, user.password_hash);
+    console.log('[Login] Password comparison result:', valid);
+    
     if (!valid) {
+      console.log('[Login] Invalid password for email:', normalizedEmail);
       res.locals.currentPage = 'login';
       return res.status(401).render('auth/login', {
         title: 'Sign in',
@@ -79,8 +114,23 @@ router.post('/login', async (req, res, next) => {
       });
     }
 
+    console.log('[Login] Login successful for user:', { id: user.id, email: user.email, role: user.role });
+
     req.session.userId = user.id;
     req.session.role = user.role;
+
+    // Save session before redirect
+    await new Promise((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) {
+          console.error('[Login] Error saving session:', err);
+          reject(err);
+        } else {
+          console.log('[Login] Session saved successfully');
+          resolve();
+        }
+      });
+    });
 
     return res.redirect(nextPath || redirectForRole(user.role));
   } catch (error) {
@@ -94,8 +144,11 @@ router.post('/login', async (req, res, next) => {
     
     // Check if it's a database connection error
     if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT' || 
+        error.code === 'ECONNRESET' || error.code === '42P01' || error.code === '42P07' || 
+        error.code === '3D000' || error.code === '28P01' ||
         error.message && (error.message.includes('connect') || error.message.includes('connection') || 
-        error.message.includes('DATABASE_URL') || error.message.includes('database'))) {
+        error.message.includes('DATABASE_URL') || error.message.includes('database') ||
+        error.message.includes('relation') || error.message.includes('does not exist'))) {
       console.error('[Login Route] Database connection error detected');
       // Return a more helpful error for database connection issues
       return res.status(500).render('errors/500', {
@@ -107,7 +160,8 @@ router.post('/login', async (req, res, next) => {
           name: error.name,
           details: process.env.NODE_ENV !== 'production' ? error.message : undefined
         },
-        isDevelopment: process.env.NODE_ENV !== 'production'
+        isDevelopment: process.env.NODE_ENV !== 'production',
+        isDatabaseError: true
       });
     }
     
@@ -163,9 +217,15 @@ router.post('/partners', async (req, res, next) => {
 
   const { email, password, agency_name, company_website, contact_name, contact_role } = parsed.data;
 
+  // Normalize email (lowercase, trim) for consistent storage and lookup
+  const normalizedEmail = email.toLowerCase().trim();
+
+  console.log('[Signup/Partners] Creating agency account for email:', normalizedEmail);
+
   try {
-    const existing = await knex('users').where({ email }).first();
+    const existing = await knex('users').where({ email: normalizedEmail }).first();
     if (existing) {
+      console.log('[Signup/Partners] Email already exists:', normalizedEmail);
       res.locals.currentPage = 'partners';
       return res.status(422).render('auth/partners', {
         title: 'Partner with ZipSite',
@@ -176,25 +236,81 @@ router.post('/partners', async (req, res, next) => {
       });
     }
 
+    console.log('[Signup/Partners] Hashing password...');
     const passwordHash = await bcrypt.hash(password, 10);
     const userId = uuidv4();
+
+    console.log('[Signup/Partners] Inserting agency user into database...', {
+      id: userId,
+      email: normalizedEmail,
+      role: 'AGENCY',
+      agency_name: agency_name || null,
+      hasPasswordHash: !!passwordHash,
+      passwordHashLength: passwordHash?.length || 0
+    });
 
     // Insert agency user with agency_name
     // Note: company_website field doesn't exist in schema, we'll skip it for now
     await knex('users').insert({
       id: userId,
-      email,
+      email: normalizedEmail,
       password_hash: passwordHash,
       role: 'AGENCY',
       agency_name: agency_name || null
     });
 
+    console.log('[Signup/Partners] Agency user created successfully:', {
+      id: userId,
+      email: normalizedEmail,
+      role: 'AGENCY'
+    });
+
+    // Verify user was created
+    const createdUser = await knex('users').where({ id: userId }).first();
+    if (!createdUser) {
+      console.error('[Signup/Partners] ERROR: User was not created!', { userId, email: normalizedEmail });
+      throw new Error('Failed to create agency account');
+    }
+
+    console.log('[Signup/Partners] User verified in database:', {
+      id: createdUser.id,
+      email: createdUser.email,
+      role: createdUser.role,
+      hasPasswordHash: !!createdUser.password_hash,
+      passwordHashLength: createdUser.password_hash?.length || 0
+    });
+
     req.session.userId = userId;
     req.session.role = 'AGENCY';
+    
+    console.log('[Signup/Partners] Setting session:', {
+      userId: req.session.userId,
+      role: req.session.role
+    });
+    
+    // Save session before redirect
+    await new Promise((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) {
+          console.error('[Signup/Partners] Error saving session:', err);
+          reject(err);
+        } else {
+          console.log('[Signup/Partners] Session saved successfully');
+          resolve();
+        }
+      });
+    });
+    
     addMessage(req, 'success', 'Welcome to ZipSite! Your agency account has been created.');
 
     return res.redirect('/dashboard/agency');
   } catch (error) {
+    console.error('[Signup/Partners] Error creating agency account:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
     return next(error);
   }
 });

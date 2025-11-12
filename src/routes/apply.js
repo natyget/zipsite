@@ -116,8 +116,14 @@ router.post('/apply', upload.array('photos', 12), async (req, res, next) => {
 
     // Create account
     try {
-      const existing = await knex('users').where({ email: signupParsed.data.email }).first();
+      // Normalize email (lowercase, trim) for consistent storage and lookup
+      const normalizedEmail = signupParsed.data.email.toLowerCase().trim();
+      
+      console.log('[Signup/Apply] Creating account for email:', normalizedEmail);
+      
+      const existing = await knex('users').where({ email: normalizedEmail }).first();
       if (existing) {
+        console.log('[Signup/Apply] Email already exists:', normalizedEmail);
         return res.status(422).render('apply/index', {
           title: 'Start your ZipSite profile',
           values: req.body,
@@ -127,14 +133,44 @@ router.post('/apply', upload.array('photos', 12), async (req, res, next) => {
         });
       }
 
+      console.log('[Signup/Apply] Hashing password...');
       const passwordHash = await bcrypt.hash(signupParsed.data.password, 10);
       userId = uuidv4();
 
+      console.log('[Signup/Apply] Inserting user into database...', {
+        id: userId,
+        email: normalizedEmail,
+        role: 'TALENT',
+        hasPasswordHash: !!passwordHash,
+        passwordHashLength: passwordHash?.length || 0
+      });
+
       await knex('users').insert({
         id: userId,
-        email: signupParsed.data.email,
+        email: normalizedEmail,
         password_hash: passwordHash,
         role: 'TALENT'
+      });
+
+      console.log('[Signup/Apply] User created successfully:', {
+        id: userId,
+        email: normalizedEmail,
+        role: 'TALENT'
+      });
+
+      // Verify user was created
+      const createdUser = await knex('users').where({ id: userId }).first();
+      if (!createdUser) {
+        console.error('[Signup/Apply] ERROR: User was not created!', { userId, email: normalizedEmail });
+        throw new Error('Failed to create user account');
+      }
+
+      console.log('[Signup/Apply] User verified in database:', {
+        id: createdUser.id,
+        email: createdUser.email,
+        role: createdUser.role,
+        hasPasswordHash: !!createdUser.password_hash,
+        passwordHashLength: createdUser.password_hash?.length || 0
       });
 
       // Log user in
@@ -142,14 +178,30 @@ router.post('/apply', upload.array('photos', 12), async (req, res, next) => {
       req.session.role = 'TALENT';
       user = { id: userId, role: 'TALENT' };
       
+      console.log('[Signup/Apply] Setting session:', {
+        userId: req.session.userId,
+        role: req.session.role
+      });
+      
       // Ensure session is saved before proceeding
       await new Promise((resolve, reject) => {
         req.session.save((err) => {
-          if (err) reject(err);
-          else resolve();
+          if (err) {
+            console.error('[Signup/Apply] Error saving session:', err);
+            reject(err);
+          } else {
+            console.log('[Signup/Apply] Session saved successfully');
+            resolve();
+          }
         });
       });
     } catch (error) {
+      console.error('[Signup/Apply] Error creating account:', {
+        message: error.message,
+        code: error.code,
+        name: error.name,
+        stack: error.stack
+      });
       return next(error);
     }
   } else {
