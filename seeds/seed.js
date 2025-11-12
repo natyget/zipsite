@@ -57,7 +57,48 @@ exports.seed = async function seed(knex) {
     is_pro: false,
     pdf_theme: null,
     pdf_customizations: null,
-    partner_agency_id: null
+    partner_agency_id: null,
+    // New comprehensive fields
+    gender: 'Female',
+    date_of_birth: '1995-06-15',
+    age: 29,
+    weight_kg: 58,
+    weight_lbs: 128,
+    dress_size: '4',
+    hair_length: 'Long',
+    skin_tone: 'Fair',
+    languages: JSON.stringify(['English', 'Spanish']),
+    availability_travel: true,
+    availability_schedule: 'Full-time',
+    experience_level: 'Experienced',
+    training: 'Formal training in editorial modeling and commercial acting.',
+    portfolio_url: 'https://elarakeats.portfolio.com',
+    instagram_handle: 'elarakeats',
+    instagram_url: null, // Free users don't get URLs
+    twitter_handle: 'elarakeats',
+    twitter_url: null, // Free users don't get URLs
+    tiktok_handle: 'elarakeats',
+    tiktok_url: null, // Free users don't get URLs
+    reference_name: null,
+    reference_email: null,
+    reference_phone: null,
+    reference_relationship: null,
+    emergency_contact_name: 'Jane Doe',
+    emergency_contact_phone: '+1 (555) 123-4567',
+    emergency_contact_relationship: 'Parent',
+    nationality: 'American',
+    union_membership: null,
+    ethnicity: null,
+    tattoos: false,
+    piercings: false,
+    phone: null,
+    bust: 32,
+    waist: 25,
+    hips: 35,
+    shoe_size: '9 US',
+    eye_color: 'Brown',
+    hair_color: 'Blonde',
+    specialties: JSON.stringify(['Editorial', 'Commercial'])
   });
 
   // Create Elara Keats images (using Unsplash URLs for demo)

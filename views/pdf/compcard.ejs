@@ -515,6 +515,50 @@
           <span class="comp-card__stat-value" style="color: var(--text-color);"><%= profile.measurements %></span>
         </div>
         <% } %>
+        <% if (profile.gender) { %>
+        <div class="comp-card__stat <%= isPro ? 'comp-card__stat--advanced' : '' %>">
+          <span class="comp-card__stat-label">Gender</span>
+          <span class="comp-card__stat-value" style="color: var(--text-color);"><%= profile.gender %></span>
+        </div>
+        <% } %>
+        <% if (profile.age) { %>
+        <div class="comp-card__stat <%= isPro ? 'comp-card__stat--advanced' : '' %>">
+          <span class="comp-card__stat-label">Age</span>
+          <span class="comp-card__stat-value" style="color: var(--text-color);"><%= profile.age %></span>
+        </div>
+        <% } %>
+        <% if (profile.weight_kg || profile.weight_lbs) { %>
+        <div class="comp-card__stat <%= isPro ? 'comp-card__stat--advanced' : '' %>">
+          <span class="comp-card__stat-label">Weight</span>
+          <span class="comp-card__stat-value" style="color: var(--text-color);">
+            <% if (profile.weight_kg && profile.weight_lbs) { %>
+              <%= profile.weight_kg %> kg (<%= profile.weight_lbs %> lbs)
+            <% } else if (profile.weight_kg) { %>
+              <%= profile.weight_kg %> kg
+            <% } else if (profile.weight_lbs) { %>
+              <%= profile.weight_lbs %> lbs
+            <% } %>
+          </span>
+        </div>
+        <% } %>
+        <% if (profile.dress_size) { %>
+        <div class="comp-card__stat <%= isPro ? 'comp-card__stat--advanced' : '' %>">
+          <span class="comp-card__stat-label">Dress Size</span>
+          <span class="comp-card__stat-value" style="color: var(--text-color);"><%= profile.dress_size %></span>
+        </div>
+        <% } %>
+        <% if (profile.hair_length) { %>
+        <div class="comp-card__stat <%= isPro ? 'comp-card__stat--advanced' : '' %>">
+          <span class="comp-card__stat-label">Hair Length</span>
+          <span class="comp-card__stat-value" style="color: var(--text-color);"><%= profile.hair_length %></span>
+        </div>
+        <% } %>
+        <% if (profile.skin_tone) { %>
+        <div class="comp-card__stat <%= isPro ? 'comp-card__stat--advanced' : '' %>">
+          <span class="comp-card__stat-label">Skin Tone</span>
+          <span class="comp-card__stat-value" style="color: var(--text-color);"><%= profile.skin_tone %></span>
+        </div>
+        <% } %>
         <% if (isPro) { %>
         <!-- Advanced Stats - Pro Only -->
         <% if (profile.shoe_size) { %>
@@ -582,6 +626,108 @@
       <!-- Extended Content Sections - Pro Only -->
       <% if (isPro) { %>
       <div class="comp-card__extended">
+        <% if (profile.languages) { %>
+        <div class="comp-card__section">
+          <div class="comp-card__section-title" style="font-family: var(--stats-font); color: var(--text-color);">Languages</div>
+          <div class="comp-card__section-content" style="font-family: var(--stats-font); color: var(--text-color);">
+            <% 
+              let languagesArray = [];
+              try {
+                languagesArray = typeof profile.languages === 'string' ? JSON.parse(profile.languages) : profile.languages;
+              } catch {
+                languagesArray = [];
+              }
+              const languagesDisplay = Array.isArray(languagesArray) && languagesArray.length > 0 
+                ? languagesArray.join(', ') 
+                : (typeof profile.languages === 'string' ? profile.languages : '');
+            %>
+            <%= languagesDisplay %>
+          </div>
+        </div>
+        <% } %>
+        <% if (profile.availability_travel !== null || profile.availability_schedule) { %>
+        <div class="comp-card__section">
+          <div class="comp-card__section-title" style="font-family: var(--stats-font); color: var(--text-color);">Availability</div>
+          <div class="comp-card__section-content" style="font-family: var(--stats-font); color: var(--text-color);">
+            <% 
+              const availabilityParts = [];
+              if (profile.availability_schedule) availabilityParts.push(profile.availability_schedule);
+              if (profile.availability_travel === true) availabilityParts.push('Willing to travel');
+              const availabilityDisplay = availabilityParts.length > 0 ? availabilityParts.join(' • ') : '';
+            %>
+            <%= availabilityDisplay %>
+          </div>
+        </div>
+        <% } %>
+        <% if (profile.experience_level) { %>
+        <div class="comp-card__section">
+          <div class="comp-card__section-title" style="font-family: var(--stats-font); color: var(--text-color);">Experience</div>
+          <div class="comp-card__section-content" style="font-family: var(--stats-font); color: var(--text-color);"><%= profile.experience_level %></div>
+        </div>
+        <% } %>
+        <% if (profile.training) { %>
+        <div class="comp-card__section">
+          <div class="comp-card__section-title" style="font-family: var(--stats-font); color: var(--text-color);">Training</div>
+          <div class="comp-card__section-content" style="font-family: var(--stats-font); color: var(--text-color);"><%= profile.training %></div>
+        </div>
+        <% } %>
+        <% if (profile.portfolio_url) { %>
+        <div class="comp-card__section">
+          <div class="comp-card__section-title" style="font-family: var(--stats-font); color: var(--text-color);">Portfolio</div>
+          <div class="comp-card__section-content" style="font-family: var(--stats-font); color: var(--text-color);">
+            <a href="<%= profile.portfolio_url %>" target="_blank" rel="noopener" style="color: var(--accent-color); text-decoration: underline;"><%= profile.portfolio_url %></a>
+          </div>
+        </div>
+        <% } %>
+        <% if (profile.instagram_handle || profile.twitter_handle || profile.tiktok_handle) { %>
+        <div class="comp-card__section">
+          <div class="comp-card__section-title" style="font-family: var(--stats-font); color: var(--text-color);">Social Media</div>
+          <div class="comp-card__section-content" style="font-family: var(--stats-font); color: var(--text-color);">
+            <% if (profile.instagram_handle) { %>
+              <% if (isPro && profile.instagram_url) { %>
+                <a href="<%= profile.instagram_url %>" target="_blank" rel="noopener" style="color: var(--accent-color); text-decoration: underline;">Instagram: @<%= profile.instagram_handle %></a>
+              <% } else { %>
+                Instagram: @<%= profile.instagram_handle %>
+              <% } %>
+              <% if (profile.twitter_handle || profile.tiktok_handle) { %><br><% } %>
+            <% } %>
+            <% if (profile.twitter_handle) { %>
+              <% if (isPro && profile.twitter_url) { %>
+                <a href="<%= profile.twitter_url %>" target="_blank" rel="noopener" style="color: var(--accent-color); text-decoration: underline;">Twitter: @<%= profile.twitter_handle %></a>
+              <% } else { %>
+                Twitter: @<%= profile.twitter_handle %>
+              <% } %>
+              <% if (profile.tiktok_handle) { %><br><% } %>
+            <% } %>
+            <% if (profile.tiktok_handle) { %>
+              <% if (isPro && profile.tiktok_url) { %>
+                <a href="<%= profile.tiktok_url %>" target="_blank" rel="noopener" style="color: var(--accent-color); text-decoration: underline;">TikTok: @<%= profile.tiktok_handle %></a>
+              <% } else { %>
+                TikTok: @<%= profile.tiktok_handle %>
+              <% } %>
+            <% } %>
+          </div>
+        </div>
+        <% } %>
+        <% if (profile.nationality || profile.union_membership || profile.ethnicity) { %>
+        <div class="comp-card__section">
+          <div class="comp-card__section-title" style="font-family: var(--stats-font); color: var(--text-color);">Additional Info</div>
+          <div class="comp-card__section-content" style="font-family: var(--stats-font); color: var(--text-color);">
+            <% if (profile.nationality) { %>Nationality: <%= profile.nationality %><% if (profile.union_membership || profile.ethnicity) { %><br><% } %><% } %>
+            <% if (profile.union_membership) { %>Union: <%= profile.union_membership %><% if (profile.ethnicity) { %><br><% } %><% } %>
+            <% if (profile.ethnicity) { %>Ethnicity: <%= profile.ethnicity %><% } %>
+          </div>
+        </div>
+        <% } %>
+        <% if (profile.tattoos === true || profile.piercings === true) { %>
+        <div class="comp-card__section">
+          <div class="comp-card__section-title" style="font-family: var(--stats-font); color: var(--text-color);">Physical Characteristics</div>
+          <div class="comp-card__section-content" style="font-family: var(--stats-font); color: var(--text-color);">
+            <% if (profile.tattoos === true) { %>Has visible tattoos<% if (profile.piercings === true) { %>, <% } %><% } %>
+            <% if (profile.piercings === true) { %>Has visible piercings<% } %>
+          </div>
+        </div>
+        <% } %>
         <% if (profile.specializations) { %>
         <div class="comp-card__section">
           <div class="comp-card__section-title" style="font-family: var(--stats-font); color: var(--text-color);">Specializations</div>
@@ -601,6 +747,28 @@
         </div>
         <% } %>
       </div>
+      <% } else { %>
+      <!-- Free Users: Social Media as Text Only -->
+      <% if (profile.instagram_handle || profile.twitter_handle || profile.tiktok_handle) { %>
+      <div class="comp-card__extended">
+        <div class="comp-card__section">
+          <div class="comp-card__section-title" style="font-family: var(--stats-font); color: var(--text-color);">Social Media</div>
+          <div class="comp-card__section-content" style="font-family: var(--stats-font); color: var(--text-color);">
+            <% if (profile.instagram_handle) { %>
+              Instagram: @<%= profile.instagram_handle %>
+              <% if (profile.twitter_handle || profile.tiktok_handle) { %><br><% } %>
+            <% } %>
+            <% if (profile.twitter_handle) { %>
+              Twitter: @<%= profile.twitter_handle %>
+              <% if (profile.tiktok_handle) { %><br><% } %>
+            <% } %>
+            <% if (profile.tiktok_handle) { %>
+              TikTok: @<%= profile.tiktok_handle %>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <% } %>
       <% } %>
     </div>
     

@@ -174,6 +174,133 @@ const hipsSchema = z
   })
   .optional();
 
+// New comprehensive profile field schemas
+const genderSchema = z.enum(['Male', 'Female', 'Non-binary', 'Other', 'Prefer not to say'], {
+  errorMap: () => ({ message: 'Please select a valid gender option' })
+}).optional();
+
+const dateOfBirthSchema = z
+  .string()
+  .trim()
+  .optional()
+  .refine((val) => {
+    if (!val || val.trim() === '') return true; // Optional field
+    const date = new Date(val);
+    if (isNaN(date.getTime())) return false;
+    
+    // Check if date is not in the future
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // End of today
+    return date <= today;
+  }, {
+    message: 'Date of birth cannot be in the future'
+  });
+
+const weightSchema = z
+  .preprocess(
+    (val) => {
+      if (typeof val === 'string') {
+        const trimmed = val.trim();
+        if (!trimmed) return null;
+        const num = parseFloat(trimmed);
+        return isNaN(num) ? null : num;
+      }
+      return val;
+    },
+    z.union([
+      z.number().refine((val) => !val || (val >= 30 && val <= 200), {
+        message: 'Weight must be between 30 and 200 kg'
+      }),
+      z.null()
+    ])
+  )
+  .optional();
+
+const dressSizeSchema = z.string().trim().max(10).optional();
+
+const hairLengthSchema = z.enum(['Short', 'Medium', 'Long', 'Very Long']).optional();
+
+const skinToneSchema = z.string().trim().max(50).optional();
+
+const languagesSchema = z
+  .union([
+    z.array(z.string()),
+    z.string().transform((val) => {
+      try {
+        return JSON.parse(val);
+      } catch {
+        return val.split(',').map(l => l.trim()).filter(l => l);
+      }
+    })
+  ])
+  .optional();
+
+const availabilityTravelSchema = z
+  .union([
+    z.boolean(),
+    z.string().transform((val) => val === 'true' || val === 'on' || val === '1')
+  ])
+  .optional();
+
+const availabilityScheduleSchema = z.enum(['Full-time', 'Part-time', 'Flexible', 'Weekends only']).optional();
+
+const experienceLevelSchema = z.enum(['Beginner', 'Intermediate', 'Experienced', 'Professional']).optional();
+
+const trainingSchema = z.string().trim().max(1000).optional();
+
+const portfolioUrlSchema = z
+  .string()
+  .trim()
+  .max(255)
+  .refine((val) => {
+    if (!val || val.trim() === '') return true;
+    return /^https?:\/\/.+/i.test(val);
+  }, {
+    message: 'Enter a valid URL starting with http:// or https://'
+  })
+  .optional();
+
+const socialMediaHandleSchema = z.string().trim().max(100).optional();
+
+const socialMediaUrlSchema = z
+  .string()
+  .trim()
+  .max(255)
+  .refine((val) => {
+    if (!val || val.trim() === '') return true;
+    return /^https?:\/\/.+/i.test(val);
+  }, {
+    message: 'Enter a valid URL'
+  })
+  .optional();
+
+const referenceNameSchema = z.string().trim().max(100).optional();
+const referenceEmailSchema = z.string().trim().email('Enter a valid email').max(255).optional().or(z.literal(''));
+const referencePhoneSchema = z.string().trim().max(20).optional();
+const referenceRelationshipSchema = z.string().trim().max(50).optional();
+
+const emergencyContactNameSchema = z.string().trim().max(100).optional();
+const emergencyContactPhoneSchema = z.string().trim().max(20).optional();
+const emergencyContactRelationshipSchema = z.string().trim().max(50).optional();
+
+const nationalitySchema = z.string().trim().max(100).optional();
+const unionMembershipSchema = z.string().trim().max(100).optional();
+const ethnicitySchema = z.string().trim().max(100).optional();
+
+const tattoosSchema = z
+  .union([
+    z.boolean(),
+    z.string().transform((val) => val === 'true' || val === 'on' || val === '1')
+  ])
+  .optional();
+
+const piercingsSchema = z
+  .union([
+    z.boolean(),
+    z.string().transform((val) => val === 'true' || val === 'on' || val === '1')
+  ])
+  .optional();
+
 const applyProfileSchema = z
   .object({
     first_name: nameSchema,
@@ -196,7 +323,39 @@ const applyProfileSchema = z
       .email('Enter a valid email')
       .max(255, 'Email too long')
       .transform((val) => val.toLowerCase())
-      .optional()
+      .optional(),
+    // New comprehensive fields
+    gender: genderSchema,
+    date_of_birth: dateOfBirthSchema,
+    weight_kg: weightSchema,
+    weight_lbs: weightSchema,
+    dress_size: dressSizeSchema,
+    hair_length: hairLengthSchema,
+    skin_tone: skinToneSchema,
+    languages: languagesSchema,
+    availability_travel: availabilityTravelSchema,
+    availability_schedule: availabilityScheduleSchema,
+    experience_level: experienceLevelSchema,
+    training: trainingSchema,
+    portfolio_url: portfolioUrlSchema,
+    instagram_handle: socialMediaHandleSchema,
+    instagram_url: socialMediaUrlSchema,
+    twitter_handle: socialMediaHandleSchema,
+    twitter_url: socialMediaUrlSchema,
+    tiktok_handle: socialMediaHandleSchema,
+    tiktok_url: socialMediaUrlSchema,
+    reference_name: referenceNameSchema,
+    reference_email: referenceEmailSchema,
+    reference_phone: referencePhoneSchema,
+    reference_relationship: referenceRelationshipSchema,
+    emergency_contact_name: emergencyContactNameSchema,
+    emergency_contact_phone: emergencyContactPhoneSchema,
+    emergency_contact_relationship: emergencyContactRelationshipSchema,
+    nationality: nationalitySchema,
+    union_membership: unionMembershipSchema,
+    ethnicity: ethnicitySchema,
+    tattoos: tattoosSchema,
+    piercings: piercingsSchema
   })
   .strict();
 
@@ -205,7 +364,47 @@ const talentProfileUpdateSchema = z
     city: nameSchema,
     height_cm: heightSchema,
     measurements: measurementsSchema,
-    bio: bioSchema
+    bio: bioSchema,
+    // Include all updatable fields
+    phone: phoneSchema,
+    bust: bustSchema,
+    waist: waistSchema,
+    hips: hipsSchema,
+    shoe_size: z.string().trim().max(10).optional(),
+    eye_color: z.string().trim().max(30).optional(),
+    hair_color: z.string().trim().max(30).optional(),
+    specialties: z.array(z.string()).optional(),
+    gender: genderSchema,
+    date_of_birth: dateOfBirthSchema,
+    weight_kg: weightSchema,
+    weight_lbs: weightSchema,
+    dress_size: dressSizeSchema,
+    hair_length: hairLengthSchema,
+    skin_tone: skinToneSchema,
+    languages: languagesSchema,
+    availability_travel: availabilityTravelSchema,
+    availability_schedule: availabilityScheduleSchema,
+    experience_level: experienceLevelSchema,
+    training: trainingSchema,
+    portfolio_url: portfolioUrlSchema,
+    instagram_handle: socialMediaHandleSchema,
+    instagram_url: socialMediaUrlSchema,
+    twitter_handle: socialMediaHandleSchema,
+    twitter_url: socialMediaUrlSchema,
+    tiktok_handle: socialMediaHandleSchema,
+    tiktok_url: socialMediaUrlSchema,
+    reference_name: referenceNameSchema,
+    reference_email: referenceEmailSchema,
+    reference_phone: referencePhoneSchema,
+    reference_relationship: referenceRelationshipSchema,
+    emergency_contact_name: emergencyContactNameSchema,
+    emergency_contact_phone: emergencyContactPhoneSchema,
+    emergency_contact_relationship: emergencyContactRelationshipSchema,
+    nationality: nationalitySchema,
+    union_membership: unionMembershipSchema,
+    ethnicity: ethnicitySchema,
+    tattoos: tattoosSchema,
+    piercings: piercingsSchema
   })
   .strict();
 

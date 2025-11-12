@@ -7,6 +7,7 @@ const { normalizeMeasurements, curateBio } = require('../lib/curate');
 const { ensureUniqueSlug } = require('../lib/slugify');
 const { addMessage } = require('../middleware/context');
 const { upload, processImage } = require('../lib/uploader');
+const { calculateAge, generateSocialMediaUrl, parseSocialMediaHandle, convertKgToLbs, convertLbsToKg } = require('../lib/profile-helpers');
 
 const router = express.Router();
 
@@ -43,7 +44,36 @@ router.get('/apply', (req, res) => {
     partner_agency_email: '',
     email: '',
     password: '',
-    password_confirm: ''
+    password_confirm: '',
+    // New comprehensive fields
+    gender: '',
+    date_of_birth: '',
+    weight_kg: '',
+    weight_lbs: '',
+    dress_size: '',
+    hair_length: '',
+    skin_tone: '',
+    languages: [],
+    availability_travel: false,
+    availability_schedule: '',
+    experience_level: '',
+    training: '',
+    portfolio_url: '',
+    instagram_handle: '',
+    twitter_handle: '',
+    tiktok_handle: '',
+    reference_name: '',
+    reference_email: '',
+    reference_phone: '',
+    reference_relationship: '',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
+    emergency_contact_relationship: '',
+    nationality: '',
+    union_membership: '',
+    ethnicity: '',
+    tattoos: false,
+    piercings: false
   };
 
   return res.render('apply/index', {
@@ -109,6 +139,12 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     // Declare profile variables at function scope so they're available after if/else
     let first_name, last_name, city, phone, height_cm, bust, waist, hips, shoe_size;
     let eye_color, hair_color, measurements, bio, specialties, partner_agency_email;
+    let gender, date_of_birth, age, weight_kg, weight_lbs, dress_size, hair_length, skin_tone;
+    let languages, availability_travel, availability_schedule, experience_level, training, portfolio_url;
+    let instagram_handle, instagram_url, twitter_handle, twitter_url, tiktok_handle, tiktok_url;
+    let reference_name, reference_email, reference_phone, reference_relationship;
+    let emergency_contact_name, emergency_contact_phone, emergency_contact_relationship;
+    let nationality, union_membership, ethnicity, tattoos, piercings;
     let passwordHash = null; // Store password hash for transaction use
 
   // If not logged in, validate account creation fields
@@ -174,6 +210,20 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       }
     }
 
+    // Handle languages - convert to array if needed
+    let languagesArray = [];
+    if (req.body.languages) {
+      if (Array.isArray(req.body.languages)) {
+        languagesArray = req.body.languages;
+      } else if (typeof req.body.languages === 'string') {
+        try {
+          languagesArray = JSON.parse(req.body.languages);
+        } catch {
+          languagesArray = req.body.languages.split(',').map(l => l.trim()).filter(l => l);
+        }
+      }
+    }
+
     // Prepare body for validation - only include fields that are in the schema
     // The schema uses .strict() so we must exclude extra fields like password, email, etc.
     const bodyForValidation = {
@@ -191,7 +241,39 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       measurements: req.body.measurements,
       bio: req.body.bio,
       specialties: specialtiesArray.length > 0 ? specialtiesArray : undefined,
-      partner_agency_email: req.body.partner_agency_email
+      partner_agency_email: req.body.partner_agency_email,
+      // New comprehensive fields
+      gender: req.body.gender,
+      date_of_birth: req.body.date_of_birth,
+      weight_kg: req.body.weight_kg,
+      weight_lbs: req.body.weight_lbs,
+      dress_size: req.body.dress_size,
+      hair_length: req.body.hair_length,
+      skin_tone: req.body.skin_tone,
+      languages: languagesArray.length > 0 ? languagesArray : undefined,
+      availability_travel: req.body.availability_travel,
+      availability_schedule: req.body.availability_schedule,
+      experience_level: req.body.experience_level,
+      training: req.body.training,
+      portfolio_url: req.body.portfolio_url,
+      instagram_handle: req.body.instagram_handle,
+      instagram_url: req.body.instagram_url,
+      twitter_handle: req.body.twitter_handle,
+      twitter_url: req.body.twitter_url,
+      tiktok_handle: req.body.tiktok_handle,
+      tiktok_url: req.body.tiktok_url,
+      reference_name: req.body.reference_name,
+      reference_email: req.body.reference_email,
+      reference_phone: req.body.reference_phone,
+      reference_relationship: req.body.reference_relationship,
+      emergency_contact_name: req.body.emergency_contact_name,
+      emergency_contact_phone: req.body.emergency_contact_phone,
+      emergency_contact_relationship: req.body.emergency_contact_relationship,
+      nationality: req.body.nationality,
+      union_membership: req.body.union_membership,
+      ethnicity: req.body.ethnicity,
+      tattoos: req.body.tattoos,
+      piercings: req.body.piercings
     };
 
     // Validate profile fields (with specialties already converted to array)
@@ -228,6 +310,56 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     bio = applyParsed.data.bio;
     specialties = applyParsed.data.specialties;
     partner_agency_email = applyParsed.data.partner_agency_email;
+    
+    // Extract new comprehensive fields
+    gender = applyParsed.data.gender;
+    date_of_birth = applyParsed.data.date_of_birth;
+    weight_kg = applyParsed.data.weight_kg;
+    weight_lbs = applyParsed.data.weight_lbs;
+    dress_size = applyParsed.data.dress_size;
+    hair_length = applyParsed.data.hair_length;
+    skin_tone = applyParsed.data.skin_tone;
+    languages = applyParsed.data.languages;
+    availability_travel = applyParsed.data.availability_travel;
+    availability_schedule = applyParsed.data.availability_schedule;
+    experience_level = applyParsed.data.experience_level;
+    training = applyParsed.data.training;
+    portfolio_url = applyParsed.data.portfolio_url;
+    instagram_handle = applyParsed.data.instagram_handle;
+    instagram_url = applyParsed.data.instagram_url;
+    twitter_handle = applyParsed.data.twitter_handle;
+    twitter_url = applyParsed.data.twitter_url;
+    tiktok_handle = applyParsed.data.tiktok_handle;
+    tiktok_url = applyParsed.data.tiktok_url;
+    reference_name = applyParsed.data.reference_name;
+    reference_email = applyParsed.data.reference_email;
+    reference_phone = applyParsed.data.reference_phone;
+    reference_relationship = applyParsed.data.reference_relationship;
+    emergency_contact_name = applyParsed.data.emergency_contact_name;
+    emergency_contact_phone = applyParsed.data.emergency_contact_phone;
+    emergency_contact_relationship = applyParsed.data.emergency_contact_relationship;
+    nationality = applyParsed.data.nationality;
+    union_membership = applyParsed.data.union_membership;
+    ethnicity = applyParsed.data.ethnicity;
+    tattoos = applyParsed.data.tattoos;
+    piercings = applyParsed.data.piercings;
+    
+    // Calculate age from date of birth
+    if (date_of_birth) {
+      age = calculateAge(date_of_birth);
+    }
+    
+    // Handle weight conversion if only one is provided
+    if (weight_kg && !weight_lbs) {
+      weight_lbs = convertKgToLbs(weight_kg);
+    } else if (weight_lbs && !weight_kg) {
+      weight_kg = convertLbsToKg(weight_lbs);
+    }
+    
+    // Handle languages - convert to JSON string
+    const languagesJson = languages && Array.isArray(languages) && languages.length > 0
+      ? JSON.stringify(languages)
+      : null;
 
     // Create account
     try {
@@ -312,6 +444,20 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       }
     }
 
+    // Handle languages - convert to array if needed
+    let languagesArray = [];
+    if (req.body.languages) {
+      if (Array.isArray(req.body.languages)) {
+        languagesArray = req.body.languages;
+      } else if (typeof req.body.languages === 'string') {
+        try {
+          languagesArray = JSON.parse(req.body.languages);
+        } catch {
+          languagesArray = req.body.languages.split(',').map(l => l.trim()).filter(l => l);
+        }
+      }
+    }
+
     // Prepare body for validation - only include fields that are in the schema
     // The schema uses .strict() so we must exclude extra fields
     const bodyForValidation = {
@@ -329,7 +475,39 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       measurements: req.body.measurements,
       bio: req.body.bio,
       specialties: specialtiesArray.length > 0 ? specialtiesArray : undefined,
-      partner_agency_email: req.body.partner_agency_email
+      partner_agency_email: req.body.partner_agency_email,
+      // New comprehensive fields
+      gender: req.body.gender,
+      date_of_birth: req.body.date_of_birth,
+      weight_kg: req.body.weight_kg,
+      weight_lbs: req.body.weight_lbs,
+      dress_size: req.body.dress_size,
+      hair_length: req.body.hair_length,
+      skin_tone: req.body.skin_tone,
+      languages: languagesArray.length > 0 ? languagesArray : undefined,
+      availability_travel: req.body.availability_travel,
+      availability_schedule: req.body.availability_schedule,
+      experience_level: req.body.experience_level,
+      training: req.body.training,
+      portfolio_url: req.body.portfolio_url,
+      instagram_handle: req.body.instagram_handle,
+      instagram_url: req.body.instagram_url,
+      twitter_handle: req.body.twitter_handle,
+      twitter_url: req.body.twitter_url,
+      tiktok_handle: req.body.tiktok_handle,
+      tiktok_url: req.body.tiktok_url,
+      reference_name: req.body.reference_name,
+      reference_email: req.body.reference_email,
+      reference_phone: req.body.reference_phone,
+      reference_relationship: req.body.reference_relationship,
+      emergency_contact_name: req.body.emergency_contact_name,
+      emergency_contact_phone: req.body.emergency_contact_phone,
+      emergency_contact_relationship: req.body.emergency_contact_relationship,
+      nationality: req.body.nationality,
+      union_membership: req.body.union_membership,
+      ethnicity: req.body.ethnicity,
+      tattoos: req.body.tattoos,
+      piercings: req.body.piercings
     };
 
     // Validate profile data
@@ -367,11 +545,62 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     specialties = parsed.data.specialties;
     partner_agency_email = parsed.data.partner_agency_email;
     
+    // Extract new comprehensive fields
+    gender = parsed.data.gender;
+    date_of_birth = parsed.data.date_of_birth;
+    weight_kg = parsed.data.weight_kg;
+    weight_lbs = parsed.data.weight_lbs;
+    dress_size = parsed.data.dress_size;
+    hair_length = parsed.data.hair_length;
+    skin_tone = parsed.data.skin_tone;
+    languages = parsed.data.languages;
+    availability_travel = parsed.data.availability_travel;
+    availability_schedule = parsed.data.availability_schedule;
+    experience_level = parsed.data.experience_level;
+    training = parsed.data.training;
+    portfolio_url = parsed.data.portfolio_url;
+    instagram_handle = parsed.data.instagram_handle;
+    instagram_url = parsed.data.instagram_url;
+    twitter_handle = parsed.data.twitter_handle;
+    twitter_url = parsed.data.twitter_url;
+    tiktok_handle = parsed.data.tiktok_handle;
+    tiktok_url = parsed.data.tiktok_url;
+    reference_name = parsed.data.reference_name;
+    reference_email = parsed.data.reference_email;
+    reference_phone = parsed.data.reference_phone;
+    reference_relationship = parsed.data.reference_relationship;
+    emergency_contact_name = parsed.data.emergency_contact_name;
+    emergency_contact_phone = parsed.data.emergency_contact_phone;
+    emergency_contact_relationship = parsed.data.emergency_contact_relationship;
+    nationality = parsed.data.nationality;
+    union_membership = parsed.data.union_membership;
+    ethnicity = parsed.data.ethnicity;
+    tattoos = parsed.data.tattoos;
+    piercings = parsed.data.piercings;
+    
+    // Calculate age from date of birth
+    if (date_of_birth) {
+      age = calculateAge(date_of_birth);
+    }
+    
+    // Handle weight conversion if only one is provided
+    if (weight_kg && !weight_lbs) {
+      weight_lbs = convertKgToLbs(weight_kg);
+    } else if (weight_lbs && !weight_kg) {
+      weight_kg = convertLbsToKg(weight_lbs);
+    }
+    
+    // Handle languages - convert to JSON string
+    const languagesJson = languages && Array.isArray(languages) && languages.length > 0
+      ? JSON.stringify(languages)
+      : null;
+    
     console.log('[Apply] Extracted profile data for logged-in user:', {
       name: `${first_name} ${last_name}`,
       city: city,
       hasBio: !!bio,
-      hasSpecialties: !!specialties
+      hasSpecialties: !!specialties,
+      hasLanguages: !!languagesJson
     });
   }
 
@@ -434,6 +663,12 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
           const slug = await ensureUniqueSlug(trx, 'profiles', `${first_name}-${last_name}`);
           profileId = uuidv4();
           
+          // For new signups, always Free - just store handles, no URLs
+          // Clean social media handles
+          const cleanInstagramHandle = instagram_handle ? parseSocialMediaHandle(instagram_handle) : null;
+          const cleanTwitterHandle = twitter_handle ? parseSocialMediaHandle(twitter_handle) : null;
+          const cleanTiktokHandle = tiktok_handle ? parseSocialMediaHandle(tiktok_handle) : null;
+          
           const profileData = {
             id: profileId,
             user_id: userId,
@@ -453,7 +688,41 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
             bio_raw: bio,
             bio_curated: curatedBio,
             specialties: specialtiesJson,
-            partner_agency_id: partnerAgencyId
+            partner_agency_id: partnerAgencyId,
+            // New comprehensive fields
+            gender: gender || null,
+            date_of_birth: date_of_birth || null,
+            age: age || null,
+            weight_kg: weight_kg || null,
+            weight_lbs: weight_lbs || null,
+            dress_size: dress_size || null,
+            hair_length: hair_length || null,
+            skin_tone: skin_tone || null,
+            languages: languagesJson,
+            availability_travel: availability_travel || null,
+            availability_schedule: availability_schedule || null,
+            experience_level: experience_level || null,
+            training: training || null,
+            portfolio_url: portfolio_url || null,
+            instagram_handle: cleanInstagramHandle,
+            instagram_url: null, // Free users don't get URLs
+            twitter_handle: cleanTwitterHandle,
+            twitter_url: null, // Free users don't get URLs
+            tiktok_handle: cleanTiktokHandle,
+            tiktok_url: null, // Free users don't get URLs
+            reference_name: reference_name || null,
+            reference_email: reference_email || null,
+            reference_phone: reference_phone || null,
+            reference_relationship: reference_relationship || null,
+            emergency_contact_name: emergency_contact_name || null,
+            emergency_contact_phone: emergency_contact_phone || null,
+            emergency_contact_relationship: emergency_contact_relationship || null,
+            nationality: nationality || null,
+            union_membership: union_membership || null,
+            ethnicity: ethnicity || null,
+            tattoos: tattoos || null,
+            piercings: piercings || null,
+            is_pro: false // New signups are always Free
           };
           
           await trx('profiles').insert(profileData);
@@ -480,6 +749,38 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         slug = await ensureUniqueSlug(knex, 'profiles', `${first_name}-${last_name}`);
       }
       profileId = existingProfile.id;
+      
+      // Check if user is Pro to determine if we should generate social media URLs
+      const isPro = existingProfile.is_pro || false;
+      
+      // Clean social media handles
+      const cleanInstagramHandle = instagram_handle ? parseSocialMediaHandle(instagram_handle) : null;
+      const cleanTwitterHandle = twitter_handle ? parseSocialMediaHandle(twitter_handle) : null;
+      const cleanTiktokHandle = tiktok_handle ? parseSocialMediaHandle(tiktok_handle) : null;
+      
+      // Generate URLs for Pro users if handles are provided but URLs are not
+      let finalInstagramUrl = instagram_url || null;
+      let finalTwitterUrl = twitter_url || null;
+      let finalTiktokUrl = tiktok_url || null;
+      
+      if (isPro) {
+        // Pro users get URLs - generate from handles if URL not provided
+        if (cleanInstagramHandle && !finalInstagramUrl) {
+          finalInstagramUrl = generateSocialMediaUrl('instagram', cleanInstagramHandle);
+        }
+        if (cleanTwitterHandle && !finalTwitterUrl) {
+          finalTwitterUrl = generateSocialMediaUrl('twitter', cleanTwitterHandle);
+        }
+        if (cleanTiktokHandle && !finalTiktokUrl) {
+          finalTiktokUrl = generateSocialMediaUrl('tiktok', cleanTiktokHandle);
+        }
+      } else {
+        // Free users don't get URLs - clear any URLs that might have been provided
+        finalInstagramUrl = null;
+        finalTwitterUrl = null;
+        finalTiktokUrl = null;
+      }
+      
       await knex('profiles')
         .where({ id: existingProfile.id })
         .update({
@@ -500,12 +801,46 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
           specialties: specialtiesJson,
           partner_agency_id: partnerAgencyId,
           slug,
+          // New comprehensive fields
+          gender: gender || null,
+          date_of_birth: date_of_birth || null,
+          age: age || null,
+          weight_kg: weight_kg || null,
+          weight_lbs: weight_lbs || null,
+          dress_size: dress_size || null,
+          hair_length: hair_length || null,
+          skin_tone: skin_tone || null,
+          languages: languagesJson,
+          availability_travel: availability_travel || null,
+          availability_schedule: availability_schedule || null,
+          experience_level: experience_level || null,
+          training: training || null,
+          portfolio_url: portfolio_url || null,
+          instagram_handle: cleanInstagramHandle,
+          instagram_url: finalInstagramUrl,
+          twitter_handle: cleanTwitterHandle,
+          twitter_url: finalTwitterUrl,
+          tiktok_handle: cleanTiktokHandle,
+          tiktok_url: finalTiktokUrl,
+          reference_name: reference_name || null,
+          reference_email: reference_email || null,
+          reference_phone: reference_phone || null,
+          reference_relationship: reference_relationship || null,
+          emergency_contact_name: emergency_contact_name || null,
+          emergency_contact_phone: emergency_contact_phone || null,
+          emergency_contact_relationship: emergency_contact_relationship || null,
+          nationality: nationality || null,
+          union_membership: union_membership || null,
+          ethnicity: ethnicity || null,
+          tattoos: tattoos || null,
+          piercings: piercings || null,
           updated_at: knex.fn.now()
         });
       console.log('[Apply] Profile updated successfully:', {
         profileId: profileId,
         userId: userId,
-        slug: slug
+        slug: slug,
+        isPro: isPro
       });
     } else {
       // Logged-in user creating profile for first time (user already exists)
@@ -515,6 +850,13 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       });
       const slug = await ensureUniqueSlug(knex, 'profiles', `${first_name}-${last_name}`);
       profileId = uuidv4();
+      
+      // For logged-in users creating profile, check if they're Pro (unlikely but possible)
+      // For now, assume Free unless they already have a Pro profile elsewhere
+      // Clean social media handles
+      const cleanInstagramHandle = instagram_handle ? parseSocialMediaHandle(instagram_handle) : null;
+      const cleanTwitterHandle = twitter_handle ? parseSocialMediaHandle(twitter_handle) : null;
+      const cleanTiktokHandle = tiktok_handle ? parseSocialMediaHandle(tiktok_handle) : null;
       
       const profileData = {
         id: profileId,
@@ -535,7 +877,41 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         bio_raw: bio,
         bio_curated: curatedBio,
         specialties: specialtiesJson,
-        partner_agency_id: partnerAgencyId
+        partner_agency_id: partnerAgencyId,
+        // New comprehensive fields
+        gender: gender || null,
+        date_of_birth: date_of_birth || null,
+        age: age || null,
+        weight_kg: weight_kg || null,
+        weight_lbs: weight_lbs || null,
+        dress_size: dress_size || null,
+        hair_length: hair_length || null,
+        skin_tone: skin_tone || null,
+        languages: languagesJson,
+        availability_travel: availability_travel || null,
+        availability_schedule: availability_schedule || null,
+        experience_level: experience_level || null,
+        training: training || null,
+        portfolio_url: portfolio_url || null,
+        instagram_handle: cleanInstagramHandle,
+        instagram_url: null, // Assume Free for new profiles
+        twitter_handle: cleanTwitterHandle,
+        twitter_url: null, // Assume Free for new profiles
+        tiktok_handle: cleanTiktokHandle,
+        tiktok_url: null, // Assume Free for new profiles
+        reference_name: reference_name || null,
+        reference_email: reference_email || null,
+        reference_phone: reference_phone || null,
+        reference_relationship: reference_relationship || null,
+        emergency_contact_name: emergency_contact_name || null,
+        emergency_contact_phone: emergency_contact_phone || null,
+        emergency_contact_relationship: emergency_contact_relationship || null,
+        nationality: nationality || null,
+        union_membership: union_membership || null,
+        ethnicity: ethnicity || null,
+        tattoos: tattoos || null,
+        piercings: piercings || null,
+        is_pro: false // Assume Free for new profiles
       };
       
       console.log('[Apply] Inserting profile into database:', {

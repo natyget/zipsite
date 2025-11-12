@@ -282,7 +282,12 @@
       const nameEl = document.getElementById('review-name');
       const phoneEl = document.getElementById('review-phone');
       const cityEl = document.getElementById('review-city');
+      const genderEl = document.getElementById('review-gender');
+      const dateOfBirthEl = document.getElementById('review-date-of-birth');
+      const ageEl = document.getElementById('review-age');
       const heightEl = document.getElementById('review-height');
+      const weightEl = document.getElementById('review-weight');
+      const dressSizeEl = document.getElementById('review-dress-size');
       const measurementsEl = document.getElementById('review-measurements');
       const bustEl = document.getElementById('review-bust');
       const waistEl = document.getElementById('review-waist');
@@ -290,8 +295,21 @@
       const shoeSizeEl = document.getElementById('review-shoe-size');
       const eyeColorEl = document.getElementById('review-eye-color');
       const hairColorEl = document.getElementById('review-hair-color');
+      const hairLengthEl = document.getElementById('review-hair-length');
+      const skinToneEl = document.getElementById('review-skin-tone');
       const bioEl = document.getElementById('review-bio');
       const specialtiesEl = document.getElementById('review-specialties');
+      const languagesEl = document.getElementById('review-languages');
+      const availabilityEl = document.getElementById('review-availability');
+      const experienceLevelEl = document.getElementById('review-experience-level');
+      const trainingEl = document.getElementById('review-training');
+      const portfolioUrlEl = document.getElementById('review-portfolio-url');
+      const socialMediaEl = document.getElementById('review-social-media');
+      const nationalityEl = document.getElementById('review-nationality');
+      const unionMembershipEl = document.getElementById('review-union-membership');
+      const ethnicityEl = document.getElementById('review-ethnicity');
+      const tattoosEl = document.getElementById('review-tattoos');
+      const piercingsEl = document.getElementById('review-piercings');
       const photosCountEl = document.getElementById('review-photos-count');
 
       if (nameEl) {
@@ -301,7 +319,46 @@
       }
       if (phoneEl) phoneEl.textContent = form.querySelector('[name="phone"]')?.value || '—';
       if (cityEl) cityEl.textContent = form.querySelector('[name="city"]')?.value || '—';
+      if (genderEl) genderEl.textContent = form.querySelector('[name="gender"]')?.value || '—';
+      if (dateOfBirthEl) {
+        const dob = form.querySelector('[name="date_of_birth"]')?.value || '';
+        if (dob) {
+          const date = new Date(dob);
+          dateOfBirthEl.textContent = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        } else {
+          dateOfBirthEl.textContent = '—';
+        }
+      }
+      if (ageEl) {
+        const dob = form.querySelector('[name="date_of_birth"]')?.value || '';
+        if (dob) {
+          const birthDate = new Date(dob);
+          const today = new Date();
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+          ageEl.textContent = age > 0 ? `${age} years` : '—';
+        } else {
+          ageEl.textContent = '—';
+        }
+      }
       if (heightEl) heightEl.textContent = form.querySelector('[name="height_cm"]')?.value || '—';
+      if (weightEl) {
+        const weightKg = form.querySelector('[name="weight_kg"]')?.value || '';
+        const weightLbs = form.querySelector('[name="weight_lbs"]')?.value || '';
+        if (weightKg && weightLbs) {
+          weightEl.textContent = `${weightKg} kg (${weightLbs} lbs)`;
+        } else if (weightKg) {
+          weightEl.textContent = `${weightKg} kg`;
+        } else if (weightLbs) {
+          weightEl.textContent = `${weightLbs} lbs`;
+        } else {
+          weightEl.textContent = '—';
+        }
+      }
+      if (dressSizeEl) dressSizeEl.textContent = form.querySelector('[name="dress_size"]')?.value || '—';
       if (measurementsEl) measurementsEl.textContent = form.querySelector('[name="measurements"]')?.value || '—';
       if (bustEl) bustEl.textContent = form.querySelector('[name="bust"]')?.value ? `${form.querySelector('[name="bust"]').value}"` : '—';
       if (waistEl) waistEl.textContent = form.querySelector('[name="waist"]')?.value ? `${form.querySelector('[name="waist"]').value}"` : '—';
@@ -309,6 +366,8 @@
       if (shoeSizeEl) shoeSizeEl.textContent = form.querySelector('[name="shoe_size"]')?.value || '—';
       if (eyeColorEl) eyeColorEl.textContent = form.querySelector('[name="eye_color"]')?.value || '—';
       if (hairColorEl) hairColorEl.textContent = form.querySelector('[name="hair_color"]')?.value || '—';
+      if (hairLengthEl) hairLengthEl.textContent = form.querySelector('[name="hair_length"]')?.value || '—';
+      if (skinToneEl) skinToneEl.textContent = form.querySelector('[name="skin_tone"]')?.value || '—';
       if (bioEl) {
         const bio = form.querySelector('[name="bio"]')?.value || '';
         bioEl.textContent = bio || '—';
@@ -317,6 +376,53 @@
         const checkboxes = form.querySelectorAll('[name="specialties"]:checked');
         const specialties = Array.from(checkboxes).map(cb => cb.value);
         specialtiesEl.textContent = specialties.length > 0 ? specialties.join(', ') : '—';
+      }
+      if (languagesEl) {
+        const checkboxes = form.querySelectorAll('[name="languages"]:checked');
+        const languages = Array.from(checkboxes).map(cb => cb.value);
+        languagesEl.textContent = languages.length > 0 ? languages.join(', ') : '—';
+      }
+      if (availabilityEl) {
+        const travel = form.querySelector('[name="availability_travel"]')?.checked || false;
+        const schedule = form.querySelector('[name="availability_schedule"]')?.value || '';
+        const parts = [];
+        if (schedule) parts.push(schedule);
+        if (travel) parts.push('Willing to travel');
+        availabilityEl.textContent = parts.length > 0 ? parts.join(' • ') : '—';
+      }
+      if (experienceLevelEl) experienceLevelEl.textContent = form.querySelector('[name="experience_level"]')?.value || '—';
+      if (trainingEl) {
+        const training = form.querySelector('[name="training"]')?.value || '';
+        trainingEl.textContent = training || '—';
+      }
+      if (portfolioUrlEl) {
+        const portfolioUrl = form.querySelector('[name="portfolio_url"]')?.value || '';
+        if (portfolioUrl) {
+          portfolioUrlEl.innerHTML = `<a href="${portfolioUrl}" target="_blank" rel="noopener">${portfolioUrl}</a>`;
+        } else {
+          portfolioUrlEl.textContent = '—';
+        }
+      }
+      if (socialMediaEl) {
+        const instagram = form.querySelector('[name="instagram_handle"]')?.value || '';
+        const twitter = form.querySelector('[name="twitter_handle"]')?.value || '';
+        const tiktok = form.querySelector('[name="tiktok_handle"]')?.value || '';
+        const parts = [];
+        if (instagram) parts.push(`Instagram: ${instagram}`);
+        if (twitter) parts.push(`Twitter: ${twitter}`);
+        if (tiktok) parts.push(`TikTok: ${tiktok}`);
+        socialMediaEl.textContent = parts.length > 0 ? parts.join(', ') : '—';
+      }
+      if (nationalityEl) nationalityEl.textContent = form.querySelector('[name="nationality"]')?.value || '—';
+      if (unionMembershipEl) unionMembershipEl.textContent = form.querySelector('[name="union_membership"]')?.value || '—';
+      if (ethnicityEl) ethnicityEl.textContent = form.querySelector('[name="ethnicity"]')?.value || '—';
+      if (tattoosEl) {
+        const tattoos = form.querySelector('[name="tattoos"]')?.checked || false;
+        tattoosEl.textContent = tattoos ? 'Yes' : 'No';
+      }
+      if (piercingsEl) {
+        const piercings = form.querySelector('[name="piercings"]')?.checked || false;
+        piercingsEl.textContent = piercings ? 'Yes' : 'No';
       }
       updateReviewPhotos();
     }

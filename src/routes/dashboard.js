@@ -14,6 +14,7 @@ const config = require('../config');
 const { getAllThemes, getFreeThemes, getProThemes, getTheme, getDefaultTheme, getAvailableFonts, getAvailableColorPalettes } = require('../lib/themes');
 const { getAllLayoutPresets } = require('../lib/pdf-layouts');
 const { ensureUniqueSlug } = require('../lib/slugify');
+const { calculateAge, generateSocialMediaUrl, parseSocialMediaHandle, convertKgToLbs, convertLbsToKg } = require('../lib/profile-helpers');
 
 const router = express.Router();
 
@@ -330,9 +331,50 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
       const profileId = uuidv4();
       const slug = await ensureUniqueSlug(knex, 'profiles', `${placeholderFirstName}-${placeholderLastName}`);
       
-      const { city, height_cm, measurements, bio } = parsed.data;
+      // Extract all fields from parsed data
+      const {
+        city, height_cm, measurements, bio,
+        gender, date_of_birth, weight_kg, weight_lbs, dress_size, hair_length, skin_tone,
+        languages, availability_travel, availability_schedule, experience_level, training, portfolio_url,
+        instagram_handle, twitter_handle, tiktok_handle,
+        reference_name, reference_email, reference_phone, reference_relationship,
+        emergency_contact_name, emergency_contact_phone, emergency_contact_relationship,
+        nationality, union_membership, ethnicity, tattoos, piercings,
+        phone, bust, waist, hips, shoe_size, eye_color, hair_color, specialties
+      } = parsed.data;
+      
       const curatedBio = curateBio(bio, placeholderFirstName, placeholderLastName);
       const cleanedMeasurements = normalizeMeasurements(measurements);
+      
+      // Calculate age from date of birth
+      let age = null;
+      if (date_of_birth) {
+        age = calculateAge(date_of_birth);
+      }
+      
+      // Handle weight conversion
+      let finalWeightKg = weight_kg || null;
+      let finalWeightLbs = weight_lbs || null;
+      if (finalWeightKg && !finalWeightLbs) {
+        finalWeightLbs = convertKgToLbs(finalWeightKg);
+      } else if (finalWeightLbs && !finalWeightKg) {
+        finalWeightKg = convertLbsToKg(finalWeightLbs);
+      }
+      
+      // Handle languages - convert to JSON string
+      const languagesJson = languages && Array.isArray(languages) && languages.length > 0
+        ? JSON.stringify(languages)
+        : null;
+      
+      // Handle specialties - convert to JSON string
+      const specialtiesJson = specialties && Array.isArray(specialties) && specialties.length > 0
+        ? JSON.stringify(specialties)
+        : null;
+      
+      // Clean social media handles (Free users - no URLs)
+      const cleanInstagramHandle = instagram_handle ? parseSocialMediaHandle(instagram_handle) : null;
+      const cleanTwitterHandle = twitter_handle ? parseSocialMediaHandle(twitter_handle) : null;
+      const cleanTiktokHandle = tiktok_handle ? parseSocialMediaHandle(tiktok_handle) : null;
       
       // Create minimal profile with the form data
       await knex('profiles').insert({
@@ -342,10 +384,50 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
         first_name: placeholderFirstName,
         last_name: placeholderLastName,
         city,
+        phone: phone || null,
         height_cm,
+        bust: bust || null,
+        waist: waist || null,
+        hips: hips || null,
+        shoe_size: shoe_size || null,
+        eye_color: eye_color || null,
+        hair_color: hair_color || null,
         measurements: cleanedMeasurements,
         bio_raw: bio,
         bio_curated: curatedBio,
+        specialties: specialtiesJson,
+        gender: gender || null,
+        date_of_birth: date_of_birth || null,
+        age: age,
+        weight_kg: finalWeightKg,
+        weight_lbs: finalWeightLbs,
+        dress_size: dress_size || null,
+        hair_length: hair_length || null,
+        skin_tone: skin_tone || null,
+        languages: languagesJson,
+        availability_travel: availability_travel || null,
+        availability_schedule: availability_schedule || null,
+        experience_level: experience_level || null,
+        training: training || null,
+        portfolio_url: portfolio_url || null,
+        instagram_handle: cleanInstagramHandle,
+        instagram_url: null, // Free users don't get URLs
+        twitter_handle: cleanTwitterHandle,
+        twitter_url: null, // Free users don't get URLs
+        tiktok_handle: cleanTiktokHandle,
+        tiktok_url: null, // Free users don't get URLs
+        reference_name: reference_name || null,
+        reference_email: reference_email || null,
+        reference_phone: reference_phone || null,
+        reference_relationship: reference_relationship || null,
+        emergency_contact_name: emergency_contact_name || null,
+        emergency_contact_phone: emergency_contact_phone || null,
+        emergency_contact_relationship: emergency_contact_relationship || null,
+        nationality: nationality || null,
+        union_membership: union_membership || null,
+        ethnicity: ethnicity || null,
+        tattoos: tattoos || null,
+        piercings: piercings || null,
         is_pro: false,
         pdf_theme: null,
         pdf_customizations: null
@@ -367,20 +449,169 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
     }
 
     // Profile exists - update it
-    const { city, height_cm, measurements, bio } = parsed.data;
+    // Extract all fields from parsed data
+    const {
+      city, height_cm, measurements, bio,
+      gender, date_of_birth, weight_kg, weight_lbs, dress_size, hair_length, skin_tone,
+      languages, availability_travel, availability_schedule, experience_level, training, portfolio_url,
+      instagram_handle, twitter_handle, tiktok_handle,
+      reference_name, reference_email, reference_phone, reference_relationship,
+      emergency_contact_name, emergency_contact_phone, emergency_contact_relationship,
+      nationality, union_membership, ethnicity, tattoos, piercings,
+      phone, bust, waist, hips, shoe_size, eye_color, hair_color, specialties
+    } = parsed.data;
+    
     const curatedBio = curateBio(bio, profile.first_name, profile.last_name);
     const cleanedMeasurements = normalizeMeasurements(measurements);
+    
+    // Calculate age from date of birth
+    let age = profile.age || null;
+    if (date_of_birth) {
+      age = calculateAge(date_of_birth);
+    } else if (profile.date_of_birth) {
+      age = calculateAge(profile.date_of_birth);
+    }
+    
+    // Handle weight conversion
+    let finalWeightKg = weight_kg || null;
+    let finalWeightLbs = weight_lbs || null;
+    if (finalWeightKg && !finalWeightLbs) {
+      finalWeightLbs = convertKgToLbs(finalWeightKg);
+    } else if (finalWeightLbs && !finalWeightKg) {
+      finalWeightKg = convertLbsToKg(finalWeightLbs);
+    }
+    
+    // Handle languages - convert to JSON string (only if provided in form)
+    let languagesJson = profile.languages; // Keep existing if not provided
+    if (languages !== undefined) {
+      languagesJson = languages && Array.isArray(languages) && languages.length > 0
+        ? JSON.stringify(languages)
+        : null;
+    }
+    
+    // Handle specialties - convert to JSON string (only if provided in form)
+    let specialtiesJson = profile.specialties; // Keep existing if not provided
+    if (specialties !== undefined) {
+      specialtiesJson = specialties && Array.isArray(specialties) && specialties.length > 0
+        ? JSON.stringify(specialties)
+        : null;
+    }
+    
+    // Handle weight (only if provided in form)
+    if (weight_kg === undefined && weight_lbs === undefined) {
+      // Keep existing weight values
+      finalWeightKg = profile.weight_kg;
+      finalWeightLbs = profile.weight_lbs;
+    }
+    
+    // Check if user is Pro to determine if we should generate social media URLs
+    const isPro = profile.is_pro || false;
+    
+    // Clean social media handles (only if provided in form)
+    let cleanInstagramHandle = profile.instagram_handle;
+    let cleanTwitterHandle = profile.twitter_handle;
+    let cleanTiktokHandle = profile.tiktok_handle;
+    
+    if (instagram_handle !== undefined) {
+      cleanInstagramHandle = instagram_handle ? parseSocialMediaHandle(instagram_handle) : null;
+    }
+    if (twitter_handle !== undefined) {
+      cleanTwitterHandle = twitter_handle ? parseSocialMediaHandle(twitter_handle) : null;
+    }
+    if (tiktok_handle !== undefined) {
+      cleanTiktokHandle = tiktok_handle ? parseSocialMediaHandle(tiktok_handle) : null;
+    }
+    
+    // Generate URLs for Pro users if handles are provided but URLs are not
+    let finalInstagramUrl = profile.instagram_url || null;
+    let finalTwitterUrl = profile.twitter_url || null;
+    let finalTiktokUrl = profile.tiktok_url || null;
+    
+    if (isPro) {
+      // Pro users get URLs - generate from handles if URL not provided and handle exists
+      if (cleanInstagramHandle && !finalInstagramUrl) {
+        finalInstagramUrl = generateSocialMediaUrl('instagram', cleanInstagramHandle);
+      }
+      if (cleanTwitterHandle && !finalTwitterUrl) {
+        finalTwitterUrl = generateSocialMediaUrl('twitter', cleanTwitterHandle);
+      }
+      if (cleanTiktokHandle && !finalTiktokUrl) {
+        finalTiktokUrl = generateSocialMediaUrl('tiktok', cleanTiktokHandle);
+      }
+    } else {
+      // Free users don't get URLs - clear any URLs if handles are being updated
+      if (instagram_handle !== undefined) finalInstagramUrl = null;
+      if (twitter_handle !== undefined) finalTwitterUrl = null;
+      if (tiktok_handle !== undefined) finalTiktokUrl = null;
+    }
+    
+    // Build update object - only update fields that were provided in the form
+    const updateData = {
+      updated_at: knex.fn.now()
+    };
+    
+    // Only update fields that are explicitly in parsed.data (were submitted in form)
+    if (city !== undefined) updateData.city = city;
+    if (phone !== undefined) updateData.phone = phone || null;
+    if (height_cm !== undefined) updateData.height_cm = height_cm;
+    if (bust !== undefined) updateData.bust = bust || null;
+    if (waist !== undefined) updateData.waist = waist || null;
+    if (hips !== undefined) updateData.hips = hips || null;
+    if (shoe_size !== undefined) updateData.shoe_size = shoe_size || null;
+    if (eye_color !== undefined) updateData.eye_color = eye_color || null;
+    if (hair_color !== undefined) updateData.hair_color = hair_color || null;
+    if (measurements !== undefined) updateData.measurements = cleanedMeasurements;
+    if (bio !== undefined) {
+      updateData.bio_raw = bio;
+      updateData.bio_curated = curatedBio;
+    }
+    if (specialties !== undefined) updateData.specialties = specialtiesJson;
+    if (gender !== undefined) updateData.gender = gender || null;
+    if (date_of_birth !== undefined) {
+      updateData.date_of_birth = date_of_birth || null;
+      updateData.age = age; // Recalculate age if DOB changed
+    }
+    if (weight_kg !== undefined || weight_lbs !== undefined) {
+      updateData.weight_kg = finalWeightKg;
+      updateData.weight_lbs = finalWeightLbs;
+    }
+    if (dress_size !== undefined) updateData.dress_size = dress_size || null;
+    if (hair_length !== undefined) updateData.hair_length = hair_length || null;
+    if (skin_tone !== undefined) updateData.skin_tone = skin_tone || null;
+    if (languages !== undefined) updateData.languages = languagesJson;
+    if (availability_travel !== undefined) updateData.availability_travel = availability_travel || null;
+    if (availability_schedule !== undefined) updateData.availability_schedule = availability_schedule || null;
+    if (experience_level !== undefined) updateData.experience_level = experience_level || null;
+    if (training !== undefined) updateData.training = training || null;
+    if (portfolio_url !== undefined) updateData.portfolio_url = portfolio_url || null;
+    if (instagram_handle !== undefined) {
+      updateData.instagram_handle = cleanInstagramHandle;
+      updateData.instagram_url = finalInstagramUrl;
+    }
+    if (twitter_handle !== undefined) {
+      updateData.twitter_handle = cleanTwitterHandle;
+      updateData.twitter_url = finalTwitterUrl;
+    }
+    if (tiktok_handle !== undefined) {
+      updateData.tiktok_handle = cleanTiktokHandle;
+      updateData.tiktok_url = finalTiktokUrl;
+    }
+    if (reference_name !== undefined) updateData.reference_name = reference_name || null;
+    if (reference_email !== undefined) updateData.reference_email = reference_email || null;
+    if (reference_phone !== undefined) updateData.reference_phone = reference_phone || null;
+    if (reference_relationship !== undefined) updateData.reference_relationship = reference_relationship || null;
+    if (emergency_contact_name !== undefined) updateData.emergency_contact_name = emergency_contact_name || null;
+    if (emergency_contact_phone !== undefined) updateData.emergency_contact_phone = emergency_contact_phone || null;
+    if (emergency_contact_relationship !== undefined) updateData.emergency_contact_relationship = emergency_contact_relationship || null;
+    if (nationality !== undefined) updateData.nationality = nationality || null;
+    if (union_membership !== undefined) updateData.union_membership = union_membership || null;
+    if (ethnicity !== undefined) updateData.ethnicity = ethnicity || null;
+    if (tattoos !== undefined) updateData.tattoos = tattoos || null;
+    if (piercings !== undefined) updateData.piercings = piercings || null;
 
     await knex('profiles')
       .where({ id: profile.id })
-      .update({
-        city,
-        height_cm,
-        measurements: cleanedMeasurements,
-        bio_raw: bio,
-        bio_curated: curatedBio,
-        updated_at: knex.fn.now()
-      });
+      .update(updateData);
 
     addMessage(req, 'success', 'Profile updated.');
     return res.redirect('/dashboard/talent');

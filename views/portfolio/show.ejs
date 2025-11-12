@@ -6,8 +6,64 @@
     <ul class="portfolio-stats">
       <li><span>Height</span> <%= profile.height_cm %> cm (<%= heightFeet %>)</li>
       <li><span>Measurements</span> <%= profile.measurements %></li>
+      <% if (profile.gender) { %>
+        <li><span>Gender</span> <%= profile.gender %></li>
+      <% } %>
+      <% if (profile.age) { %>
+        <li><span>Age</span> <%= profile.age %></li>
+      <% } %>
+      <% if (profile.weight_kg || profile.weight_lbs) { %>
+        <li><span>Weight</span>
+          <% if (profile.weight_kg && profile.weight_lbs) { %>
+            <%= profile.weight_kg %> kg (<%= profile.weight_lbs %> lbs)
+          <% } else if (profile.weight_kg) { %>
+            <%= profile.weight_kg %> kg
+          <% } else if (profile.weight_lbs) { %>
+            <%= profile.weight_lbs %> lbs
+          <% } %>
+        </li>
+      <% } %>
+      <% if (profile.dress_size) { %>
+        <li><span>Dress Size</span> <%= profile.dress_size %></li>
+      <% } %>
+      <% if (profile.hair_length) { %>
+        <li><span>Hair Length</span> <%= profile.hair_length %></li>
+      <% } %>
+      <% if (profile.skin_tone) { %>
+        <li><span>Skin Tone</span> <%= profile.skin_tone %></li>
+      <% } %>
       <% if (profile.is_pro) { %>
         <li><span>Status</span> Pro talent</li>
+      <% } %>
+      <% if (profile.is_pro && profile.languages) { %>
+        <li><span>Languages</span>
+          <% 
+            let languagesArray = [];
+            try {
+              languagesArray = typeof profile.languages === 'string' ? JSON.parse(profile.languages) : profile.languages;
+            } catch {
+              languagesArray = [];
+            }
+            const languagesDisplay = Array.isArray(languagesArray) && languagesArray.length > 0 
+              ? languagesArray.join(', ') 
+              : (typeof profile.languages === 'string' ? profile.languages : '');
+          %>
+          <%= languagesDisplay %>
+        </li>
+      <% } %>
+      <% if (profile.is_pro && (profile.availability_travel !== null || profile.availability_schedule)) { %>
+        <li><span>Availability</span>
+          <% 
+            const availabilityParts = [];
+            if (profile.availability_schedule) availabilityParts.push(profile.availability_schedule);
+            if (profile.availability_travel === true) availabilityParts.push('Willing to travel');
+            const availabilityDisplay = availabilityParts.length > 0 ? availabilityParts.join(' • ') : '';
+          %>
+          <%= availabilityDisplay %>
+        </li>
+      <% } %>
+      <% if (profile.is_pro && profile.experience_level) { %>
+        <li><span>Experience</span> <%= profile.experience_level %></li>
       <% } %>
     </ul>
   </div>
@@ -22,6 +78,81 @@
   <article class="portfolio-bio">
     <h2>About</h2>
     <p><%= profile.bio_curated %></p>
+    <% if (profile.is_pro && profile.training) { %>
+      <div class="portfolio-training">
+        <h3>Training</h3>
+        <p><%= profile.training %></p>
+      </div>
+    <% } %>
+    <% if (profile.portfolio_url) { %>
+      <div class="portfolio-portfolio">
+        <h3>Portfolio</h3>
+        <p><a href="<%= profile.portfolio_url %>" target="_blank" rel="noopener"><%= profile.portfolio_url %></a></p>
+      </div>
+    <% } %>
+    <% if (profile.instagram_handle || profile.twitter_handle || profile.tiktok_handle) { %>
+      <div class="portfolio-social">
+        <h3>Social Media</h3>
+        <ul class="portfolio-social-list">
+          <% if (profile.instagram_handle) { %>
+            <li>
+              <% if (profile.is_pro && profile.instagram_url) { %>
+                <a href="<%= profile.instagram_url %>" target="_blank" rel="noopener">Instagram: @<%= profile.instagram_handle %></a>
+              <% } else { %>
+                Instagram: @<%= profile.instagram_handle %>
+              <% } %>
+            </li>
+          <% } %>
+          <% if (profile.twitter_handle) { %>
+            <li>
+              <% if (profile.is_pro && profile.twitter_url) { %>
+                <a href="<%= profile.twitter_url %>" target="_blank" rel="noopener">Twitter: @<%= profile.twitter_handle %></a>
+              <% } else { %>
+                Twitter: @<%= profile.twitter_handle %>
+              <% } %>
+            </li>
+          <% } %>
+          <% if (profile.tiktok_handle) { %>
+            <li>
+              <% if (profile.is_pro && profile.tiktok_url) { %>
+                <a href="<%= profile.tiktok_url %>" target="_blank" rel="noopener">TikTok: @<%= profile.tiktok_handle %></a>
+              <% } else { %>
+                TikTok: @<%= profile.tiktok_handle %>
+              <% } %>
+            </li>
+          <% } %>
+        </ul>
+      </div>
+    <% } %>
+    <% if (profile.is_pro && (profile.nationality || profile.union_membership || profile.ethnicity)) { %>
+      <div class="portfolio-additional">
+        <h3>Additional Information</h3>
+        <ul class="portfolio-additional-list">
+          <% if (profile.nationality) { %>
+            <li><span>Nationality:</span> <%= profile.nationality %></li>
+          <% } %>
+          <% if (profile.union_membership) { %>
+            <li><span>Union:</span> <%= profile.union_membership %></li>
+          <% } %>
+          <% if (profile.ethnicity) { %>
+            <li><span>Ethnicity:</span> <%= profile.ethnicity %></li>
+          <% } %>
+        </ul>
+      </div>
+    <% } %>
+    <% if (profile.is_pro && (profile.tattoos === true || profile.piercings === true)) { %>
+      <div class="portfolio-physical">
+        <h3>Physical Characteristics</h3>
+        <ul class="portfolio-physical-list">
+          <% if (profile.tattoos === true) { %>
+            <li>Has visible tattoos</li>
+          <% } %>
+          <% if (profile.piercings === true) { %>
+            <li>Has visible piercings</li>
+          <% } %>
+        </ul>
+      </div>
+    <% } %>
   </article>
   <section class="portfolio-gallery">
     <h2>Gallery</h2>

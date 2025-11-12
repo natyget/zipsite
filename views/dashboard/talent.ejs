@@ -143,6 +143,17 @@
                   <% } %>
               </div>
 
+              <div class="form-field <%= fieldHasError('phone') ? 'has-error' : '' %>">
+                <label for="phone">Phone</label>
+                <input id="phone" name="phone" type="tel" autocomplete="tel" value="<%= valueFor('phone') %>"
+                  placeholder="+1 (555) 123-4567">
+                <% if (fieldHasError('phone')) { %>
+                  <p class="form-field__error">
+                    <%= fieldError('phone') %>
+                  </p>
+                  <% } %>
+              </div>
+
               <div class="form-field <%= fieldHasError('height_cm') ? 'has-error' : '' %>">
                 <label for="height_cm">Height (cm)</label>
                 <input id="height_cm" name="height_cm" type="number" min="120" max="220"
@@ -153,9 +164,46 @@
                   </p>
                   <% } %>
               </div>
+            </div>
 
+            <div class="form-grid">
+              <div class="form-field <%= fieldHasError('bust') ? 'has-error' : '' %>">
+                <label for="bust">Bust</label>
+                <input id="bust" name="bust" type="number" min="20" max="60" step="0.5"
+                  value="<%= valueFor('bust') %>" placeholder="32">
+                <% if (fieldHasError('bust')) { %>
+                  <p class="form-field__error">
+                    <%= fieldError('bust') %>
+                  </p>
+                  <% } %>
+              </div>
+
+              <div class="form-field <%= fieldHasError('waist') ? 'has-error' : '' %>">
+                <label for="waist">Waist</label>
+                <input id="waist" name="waist" type="number" min="20" max="60" step="0.5"
+                  value="<%= valueFor('waist') %>" placeholder="25">
+                <% if (fieldHasError('waist')) { %>
+                  <p class="form-field__error">
+                    <%= fieldError('waist') %>
+                  </p>
+                  <% } %>
+              </div>
+
+              <div class="form-field <%= fieldHasError('hips') ? 'has-error' : '' %>">
+                <label for="hips">Hips</label>
+                <input id="hips" name="hips" type="number" min="20" max="60" step="0.5"
+                  value="<%= valueFor('hips') %>" placeholder="35">
+                <% if (fieldHasError('hips')) { %>
+                  <p class="form-field__error">
+                    <%= fieldError('hips') %>
+                  </p>
+                  <% } %>
+              </div>
+            </div>
+
+            <div class="form-grid">
               <div class="form-field <%= fieldHasError('measurements') ? 'has-error' : '' %>">
-                <label for="measurements">Measurements</label>
+                <label for="measurements">Measurements (B-W-H)</label>
                 <input id="measurements" name="measurements" type="text" value="<%= valueFor('measurements') %>"
                   placeholder="32-25-35">
                 <% if (fieldHasError('measurements')) { %>
@@ -163,6 +211,212 @@
                     <%= fieldError('measurements') %>
                   </p>
                   <% } %>
+              </div>
+
+              <div class="form-field <%= fieldHasError('shoe_size') ? 'has-error' : '' %>">
+                <label for="shoe_size">Shoe Size</label>
+                <input id="shoe_size" name="shoe_size" type="text" value="<%= valueFor('shoe_size') %>"
+                  placeholder="9 US">
+                <% if (fieldHasError('shoe_size')) { %>
+                  <p class="form-field__error">
+                    <%= fieldError('shoe_size') %>
+                  </p>
+                  <% } %>
+              </div>
+
+              <div class="form-field <%= fieldHasError('eye_color') ? 'has-error' : '' %>">
+                <label for="eye_color">Eye Color</label>
+                <input id="eye_color" name="eye_color" type="text" value="<%= valueFor('eye_color') %>"
+                  placeholder="Brown">
+                <% if (fieldHasError('eye_color')) { %>
+                  <p class="form-field__error">
+                    <%= fieldError('eye_color') %>
+                  </p>
+                  <% } %>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-field <%= fieldHasError('hair_color') ? 'has-error' : '' %>">
+                <label for="hair_color">Hair Color</label>
+                <input id="hair_color" name="hair_color" type="text" value="<%= valueFor('hair_color') %>"
+                  placeholder="Blonde">
+                <% if (fieldHasError('hair_color')) { %>
+                  <p class="form-field__error">
+                    <%= fieldError('hair_color') %>
+                  </p>
+                  <% } %>
+              </div>
+
+              <div class="form-field <%= fieldHasError('hair_length') ? 'has-error' : '' %>">
+                <label for="hair_length">Hair Length</label>
+                <select id="hair_length" name="hair_length">
+                  <option value="">Select...</option>
+                  <option value="Short" <%= valueFor('hair_length') === 'Short' ? 'selected' : '' %>>Short</option>
+                  <option value="Medium" <%= valueFor('hair_length') === 'Medium' ? 'selected' : '' %>>Medium</option>
+                  <option value="Long" <%= valueFor('hair_length') === 'Long' ? 'selected' : '' %>>Long</option>
+                  <option value="Very Long" <%= valueFor('hair_length') === 'Very Long' ? 'selected' : '' %>>Very Long</option>
+                </select>
+                <% if (fieldHasError('hair_length')) { %>
+                  <p class="form-field__error">
+                    <%= fieldError('hair_length') %>
+                  </p>
+                  <% } %>
+              </div>
+
+              <div class="form-field <%= fieldHasError('skin_tone') ? 'has-error' : '' %>">
+                <label for="skin_tone">Skin Tone</label>
+                <input id="skin_tone" name="skin_tone" type="text" value="<%= valueFor('skin_tone') %>"
+                  placeholder="Fair, Medium, Olive, etc.">
+                <% if (fieldHasError('skin_tone')) { %>
+                  <p class="form-field__error">
+                    <%= fieldError('skin_tone') %>
+                  </p>
+                  <% } %>
+              </div>
+            </div>
+
+            <!-- Personal Details Section -->
+            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
+              <h4 style="margin-bottom: 1rem; font-size: 1.1rem; font-weight: 600;">Personal Details</h4>
+              
+              <div class="form-grid">
+                <div class="form-field <%= fieldHasError('gender') ? 'has-error' : '' %>">
+                  <label for="gender">Gender</label>
+                  <select id="gender" name="gender">
+                    <option value="">Select...</option>
+                    <option value="Male" <%= valueFor('gender') === 'Male' ? 'selected' : '' %>>Male</option>
+                    <option value="Female" <%= valueFor('gender') === 'Female' ? 'selected' : '' %>>Female</option>
+                    <option value="Non-binary" <%= valueFor('gender') === 'Non-binary' ? 'selected' : '' %>>Non-binary</option>
+                    <option value="Other" <%= valueFor('gender') === 'Other' ? 'selected' : '' %>>Other</option>
+                    <option value="Prefer not to say" <%= valueFor('gender') === 'Prefer not to say' ? 'selected' : '' %>>Prefer not to say</option>
+                  </select>
+                  <% if (fieldHasError('gender')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('gender') %>
+                    </p>
+                    <% } %>
+                </div>
+
+                <div class="form-field <%= fieldHasError('date_of_birth') ? 'has-error' : '' %>">
+                  <label for="date_of_birth">Date of Birth</label>
+                  <input id="date_of_birth" name="date_of_birth" type="date" value="<%= valueFor('date_of_birth') %>">
+                  <% if (fieldHasError('date_of_birth')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('date_of_birth') %>
+                    </p>
+                    <% } %>
+                </div>
+
+                <div class="form-field <%= fieldHasError('age') ? 'has-error' : '' %>">
+                  <label for="age">Age</label>
+                  <input id="age" name="age" type="number" min="0" max="150" value="<%= valueFor('age') %>" readonly
+                    style="background-color: #f5f5f5; cursor: not-allowed;" placeholder="Auto-calculated">
+                  <p class="form-field__help" style="font-size: 0.85rem; margin-top: 0.25rem;">
+                    Automatically calculated from date of birth
+                  </p>
+                  <% if (fieldHasError('age')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('age') %>
+                    </p>
+                    <% } %>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-field <%= fieldHasError('weight_kg') ? 'has-error' : '' %>">
+                  <label for="weight_kg">Weight (kg)</label>
+                  <input id="weight_kg" name="weight_kg" type="number" step="0.1" min="30" max="200"
+                    value="<%= valueFor('weight_kg') %>" placeholder="65">
+                  <% if (fieldHasError('weight_kg')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('weight_kg') %>
+                    </p>
+                    <% } %>
+                </div>
+
+                <div class="form-field <%= fieldHasError('weight_lbs') ? 'has-error' : '' %>">
+                  <label for="weight_lbs">Weight (lbs)</label>
+                  <input id="weight_lbs" name="weight_lbs" type="number" step="0.1" min="66" max="440"
+                    value="<%= valueFor('weight_lbs') %>" placeholder="143">
+                  <% if (fieldHasError('weight_lbs')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('weight_lbs') %>
+                    </p>
+                    <% } %>
+                </div>
+
+                <div class="form-field <%= fieldHasError('dress_size') ? 'has-error' : '' %>">
+                  <label for="dress_size">Dress Size</label>
+                  <input id="dress_size" name="dress_size" type="text" value="<%= valueFor('dress_size') %>"
+                    placeholder="6 US">
+                  <% if (fieldHasError('dress_size')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('dress_size') %>
+                    </p>
+                    <% } %>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-field <%= fieldHasError('nationality') ? 'has-error' : '' %>">
+                  <label for="nationality">Nationality</label>
+                  <input id="nationality" name="nationality" type="text" value="<%= valueFor('nationality') %>"
+                    placeholder="American">
+                  <% if (fieldHasError('nationality')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('nationality') %>
+                    </p>
+                    <% } %>
+                </div>
+
+                <div class="form-field <%= fieldHasError('ethnicity') ? 'has-error' : '' %>">
+                  <label for="ethnicity">Ethnicity</label>
+                  <input id="ethnicity" name="ethnicity" type="text" value="<%= valueFor('ethnicity') %>"
+                    placeholder="Optional">
+                  <% if (fieldHasError('ethnicity')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('ethnicity') %>
+                    </p>
+                    <% } %>
+                </div>
+
+                <div class="form-field <%= fieldHasError('union_membership') ? 'has-error' : '' %>">
+                  <label for="union_membership">Union Membership</label>
+                  <input id="union_membership" name="union_membership" type="text" value="<%= valueFor('union_membership') %>"
+                    placeholder="SAG-AFTRA, AEA, etc.">
+                  <% if (fieldHasError('union_membership')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('union_membership') %>
+                    </p>
+                    <% } %>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-field <%= fieldHasError('tattoos') ? 'has-error' : '' %>">
+                  <label>
+                    <input type="checkbox" name="tattoos" value="true" <%= valueFor('tattoos') === 'true' || valueFor('tattoos') === true ? 'checked' : '' %>>
+                    <span>Has Tattoos</span>
+                  </label>
+                  <% if (fieldHasError('tattoos')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('tattoos') %>
+                    </p>
+                    <% } %>
+                </div>
+
+                <div class="form-field <%= fieldHasError('piercings') ? 'has-error' : '' %>">
+                  <label>
+                    <input type="checkbox" name="piercings" value="true" <%= valueFor('piercings') === 'true' || valueFor('piercings') === true ? 'checked' : '' %>>
+                    <span>Has Piercings</span>
+                  </label>
+                  <% if (fieldHasError('piercings')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('piercings') %>
+                    </p>
+                    <% } %>
+                </div>
               </div>
             </div>
 
@@ -180,7 +434,7 @@
                 <% } %>
             </div>
 
-            <% if (safeProfile.bio_curated) { %>
+            <% if (safeProfile && safeProfile.bio_curated) { %>
               <div class="form-field--readonly">
                 <label>AI-Refined Bio (Live on Portfolio)</label>
                 <p class="form-field__static-text">
@@ -188,6 +442,319 @@
                 </p>
               </div>
               <% } %>
+
+            <!-- Specialties Section -->
+            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
+              <div class="form-field">
+                <label>Specialties / Categories</label>
+                <p class="form-field__help">Select all that apply</p>
+                <div class="checkbox-group">
+                  <% 
+                    const specialtiesValue = valueFor('specialties', '');
+                    let specialtiesArray = [];
+                    if (Array.isArray(specialtiesValue)) {
+                      specialtiesArray = specialtiesValue;
+                    } else if (typeof specialtiesValue === 'string') {
+                      try {
+                        specialtiesArray = JSON.parse(specialtiesValue);
+                      } catch {
+                        specialtiesArray = specialtiesValue ? specialtiesValue.split(',').map(s => s.trim()).filter(s => s) : [];
+                      }
+                    }
+                    const hasSpecialty = (val) => specialtiesArray.includes(val);
+                  %>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="specialties" value="Editorial" <%= hasSpecialty('Editorial') ? 'checked' : '' %>>
+                    <span>Editorial</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="specialties" value="Commercial" <%= hasSpecialty('Commercial') ? 'checked' : '' %>>
+                    <span>Commercial</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="specialties" value="Runway" <%= hasSpecialty('Runway') ? 'checked' : '' %>>
+                    <span>Runway</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="specialties" value="Fitness" <%= hasSpecialty('Fitness') ? 'checked' : '' %>>
+                    <span>Fitness</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="specialties" value="Parts" <%= hasSpecialty('Parts') ? 'checked' : '' %>>
+                    <span>Parts (Hands, Feet, etc.)</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="specialties" value="Other" <%= hasSpecialty('Other') ? 'checked' : '' %>>
+                    <span>Other</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Experience & Availability Section -->
+            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
+              <h4 style="margin-bottom: 1rem; font-size: 1.1rem; font-weight: 600;">Experience & Availability</h4>
+              
+              <div class="form-field">
+                <label>Languages</label>
+                <p class="form-field__help">Select all languages you speak</p>
+                <div class="checkbox-group">
+                  <% 
+                    const languagesValue = valueFor('languages', '');
+                    let languagesArray = [];
+                    if (Array.isArray(languagesValue)) {
+                      languagesArray = languagesValue;
+                    } else if (typeof languagesValue === 'string') {
+                      try {
+                        languagesArray = JSON.parse(languagesValue);
+                      } catch {
+                        languagesArray = languagesValue ? languagesValue.split(',').map(l => l.trim()).filter(l => l) : [];
+                      }
+                    }
+                    const hasLanguage = (val) => languagesArray.includes(val);
+                  %>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="languages" value="English" <%= hasLanguage('English') ? 'checked' : '' %>>
+                    <span>English</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="languages" value="Spanish" <%= hasLanguage('Spanish') ? 'checked' : '' %>>
+                    <span>Spanish</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="languages" value="French" <%= hasLanguage('French') ? 'checked' : '' %>>
+                    <span>French</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="languages" value="Italian" <%= hasLanguage('Italian') ? 'checked' : '' %>>
+                    <span>Italian</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="languages" value="German" <%= hasLanguage('German') ? 'checked' : '' %>>
+                    <span>German</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="languages" value="Portuguese" <%= hasLanguage('Portuguese') ? 'checked' : '' %>>
+                    <span>Portuguese</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="languages" value="Mandarin" <%= hasLanguage('Mandarin') ? 'checked' : '' %>>
+                    <span>Mandarin</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="languages" value="Japanese" <%= hasLanguage('Japanese') ? 'checked' : '' %>>
+                    <span>Japanese</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="languages" value="Korean" <%= hasLanguage('Korean') ? 'checked' : '' %>>
+                    <span>Korean</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" name="languages" value="Other" <%= hasLanguage('Other') ? 'checked' : '' %>>
+                    <span>Other</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-field <%= fieldHasError('availability_travel') ? 'has-error' : '' %>">
+                  <label>
+                    <input type="checkbox" name="availability_travel" value="true" <%= valueFor('availability_travel') === 'true' || valueFor('availability_travel') === true ? 'checked' : '' %>>
+                    <span>Available for Travel</span>
+                  </label>
+                  <% if (fieldHasError('availability_travel')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('availability_travel') %>
+                    </p>
+                    <% } %>
+                </div>
+
+                <div class="form-field <%= fieldHasError('availability_schedule') ? 'has-error' : '' %>">
+                  <label for="availability_schedule">Availability Schedule</label>
+                  <select id="availability_schedule" name="availability_schedule">
+                    <option value="">Select...</option>
+                    <option value="Full-time" <%= valueFor('availability_schedule') === 'Full-time' ? 'selected' : '' %>>Full-time</option>
+                    <option value="Part-time" <%= valueFor('availability_schedule') === 'Part-time' ? 'selected' : '' %>>Part-time</option>
+                    <option value="Flexible" <%= valueFor('availability_schedule') === 'Flexible' ? 'selected' : '' %>>Flexible</option>
+                    <option value="Weekends only" <%= valueFor('availability_schedule') === 'Weekends only' ? 'selected' : '' %>>Weekends only</option>
+                  </select>
+                  <% if (fieldHasError('availability_schedule')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('availability_schedule') %>
+                    </p>
+                    <% } %>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-field <%= fieldHasError('experience_level') ? 'has-error' : '' %>">
+                  <label for="experience_level">Experience Level</label>
+                  <select id="experience_level" name="experience_level">
+                    <option value="">Select...</option>
+                    <option value="Beginner" <%= valueFor('experience_level') === 'Beginner' ? 'selected' : '' %>>Beginner</option>
+                    <option value="Intermediate" <%= valueFor('experience_level') === 'Intermediate' ? 'selected' : '' %>>Intermediate</option>
+                    <option value="Experienced" <%= valueFor('experience_level') === 'Experienced' ? 'selected' : '' %>>Experienced</option>
+                    <option value="Professional" <%= valueFor('experience_level') === 'Professional' ? 'selected' : '' %>>Professional</option>
+                  </select>
+                  <% if (fieldHasError('experience_level')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('experience_level') %>
+                    </p>
+                    <% } %>
+                </div>
+
+                <div class="form-field <%= fieldHasError('training') ? 'has-error' : '' %>">
+                  <label for="training">Training</label>
+                  <textarea id="training" name="training" rows="3" value="<%= valueFor('training') %>"
+                    placeholder="Formal training in editorial modeling and commercial acting."><%= valueFor('training') %></textarea>
+                  <% if (fieldHasError('training')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('training') %>
+                    </p>
+                    <% } %>
+                </div>
+              </div>
+
+              <div class="form-field <%= fieldHasError('portfolio_url') ? 'has-error' : '' %>">
+                <label for="portfolio_url">Portfolio URL</label>
+                <input id="portfolio_url" name="portfolio_url" type="url" value="<%= valueFor('portfolio_url') %>"
+                  placeholder="https://yourportfolio.com">
+                <% if (fieldHasError('portfolio_url')) { %>
+                  <p class="form-field__error">
+                    <%= fieldError('portfolio_url') %>
+                  </p>
+                  <% } %>
+              </div>
+            </div>
+
+            <!-- Social Media Section -->
+            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
+              <h4 style="margin-bottom: 1rem; font-size: 1.1rem; font-weight: 600;">Social Media</h4>
+              <p class="form-field__help" style="margin-bottom: 1rem; font-size: 0.9rem;">
+                Free users: Handles display as text only. Pro users: Handles are clickable links.
+              </p>
+              
+              <div class="form-grid">
+                <div class="form-field <%= fieldHasError('instagram_handle') ? 'has-error' : '' %>">
+                  <label for="instagram_handle">Instagram Handle</label>
+                  <input id="instagram_handle" name="instagram_handle" type="text" value="<%= valueFor('instagram_handle') %>"
+                    placeholder="@username or username">
+                  <% if (fieldHasError('instagram_handle')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('instagram_handle') %>
+                    </p>
+                    <% } %>
+                </div>
+
+                <div class="form-field <%= fieldHasError('twitter_handle') ? 'has-error' : '' %>">
+                  <label for="twitter_handle">Twitter/X Handle</label>
+                  <input id="twitter_handle" name="twitter_handle" type="text" value="<%= valueFor('twitter_handle') %>"
+                    placeholder="@username or username">
+                  <% if (fieldHasError('twitter_handle')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('twitter_handle') %>
+                    </p>
+                    <% } %>
+                </div>
+
+                <div class="form-field <%= fieldHasError('tiktok_handle') ? 'has-error' : '' %>">
+                  <label for="tiktok_handle">TikTok Handle</label>
+                  <input id="tiktok_handle" name="tiktok_handle" type="text" value="<%= valueFor('tiktok_handle') %>"
+                    placeholder="@username or username">
+                  <% if (fieldHasError('tiktok_handle')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('tiktok_handle') %>
+                    </p>
+                    <% } %>
+                </div>
+              </div>
+            </div>
+
+            <!-- References & Emergency Contact Section -->
+            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
+              <h4 style="margin-bottom: 1rem; font-size: 1.1rem; font-weight: 600;">References & Emergency Contact</h4>
+              
+              <div class="form-grid">
+                <div class="form-field <%= fieldHasError('reference_name') ? 'has-error' : '' %>">
+                  <label for="reference_name">Reference Name</label>
+                  <input id="reference_name" name="reference_name" type="text" value="<%= valueFor('reference_name') %>"
+                    placeholder="John Doe">
+                  <% if (fieldHasError('reference_name')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('reference_name') %>
+                    </p>
+                    <% } %>
+                </div>
+
+                <div class="form-field <%= fieldHasError('reference_email') ? 'has-error' : '' %>">
+                  <label for="reference_email">Reference Email</label>
+                  <input id="reference_email" name="reference_email" type="email" value="<%= valueFor('reference_email') %>"
+                    placeholder="john@example.com">
+                  <% if (fieldHasError('reference_email')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('reference_email') %>
+                    </p>
+                    <% } %>
+                </div>
+
+                <div class="form-field <%= fieldHasError('reference_phone') ? 'has-error' : '' %>">
+                  <label for="reference_phone">Reference Phone</label>
+                  <input id="reference_phone" name="reference_phone" type="tel" value="<%= valueFor('reference_phone') %>"
+                    placeholder="+1 (555) 123-4567">
+                  <% if (fieldHasError('reference_phone')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('reference_phone') %>
+                    </p>
+                    <% } %>
+                </div>
+              </div>
+
+              <div class="form-field <%= fieldHasError('reference_relationship') ? 'has-error' : '' %>">
+                <label for="reference_relationship">Reference Relationship</label>
+                <input id="reference_relationship" name="reference_relationship" type="text" value="<%= valueFor('reference_relationship') %>"
+                  placeholder="Agent, Manager, etc.">
+                <% if (fieldHasError('reference_relationship')) { %>
+                  <p class="form-field__error">
+                    <%= fieldError('reference_relationship') %>
+                  </p>
+                  <% } %>
+              </div>
+
+              <div class="form-grid" style="margin-top: 1.5rem;">
+                <div class="form-field <%= fieldHasError('emergency_contact_name') ? 'has-error' : '' %>">
+                  <label for="emergency_contact_name">Emergency Contact Name</label>
+                  <input id="emergency_contact_name" name="emergency_contact_name" type="text" value="<%= valueFor('emergency_contact_name') %>"
+                    placeholder="Jane Doe">
+                  <% if (fieldHasError('emergency_contact_name')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('emergency_contact_name') %>
+                    </p>
+                    <% } %>
+                </div>
+
+                <div class="form-field <%= fieldHasError('emergency_contact_phone') ? 'has-error' : '' %>">
+                  <label for="emergency_contact_phone">Emergency Contact Phone</label>
+                  <input id="emergency_contact_phone" name="emergency_contact_phone" type="tel" value="<%= valueFor('emergency_contact_phone') %>"
+                    placeholder="+1 (555) 123-4567">
+                  <% if (fieldHasError('emergency_contact_phone')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('emergency_contact_phone') %>
+                    </p>
+                    <% } %>
+                </div>
+
+                <div class="form-field <%= fieldHasError('emergency_contact_relationship') ? 'has-error' : '' %>">
+                  <label for="emergency_contact_relationship">Emergency Contact Relationship</label>
+                  <input id="emergency_contact_relationship" name="emergency_contact_relationship" type="text" value="<%= valueFor('emergency_contact_relationship') %>"
+                    placeholder="Parent, Spouse, etc.">
+                  <% if (fieldHasError('emergency_contact_relationship')) { %>
+                    <p class="form-field__error">
+                      <%= fieldError('emergency_contact_relationship') %>
+                    </p>
+                    <% } %>
+                </div>
+              </div>
+            </div>
 
                 <div class="form-actions">
                   <button class="button-primary" type="submit">Save Changes</button>
@@ -394,4 +961,49 @@
         baseUrl: '<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>'
       };
     <% } %>
+
+    // Auto-calculate age from date of birth
+    (function() {
+      const dateOfBirthInput = document.getElementById('date_of_birth');
+      const ageInput = document.getElementById('age');
+      
+      if (dateOfBirthInput && ageInput) {
+        function calculateAge(dateString) {
+          if (!dateString) return null;
+          
+          const birthDate = new Date(dateString);
+          const today = new Date();
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+          
+          return age >= 0 ? age : null;
+        }
+        
+        function updateAge() {
+          const dateOfBirth = dateOfBirthInput.value;
+          if (dateOfBirth) {
+            const age = calculateAge(dateOfBirth);
+            if (age !== null) {
+              ageInput.value = age;
+            } else {
+              ageInput.value = '';
+            }
+          } else {
+            ageInput.value = '';
+          }
+        }
+        
+        dateOfBirthInput.addEventListener('change', updateAge);
+        dateOfBirthInput.addEventListener('input', updateAge);
+        
+        // Calculate age on page load if date of birth is already set
+        if (dateOfBirthInput.value) {
+          updateAge();
+        }
+      }
+    })();
   </script>
