@@ -22,8 +22,21 @@ function safeNext(input) {
 }
 
 // GET /login
-router.get('/login', (req, res) => {
+router.get('/login', async (req, res) => {
   if (req.session && req.session.userId) {
+    // If user is logged in, check if they have a profile
+    // If TALENT user without profile, redirect to /apply
+    if (req.session.role === 'TALENT') {
+      try {
+        const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
+        if (!profile) {
+          return res.redirect('/apply');
+        }
+      } catch (error) {
+        // If database error, still redirect to dashboard (it will handle the error)
+        console.error('[Login] Error checking profile:', error);
+      }
+    }
     return res.redirect(redirectForRole(req.session.role));
   }
   const nextPath = safeNext(req.query.next);

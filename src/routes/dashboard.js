@@ -30,8 +30,13 @@ router.get('/dashboard', async (req, res, next) => {
       return res.redirect('/login');
     }
     
-    // Redirect based on role
+    // For TALENT users, check if they have a profile
+    // If no profile, redirect to /apply instead of /dashboard/talent
     if (user.role === 'TALENT') {
+      const profile = await knex('profiles').where({ user_id: user.id }).first();
+      if (!profile) {
+        return res.redirect('/apply');
+      }
       return res.redirect('/dashboard/talent');
     } else if (user.role === 'AGENCY') {
       return res.redirect('/dashboard/agency');
@@ -44,6 +49,16 @@ router.get('/dashboard', async (req, res, next) => {
     // On error, try to redirect based on session role if available
     if (req.session && req.session.role) {
       if (req.session.role === 'TALENT') {
+        // On error, still try to check for profile, but if that fails, redirect to /apply
+        try {
+          const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
+          if (!profile) {
+            return res.redirect('/apply');
+          }
+        } catch (profileError) {
+          // If profile check fails, redirect to /apply as safe fallback
+          return res.redirect('/apply');
+        }
         return res.redirect('/dashboard/talent');
       } else if (req.session.role === 'AGENCY') {
         return res.redirect('/dashboard/agency');
@@ -57,6 +72,9 @@ router.get('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =>
   try {
     const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
     if (!profile) {
+      // Instead of redirecting, show the dashboard with a message to create profile
+      // This allows users to see the dashboard even without a profile
+      addMessage(req, 'info', 'Create your profile to get started!');
       return res.redirect('/apply');
     }
     const images = await knex('images').where({ profile_id: profile.id }).orderBy('sort', 'asc');
