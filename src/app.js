@@ -41,7 +41,7 @@ app.set('trust proxy', 1);
 app.use(ejsLayouts);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '..', 'views'));
-app.set('layout', 'layouts/dashboard'); // Set new default layout
+app.set('layout', 'layout'); // Default to public layout (dashboard routes explicitly use 'layouts/dashboard')
 // Disable EJS cache in development to see template changes immediately
 if (process.env.NODE_ENV !== 'production') {
   app.set('view cache', false);
