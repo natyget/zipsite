@@ -44,7 +44,7 @@
   %>
 
   <!-- Hero Section with Talent Image -->
-  <section class="dash-hero">
+  <section class="dash-hero" id="overview" data-section="overview">
     <div class="dash-hero__image">
       <% if (heroImage) { %>
         <div class="dash-hero__image-placeholder">
@@ -92,22 +92,44 @@
         </div>
         <div class="dash-hero__stat">
           <span class="dash-hero__stat-label">Images</span>
-          <span class="dash-hero__stat-value">
+          <span class="dash-hero__stat-value" id="hero-image-count">
             <%= safeMedia.length %>
           </span>
         </div>
+        <% if (safeProfile.updated_at) { %>
+          <div class="dash-hero__stat">
+            <span class="dash-hero__stat-label">Last Updated</span>
+            <span class="dash-hero__stat-value">
+              <%= new Date(safeProfile.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+            </span>
+          </div>
+        <% } %>
+        <% if (safeCompleteness && safeCompleteness.percentage !== undefined) { %>
+          <div class="dash-hero__stat dash-hero__stat--completeness">
+            <span class="dash-hero__stat-label">Profile</span>
+            <span class="dash-hero__stat-value">
+              <%= Math.round(safeCompleteness.percentage) %>%
+            </span>
+          </div>
+        <% } %>
       </div>
 
       <div class="dash-hero__actions">
-        <% if (typeof profile !== 'undefined' && profile && profile.id) { %>
+        <% if (typeof profile !== 'undefined' && profile && profile.id && safeProfile.slug) { %>
           <!-- Only show these buttons when profile exists -->
-          <button type="button" class="button-primary" id="pdf-download-btn" data-slug="<%= slug %>" data-theme="<%= (typeof currentTheme !== 'undefined' ? currentTheme : safeProfile.pdf_theme) || 'classic-serif' %>" data-is-pro="<%= safeProfile.is_pro ? 'true' : 'false' %>">Download Comp Card</button>
+          <button type="button" class="button button-primary dash-hero__action" id="pdf-download-btn" data-slug="<%= slug %>" data-theme="<%= (typeof currentTheme !== 'undefined' ? currentTheme : safeProfile.pdf_theme) || 'classic-serif' %>" data-is-pro="<%= safeProfile.is_pro ? 'true' : 'false' %>">
+            <span>Download Comp Card</span>
+          </button>
           <% if (safeProfile.is_pro) { %>
-            <a href="/dashboard/pdf-customizer" class="button-secondary">Customize PDF</a>
+            <a href="/dashboard/pdf-customizer" class="button button-secondary dash-hero__action">Customize PDF</a>
           <% } %>
-          <a href="/portfolio/<%= slug %>" class="button-secondary" target="_blank" rel="noopener">View Portfolio</a>
+          <a href="/portfolio/<%= slug %>" class="button button-secondary dash-hero__action" target="_blank" rel="noopener noreferrer">
+            <span>View Portfolio</span>
+          </a>
           <% if (!safeProfile.is_pro) { %>
-            <a href="/pro/upgrade" class="button-primary">Upgrade to Pro</a>
+            <a href="/pro/upgrade" class="button button-gold dash-hero__action dash-hero__action--upgrade">
+              <span>Upgrade to Pro</span>
+            </a>
           <% } %>
         <% } else { %>
           <!-- Show message when no profile exists -->
@@ -117,6 +139,28 @@
     </div>
   </section>
 
+  <!-- Section Navigation -->
+  <nav class="dash-nav" id="dash-nav">
+    <div class="dash-nav__inner">
+      <a href="#overview" class="dash-nav__link dash-nav__link--active" data-section="overview">
+        <span class="dash-nav__icon">📊</span>
+        <span class="dash-nav__text">Overview</span>
+      </a>
+      <a href="#profile-details" class="dash-nav__link" data-section="profile-details">
+        <span class="dash-nav__icon">✏️</span>
+        <span class="dash-nav__text">Profile Details</span>
+      </a>
+      <a href="#portfolio-imagery" class="dash-nav__link" data-section="portfolio-imagery">
+        <span class="dash-nav__icon">📷</span>
+        <span class="dash-nav__text">Portfolio Imagery</span>
+      </a>
+      <a href="#analytics" class="dash-nav__link" data-section="analytics">
+        <span class="dash-nav__icon">📈</span>
+        <span class="dash-nav__text">Analytics</span>
+      </a>
+    </div>
+  </nav>
+
   <!-- Main Dashboard Grid -->
   <div class="dash-grid">
 
@@ -124,7 +168,7 @@
     <div class="dash-grid__column">
 
       <!-- Profile Details Form -->
-      <div class="dash-panel">
+      <div class="dash-panel" id="profile-details" data-section="profile-details">
         <header class="dash-panel__header">
           <h3>Profile Details</h3>
           <p>Your essential stats for agency rosters and comp cards</p>
@@ -764,7 +808,7 @@
       </div>
 
       <!-- Portfolio Imagery -->
-      <div class="dash-panel">
+      <div class="dash-panel" id="portfolio-imagery" data-section="portfolio-imagery">
         <header class="dash-panel__header">
           <h3>Portfolio Imagery</h3>
           <p>Upload 6-12 high-quality images. The first image becomes your hero shot.</p>
@@ -796,9 +840,29 @@
           </form>
 
           <% if (safeMedia.length) { %>
-            <div class="media-grid" data-media-grid>
+            <div class="media-grid" data-media-grid id="media-grid">
               <% safeMedia.forEach((image, index)=> { %>
-                <article class="media-card" data-media-id="<%= image.id %>">
+                <% 
+                  // Check if this is the hero image
+                  const isHeroImage = heroImage && (normalizeImagePath(image.path) === normalizeImagePath(heroImage) || image.path === heroImage || image.path === safeProfile.hero_image_path);
+                %>
+                <article class="media-card" 
+                         data-media-id="<%= image.id %>" 
+                         data-sort="<%= image.sort || index + 1 %>"
+                         draggable="true"
+                         role="button"
+                         tabindex="0"
+                         aria-label="Drag to reorder image">
+                  <div class="media-card__drag-handle" title="Drag to reorder">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="7" cy="5" r="1.5" fill="currentColor" opacity="0.4"/>
+                      <circle cx="13" cy="5" r="1.5" fill="currentColor" opacity="0.4"/>
+                      <circle cx="7" cy="10" r="1.5" fill="currentColor" opacity="0.4"/>
+                      <circle cx="13" cy="10" r="1.5" fill="currentColor" opacity="0.4"/>
+                      <circle cx="7" cy="15" r="1.5" fill="currentColor" opacity="0.4"/>
+                      <circle cx="13" cy="15" r="1.5" fill="currentColor" opacity="0.4"/>
+                    </svg>
+                  </div>
                   <div class="media-card__image-placeholder">
                     <div class="media-card__placeholder-shimmer"></div>
                   </div>
@@ -808,7 +872,12 @@
                     onload="this.classList.add('is-loaded')"
                     onerror="this.classList.add('is-loaded')">
                   <div class="media-card__controls">
-                    <button class="media-card__delete" type="button" title="Delete image">&times;</button>
+                    <% if (isHeroImage) { %>
+                      <span class="media-card__hero-badge" title="Hero Image">★</span>
+                    <% } else { %>
+                      <button class="media-card__set-hero" type="button" title="Set as Hero Image" data-image-id="<%= image.id %>" data-image-path="<%= normalizeImagePath(image.path) %>">Set Hero</button>
+                    <% } %>
+                    <button class="media-card__delete" type="button" title="Delete image" data-image-id="<%= image.id %>">&times;</button>
                   </div>
                 </article>
                 <% }); %>
@@ -822,8 +891,69 @@
       </div>
     </div>
 
-    <!-- Right Column: Meta & Actions -->
-    <div class="dash-grid__column">
+    <!-- Right Column: Quick Actions Sidebar -->
+    <div class="dash-grid__column dash-sidebar">
+      <!-- Quick Stats -->
+      <div class="dash-panel dash-panel--compact dash-sidebar__stats">
+        <header class="dash-panel__header">
+          <h3>Quick Stats</h3>
+        </header>
+        <div class="dash-panel__body">
+          <div class="dash-sidebar__stat">
+            <span class="dash-sidebar__stat-label">Images</span>
+            <span class="dash-sidebar__stat-value" id="sidebar-image-count"><%= safeMedia.length %></span>
+          </div>
+          <% if (safeCompleteness && safeCompleteness.percentage !== undefined) { %>
+            <div class="dash-sidebar__stat">
+              <span class="dash-sidebar__stat-label">Profile</span>
+              <span class="dash-sidebar__stat-value"><%= Math.round(safeCompleteness.percentage) %>%</span>
+            </div>
+          <% } %>
+          <% if (safeProfile.updated_at) { %>
+            <div class="dash-sidebar__stat">
+              <span class="dash-sidebar__stat-label">Last Updated</span>
+              <span class="dash-sidebar__stat-value" style="font-size: 12px;">
+                <%= new Date(safeProfile.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %>
+              </span>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="dash-panel dash-panel--compact dash-sidebar__actions">
+        <header class="dash-panel__header">
+          <h3>Quick Actions</h3>
+        </header>
+        <div class="dash-panel__body">
+          <% if (typeof profile !== 'undefined' && profile && profile.id && safeProfile.slug) { %>
+            <div class="dash-sidebar__action-buttons">
+              <button type="button" class="button button-primary dash-sidebar__action-btn" id="sidebar-pdf-download-btn" data-slug="<%= slug %>" data-theme="<%= (typeof currentTheme !== 'undefined' ? currentTheme : safeProfile.pdf_theme) || 'classic-serif' %>" data-is-pro="<%= safeProfile.is_pro ? 'true' : 'false' %>">
+                <span>📄</span>
+                <span>Download PDF</span>
+              </button>
+              <a href="/portfolio/<%= slug %>" class="button button-secondary dash-sidebar__action-btn" target="_blank" rel="noopener noreferrer">
+                <span>👁️</span>
+                <span>View Portfolio</span>
+              </a>
+              <button type="button" class="button button-secondary dash-sidebar__action-btn" data-copy-target="[data-share-url]">
+                <span>🔗</span>
+                <span>Share Link</span>
+              </button>
+              <% if (safeProfile.is_pro) { %>
+                <a href="/dashboard/pdf-customizer" class="button button-secondary dash-sidebar__action-btn">
+                  <span>🎨</span>
+                  <span>Customize PDF</span>
+                </a>
+              <% } %>
+            </div>
+          <% } else { %>
+            <p class="form-field__help" style="margin-bottom: 16px; text-align: center;">
+              Complete your profile to unlock quick actions
+            </p>
+          <% } %>
+        </div>
+      </div>
 
       <!-- Profile Status -->
       <div class="dash-panel dash-panel--compact">
@@ -848,7 +978,7 @@
         </div>
       </div>
 
-      <!-- Public Portfolio Link -->
+      <!-- Share Portfolio -->
       <div class="dash-panel dash-panel--compact">
         <header class="dash-panel__header">
           <h3>Share Portfolio</h3>
@@ -857,17 +987,64 @@
           <div class="share-url" data-share-url>
             <%= effectiveShareUrl %>
           </div>
-          <div class="form-actions">
-            <button class="button-secondary" type="button" data-copy-target="[data-share-url]" style="width: 100%;">
-              Copy Link
-            </button>
-          </div>
         </div>
       </div>
 
+      <!-- Portfolio Analytics -->
+      <% if (typeof profile !== 'undefined' && profile && profile.id) { %>
+        <div class="dash-panel dash-panel--compact dash-sidebar__analytics" id="analytics" data-section="analytics">
+          <header class="dash-panel__header">
+            <h3>Portfolio Analytics</h3>
+          </header>
+          <div class="dash-panel__body">
+            <div class="analytics-loading" style="padding: 16px; text-align: center; color: var(--text-secondary);">
+              Loading analytics...
+            </div>
+            <div class="analytics-content" style="display: none;">
+              <div class="analytics-stat">
+                <span class="analytics-stat__label">Views</span>
+                <span class="analytics-stat__value" id="analytics-views-total">—</span>
+                <span class="analytics-stat__subtext" id="analytics-views-week">—</span>
+              </div>
+              <div class="analytics-stat">
+                <span class="analytics-stat__label">Downloads</span>
+                <span class="analytics-stat__value" id="analytics-downloads-total">—</span>
+                <span class="analytics-stat__subtext" id="analytics-downloads-week">—</span>
+              </div>
+            </div>
+            <div class="analytics-error" style="display: none; padding: 16px; text-align: center; color: var(--text-tertiary); font-size: 13px;">
+              Analytics unavailable
+            </div>
+          </div>
+        </div>
+      <% } %>
+
+      <!-- Activity Feed -->
+      <% if (typeof profile !== 'undefined' && profile && profile.id) { %>
+        <div class="dash-panel dash-panel--compact dash-sidebar__activity" id="activity-panel">
+          <header class="dash-panel__header">
+            <h3>Recent Activity</h3>
+          </header>
+          <div class="dash-panel__body">
+            <div class="activity-loading" style="padding: 16px; text-align: center; color: var(--text-secondary);">
+              Loading activity...
+            </div>
+            <div class="activity-feed" id="activity-feed" style="display: none;">
+              <!-- Activities will be populated by JavaScript -->
+            </div>
+            <div class="activity-empty" style="display: none; padding: 16px; text-align: center; color: var(--text-tertiary); font-size: 13px;">
+              No recent activity
+            </div>
+            <div class="activity-error" style="display: none; padding: 16px; text-align: center; color: var(--text-tertiary); font-size: 13px;">
+              Activity unavailable
+            </div>
+          </div>
+        </div>
+      <% } %>
+
       <!-- Account Status -->
       <% if (!safeProfile.is_pro) { %>
-        <div class="dash-panel dash-panel--compact">
+        <div class="dash-panel dash-panel--compact dash-sidebar__upgrade">
           <header class="dash-panel__header">
             <h3>Upgrade to Pro</h3>
           </header>
@@ -875,25 +1052,25 @@
             <p class="form-field__help" style="margin-bottom: 16px;">
               Remove watermarks, unlock advanced features, and get priority support
             </p>
-            <a href="/pro/upgrade" class="button button-primary button-block">
+            <a href="/pro/upgrade" class="button button-gold button-block">
               Upgrade Now
             </a>
           </div>
         </div>
-        <% } else { %>
-          <div class="dash-panel dash-panel--compact">
-            <header class="dash-panel__header">
-              <h3>Pro Account</h3>
-            </header>
-            <div class="dash-panel__body">
-              <p class="form-field__help">
-                ✓ Watermark-free PDFs<br>
-                ✓ Advanced analytics<br>
-                ✓ Priority support
-              </p>
-            </div>
+      <% } else { %>
+        <div class="dash-panel dash-panel--compact">
+          <header class="dash-panel__header">
+            <h3>Pro Account</h3>
+          </header>
+          <div class="dash-panel__body">
+            <p class="form-field__help">
+              ✓ Watermark-free PDFs<br>
+              ✓ Advanced analytics<br>
+              ✓ Priority support
+            </p>
           </div>
-          <% } %>
+        </div>
+      <% } %>
     </div>
   </div>
 

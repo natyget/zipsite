@@ -62,7 +62,7 @@
     if (!deleteBtn) return;
 
     const card = deleteBtn.closest('.media-card');
-    const mediaId = card?.getAttribute('data-media-id');
+    const mediaId = card?.getAttribute('data-media-id') || deleteBtn.getAttribute('data-image-id');
 
     if (!mediaId) {
       console.error('No media ID found');
@@ -78,21 +78,400 @@
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      credentials: 'same-origin'
     })
       .then(res => {
         if (!res.ok) throw new Error('Delete failed');
         return res.json();
       })
-      .then(() => {
+      .then((data) => {
         // Animate out and remove
         card.style.opacity = '0';
         card.style.transform = 'scale(0.9)';
-        setTimeout(() => card.remove(), 300);
+        setTimeout(() => {
+          card.remove();
+          
+          // Update image count
+          const mediaGrid = document.querySelector('[data-media-grid]');
+          const remainingImages = mediaGrid ? mediaGrid.querySelectorAll('.media-card').length : 0;
+          updateImageCount(remainingImages);
+          
+          // If grid is empty, show empty state
+          if (remainingImages === 0) {
+            const portfolioPanel = document.querySelector('.dash-panel');
+            if (portfolioPanel) {
+              const panelBody = portfolioPanel.querySelector('.dash-panel__body');
+              if (panelBody && !panelBody.querySelector('.empty-state')) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                emptyState.innerHTML = '<p>No images yet. Upload your first portfolio images to get started.</p>';
+                panelBody.appendChild(emptyState);
+              }
+            }
+          }
+          
+          // Update hero image if this was the hero
+          if (data.heroImagePath) {
+            updateHeroImage(data.heroImagePath);
+          } else {
+            // Hero was deleted, clear hero image
+            const heroImageContainer = document.querySelector('.dash-hero__image');
+            if (heroImageContainer) {
+              const heroImg = heroImageContainer.querySelector('img');
+              if (heroImg) {
+                heroImg.remove();
+              }
+              if (!heroImageContainer.querySelector('.dash-hero__image-placeholder')) {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'dash-hero__image-placeholder';
+                placeholder.textContent = 'Upload images to see your portfolio';
+                heroImageContainer.appendChild(placeholder);
+              }
+            }
+          }
+        }, 300);
       })
       .catch(err => {
         console.error('Delete error:', err);
         alert('Failed to delete image. Please try again.');
+      });
+  });
+
+  // Drag and Drop Reordering
+  function initDragAndDrop() {
+    const mediaGrid = document.querySelector('[data-media-grid]');
+    if (!mediaGrid) return;
+
+    let draggedElement = null;
+    let draggedIndex = null;
+    let dragOverElement = null;
+
+    // Make all media cards draggable
+    const mediaCards = mediaGrid.querySelectorAll('.media-card');
+    mediaCards.forEach((card, index) => {
+      card.setAttribute('draggable', 'true');
+      card.setAttribute('data-index', index);
+    });
+
+    // Drag start - only allow dragging from the drag handle or the card itself (not buttons)
+    mediaGrid.addEventListener('dragstart', function(e) {
+      // Don't allow dragging from buttons or controls
+      if (e.target.closest('.media-card__delete') || 
+          e.target.closest('.media-card__set-hero') ||
+          e.target.closest('.media-card__controls')) {
+        e.preventDefault();
+        return;
+      }
+      
+      // Only allow dragging from the card itself or the drag handle
+      const card = e.target.closest('.media-card');
+      if (!card) return;
+      
+      draggedElement = card;
+      draggedIndex = Array.from(mediaGrid.children).indexOf(draggedElement);
+      
+      draggedElement.classList.add('dragging');
+      mediaGrid.classList.add('drag-active');
+      
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', draggedElement.innerHTML);
+    });
+
+    // Drag over
+    mediaGrid.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+
+      const card = e.target.closest('.media-card');
+      if (!card || card === draggedElement) return;
+
+      // Remove previous drag-over class
+      if (dragOverElement && dragOverElement !== card) {
+        dragOverElement.classList.remove('drag-over');
+      }
+
+      // Add drag-over class to current card
+      card.classList.add('drag-over');
+      dragOverElement = card;
+    });
+
+    // Drag leave
+    mediaGrid.addEventListener('dragleave', function(e) {
+      const card = e.target.closest('.media-card');
+      if (card && card !== draggedElement) {
+        card.classList.remove('drag-over');
+      }
+    });
+
+    // Drop
+    mediaGrid.addEventListener('drop', function(e) {
+      e.preventDefault();
+      
+      const dropTarget = e.target.closest('.media-card');
+      if (!dropTarget || dropTarget === draggedElement) {
+        // Clean up
+        if (draggedElement) {
+          draggedElement.classList.remove('dragging');
+        }
+        mediaGrid.classList.remove('drag-active');
+        mediaCards.forEach(card => card.classList.remove('drag-over'));
+        return;
+      }
+
+      const dropIndex = Array.from(mediaGrid.children).indexOf(dropTarget);
+      
+      // Reorder DOM elements
+      if (draggedIndex < dropIndex) {
+        mediaGrid.insertBefore(draggedElement, dropTarget.nextSibling);
+      } else {
+        mediaGrid.insertBefore(draggedElement, dropTarget);
+      }
+
+      // Clean up
+      draggedElement.classList.remove('dragging');
+      mediaGrid.classList.remove('drag-active');
+      mediaCards.forEach(card => card.classList.remove('drag-over'));
+
+      // Save new order
+      saveMediaOrder();
+    });
+
+    // Drag end
+    mediaGrid.addEventListener('dragend', function(e) {
+      // Clean up
+      if (draggedElement) {
+        draggedElement.classList.remove('dragging');
+      }
+      mediaGrid.classList.remove('drag-active');
+      mediaCards.forEach(card => card.classList.remove('drag-over'));
+      
+      draggedElement = null;
+      draggedIndex = null;
+      dragOverElement = null;
+    });
+
+    // Save media order function
+    async function saveMediaOrder() {
+      const cards = Array.from(mediaGrid.querySelectorAll('.media-card'));
+      const order = cards.map(card => card.getAttribute('data-media-id'));
+
+      if (order.length === 0) return;
+
+      try {
+        // Show saving indicator
+        const savingIndicator = document.createElement('div');
+        savingIndicator.className = 'media-grid__saving';
+        savingIndicator.textContent = 'Saving order...';
+        savingIndicator.style.cssText = 'position: fixed; top: 20px; right: 20px; background: var(--accent-gold); color: #FFFFFF; padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(201, 165, 90, 0.3); z-index: 10000; font-size: 14px; font-weight: 600;';
+        document.body.appendChild(savingIndicator);
+
+        // Send reorder request
+        const response = await fetch('/media/reorder', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({ order })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save order');
+        }
+
+        const data = await response.json();
+
+        // Update sort attributes
+        cards.forEach((card, index) => {
+          card.setAttribute('data-sort', index + 1);
+          card.setAttribute('data-index', index);
+        });
+
+        // Check if first image changed (hero image update)
+        const firstCard = cards[0];
+        if (firstCard) {
+          const firstImageId = firstCard.getAttribute('data-media-id');
+          const firstImageImg = firstCard.querySelector('img');
+          if (firstImageImg) {
+            // Get the image path from the data attribute or src
+            const firstImagePath = firstImageImg.src;
+            // Update hero image in database and UI
+            await updateHeroImageFromReorder(firstImageId, firstImagePath);
+          }
+        }
+
+        // Show success message
+        savingIndicator.textContent = 'Order saved!';
+        savingIndicator.style.background = 'var(--accent-success)';
+        setTimeout(() => {
+          savingIndicator.style.opacity = '0';
+          savingIndicator.style.transform = 'translateY(-10px)';
+          setTimeout(() => savingIndicator.remove(), 300);
+        }, 1000);
+      } catch (error) {
+        console.error('Error saving order:', error);
+        
+        // Show error message
+        const errorIndicator = document.createElement('div');
+        errorIndicator.className = 'media-grid__error';
+        errorIndicator.textContent = 'Failed to save order. Please try again.';
+        errorIndicator.style.cssText = 'position: fixed; top: 20px; right: 20px; background: var(--accent-error); color: #FFFFFF; padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); z-index: 10000; font-size: 14px; font-weight: 600;';
+        document.body.appendChild(errorIndicator);
+        
+        setTimeout(() => {
+          errorIndicator.style.opacity = '0';
+          errorIndicator.style.transform = 'translateY(-10px)';
+          setTimeout(() => errorIndicator.remove(), 3000);
+        }, 2000);
+
+        // Revert order (reload page as fallback)
+        // For now, just show error - user can manually reorder if needed
+      }
+    }
+
+    // Helper function to update hero image from reorder
+    async function updateHeroImageFromReorder(imageId, imagePath) {
+      try {
+        // Update hero image in database
+        const response = await fetch(`/dashboard/talent/media/${imageId}/hero`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+          console.error('Failed to update hero image');
+          return;
+        }
+
+        const data = await response.json();
+
+        // Update hero image in UI
+        if (data.heroImagePath) {
+          updateHeroImage(data.heroImagePath);
+        }
+      } catch (error) {
+        console.error('Error updating hero image:', error);
+        // Don't show error to user - just log it
+      }
+    }
+  }
+
+  // Initialize drag and drop when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDragAndDrop);
+  } else {
+    initDragAndDrop();
+  }
+
+  // Reinitialize drag and drop after images are added
+  const originalAddImagesToGrid = addImagesToGrid;
+  addImagesToGrid = function(images, heroImagePath) {
+    originalAddImagesToGrid(images, heroImagePath);
+    // Reinitialize drag and drop for new images
+    setTimeout(initDragAndDrop, 100);
+  };
+
+  // Set Hero Image Handler
+  document.addEventListener('click', function (e) {
+    const setHeroBtn = e.target.closest('.media-card__set-hero');
+    if (!setHeroBtn) return;
+
+    const card = setHeroBtn.closest('.media-card');
+    const imageId = setHeroBtn.getAttribute('data-image-id') || card?.getAttribute('data-media-id');
+    const imagePath = setHeroBtn.getAttribute('data-image-path');
+
+    if (!imageId) {
+      console.error('No image ID found');
+      return;
+    }
+
+    // Show loading state
+    setHeroBtn.disabled = true;
+    setHeroBtn.textContent = 'Setting...';
+
+    // Send PUT request
+    fetch(`/dashboard/talent/media/${imageId}/hero`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'same-origin'
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Set hero failed');
+        return res.json();
+      })
+      .then((data) => {
+        // Update hero image in hero section
+        if (data.heroImagePath) {
+          updateHeroImage(data.heroImagePath);
+        }
+
+        // Update hero badges on all cards
+        const allCards = document.querySelectorAll('.media-card');
+        allCards.forEach(card => {
+          const controls = card.querySelector('.media-card__controls');
+          if (!controls) return;
+
+          const existingBadge = controls.querySelector('.media-card__hero-badge');
+          const existingSetHeroBtn = controls.querySelector('.media-card__set-hero');
+          const cardImageId = card.getAttribute('data-media-id');
+
+          if (cardImageId === imageId) {
+            // This is the new hero - replace button with badge
+            if (existingSetHeroBtn) {
+              existingSetHeroBtn.remove();
+            }
+            if (!existingBadge) {
+              const badge = document.createElement('span');
+              badge.className = 'media-card__hero-badge';
+              badge.title = 'Hero Image';
+              badge.textContent = '★';
+              const deleteBtn = controls.querySelector('.media-card__delete');
+              if (deleteBtn) {
+                controls.insertBefore(badge, deleteBtn);
+              } else {
+                controls.appendChild(badge);
+              }
+            }
+          } else {
+            // This is not the hero - replace badge with button
+            if (existingBadge) {
+              existingBadge.remove();
+            }
+            if (!existingSetHeroBtn) {
+              const setHeroBtn = document.createElement('button');
+              setHeroBtn.className = 'media-card__set-hero';
+              setHeroBtn.type = 'button';
+              setHeroBtn.title = 'Set as Hero Image';
+              setHeroBtn.textContent = 'Set Hero';
+              setHeroBtn.setAttribute('data-image-id', cardImageId);
+              const img = card.querySelector('img');
+              if (img) {
+                setHeroBtn.setAttribute('data-image-path', img.src);
+              }
+              const deleteBtn = controls.querySelector('.media-card__delete');
+              if (deleteBtn) {
+                controls.insertBefore(setHeroBtn, deleteBtn);
+              } else {
+                controls.appendChild(setHeroBtn);
+              }
+            }
+          }
+        });
+
+        // Show success message
+        showSuccessMessage('Hero image updated successfully');
+      })
+      .catch(err => {
+        console.error('Set hero error:', err);
+        alert('Failed to set hero image. Please try again.');
+        setHeroBtn.disabled = false;
+        setHeroBtn.textContent = 'Set Hero';
       });
   });
 
@@ -263,16 +642,18 @@
       }
 
       ['dragenter', 'dragover'].forEach(eventName => {
-        uploadLabel.addEventListener(eventName, () => {
-          uploadLabel.style.borderColor = 'var(--accent-gold)';
-          uploadLabel.style.background = 'rgba(201, 165, 90, 0.08)';
+        uploadLabel.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          uploadLabel.classList.add('drag-over');
         }, false);
       });
 
       ['dragleave', 'drop'].forEach(eventName => {
-        uploadLabel.addEventListener(eventName, () => {
-          uploadLabel.style.borderColor = '';
-          uploadLabel.style.background = '';
+        uploadLabel.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          uploadLabel.classList.remove('drag-over');
         }, false);
       });
 
@@ -286,24 +667,383 @@
       }, false);
     }
 
-    // Form submission handler
-    uploadForm.addEventListener('submit', function(e) {
+    // Form submission handler - Use AJAX instead of form submission
+    uploadForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
       if (selectedFiles.length === 0) {
-        e.preventDefault();
         alert('Please select at least one image to upload.');
         return;
       }
 
+      // Validate file sizes and types before upload
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      const invalidFiles = selectedFiles.filter(file => {
+        return !allowedTypes.includes(file.type) || file.size > maxSize;
+      });
+
+      if (invalidFiles.length > 0) {
+        alert(`Invalid files detected. Please ensure all files are JPEG, PNG, or WebP and under 10MB.`);
+        return;
+      }
+
+      // Show loading state
       if (uploadButton) {
         uploadButton.disabled = true;
         uploadButton.textContent = 'Uploading...';
+        uploadButton.style.opacity = '0.6';
+        uploadButton.style.cursor = 'not-allowed';
+      }
+
+      // Create FormData for upload
+      const formData = new FormData();
+      selectedFiles.forEach(file => {
+        formData.append('media', file);
+      });
+
+      try {
+        // Upload images via AJAX
+        const response = await fetch('/dashboard/talent/media', {
+          method: 'POST',
+          body: formData,
+          credentials: 'same-origin'
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Upload failed');
+        }
+
+        // Success - add images to grid dynamically
+        if (data.images && data.images.length > 0) {
+          addImagesToGrid(data.images, data.heroImagePath);
+          updateImageCount(data.totalImages);
+          updateHeroImage(data.heroImagePath);
+          showSuccessMessage(data.message);
+        }
+
+        // Clear file input and preview
+        selectedFiles.length = 0;
+        fileInput.value = '';
+        filePreview.innerHTML = '';
+
+        // Reset button
+        if (uploadButton) {
+          uploadButton.disabled = false;
+          uploadButton.textContent = 'Upload Images';
+          uploadButton.style.opacity = '1';
+          uploadButton.style.cursor = 'pointer';
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        alert(error.message || 'Failed to upload images. Please try again.');
+
+        // Reset button
+        if (uploadButton) {
+          uploadButton.disabled = false;
+          uploadButton.textContent = 'Upload Images';
+          uploadButton.style.opacity = '1';
+          uploadButton.style.cursor = 'pointer';
+        }
       }
     });
+  }
+
+  // Helper function to add images to grid dynamically
+  function addImagesToGrid(images, heroImagePath) {
+    let mediaGrid = document.querySelector('[data-media-grid]');
+    
+    // If grid doesn't exist, create it
+    if (!mediaGrid) {
+      // Find the portfolio imagery panel body
+      const portfolioPanel = document.querySelector('.dash-panel');
+      if (portfolioPanel) {
+        const panelBody = portfolioPanel.querySelector('.dash-panel__body');
+        if (panelBody) {
+          // Remove empty state if it exists
+          const emptyState = panelBody.querySelector('.empty-state');
+          if (emptyState) {
+            emptyState.remove();
+          }
+          
+          // Create new grid
+          mediaGrid = document.createElement('div');
+          mediaGrid.className = 'media-grid';
+          mediaGrid.setAttribute('data-media-grid', '');
+          panelBody.appendChild(mediaGrid);
+        } else {
+          console.error('Portfolio panel body not found');
+          return;
+        }
+      } else {
+        console.error('Portfolio panel not found');
+        return;
+      }
+    } else {
+      // Remove empty state if it exists (it might be a sibling)
+      const emptyState = mediaGrid.parentElement.querySelector('.empty-state');
+      if (emptyState) {
+        emptyState.remove();
+      }
+    }
+
+    // Add each image to grid
+    images.forEach(image => {
+      const mediaCard = createMediaCard(image, heroImagePath);
+      mediaGrid.appendChild(mediaCard);
+    });
+
+    // Animate new images in (only the ones we just added)
+    const allCards = Array.from(mediaGrid.querySelectorAll('.media-card'));
+    const newCards = allCards.slice(-images.length);
+    newCards.forEach((card, index) => {
+      card.style.opacity = '0';
+      card.style.transform = 'scale(0.9)';
+      setTimeout(() => {
+        card.style.transition = 'all 0.3s ease-out';
+        card.style.opacity = '1';
+        card.style.transform = 'scale(1)';
+      }, index * 50);
+    });
+  }
+
+  // Helper function to normalize image path (matches template logic)
+  function normalizeImagePath(imagePath) {
+    if (!imagePath) return '';
+    // Preserve external URLs
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    // Remove any ../ sequences and normalize
+    let normalized = imagePath.replace(/\.\.\//g, '').replace(/\\/g, '/');
+    // Ensure it starts with /
+    if (!normalized.startsWith('/')) {
+      normalized = '/' + normalized;
+    }
+    // If path contains /uploads/ but starts with /../, fix it
+    if (normalized.includes('/uploads/')) {
+      const uploadsIndex = normalized.indexOf('/uploads/');
+      normalized = normalized.substring(uploadsIndex);
+    }
+    // If it doesn't start with /uploads/ and is a relative path, assume it's in uploads
+    if (!normalized.startsWith('/uploads/') && !normalized.startsWith('http')) {
+      // Extract filename if path contains one
+      const parts = normalized.split('/');
+      const filename = parts[parts.length - 1];
+      if (filename && filename.includes('.')) {
+        normalized = '/uploads/' + filename;
+      }
+    }
+    return normalized;
+  }
+
+  // Helper function to create media card element
+  function createMediaCard(image, heroImagePath) {
+    const card = document.createElement('article');
+    card.className = 'media-card';
+    card.setAttribute('data-media-id', image.id);
+    card.setAttribute('draggable', 'true');
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', 'Drag to reorder image');
+    if (image.sort) {
+      card.setAttribute('data-sort', image.sort);
+    }
+
+    // Normalize image path using same logic as template
+    const imagePath = normalizeImagePath(image.path);
+
+    // Check if this is the hero image (compare normalized paths)
+    const normalizedHeroPath = heroImagePath ? normalizeImagePath(heroImagePath) : null;
+    const normalizedImagePath = normalizeImagePath(image.path);
+    const isHero = normalizedHeroPath && normalizedImagePath === normalizedHeroPath;
+
+    card.innerHTML = `
+      <div class="media-card__drag-handle" title="Drag to reorder">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="7" cy="5" r="1.5" fill="currentColor" opacity="0.4"/>
+          <circle cx="13" cy="5" r="1.5" fill="currentColor" opacity="0.4"/>
+          <circle cx="7" cy="10" r="1.5" fill="currentColor" opacity="0.4"/>
+          <circle cx="13" cy="10" r="1.5" fill="currentColor" opacity="0.4"/>
+          <circle cx="7" cy="15" r="1.5" fill="currentColor" opacity="0.4"/>
+          <circle cx="13" cy="15" r="1.5" fill="currentColor" opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="media-card__image-placeholder">
+        <div class="media-card__placeholder-shimmer"></div>
+      </div>
+      <img src="${imagePath}" 
+           alt="${image.label || 'Portfolio image'}" 
+           loading="lazy"
+           onload="this.classList.add('is-loaded')"
+           onerror="this.classList.add('is-loaded')">
+      <div class="media-card__controls">
+        ${isHero 
+          ? '<span class="media-card__hero-badge" title="Hero Image">★</span>' 
+          : `<button class="media-card__set-hero" type="button" title="Set as Hero Image" data-image-id="${image.id}" data-image-path="${imagePath}">Set Hero</button>`
+        }
+        <button class="media-card__delete" type="button" title="Delete image" data-image-id="${image.id}">&times;</button>
+      </div>
+    `;
+
+    return card;
+  }
+
+  // Helper function to update image count in header
+  function updateImageCount(totalImages) {
+    // Update image count in hero stats section
+    const heroImageCount = document.getElementById('hero-image-count');
+    if (heroImageCount) {
+      heroImageCount.textContent = totalImages;
+    }
+
+    // Update image count in sidebar stats
+    const sidebarImageCount = document.getElementById('sidebar-image-count');
+    if (sidebarImageCount) {
+      sidebarImageCount.textContent = totalImages;
+    }
+
+    // Also update any other image count displays
+    const heroStats = document.querySelectorAll('.dash-hero__stat');
+    heroStats.forEach(stat => {
+      const label = stat.querySelector('.dash-hero__stat-label');
+      if (label && label.textContent.trim() === 'Images') {
+        const value = stat.querySelector('.dash-hero__stat-value');
+        if (value) {
+          value.textContent = totalImages;
+        }
+      }
+    });
+
+    // Update image count in profile status panel (if it exists)
+    const profileStatusChips = document.querySelectorAll('.completion-chips .chip');
+    profileStatusChips.forEach(chip => {
+      if (chip.textContent.includes('2+ Images') || chip.textContent.includes('Images')) {
+        // Update chip text to show current count
+        const chipText = chip.textContent.trim();
+        if (chipText.includes('Images')) {
+          chip.textContent = totalImages >= 2 ? `${totalImages} Images` : '2+ Images';
+          if (totalImages >= 2) {
+            chip.classList.add('is-complete');
+          } else {
+            chip.classList.remove('is-complete');
+          }
+        }
+      }
+    });
+  }
+
+  // Helper function to update hero image
+  function updateHeroImage(heroImagePath) {
+    if (!heroImagePath) return;
+
+    // Normalize hero image path
+    const normalizedHeroPath = normalizeImagePath(heroImagePath);
+
+    // Update hero image in hero section
+    const heroImageContainer = document.querySelector('.dash-hero__image');
+    if (heroImageContainer) {
+      // Remove placeholder if it exists
+      const placeholder = heroImageContainer.querySelector('.dash-hero__image-placeholder');
+      if (placeholder) {
+        placeholder.remove();
+      }
+
+      // Get or create hero image element
+      let heroImage = heroImageContainer.querySelector('img');
+      if (!heroImage) {
+        heroImage = document.createElement('img');
+        heroImage.alt = 'Profile hero image';
+        heroImage.onload = function() {
+          this.classList.add('is-loaded');
+        };
+        heroImage.onerror = function() {
+          this.classList.add('is-loaded');
+        };
+        heroImageContainer.appendChild(heroImage);
+      }
+
+      // Update image source
+      heroImage.src = normalizedHeroPath;
+      
+      // Add loading placeholder if image hasn't loaded yet
+      if (!heroImage.complete) {
+        const placeholderDiv = document.createElement('div');
+        placeholderDiv.className = 'dash-hero__image-placeholder';
+        placeholderDiv.innerHTML = '<div class="dash-hero__placeholder-shimmer"></div>';
+        if (!heroImageContainer.querySelector('.dash-hero__image-placeholder')) {
+          heroImageContainer.insertBefore(placeholderDiv, heroImage);
+        }
+      }
+    }
+
+    // Update hero badges on media cards
+    const mediaCards = document.querySelectorAll('.media-card');
+    const normalizedHeroPathForComparison = normalizedHeroPath;
+    
+    mediaCards.forEach(card => {
+      const img = card.querySelector('img');
+      if (!img) return;
+
+      const cardImagePath = normalizeImagePath(img.getAttribute('src') || img.src);
+      const isHero = cardImagePath === normalizedHeroPathForComparison;
+      const controls = card.querySelector('.media-card__controls');
+      
+      if (!controls) return;
+
+      const existingBadge = controls.querySelector('.media-card__hero-badge');
+      
+      if (isHero && !existingBadge) {
+        // Add hero badge
+        const badge = document.createElement('span');
+        badge.className = 'media-card__hero-badge';
+        badge.title = 'Hero Image';
+        badge.textContent = '★';
+        const deleteBtn = controls.querySelector('.media-card__delete');
+        if (deleteBtn) {
+          controls.insertBefore(badge, deleteBtn);
+        } else {
+          controls.appendChild(badge);
+        }
+      } else if (!isHero && existingBadge) {
+        // Remove hero badge
+        existingBadge.remove();
+      }
+    });
+  }
+
+  // Helper function to show success message
+  function showSuccessMessage(message) {
+    // Create flash message element
+    const flashMessages = document.querySelector('.flash-messages') || document.createElement('div');
+    if (!flashMessages.classList.contains('flash-messages')) {
+      flashMessages.className = 'flash-messages';
+      document.body.insertBefore(flashMessages, document.body.firstChild);
+    }
+
+    const flashMessage = document.createElement('div');
+    flashMessage.className = 'flash-message flash-message--success';
+    flashMessage.innerHTML = `
+      <span>${message}</span>
+      <button class="flash-message__close" type="button" onclick="this.parentElement.remove()">&times;</button>
+    `;
+
+    flashMessages.appendChild(flashMessage);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      flashMessage.style.opacity = '0';
+      flashMessage.style.transform = 'translateY(-10px)';
+      setTimeout(() => flashMessage.remove(), 300);
+    }, 5000);
   }
 
   // PDF Theme Selector Modal
   function initPdfThemeModal() {
     const pdfBtn = document.getElementById('pdf-download-btn');
+    const sidebarPdfBtn = document.getElementById('sidebar-pdf-download-btn');
     const modal = document.getElementById('pdf-theme-modal');
     const backdrop = modal?.querySelector('.pdf-theme-modal__backdrop');
     const closeBtn = modal?.querySelector('.pdf-theme-modal__close');
@@ -316,24 +1056,26 @@
     const previewIframe = document.getElementById('pdf-theme-preview-iframe');
     const themeTabs = document.querySelectorAll('.pdf-theme-modal__tab');
     
-    if (!pdfBtn) {
-      console.warn('[PDF Modal] PDF download button not found');
-      return;
-    }
-    
     if (!modal) {
       console.warn('[PDF Modal] PDF theme modal not found');
       return;
     }
 
-    // Get theme data from window
+    // Get button data - use sidebar button if available, fallback to main button
+    const activePdfBtn = sidebarPdfBtn || pdfBtn;
+    if (!activePdfBtn) {
+      console.warn('[PDF Modal] PDF download button not found');
+      return;
+    }
+
+    // Get theme data from window or button data attributes
     const themeData = window.PDF_THEME_DATA || {};
     const allThemes = themeData.allThemes || {};
     const freeThemes = themeData.freeThemes || [];
     const proThemes = themeData.proThemes || [];
-    const slug = themeData.profileSlug || pdfBtn.dataset.slug;
-    const savedTheme = themeData.currentTheme || pdfBtn.dataset.theme || 'classic-serif';
-    const isPro = themeData.isPro === true || pdfBtn.dataset.isPro === 'true';
+    const slug = themeData.profileSlug || activePdfBtn.dataset.slug;
+    const savedTheme = themeData.currentTheme || activePdfBtn.dataset.theme || 'classic-serif';
+    const isPro = themeData.isPro === true || activePdfBtn.dataset.isPro === 'true';
     const baseUrl = themeData.baseUrl || '';
     
     let selectedTheme = savedTheme;
@@ -447,7 +1189,11 @@
     // Update buttons
     function updateButtons() {
       if (downloadBtn) {
-        downloadBtn.href = `${baseUrl}/pdf/${slug}?theme=${selectedTheme}&download=1`;
+        // Use relative URL if baseUrl is empty
+        const downloadUrl = baseUrl 
+          ? `${baseUrl}/pdf/${slug}?theme=${selectedTheme}&download=1`
+          : `/pdf/${slug}?theme=${selectedTheme}&download=1`;
+        downloadBtn.href = downloadUrl;
       }
       
       if (applyBtn) {
@@ -456,7 +1202,10 @@
       
       if (customizeBtn && isPro) {
         customizeBtn.style.display = 'inline-block';
-        customizeBtn.href = `${baseUrl}/dashboard/pdf-customizer?theme=${selectedTheme}`;
+        const customizerUrl = baseUrl 
+          ? `${baseUrl}/dashboard/pdf-customizer?theme=${selectedTheme}`
+          : `/dashboard/pdf-customizer?theme=${selectedTheme}`;
+        customizeBtn.href = customizerUrl;
       }
     }
 
@@ -539,11 +1288,22 @@
     }
 
     // Event listeners
-    pdfBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      openModal();
-    });
+    // Handle both main and sidebar PDF download buttons
+    if (pdfBtn) {
+      pdfBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openModal();
+      });
+    }
+    
+    if (sidebarPdfBtn) {
+      sidebarPdfBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openModal();
+      });
+    }
 
     if (backdrop) backdrop.addEventListener('click', closeModal);
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
@@ -597,3 +1357,240 @@
     initPdfThemeModal();
   }
 })();
+
+// Load Analytics
+async function loadAnalytics() {
+  const analyticsPanel = document.getElementById('analytics-panel');
+  if (!analyticsPanel) return;
+
+  const loadingEl = analyticsPanel.querySelector('.analytics-loading');
+  const contentEl = analyticsPanel.querySelector('.analytics-content');
+  const errorEl = analyticsPanel.querySelector('.analytics-error');
+
+  try {
+    const response = await fetch('/dashboard/talent/analytics', {
+      credentials: 'same-origin'
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to load analytics');
+    }
+
+    const data = await response.json();
+
+    if (data.success && data.analytics) {
+      // Update views
+      const viewsTotal = document.getElementById('analytics-views-total');
+      const viewsWeek = document.getElementById('analytics-views-week');
+      if (viewsTotal) {
+        viewsTotal.textContent = data.analytics.views.total || 0;
+      }
+      if (viewsWeek) {
+        viewsWeek.textContent = `${data.analytics.views.thisWeek || 0} this week`;
+      }
+
+      // Update downloads
+      const downloadsTotal = document.getElementById('analytics-downloads-total');
+      const downloadsWeek = document.getElementById('analytics-downloads-week');
+      if (downloadsTotal) {
+        downloadsTotal.textContent = data.analytics.downloads.total || 0;
+      }
+      if (downloadsWeek) {
+        downloadsWeek.textContent = `${data.analytics.downloads.thisWeek || 0} this week`;
+      }
+
+      // Show content
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (errorEl) errorEl.style.display = 'none';
+      if (contentEl) contentEl.style.display = 'block';
+    } else {
+      throw new Error('Invalid analytics data');
+    }
+  } catch (error) {
+    console.error('Error loading analytics:', error);
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (contentEl) contentEl.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'block';
+  }
+}
+
+// Load Activity Feed
+async function loadActivityFeed() {
+  const activityPanel = document.getElementById('activity-panel');
+  if (!activityPanel) return;
+
+  const loadingEl = activityPanel.querySelector('.activity-loading');
+  const feedEl = activityPanel.querySelector('.activity-feed');
+  const emptyEl = activityPanel.querySelector('.activity-empty');
+  const errorEl = activityPanel.querySelector('.activity-error');
+
+  try {
+    const response = await fetch('/dashboard/talent/activity', {
+      credentials: 'same-origin'
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to load activity feed');
+    }
+
+    const data = await response.json();
+
+    if (data.success && data.activities) {
+      if (data.activities.length === 0) {
+        // Show empty state
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (feedEl) feedEl.style.display = 'none';
+        if (errorEl) errorEl.style.display = 'none';
+        if (emptyEl) emptyEl.style.display = 'block';
+      } else {
+        // Render activities
+        if (feedEl) {
+          feedEl.innerHTML = data.activities.map(activity => `
+            <div class="activity-item">
+              <span class="activity-item__icon">${activity.icon || '📝'}</span>
+              <div class="activity-item__content">
+                <div class="activity-item__message">${activity.message || 'Activity recorded'}</div>
+                <div class="activity-item__time">${activity.timeAgo || 'Recently'}</div>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        // Show feed
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (errorEl) errorEl.style.display = 'none';
+        if (feedEl) feedEl.style.display = 'flex';
+      }
+    } else {
+      throw new Error('Invalid activity data');
+    }
+  } catch (error) {
+    console.error('Error loading activity feed:', error);
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (feedEl) feedEl.style.display = 'none';
+    if (emptyEl) emptyEl.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'block';
+  }
+}
+
+// Load analytics and activity feed when page loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAnalytics();
+    loadActivityFeed();
+    initSectionNavigation();
+  });
+} else {
+  loadAnalytics();
+  loadActivityFeed();
+  initSectionNavigation();
+}
+
+// Section Navigation with Active State Tracking
+function initSectionNavigation() {
+  const nav = document.getElementById('dash-nav');
+  if (!nav) return;
+
+  const navLinks = nav.querySelectorAll('.dash-nav__link');
+  const sections = document.querySelectorAll('[data-section]');
+
+  if (navLinks.length === 0 || sections.length === 0) return;
+
+  // Handle click on nav links
+  navLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const targetSection = this.getAttribute('data-section');
+      const targetElement = document.querySelector(`[data-section="${targetSection}"]`);
+      
+      if (targetElement) {
+        // Update active state
+        navLinks.forEach(l => l.classList.remove('dash-nav__link--active'));
+        this.classList.add('dash-nav__link--active');
+        
+        // Smooth scroll to section
+        const offsetTop = targetElement.getBoundingClientRect().top + window.pageYOffset - 100;
+        window.scrollTo({
+          top: offsetTop,
+          behavior: 'smooth'
+        });
+        
+        // Update URL without reloading
+        history.pushState(null, null, `#${targetSection}`);
+      }
+    });
+  });
+
+  // Track scroll position to update active nav item
+  let ticking = false;
+  
+  function updateActiveNav() {
+    const scrollPosition = window.pageYOffset + 150; // Offset for nav + header
+    
+    let currentSection = null;
+    
+    // Find the section currently in view
+    sections.forEach(section => {
+      const sectionTop = section.getBoundingClientRect().top + window.pageYOffset;
+      const sectionBottom = sectionTop + section.offsetHeight;
+      
+      if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+        currentSection = section.getAttribute('data-section');
+      }
+    });
+    
+    // If no section is in view, check which one is closest to top
+    if (!currentSection && sections.length > 0) {
+      let closestSection = null;
+      let closestDistance = Infinity;
+      
+      sections.forEach(section => {
+        const sectionTop = section.getBoundingClientRect().top + window.pageYOffset;
+        const distance = Math.abs(sectionTop - scrollPosition);
+        
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestSection = section.getAttribute('data-section');
+        }
+      });
+      
+      currentSection = closestSection;
+    }
+    
+    // Update active nav link
+    if (currentSection) {
+      navLinks.forEach(link => {
+        if (link.getAttribute('data-section') === currentSection) {
+          link.classList.add('dash-nav__link--active');
+        } else {
+          link.classList.remove('dash-nav__link--active');
+        }
+      });
+    }
+    
+    ticking = false;
+  }
+  
+  function onScroll() {
+    if (!ticking) {
+      window.requestAnimationFrame(updateActiveNav);
+      ticking = true;
+    }
+  }
+  
+  // Listen to scroll events
+  window.addEventListener('scroll', onScroll, { passive: true });
+  
+  // Check initial scroll position
+  updateActiveNav();
+  
+  // Handle hash in URL on page load
+  if (window.location.hash) {
+    const hash = window.location.hash.substring(1);
+    const targetLink = nav.querySelector(`[data-section="${hash}"]`);
+    if (targetLink) {
+      targetLink.click();
+    }
+  }
+}

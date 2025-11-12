@@ -1,8 +1,33 @@
 const express = require('express');
 const knex = require('../db/knex');
 const { toFeetInches } = require('../lib/stats');
+const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();
+
+// Helper function to log analytics event (non-blocking)
+async function logAnalyticsEvent(profileId, eventType, metadata = {}, req = null) {
+  try {
+    // Only log if profile exists (not demo)
+    if (!profileId || profileId === 'demo-elara-k') {
+      return;
+    }
+    
+    await knex('analytics').insert({
+      id: uuidv4(),
+      profile_id: profileId,
+      event_type: eventType,
+      event_source: 'web',
+      metadata: JSON.stringify(metadata),
+      ip_address: req?.ip || req?.headers?.['x-forwarded-for']?.split(',')[0]?.trim() || null,
+      user_agent: req?.headers?.['user-agent'] || null,
+      created_at: knex.fn.now()
+    });
+  } catch (error) {
+    console.error('[Portfolio] Error logging analytics:', error);
+    // Don't throw - analytics logging is non-critical
+  }
+}
 
 // Demo profile data for elara-k (fallback when database is empty)
 function getDemoProfile(slug) {

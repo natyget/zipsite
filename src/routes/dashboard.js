@@ -444,6 +444,15 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
       // Reload profile
       profile = await knex('profiles').where({ id: profileId }).first();
       
+      // Log activity (non-blocking)
+      logActivity(req.session.userId, 'profile_updated', {
+        profileId: profileId,
+        slug: slug,
+        action: 'created'
+      }).catch(err => {
+        console.error('[Dashboard] Error logging activity:', err);
+      });
+      
       addMessage(req, 'success', 'Profile created! You can update your name and other details anytime.');
       return res.redirect('/dashboard/talent');
     }
@@ -613,6 +622,14 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
       .where({ id: profile.id })
       .update(updateData);
 
+    // Log activity (non-blocking)
+    logActivity(req.session.userId, 'profile_updated', {
+      profileId: profile.id,
+      slug: profile.slug
+    }).catch(err => {
+      console.error('[Dashboard] Error logging activity:', err);
+    });
+
     addMessage(req, 'success', 'Profile updated.');
     return res.redirect('/dashboard/talent');
   } catch (error) {
@@ -632,14 +649,18 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
 router.post('/dashboard/talent/media', requireRole('TALENT'), upload.array('media', 12), async (req, res, next) => {
   try {
     if (!req.files || req.files.length === 0) {
-      addMessage(req, 'error', 'Please select at least one image to upload.');
-      return res.redirect('/dashboard/talent');
+      return res.status(400).json({ 
+        error: 'Please select at least one image to upload.',
+        success: false 
+      });
     }
 
     const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
     if (!profile) {
-      addMessage(req, 'error', 'Profile not found.');
-      return res.redirect('/apply');
+      return res.status(404).json({ 
+        error: 'Profile not found.',
+        success: false 
+      });
     }
 
     const countResult = await knex('images')
@@ -648,8 +669,11 @@ router.post('/dashboard/talent/media', requireRole('TALENT'), upload.array('medi
       .first();
     let nextSort = Number(countResult?.total || 0) + 1;
 
-    const uploadedFiles = [];
+    const uploadedImages = [];
     let heroSet = false;
+    let heroImageId = null;
+    let heroImagePath = null;
+
     for (const file of req.files) {
       try {
         const storedPath = await processImage(file.path);
@@ -661,13 +685,23 @@ router.post('/dashboard/talent/media', requireRole('TALENT'), upload.array('medi
           label: 'Portfolio image',
           sort: nextSort++
         });
-        uploadedFiles.push(storedPath);
 
         // Set first uploaded image as hero if no hero exists
-        if (!profile.hero_image_path && !heroSet && uploadedFiles.length === 1) {
+        if (!profile.hero_image_path && !heroSet && uploadedImages.length === 0) {
           await knex('profiles').where({ id: profile.id }).update({ hero_image_path: storedPath });
           heroSet = true;
+          heroImageId = imageId;
+          heroImagePath = storedPath;
         }
+
+        uploadedImages.push({
+          id: imageId,
+          path: storedPath,
+          label: 'Portfolio image',
+          sort: nextSort - 1,
+          profile_id: profile.id,
+          created_at: new Date().toISOString()
+        });
       } catch (fileError) {
         console.error('Error processing file:', fileError);
         console.error('File details:', { name: file.originalname, size: file.size, mimetype: file.mimetype });
@@ -675,16 +709,84 @@ router.post('/dashboard/talent/media', requireRole('TALENT'), upload.array('medi
       }
     }
 
-    if (uploadedFiles.length > 0) {
-      addMessage(req, 'success', `Successfully uploaded ${uploadedFiles.length} image${uploadedFiles.length > 1 ? 's' : ''}.`);
-      // Force a fresh page load to show new images
-      return res.redirect(303, '/dashboard/talent');
+    if (uploadedImages.length > 0) {
+      // Get updated profile to check if hero was set
+      const updatedProfile = await knex('profiles').where({ id: profile.id }).first();
+      
+      const totalImages = Number(countResult?.total || 0) + uploadedImages.length;
+      
+      // Log activity (non-blocking)
+      logActivity(req.session.userId, 'image_uploaded', {
+        profileId: profile.id,
+        imageCount: uploadedImages.length,
+        totalImages: totalImages
+      }).catch(err => {
+        console.error('[Dashboard] Error logging activity:', err);
+      });
+      
+      return res.json({ 
+        success: true,
+        message: `Successfully uploaded ${uploadedImages.length} image${uploadedImages.length > 1 ? 's' : ''}.`,
+        images: uploadedImages,
+        heroImagePath: updatedProfile.hero_image_path,
+        totalImages: totalImages
+      });
     } else {
-      addMessage(req, 'error', 'Failed to upload images. Please try again.');
-      return res.redirect('/dashboard/talent');
+      return res.status(500).json({ 
+        error: 'Failed to upload images. Please try again.',
+        success: false 
+      });
     }
   } catch (error) {
-    return next(error);
+    console.error('[Dashboard/Media Upload] Error:', error);
+    return res.status(500).json({ 
+      error: 'An error occurred while uploading images.',
+      success: false,
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    });
+  }
+});
+
+// PUT route for setting hero image
+router.put('/dashboard/talent/media/:id/hero', requireRole('TALENT'), async (req, res, next) => {
+  try {
+    const imageId = req.params.id;
+    if (!imageId || typeof imageId !== 'string') {
+      return res.status(400).json({ error: 'Invalid image ID' });
+    }
+
+    // Get the image record to verify ownership
+    const image = await knex('images')
+      .select('images.*', 'profiles.user_id', 'profiles.id as profile_id')
+      .leftJoin('profiles', 'images.profile_id', 'profiles.id')
+      .where('images.id', imageId)
+      .first();
+
+    if (!image) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    // Verify the current user owns this image
+    if (image.user_id !== req.session.userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Update profile hero image
+    await knex('profiles')
+      .where({ id: image.profile_id })
+      .update({
+        hero_image_path: image.path,
+        updated_at: knex.fn.now()
+      });
+
+    return res.json({ 
+      success: true, 
+      message: 'Hero image updated successfully',
+      heroImagePath: image.path
+    });
+  } catch (error) {
+    console.error('Set hero image error:', error);
+    return res.status(500).json({ error: 'Failed to set hero image' });
   }
 });
 
@@ -735,32 +837,259 @@ router.delete('/dashboard/talent/media/:id', requireRole('TALENT'), async (req, 
       console.warn(`Could not delete file ${filePath}:`, fileError.message);
     }
 
-    // Delete from database
-    await knex('images').where({ id: mediaId }).delete();
-
     // Check if this was the hero image and update profile if needed
     const profile = await knex('profiles').where({ id: media.profile_id }).first();
+    let newHeroImagePath = null;
     if (profile && profile.hero_image_path === media.path) {
       // Set hero to next available image, or null
       const nextImage = await knex('images')
         .where({ profile_id: media.profile_id })
+        .whereNot('id', mediaId) // Exclude the image we're about to delete
         .orderBy('sort')
         .first();
 
+      newHeroImagePath = nextImage ? nextImage.path : null;
       await knex('profiles')
         .where({ id: media.profile_id })
         .update({
-          hero_image_path: nextImage ? nextImage.path : null,
+          hero_image_path: newHeroImagePath,
           updated_at: knex.fn.now()
         });
+    } else {
+      // Keep existing hero image path
+      newHeroImagePath = profile?.hero_image_path || null;
     }
 
-    return res.json({ success: true, deleted: mediaId });
+    // Delete from database
+    await knex('images').where({ id: mediaId }).delete();
+
+    return res.json({ 
+      success: true, 
+      deleted: mediaId,
+      heroImagePath: newHeroImagePath
+    });
   } catch (error) {
     console.error('Media delete error:', error);
     return res.status(500).json({ error: 'Failed to delete media' });
   }
 });
+
+// GET route for analytics
+router.get('/dashboard/talent/analytics', requireRole('TALENT'), async (req, res, next) => {
+  try {
+    const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
+    if (!profile) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    // Get analytics for the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Get view counts
+    const views = await knex('analytics')
+      .where({ profile_id: profile.id, event_type: 'view' })
+      .where('created_at', '>=', thirtyDaysAgo)
+      .count({ total: '*' })
+      .first();
+
+    // Get download counts
+    const downloads = await knex('analytics')
+      .where({ profile_id: profile.id, event_type: 'download' })
+      .where('created_at', '>=', thirtyDaysAgo)
+      .count({ total: '*' })
+      .first();
+
+    // Get views this week
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const viewsThisWeek = await knex('analytics')
+      .where({ profile_id: profile.id, event_type: 'view' })
+      .where('created_at', '>=', weekAgo)
+      .count({ total: '*' })
+      .first();
+
+    // Get downloads this week
+    const downloadsThisWeek = await knex('analytics')
+      .where({ profile_id: profile.id, event_type: 'download' })
+      .where('created_at', '>=', weekAgo)
+      .count({ total: '*' })
+      .first();
+
+    // Get views this month
+    const monthAgo = new Date();
+    monthAgo.setMonth(monthAgo.getMonth() - 1);
+    const viewsThisMonth = await knex('analytics')
+      .where({ profile_id: profile.id, event_type: 'view' })
+      .where('created_at', '>=', monthAgo)
+      .count({ total: '*' })
+      .first();
+
+    // Get downloads this month
+    const downloadsThisMonth = await knex('analytics')
+      .where({ profile_id: profile.id, event_type: 'download' })
+      .where('created_at', '>=', monthAgo)
+      .count({ total: '*' })
+      .first();
+
+    // Get downloads by theme
+    const downloadsByTheme = await knex('analytics')
+      .where({ profile_id: profile.id, event_type: 'download' })
+      .where('created_at', '>=', thirtyDaysAgo)
+      .select(knex.raw('metadata->>\'theme\' as theme'))
+      .count({ total: '*' })
+      .groupBy('theme');
+
+    return res.json({
+      success: true,
+      analytics: {
+        views: {
+          total: Number(views?.total || 0),
+          thisWeek: Number(viewsThisWeek?.total || 0),
+          thisMonth: Number(viewsThisMonth?.total || 0)
+        },
+        downloads: {
+          total: Number(downloads?.total || 0),
+          thisWeek: Number(downloadsThisWeek?.total || 0),
+          thisMonth: Number(downloadsThisMonth?.total || 0),
+          byTheme: downloadsByTheme.map(item => ({
+            theme: item.theme || 'unknown',
+            count: Number(item.total || 0)
+          }))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('[Dashboard/Analytics] Error:', error);
+    return res.status(500).json({ 
+      error: 'Failed to load analytics',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    });
+  }
+});
+
+// GET route for activity feed
+router.get('/dashboard/talent/activity', requireRole('TALENT'), async (req, res, next) => {
+  try {
+    // Get recent activities for the user
+    const activities = await knex('activities')
+      .where({ user_id: req.session.userId })
+      .orderBy('created_at', 'desc')
+      .limit(10);
+
+    // Format activities
+    const formattedActivities = activities.map(activity => {
+      const metadata = typeof activity.metadata === 'string' 
+        ? JSON.parse(activity.metadata) 
+        : activity.metadata || {};
+      
+      let message = '';
+      let icon = '📝';
+      
+      switch (activity.activity_type) {
+        case 'profile_updated':
+          message = 'Profile updated';
+          icon = '✏️';
+          break;
+        case 'image_uploaded':
+          const imageCount = metadata.imageCount || 1;
+          message = `${imageCount} image${imageCount > 1 ? 's' : ''} uploaded`;
+          icon = '📷';
+          break;
+        case 'pdf_downloaded':
+          const theme = metadata.theme || 'default';
+          message = `PDF downloaded (${theme} theme)`;
+          icon = '📄';
+          break;
+        case 'portfolio_viewed':
+          message = 'Portfolio viewed';
+          icon = '👁️';
+          break;
+        default:
+          message = 'Activity recorded';
+          icon = '📝';
+      }
+      
+      return {
+        id: activity.id,
+        type: activity.activity_type,
+        message,
+        icon,
+        metadata,
+        createdAt: activity.created_at,
+        timeAgo: getTimeAgo(activity.created_at)
+      };
+    });
+
+    return res.json({
+      success: true,
+      activities: formattedActivities
+    });
+  } catch (error) {
+    console.error('[Dashboard/Activity] Error:', error);
+    return res.status(500).json({ 
+      error: 'Failed to load activity feed',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    });
+  }
+});
+
+// Helper function to format time ago
+function getTimeAgo(date) {
+  const now = new Date();
+  const then = new Date(date);
+  const diffInSeconds = Math.floor((now - then) / 1000);
+  
+  if (diffInSeconds < 60) {
+    return 'just now';
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  } else if (diffInSeconds < 604800) {
+    const days = Math.floor(diffInSeconds / 86400);
+    return `${days} day${days > 1 ? 's' : ''} ago`;
+  } else {
+    return then.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+}
+
+// Helper function to log activity
+async function logActivity(userId, activityType, metadata = {}) {
+  try {
+    await knex('activities').insert({
+      id: uuidv4(),
+      user_id: userId,
+      activity_type: activityType,
+      metadata: JSON.stringify(metadata),
+      created_at: knex.fn.now()
+    });
+  } catch (error) {
+    console.error('[Dashboard] Error logging activity:', error);
+    // Don't throw - activity logging is non-critical
+  }
+}
+
+// Helper function to log analytics event
+async function logAnalyticsEvent(profileId, eventType, metadata = {}, req = null) {
+  try {
+    await knex('analytics').insert({
+      id: uuidv4(),
+      profile_id: profileId,
+      event_type: eventType,
+      event_source: 'web',
+      metadata: JSON.stringify(metadata),
+      ip_address: req?.ip || req?.headers?.['x-forwarded-for']?.split(',')[0]?.trim() || null,
+      user_agent: req?.headers?.['user-agent'] || null,
+      created_at: knex.fn.now()
+    });
+  } catch (error) {
+    console.error('[Dashboard] Error logging analytics:', error);
+    // Don't throw - analytics logging is non-critical
+  }
+}
 
 router.get('/dashboard/agency', requireRole('AGENCY'), async (req, res, next) => {
   try {

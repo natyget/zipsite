@@ -11,8 +11,33 @@ const { requireRole } = require('../middleware/auth');
 const knex = require('../db/knex');
 const QRCode = require('qrcode');
 const config = require('../config');
+const { v4: uuidv4 } = require('uuid');
 
 const router = express.Router();
+
+// Helper function to log analytics event (non-blocking)
+async function logAnalyticsEvent(profileId, eventType, metadata = {}, req = null) {
+  try {
+    // Only log if profile exists (not demo)
+    if (!profileId || profileId === 'demo-elara-k') {
+      return;
+    }
+
+    await knex('analytics').insert({
+      id: uuidv4(),
+      profile_id: profileId,
+      event_type: eventType,
+      event_source: 'web',
+      metadata: JSON.stringify(metadata),
+      ip_address: req?.ip || req?.headers?.['x-forwarded-for']?.split(',')[0]?.trim() || null,
+      user_agent: req?.headers?.['user-agent'] || null,
+      created_at: knex.fn.now()
+    });
+  } catch (error) {
+    console.error('[PDF] Error logging analytics:', error);
+    // Don't throw - analytics logging is non-critical
+  }
+}
 
 // Helper function to detect database connection errors
 function isDatabaseError(error) {
@@ -720,6 +745,38 @@ router.get('/pdf/:slug', async (req, res, next) => {
         sizeMB: (buffer.length / 1024 / 1024).toFixed(2),
         maxSize: '6MB'
       });
+    }
+
+    // Log PDF download analytics (non-blocking, don't wait)
+    if (!isDemo && profile.id) {
+      logAnalyticsEvent(profile.id, 'download', {
+        slug: slug,
+        theme: themeKey,
+        size: buffer.length
+      }, req).catch(err => {
+        console.error('[PDF Download] Error logging download analytics:', err);
+        // Don't block response - analytics is non-critical
+      });
+
+      // Log activity if user owns this profile (non-blocking)
+      if (req.session && req.session.userId && profile.user_id === req.session.userId) {
+        try {
+          await knex('activities').insert({
+            id: uuidv4(),
+            user_id: req.session.userId,
+            activity_type: 'pdf_downloaded',
+            metadata: JSON.stringify({
+              profileId: profile.id,
+              theme: themeKey,
+              size: buffer.length
+            }),
+            created_at: knex.fn.now()
+          });
+        } catch (activityError) {
+          console.error('[PDF Download] Error logging activity:', activityError);
+          // Don't block response - activity logging is non-critical
+        }
+      }
     }
 
     if (req.query.download) {
