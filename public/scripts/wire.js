@@ -502,6 +502,39 @@
     }
   }
 
+  function initFooterAnimations() {
+    const footer = document.querySelector('.universal-footer');
+    if (!footer) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          footer.classList.add('is-visible');
+          
+          // Stagger animation for footer sections
+          const brandSection = footer.querySelector('.universal-footer__brand-section');
+          const navSections = footer.querySelector('.universal-footer__nav-sections');
+          const newsletterSection = footer.querySelector('.universal-footer__newsletter-section');
+
+          if (brandSection) {
+            setTimeout(() => brandSection.classList.add('is-visible'), 100);
+          }
+          if (navSections) {
+            setTimeout(() => navSections.classList.add('is-visible'), 200);
+          }
+          if (newsletterSection) {
+            setTimeout(() => newsletterSection.classList.add('is-visible'), 300);
+          }
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -100px 0px'
+    });
+
+    observer.observe(footer);
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     hydrateFlash();
     handleAsyncForms();
@@ -510,5 +543,6 @@
     handlePdfButtons();
     wireMobileNav();
     initUniversalHeaderMenu();
+    initFooterAnimations();
   });
 })();
