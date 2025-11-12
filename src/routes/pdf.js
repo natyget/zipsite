@@ -769,10 +769,6 @@ router.post('/api/pdf/customize/:slug', requireRole('TALENT'), async (req, res, 
       return res.status(403).json({ error: error || 'Not authorized' });
     }
 
-    if (!profile.is_pro) {
-      return res.status(403).json({ error: 'Pro account required' });
-    }
-
     const { theme, customizations } = req.body;
 
     // Validate theme if provided
@@ -782,13 +778,18 @@ router.post('/api/pdf/customize/:slug', requireRole('TALENT'), async (req, res, 
         return res.status(400).json({ error: 'Invalid theme' });
       }
 
-      // Check if Pro theme is selected
+      // Check if Pro theme is selected for non-Pro users
       if (isProTheme(theme) && !profile.is_pro) {
         return res.status(403).json({ error: 'Pro theme requires Pro account' });
       }
     }
 
-    // Validate customizations if provided
+    // Customizations require Pro account
+    if (customizations && !profile.is_pro) {
+      return res.status(403).json({ error: 'Pro account required for customizations' });
+    }
+
+    // Validate customizations if provided (Pro users only)
     if (customizations) {
       const themeKey = theme || profile.pdf_theme || getDefaultTheme();
       const themeObj = getTheme(themeKey);
@@ -808,11 +809,13 @@ router.post('/api/pdf/customize/:slug', requireRole('TALENT'), async (req, res, 
     }
 
     // Prepare update object
+    // Theme can be saved for all users (Free themes for Free users, Pro themes for Pro users)
     const updates = {};
     if (theme) {
       updates.pdf_theme = theme;
     }
-    if (customizations) {
+    // Customizations only for Pro users
+    if (customizations && profile.is_pro) {
       updates.pdf_customizations = JSON.stringify(customizations);
     }
 

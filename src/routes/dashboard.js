@@ -16,6 +16,13 @@ const { getAllLayoutPresets } = require('../lib/pdf-layouts');
 
 const router = express.Router();
 
+// Helper function to determine dashboard redirect based on user role
+function getDashboardRedirect(role) {
+  if (role === 'TALENT') return '/dashboard/talent';
+  if (role === 'AGENCY') return '/dashboard/agency';
+  return '/';
+}
+
 // Redirect /dashboard to appropriate dashboard based on user role
 router.get('/dashboard', async (req, res, next) => {
   try {
@@ -30,39 +37,13 @@ router.get('/dashboard', async (req, res, next) => {
       return res.redirect('/login');
     }
     
-    // For TALENT users, check if they have a profile
-    // If no profile, redirect to /apply instead of /dashboard/talent
-    if (user.role === 'TALENT') {
-      const profile = await knex('profiles').where({ user_id: user.id }).first();
-      if (!profile) {
-        return res.redirect('/apply');
-      }
-      return res.redirect('/dashboard/talent');
-    } else if (user.role === 'AGENCY') {
-      return res.redirect('/dashboard/agency');
-    } else {
-      // Unknown role, redirect to home
-      return res.redirect('/');
-    }
+    // Redirect based on role - dashboard routes handle empty states internally
+    return res.redirect(getDashboardRedirect(user.role));
   } catch (error) {
     console.error('[Dashboard] Error redirecting /dashboard:', error);
     // On error, try to redirect based on session role if available
     if (req.session && req.session.role) {
-      if (req.session.role === 'TALENT') {
-        // On error, still try to check for profile, but if that fails, redirect to /apply
-        try {
-          const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
-          if (!profile) {
-            return res.redirect('/apply');
-          }
-        } catch (profileError) {
-          // If profile check fails, redirect to /apply as safe fallback
-          return res.redirect('/apply');
-        }
-        return res.redirect('/dashboard/talent');
-      } else if (req.session.role === 'AGENCY') {
-        return res.redirect('/dashboard/agency');
-      }
+      return res.redirect(getDashboardRedirect(req.session.role));
     }
     return res.redirect('/login');
   }

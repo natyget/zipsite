@@ -109,6 +109,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     // Declare profile variables at function scope so they're available after if/else
     let first_name, last_name, city, phone, height_cm, bust, waist, hips, shoe_size;
     let eye_color, hair_color, measurements, bio, specialties, partner_agency_email;
+    let passwordHash = null; // Store password hash for transaction use
 
   // If not logged in, validate account creation fields
   if (!isLoggedIn) {
@@ -248,10 +249,10 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       }
 
       console.log('[Signup/Apply] Hashing password...');
-      const passwordHash = await bcrypt.hash(signupParsed.data.password, 10);
+      passwordHash = await bcrypt.hash(signupParsed.data.password, 10);
       userId = uuidv4();
 
-      console.log('[Signup/Apply] Inserting user into database...', {
+      console.log('[Signup/Apply] Preparing user data:', {
         id: userId,
         email: normalizedEmail,
         role: 'TALENT',
@@ -259,35 +260,9 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         passwordHashLength: passwordHash?.length || 0
       });
 
-      await knex('users').insert({
-        id: userId,
-        email: normalizedEmail,
-        password_hash: passwordHash,
-        role: 'TALENT'
-      });
-
-      console.log('[Signup/Apply] User created successfully:', {
-        id: userId,
-        email: normalizedEmail,
-        role: 'TALENT'
-      });
-
-      // Verify user was created
-      const createdUser = await knex('users').where({ id: userId }).first();
-      if (!createdUser) {
-        console.error('[Signup/Apply] ERROR: User was not created!', { userId, email: normalizedEmail });
-        throw new Error('Failed to create user account');
-      }
-
-      console.log('[Signup/Apply] User verified in database:', {
-        id: createdUser.id,
-        email: createdUser.email,
-        role: createdUser.role,
-        hasPasswordHash: !!createdUser.password_hash,
-        passwordHashLength: createdUser.password_hash?.length || 0
-      });
-
-      // Log user in
+      // Store password hash for use in transaction
+      // User will be created in transaction below along with profile
+      // Session is set early so user is logged in even if profile creation fails
       req.session.userId = userId;
       req.session.role = 'TALENT';
       user = { id: userId, role: 'TALENT' };
@@ -297,7 +272,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         role: req.session.role
       });
       
-      // Ensure session is saved before proceeding
+      // Save session before proceeding with database operations
       await new Promise((resolve, reject) => {
         req.session.save((err) => {
           if (err) {
@@ -310,7 +285,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         });
       });
     } catch (error) {
-      console.error('[Signup/Apply] Error creating account:', {
+      console.error('[Signup/Apply] Error preparing account:', {
         message: error.message,
         code: error.code,
         name: error.name,
@@ -432,7 +407,73 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       : null;
 
     let profileId;
-    if (existingProfile) {
+    
+    // Use transaction for new signups to ensure atomicity of user + profile creation
+    if (!isLoggedIn && !existingProfile) {
+      console.log('[Apply] Creating user and profile in transaction:', {
+        userId: userId,
+        name: `${first_name} ${last_name}`,
+        email: normalizedEmail
+      });
+      
+      // Wrap user and profile creation in a transaction
+      // Use the password hash that was already computed above
+      await knex.transaction(async (trx) => {
+        try {
+          // Insert user first
+          await trx('users').insert({
+            id: userId,
+            email: normalizedEmail,
+            password_hash: passwordHash,
+            role: 'TALENT'
+          });
+          
+          console.log('[Apply] User inserted in transaction:', userId);
+          
+          // Create profile
+          const slug = await ensureUniqueSlug(trx, 'profiles', `${first_name}-${last_name}`);
+          profileId = uuidv4();
+          
+          const profileData = {
+            id: profileId,
+            user_id: userId,
+            slug,
+            first_name,
+            last_name,
+            city,
+            phone: phone || null,
+            height_cm,
+            bust: bust || null,
+            waist: waist || null,
+            hips: hips || null,
+            shoe_size: shoe_size || null,
+            eye_color: eye_color || null,
+            hair_color: hair_color || null,
+            measurements: cleanedMeasurements,
+            bio_raw: bio,
+            bio_curated: curatedBio,
+            specialties: specialtiesJson,
+            partner_agency_id: partnerAgencyId
+          };
+          
+          await trx('profiles').insert(profileData);
+          
+          console.log('[Apply] User and profile created atomically:', {
+            userId: userId,
+            profileId: profileId,
+            slug: slug
+          });
+        } catch (txError) {
+          console.error('[Apply] Transaction error, rolling back:', {
+            message: txError.message,
+            code: txError.code,
+            name: txError.name
+          });
+          throw txError; // Re-throw to trigger rollback
+        }
+      });
+    } else if (existingProfile) {
+      // Update existing profile (no transaction needed, user already exists)
       console.log('[Apply] Updating existing profile:', existingProfile.id);
       let slug = existingProfile.slug;
       if (!slug) {
@@ -467,10 +508,10 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         slug: slug
       });
     } else {
-      console.log('[Apply] Creating new profile:', {
+      // Logged-in user creating profile for first time (user already exists)
+      console.log('[Apply] Creating new profile for logged-in user:', {
         userId: userId,
-        name: `${first_name} ${last_name}`,
-        isLoggedIn: isLoggedIn
+        name: `${first_name} ${last_name}`
       });
       const slug = await ensureUniqueSlug(knex, 'profiles', `${first_name}-${last_name}`);
       profileId = uuidv4();
@@ -590,7 +631,9 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       });
     }
     
-    // Ensure session is saved with all data (userId, role, profileId) before redirect
+    // Save session once with all data (userId, role, profileId) before redirect
+    // For new signups, session was already saved earlier, but we need to save again with profileId
+    // For logged-in users, this is the first save
     await new Promise((resolve, reject) => {
       req.session.save((err) => {
         if (err) {
