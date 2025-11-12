@@ -39,26 +39,27 @@ if (client === 'pg') {
   // Try to extract connection string from common command patterns
   // Pattern 1: psql 'postgresql://...' or psql "postgresql://..." (with quotes)
   // This handles: psql 'postgresql://user:pass@host/db?param=value&param2=value2'
-  // Match psql, whitespace, quote, then capture everything until the closing quote
-  // Then extract the postgresql:// connection string from the captured content
+  // More robust pattern: match psql, whitespace, then capture everything in quotes
   let match = cleanedUrl.match(/psql\s+['"]([^'"]+)['"]/i);
   if (match && match[1]) {
-    // Found something in quotes after psql, check if it contains postgresql://
+    // Found something in quotes after psql
     const quotedContent = match[1];
-    const urlMatch = quotedContent.match(/(postgres(?:ql)?:\/\/[^\s'"]+(?:\?[^\s'"]*)?)/);
-    if (urlMatch && urlMatch[1]) {
-      cleanedUrl = urlMatch[1];
+    // Check if the quoted content IS the connection string (starts with postgresql://)
+    if (quotedContent.startsWith('postgresql://') || quotedContent.startsWith('postgres://')) {
+      cleanedUrl = quotedContent;
     } else {
-      // If no postgresql:// found in quotes, the quoted content itself might be the URL
-      if (quotedContent.startsWith('postgresql://') || quotedContent.startsWith('postgres://')) {
-        cleanedUrl = quotedContent;
+      // Try to find postgresql:// within the quoted content (handles cases with extra text)
+      const urlMatch = quotedContent.match(/(postgres(?:ql)?:\/\/[^'"]+)/);
+      if (urlMatch && urlMatch[1]) {
+        cleanedUrl = urlMatch[1];
       }
     }
   }
 
   // If Pattern 1 didn't work, try Pattern 2: psql postgresql://... (without quotes)
   if (!cleanedUrl.startsWith('postgresql://') && !cleanedUrl.startsWith('postgres://')) {
-    match = cleanedUrl.match(/psql\s+(postgres(?:ql)?:\/\/[^\s'"]+(?:\?[^\s'"]*)?)/i);
+    // Match psql followed by whitespace, then the connection string
+    match = cleanedUrl.match(/psql\s+(postgres(?:ql)?:\/\/[^\s'"]+)/i);
     if (match && match[1]) {
       cleanedUrl = match[1];
     } else {
@@ -73,8 +74,9 @@ if (client === 'pg') {
           cleanedUrl = match[1];
         } else {
           // Pattern 5: Find postgresql:// or postgres:// anywhere in the string
-          // Match: postgresql://username:password@host/dbname?params
-          match = cleanedUrl.match(/(postgres(?:ql)?:\/\/[^@\s'"]+@[^\s'"]+)/);
+          // More permissive: match postgresql:// followed by user:pass@host/dbname?params
+          // This handles URLs with query parameters and special characters
+          match = cleanedUrl.match(/(postgres(?:ql)?:\/\/[^@\s'"]+@[^\s'"]+(?:\?[^\s'"]*)?)/);
           if (match && match[1]) {
             cleanedUrl = match[1];
           }
@@ -89,10 +91,10 @@ if (client === 'pg') {
   // Remove any leading/trailing whitespace
   cleanedUrl = cleanedUrl.trim();
 
-  // Log the cleaning process for debugging (only in development)
-  if (process.env.NODE_ENV !== 'production' && cleanedUrl !== originalUrl) {
-    console.log('[DATABASE_URL] Cleaned URL from:', originalUrl.substring(0, 50) + '...');
-    console.log('[DATABASE_URL] Cleaned URL to:', cleanedUrl.substring(0, 50) + '...');
+  // Log the cleaning process for debugging (in both development and production for troubleshooting)
+  if (cleanedUrl !== originalUrl) {
+    console.log('[DATABASE_URL] Cleaned URL from:', originalUrl.substring(0, 80) + (originalUrl.length > 80 ? '...' : ''));
+    console.log('[DATABASE_URL] Cleaned URL to:', cleanedUrl.substring(0, 80) + (cleanedUrl.length > 80 ? '...' : ''));
   }
 
   // Validate that cleaned URL looks like a PostgreSQL connection string
@@ -124,13 +126,16 @@ if (client === 'pg') {
     const urlMatch = cleanedUrl.match(/@([^/]+)/);
     if (urlMatch && urlMatch[1]) {
       hostname = urlMatch[1].split(':')[0]; // Remove port if present
+      console.log('[DATABASE_URL] Extracted hostname:', hostname);
     }
   } catch (error) {
     // If we can't parse the URL, we'll skip hostname validation
+    console.error('[DATABASE_URL] Error extracting hostname:', error.message);
   }
 
   // Check if hostname looks like a valid Neon hostname (should start with ep-)
   const isLikelyNeonHostname = hostname && hostname.startsWith('ep-') && hostname.includes('.neon.tech');
+  console.log('[DATABASE_URL] Is valid Neon hostname:', isLikelyNeonHostname, hostname ? `(hostname: ${hostname})` : '(no hostname)');
 
   // If hostname looks valid (starts with ep- and contains .neon.tech), skip placeholder check
   // This prevents false positives where valid Neon hostnames contain "neon.tech"

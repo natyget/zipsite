@@ -65,6 +65,41 @@ router.get('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =>
       baseUrl
     });
   } catch (error) {
+    // Log database connection errors for debugging
+    console.error('[Dashboard/Talent] Database error:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
+    
+    // Check if it's a database connection error
+    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT' || 
+        error.code === 'ECONNRESET' || error.message && (
+          error.message.includes('connect') || 
+          error.message.includes('connection') || 
+          error.message.includes('DATABASE_URL') || 
+          error.message.includes('database') ||
+          error.message.includes('Cannot find module \'pg\'') ||
+          error.message.includes('Knex: run')
+        )) {
+      console.error('[Dashboard/Talent] Database connection error detected');
+      // Return a more helpful error for database connection issues
+      return res.status(500).render('errors/500', {
+        title: 'Database Connection Error',
+        layout: 'layout',
+        error: {
+          message: 'Unable to connect to the database. Please check your database configuration.',
+          code: error.code,
+          name: error.name,
+          details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+        },
+        isDevelopment: process.env.NODE_ENV !== 'production',
+        isDatabaseError: true
+      });
+    }
+    
+    // For other errors, pass to error handler
     return next(error);
   }
 });
