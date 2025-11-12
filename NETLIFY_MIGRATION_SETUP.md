@@ -10,6 +10,67 @@ relation "users" does not exist
 
 This means the database is connected, but the tables haven't been created yet. You need to run database migrations.
 
+## Quick Fix (Fastest Method)
+
+### Option 1: Use the Migration Script (Recommended)
+
+Run the migration script to automatically call the migration endpoint:
+
+```bash
+# Set your Netlify site URL
+export NETLIFY_SITE_URL="https://yoursite.netlify.app"
+
+# Set migration secret (if you set MIGRATION_SECRET in Netlify)
+export MIGRATION_SECRET="your-secret-here"
+
+# Run migrations
+./scripts/run-migrations-netlify.sh
+```
+
+Or run it interactively (it will ask for your site URL and secret):
+
+```bash
+./scripts/run-migrations-netlify.sh
+```
+
+### Option 2: Use curl Directly
+
+```bash
+# Replace yoursite.netlify.app with your actual Netlify site URL
+# Replace YOUR_SECRET with your migration secret (if set)
+curl -X POST "https://yoursite.netlify.app/api/migrate?secret=YOUR_SECRET"
+```
+
+If you didn't set a migration secret, call it without the secret:
+
+```bash
+curl -X POST "https://yoursite.netlify.app/api/migrate"
+```
+
+### Option 3: Run Migrations Locally
+
+If you have access to the Neon database from your local machine:
+
+```bash
+# Set your Neon connection string
+export DATABASE_URL="postgresql://neondb_owner:npg_qviTLhP35tWO@ep-cold-moon-a4bwyid7-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require"
+export DB_CLIENT=pg
+
+# Run migrations
+./scripts/run-migrations-local.sh
+```
+
+Or manually:
+
+```bash
+# Set environment variables
+export DATABASE_URL="postgresql://neondb_owner:npg_qviTLhP35tWO@ep-cold-moon-a4bwyid7-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require"
+export DB_CLIENT=pg
+
+# Run migrations
+npm run migrate
+```
+
 ## Solution: Run Migrations
 
 ### Option 1: Use the Migration Endpoint (Recommended)
