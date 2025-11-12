@@ -72,10 +72,36 @@ router.get('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =>
   try {
     const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
     if (!profile) {
-      // Instead of redirecting, show the dashboard with a message to create profile
-      // This allows users to see the dashboard even without a profile
-      addMessage(req, 'info', 'Create your profile to get started!');
-      return res.redirect('/apply');
+      // Logged-in user without profile - show dashboard with empty state
+      // Don't redirect to /apply since /apply is only for logged-out users
+      const currentUser = await knex('users')
+        .where({ id: req.session.userId })
+        .first();
+      
+      addMessage(req, 'info', 'Complete your profile to get started! Fill out the form below.');
+      
+      return res.render('dashboard/talent', {
+        title: 'Talent Dashboard',
+        profile: null,
+        images: [],
+        completeness: {
+          basics: false,
+          imagery: false,
+          hero: false
+        },
+        stats: null,
+        shareUrl: null,
+        user: currentUser,
+        currentUser,
+        isDashboard: true,
+        layout: 'layouts/dashboard',
+        allThemes: getAllThemes(),
+        freeThemes: getFreeThemes(),
+        proThemes: getProThemes(),
+        currentTheme: getDefaultTheme(),
+        baseUrl: `${req.protocol}://${req.get('host')}`,
+        showProfileForm: true // Flag to show profile creation form
+      });
     }
     const images = await knex('images').where({ profile_id: profile.id }).orderBy('sort', 'asc');
     

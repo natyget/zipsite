@@ -11,54 +11,47 @@ const { upload, processImage } = require('../lib/uploader');
 const router = express.Router();
 
 router.get('/apply', (req, res) => {
-  const defaults = req.currentProfile
-    ? {
-        first_name: req.currentProfile.first_name,
-        last_name: req.currentProfile.last_name,
-        city: req.currentProfile.city,
-        phone: req.currentProfile.phone || '',
-        measurements: req.currentProfile.measurements,
-        height_cm: req.currentProfile.height_cm,
-        bust: req.currentProfile.bust || '',
-        waist: req.currentProfile.waist || '',
-        hips: req.currentProfile.hips || '',
-        shoe_size: req.currentProfile.shoe_size || '',
-        eye_color: req.currentProfile.eye_color || '',
-        hair_color: req.currentProfile.hair_color || '',
-        bio: req.currentProfile.bio_raw,
-        specialties: req.currentProfile.specialties ? JSON.parse(req.currentProfile.specialties) : [],
-        partner_agency_email: '',
-        email: req.currentUser?.email || '',
-        password: '',
-        password_confirm: ''
-      }
-    : {
-        first_name: '',
-        last_name: '',
-        city: '',
-        phone: '',
-        measurements: '',
-        height_cm: '',
-        bust: '',
-        waist: '',
-        hips: '',
-        shoe_size: '',
-        eye_color: '',
-        hair_color: '',
-        bio: '',
-        specialties: [],
-        partner_agency_email: '',
-        email: '',
-        password: '',
-        password_confirm: ''
-      };
+  // /apply is only for logged-out users (new signups)
+  // If user is logged in, redirect them to their dashboard
+  if (req.session && req.session.userId && req.currentUser) {
+    // Logged-in users should go to their dashboard, not /apply
+    if (req.session.role === 'TALENT') {
+      return res.redirect('/dashboard/talent');
+    } else if (req.session.role === 'AGENCY') {
+      return res.redirect('/dashboard/agency');
+    } else {
+      return res.redirect('/dashboard');
+    }
+  }
+
+  // Only logged-out users can access /apply
+  const defaults = {
+    first_name: '',
+    last_name: '',
+    city: '',
+    phone: '',
+    measurements: '',
+    height_cm: '',
+    bust: '',
+    waist: '',
+    hips: '',
+    shoe_size: '',
+    eye_color: '',
+    hair_color: '',
+    bio: '',
+    specialties: [],
+    partner_agency_email: '',
+    email: '',
+    password: '',
+    password_confirm: ''
+  };
 
   return res.render('apply/index', {
     title: 'Start your ZipSite profile',
     values: defaults,
     errors: {},
     layout: 'layout',
-    isLoggedIn: Boolean(req.currentUser)
+    isLoggedIn: false // Always false for /apply since logged-in users are redirected
   });
 });
 
