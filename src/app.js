@@ -102,12 +102,25 @@ app.use('/upload', rateLimit({ windowMs: 60 * 1000, max: 20 }));
 app.get('/', async (req, res, next) => {
   try {
     // Load Elara Keats data for homepage demo (main featured talent)
-    const elaraProfile = await knex('profiles').where({ slug: 'elara-k' }).first();
-    const elaraImages = elaraProfile ? await knex('images').where({ profile_id: elaraProfile.id }).orderBy('sort', 'asc') : [];
+    // Use fallback data if database query fails
+    let elaraProfile = null;
+    let elaraImages = [];
+    
+    try {
+      elaraProfile = await knex('profiles').where({ slug: 'elara-k' }).first();
+      if (elaraProfile) {
+        elaraImages = await knex('images').where({ profile_id: elaraProfile.id }).orderBy('sort', 'asc');
+      }
+    } catch (dbError) {
+      console.error('[Homepage] Database error loading Elara profile:', dbError.message);
+      // Continue with fallback data below
+    }
 
     // Load additional talent profiles for floating cards (limit to 4)
     // Use database-agnostic random ordering
     let floatingTalents = [];
+    let floatingTalentsWithImages = [];
+    
     try {
       if (config.dbClient === 'pg') {
         floatingTalents = await knex('profiles')
@@ -125,24 +138,33 @@ app.get('/', async (req, res, next) => {
         // Shuffle and take first 4
         floatingTalents = floatingTalents.sort(() => Math.random() - 0.5).slice(0, 4);
       }
+      
+      // For each floating talent, get their first image
+      floatingTalentsWithImages = await Promise.all(
+        floatingTalents.map(async (talent) => {
+          try {
+            const images = await knex('images')
+              .where({ profile_id: talent.id })
+              .orderBy('sort', 'asc')
+              .limit(1);
+            return {
+              ...talent,
+              hero_image: images.length > 0 ? images[0].path : talent.hero_image_path
+            };
+          } catch (imgError) {
+            console.warn(`[Homepage] Error loading images for talent ${talent.id}:`, imgError.message);
+            return {
+              ...talent,
+              hero_image: talent.hero_image_path
+            };
+          }
+        })
+      );
     } catch (err) {
       console.warn('[Homepage] Error loading floating talents:', err.message);
-      floatingTalents = [];
+      // Will use fallback data below
+      floatingTalentsWithImages = [];
     }
-
-    // For each floating talent, get their first image
-    const floatingTalentsWithImages = await Promise.all(
-      floatingTalents.map(async (talent) => {
-        const images = await knex('images')
-          .where({ profile_id: talent.id })
-          .orderBy('sort', 'asc')
-          .limit(1);
-        return {
-          ...talent,
-          hero_image: images.length > 0 ? images[0].path : talent.hero_image_path
-        };
-      })
-    );
 
     // Set in res.locals so layout can access it
     res.locals.isHomepage = true;
@@ -271,18 +293,43 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error(err);
+  // Log detailed error information
+  console.error('[Error Handler]', {
+    message: err.message,
+    stack: err.stack,
+    code: err.code,
+    name: err.name,
+    url: req.url,
+    method: req.method
+  });
+  
   if (res.headersSent) {
     return next(err);
   }
+  
+  // In production, show generic error; in development, show more details
+  const isDevelopment = config.nodeEnv !== 'production';
+  const errorDetails = isDevelopment ? {
+    message: err.message,
+    code: err.code,
+    name: err.name,
+    stack: err.stack
+  } : null;
+  
   if (req.accepts('html')) {
     // Tell 500 page to use the old 'layout' file
     return res.status(500).render('errors/500', {
       title: 'Server error',
-      layout: 'layout' // Use simple layout for error
+      layout: 'layout', // Use simple layout for error
+      error: errorDetails,
+      isDevelopment
     });
   }
-  return res.status(500).json({ error: 'Server error' });
+  return res.status(500).json({ 
+    error: 'Server error',
+    message: isDevelopment ? err.message : undefined,
+    code: isDevelopment ? err.code : undefined
+  });
 });
 
 module.exports = app;

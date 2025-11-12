@@ -1,4 +1,23 @@
 <section class="panel">
   <h1>Unexpected error</h1>
   <p>Something went wrong. Please try again later.</p>
+  
+  <% if (typeof isDevelopment !== 'undefined' && isDevelopment && typeof error !== 'undefined' && error) { %>
+    <div style="margin-top: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 4px; font-family: monospace; font-size: 0.9rem;">
+      <h3>Error Details (Development Mode)</h3>
+      <p><strong>Message:</strong> <%= error.message %></p>
+      <% if (error.code) { %>
+        <p><strong>Code:</strong> <%= error.code %></p>
+      <% } %>
+      <% if (error.name) { %>
+        <p><strong>Type:</strong> <%= error.name %></p>
+      <% } %>
+      <% if (error.stack) { %>
+        <details style="margin-top: 1rem;">
+          <summary style="cursor: pointer; font-weight: bold;">Stack Trace</summary>
+          <pre style="margin-top: 0.5rem; white-space: pre-wrap; word-break: break-all;"><%= error.stack %></pre>
+        </details>
+      <% } %>
+    </div>
+  <% } %>
 </section>
