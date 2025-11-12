@@ -34,5 +34,10 @@ module.exports = {
   uploadsDir: rootUploads,
   isServerless,
   maxUploadBytes: Number.isFinite(MAX_UPLOAD_MB) ? MAX_UPLOAD_MB * 1024 * 1024 : 8 * 1024 * 1024,
-  pdfBaseUrl: process.env.PDF_BASE_URL || process.env.URL || 'http://localhost:3000'
+  // PDF Base URL: Use Netlify environment variables for proper URL resolution
+  // DEPLOY_PRIME_URL is available for branch deployments (e.g., branch--site.netlify.app)
+  // URL is the main production URL
+  // PDF_BASE_URL can be used as a custom override
+  // Fall back to localhost for local development
+  pdfBaseUrl: process.env.DEPLOY_PRIME_URL || process.env.URL || process.env.PDF_BASE_URL || 'http://localhost:3000'
 };

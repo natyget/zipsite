@@ -39,10 +39,10 @@ async function attachLocals(req, res, next) {
             error.message.includes('Knex: run')
           )) {
         // Log database connection error but don't fail the request for non-dashboard routes
-        // Dashboard routes will handle their own database errors
+        // Dashboard and PDF routes will handle their own database errors
         console.error('[attachLocals] Database connection error:', error.message);
-        // For dashboard routes, let the error propagate so it can be handled properly
-        if (req.path && req.path.startsWith('/dashboard')) {
+        // For dashboard and PDF routes, let the error propagate so it can be handled properly
+        if (req.path && (req.path.startsWith('/dashboard') || req.path.startsWith('/pdf'))) {
           return next(error);
         }
         // For other routes, continue without user data

@@ -14,6 +14,38 @@ const config = require('../config');
 
 const router = express.Router();
 
+// Helper function to detect database connection errors
+function isDatabaseError(error) {
+  if (!error) return false;
+
+  // Check for database connection error codes
+  const dbErrorCodes = ['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', 'ECONNRESET'];
+  if (dbErrorCodes.includes(error.code)) {
+    return true;
+  }
+
+  // Check for database-related error messages
+  if (error.message) {
+    const dbErrorKeywords = [
+      'connect',
+      'connection',
+      'DATABASE_URL',
+      'database',
+      'Cannot find module \'pg\'',
+      'Knex: run',
+      'ECONNREFUSED',
+      'ENOTFOUND',
+      'ETIMEDOUT',
+      'ECONNRESET'
+    ];
+
+    const errorMessage = error.message.toLowerCase();
+    return dbErrorKeywords.some(keyword => errorMessage.includes(keyword.toLowerCase()));
+  }
+
+  return false;
+}
+
 // Helper function to verify profile ownership
 async function verifyProfileOwnership(req, profileSlug) {
   if (!req.session || !req.session.userId) {
@@ -173,6 +205,33 @@ router.get('/pdf/view/:slug', async (req, res, next) => {
       agencyLogo
     });
   } catch (error) {
+    // Log database connection errors for debugging
+    console.error('[PDF View Route] Error:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
+
+    // Check if it's a database connection error
+    if (isDatabaseError(error)) {
+      console.error('[PDF View Route] Database connection error detected');
+      // Return a more helpful error for database connection issues
+      return res.status(500).render('errors/500', {
+        title: 'Database Connection Error',
+        layout: 'layout',
+        error: {
+          message: 'Unable to connect to the database. Please check your database configuration.',
+          code: error.code,
+          name: error.name,
+          details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+        },
+        isDevelopment: process.env.NODE_ENV !== 'production',
+        isDatabaseError: true
+      });
+    }
+
+    // For other errors, pass to error handler
     return next(error);
   }
 });
@@ -203,9 +262,14 @@ router.get('/pdf/:slug', async (req, res, next) => {
 
     // Save theme preference if user is logged in and owns this profile
     if (req.session.userId && profile.user_id === req.session.userId && themeKey !== profile.pdf_theme) {
-      await knex('profiles')
-        .where({ id: profile.id })
-        .update({ pdf_theme: themeKey });
+      try {
+        await knex('profiles')
+          .where({ id: profile.id })
+          .update({ pdf_theme: themeKey });
+      } catch (dbError) {
+        // Log database error but don't fail PDF generation
+        console.error('[PDF Download Route] Error saving theme preference:', dbError.message);
+      }
     }
 
     // Build URL with theme parameter (customizations are loaded in the view route)
@@ -223,6 +287,44 @@ router.get('/pdf/:slug', async (req, res, next) => {
     res.contentType('application/pdf');
     return res.send(buffer);
   } catch (error) {
+    // Log database connection errors for debugging
+    console.error('[PDF Download Route] Error:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
+
+    // Check if it's a database connection error
+    if (isDatabaseError(error)) {
+      console.error('[PDF Download Route] Database connection error detected');
+      // Return JSON error response for download endpoint
+      return res.status(500).json({
+        error: 'Database connection error',
+        message: 'Unable to connect to the database. Please check your database configuration.',
+        code: error.code,
+        details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
+
+    // Check if it's a Puppeteer error (browser launch, navigation, PDF generation)
+    if (error.message && (
+      error.message.includes('browser') ||
+      error.message.includes('puppeteer') ||
+      error.message.includes('navigation') ||
+      error.message.includes('timeout') ||
+      error.message.includes('ENOTFOUND') ||
+      error.message.includes('ECONNREFUSED')
+    )) {
+      console.error('[PDF Download Route] Puppeteer error detected');
+      return res.status(500).json({
+        error: 'PDF generation error',
+        message: 'Unable to generate PDF. Please try again later.',
+        details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
+
+    // For other errors, pass to error handler
     return next(error);
   }
 });
@@ -261,6 +363,26 @@ router.get('/api/pdf/customize/:slug', requireRole('TALENT'), async (req, res, n
       theme: profile.pdf_theme || getDefaultTheme()
     });
   } catch (error) {
+    // Log database connection errors for debugging
+    console.error('[PDF Customize GET Route] Error:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
+
+    // Check if it's a database connection error
+    if (isDatabaseError(error)) {
+      console.error('[PDF Customize GET Route] Database connection error detected');
+      return res.status(500).json({
+        error: 'Database connection error',
+        message: 'Unable to connect to the database. Please check your database configuration.',
+        code: error.code,
+        details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
+
+    // For other errors, pass to error handler
     return next(error);
   }
 });
@@ -332,6 +454,26 @@ router.post('/api/pdf/customize/:slug', requireRole('TALENT'), async (req, res, 
       message: 'Customizations saved successfully'
     });
   } catch (error) {
+    // Log database connection errors for debugging
+    console.error('[PDF Customize POST Route] Error:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
+
+    // Check if it's a database connection error
+    if (isDatabaseError(error)) {
+      console.error('[PDF Customize POST Route] Database connection error detected');
+      return res.status(500).json({
+        error: 'Database connection error',
+        message: 'Unable to connect to the database. Please check your database configuration.',
+        code: error.code,
+        details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
+
+    // For other errors, pass to error handler
     return next(error);
   }
 });
@@ -427,6 +569,26 @@ router.post('/api/pdf/agency-logo/:slug', requireRole('TALENT'), agencyLogoUploa
       return res.status(500).json({ error: 'Error processing logo' });
     }
   } catch (error) {
+    // Log database connection errors for debugging
+    console.error('[PDF Agency Logo Upload Route] Error:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
+
+    // Check if it's a database connection error
+    if (isDatabaseError(error)) {
+      console.error('[PDF Agency Logo Upload Route] Database connection error detected');
+      return res.status(500).json({
+        error: 'Database connection error',
+        message: 'Unable to connect to the database. Please check your database configuration.',
+        code: error.code,
+        details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
+
+    // For other errors, pass to error handler
     return next(error);
   }
 });
@@ -488,6 +650,26 @@ router.post('/api/pdf/agency-logo-url/:slug', requireRole('TALENT'), async (req,
       message: 'Logo URL saved successfully'
     });
   } catch (error) {
+    // Log database connection errors for debugging
+    console.error('[PDF Agency Logo URL Route] Error:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
+
+    // Check if it's a database connection error
+    if (isDatabaseError(error)) {
+      console.error('[PDF Agency Logo URL Route] Database connection error detected');
+      return res.status(500).json({
+        error: 'Database connection error',
+        message: 'Unable to connect to the database. Please check your database configuration.',
+        code: error.code,
+        details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
+
+    // For other errors, pass to error handler
     return next(error);
   }
 });
@@ -545,6 +727,26 @@ router.delete('/api/pdf/agency-logo/:slug', requireRole('TALENT'), async (req, r
       message: 'Logo removed successfully'
     });
   } catch (error) {
+    // Log database connection errors for debugging
+    console.error('[PDF Agency Logo Delete Route] Error:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
+
+    // Check if it's a database connection error
+    if (isDatabaseError(error)) {
+      console.error('[PDF Agency Logo Delete Route] Database connection error detected');
+      return res.status(500).json({
+        error: 'Database connection error',
+        message: 'Unable to connect to the database. Please check your database configuration.',
+        code: error.code,
+        details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
+
+    // For other errors, pass to error handler
     return next(error);
   }
 });
