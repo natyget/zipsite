@@ -87,11 +87,22 @@
         </div>
       </div>
 
-      <!-- Right Column: Pro PDF Comp Card -->
+      <!-- Right Column: PDF Comp Card Themes -->
       <div class="demo-pdf-themes">
         <div class="demo-pdf-themes__header">
-          <h2 class="demo-pdf-themes__title">Pro PDF Themes</h2>
-          <p class="demo-pdf-themes__subtitle">Choose from premium editorial themes</p>
+          <h2 class="demo-pdf-themes__title">PDF Comp Card Themes</h2>
+          <p class="demo-pdf-themes__subtitle">Professional themes for every style</p>
+          <div class="demo-pdf-themes__tabs">
+            <button class="demo-pdf-themes__tab demo-pdf-themes__tab--active" data-theme-filter="all" aria-label="All themes">
+              All Themes
+            </button>
+            <button class="demo-pdf-themes__tab" data-theme-filter="free" aria-label="Free themes">
+              Free
+            </button>
+            <button class="demo-pdf-themes__tab" data-theme-filter="pro" aria-label="Pro themes">
+              Pro
+            </button>
+          </div>
         </div>
         
         <div class="demo-pdf-themes__gallery" id="pdf-themes-gallery">
@@ -100,7 +111,10 @@
         
         <div class="demo-pdf-themes__preview" id="pdf-theme-preview">
           <div class="demo-pdf-themes__preview-header">
-            <h3 class="demo-pdf-themes__preview-title" id="preview-theme-name">Select a theme</h3>
+            <div class="demo-pdf-themes__preview-title-group">
+              <h3 class="demo-pdf-themes__preview-title" id="preview-theme-name">Select a theme</h3>
+              <p class="demo-pdf-themes__preview-subtitle" id="preview-theme-description"></p>
+            </div>
             <button class="demo-pdf-themes__preview-close" id="close-pdf-preview" aria-label="Close preview" hidden>&times;</button>
           </div>
           <div class="demo-pdf-themes__preview-content" id="pdf-preview-content">
@@ -113,6 +127,7 @@
             <a href="#" class="demo-pdf-themes__download-btn button button-primary" id="download-pdf-btn" target="_blank">
               Download Sample PDF
             </a>
+            <span class="demo-pdf-themes__preview-badge" id="preview-theme-badge"></span>
           </div>
         </div>
       </div>
@@ -146,8 +161,15 @@
       <div class="comparison-card">
         <div class="comparison-card__icon">🎨</div>
         <div class="comparison-card__title">PDF Themes</div>
-        <div class="comparison-card__free">1 theme (Ink)</div>
-        <div class="comparison-card__pro">5+ premium themes</div>
+        <div class="comparison-card__free">3 high-quality themes<br><small>With ZipSite watermark</small></div>
+        <div class="comparison-card__pro">4+ premium themes<br><small>Full customization</small></div>
+      </div>
+      
+      <div class="comparison-card">
+        <div class="comparison-card__icon">🎭</div>
+        <div class="comparison-card__title">PDF Customization</div>
+        <div class="comparison-card__free">Locked themes</div>
+        <div class="comparison-card__pro">Fonts, colors, layouts<br><small>Agency logo placement</small></div>
       </div>
       
       <div class="comparison-card">
@@ -174,4 +196,55 @@
   </div>
 </section>
 
+<!-- PDF Customization Showcase Section (Pro Features) -->
+<section class="demo-customization" id="demo-customization">
+  <div class="demo-customization__container">
+    <div class="demo-customization__header">
+      <h2 class="demo-customization__title">Pro PDF Customization</h2>
+      <p class="demo-customization__subtitle">Full control over fonts, colors, layouts, and branding</p>
+    </div>
+    
+    <div class="demo-customization__grid">
+      <div class="demo-customization__feature">
+        <div class="demo-customization__feature-icon">🔤</div>
+        <h3 class="demo-customization__feature-title">Custom Fonts</h3>
+        <p class="demo-customization__feature-description">Choose from 20+ curated Google Fonts for name, bio, and stats. Perfect typography for every style.</p>
+      </div>
+      
+      <div class="demo-customization__feature">
+        <div class="demo-customization__feature-icon">🎨</div>
+        <h3 class="demo-customization__feature-title">Color Palettes</h3>
+        <p class="demo-customization__feature-description">Customize background, text, and accent colors. Use preset palettes or create your own.</p>
+      </div>
+      
+      <div class="demo-customization__feature">
+        <div class="demo-customization__feature-icon">📐</div>
+        <h3 class="demo-customization__feature-title">Layout Control</h3>
+        <p class="demo-customization__feature-description">Adjust header position, image grid, bio placement, and stats positioning for the perfect layout.</p>
+      </div>
+      
+      <div class="demo-customization__feature">
+        <div class="demo-customization__feature-icon">🏢</div>
+        <h3 class="demo-customization__feature-title">Agency Branding</h3>
+        <p class="demo-customization__feature-description">Upload your agency logo or use a URL. Place it anywhere with customizable size and position.</p>
+      </div>
+    </div>
+    
+    <div class="demo-customization__cta">
+      <a href="/apply" class="button button-primary">Upgrade to Pro</a>
+      <a href="/pricing" class="button button-secondary">View Pricing</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Pass theme data to JavaScript
+  window.DEMO_THEME_DATA = {
+    allThemes: <%- JSON.stringify(typeof allThemes !== 'undefined' ? allThemes : {}) %>,
+    freeThemes: <%- JSON.stringify(typeof freeThemes !== 'undefined' ? freeThemes : []) %>,
+    proThemes: <%- JSON.stringify(typeof proThemes !== 'undefined' ? proThemes : []) %>,
+    demoSlug: '<%= typeof demoSlug !== 'undefined' ? demoSlug : 'elara-k' %>',
+    baseUrl: '<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>'
+  };
+</script>
 <script src="/scripts/demo.js?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>" defer></script>

@@ -1,23 +1,19 @@
 (function() {
   'use strict';
 
-  // Theme definitions (matching src/lib/themes.js)
-  const themes = {
-    ink: { name: 'Ink', bg: '#F8F8F8', text: '#111111', accent: '#1C1C1C', isPro: false },
-    noir: { name: 'Noir', bg: '#1C1C1C', text: '#FFFFFF', accent: '#E5E5E5', isPro: true },
-    studio: { name: 'Studio', bg: '#F4F2F0', text: '#2D2D2D', accent: '#C9A55A', isPro: true },
-    paper: { name: 'Paper', bg: '#FAF9F7', text: '#3A3A3A', accent: '#8B7355', isPro: false },
-    slate: { name: 'Slate', bg: '#2C3E50', text: '#ECF0F1', accent: '#95A5A6', isPro: true },
-    archive: { name: 'Archive', bg: '#F5E6D3', text: '#3D2817', accent: '#8B6F47', isPro: true }
-  };
-
-  // Demo profile slug
-  const demoSlug = 'elara-k';
+  // Get theme data from server
+  const themeData = window.DEMO_THEME_DATA || {};
+  const allThemes = themeData.allThemes || {};
+  const freeThemes = themeData.freeThemes || [];
+  const proThemes = themeData.proThemes || [];
+  const demoSlug = themeData.demoSlug || 'elara-k';
+  const baseUrl = themeData.baseUrl || '';
 
   // Initialize when DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
     initPortfolioPreview();
-    initPdfThemeGallery();
+    initPdfThemeGallery(); // Initialize first so themeGalleryInstance is set
+    initThemeFilter(); // Initialize after theme gallery
     initCopyUrl();
     initScrollAnimations();
   });
@@ -92,19 +88,53 @@
     });
   }
 
+  // Theme Filter Tabs
+  let currentThemeFilter = 'all';
+  let themeGalleryInstance = null;
+
+  function initThemeFilter() {
+    const tabs = document.querySelectorAll('.demo-pdf-themes__tab');
+    const gallery = document.getElementById('pdf-themes-gallery');
+    
+    if (!tabs.length || !gallery) return;
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const filter = tab.dataset.themeFilter;
+        currentThemeFilter = filter;
+        
+        // Update active state
+        tabs.forEach(t => t.classList.remove('demo-pdf-themes__tab--active'));
+        tab.classList.add('demo-pdf-themes__tab--active');
+        
+        // Reset preview when switching filters
+        if (themeGalleryInstance && themeGalleryInstance.resetPdfPreview) {
+          themeGalleryInstance.resetPdfPreview();
+        }
+        
+        // Re-render themes with filter
+        if (themeGalleryInstance && themeGalleryInstance.renderThemeCards) {
+          themeGalleryInstance.renderThemeCards(filter);
+        }
+      });
+    });
+  }
+
   // PDF Theme Gallery
   function initPdfThemeGallery() {
     const gallery = document.getElementById('pdf-themes-gallery');
     const previewContent = document.getElementById('pdf-preview-content');
     const previewTitle = document.getElementById('preview-theme-name');
+    const previewDescription = document.getElementById('preview-theme-description');
     const previewActions = document.getElementById('pdf-preview-actions');
+    const previewBadge = document.getElementById('preview-theme-badge');
     const downloadBtn = document.getElementById('download-pdf-btn');
     const closeBtn = document.getElementById('close-pdf-preview');
 
     if (!gallery) return;
 
-    // Render theme cards
-    renderThemeCards();
+    // Render theme cards initially
+    renderThemeCards('all');
 
     // Theme card click handler
     gallery.addEventListener('click', (e) => {
@@ -112,7 +142,7 @@
       if (!card) return;
 
       const themeKey = card.dataset.theme;
-      const theme = themes[themeKey];
+      const theme = allThemes[themeKey];
       if (!theme) return;
 
       // Update selected state
@@ -132,41 +162,107 @@
       });
     }
 
-    function renderThemeCards() {
+    function renderThemeCards(filter = 'all') {
+      if (!gallery) return;
+      
+      // Clear gallery
       gallery.innerHTML = '';
       
-      Object.entries(themes).forEach(([key, theme], index) => {
-        const card = document.createElement('div');
-        card.className = 'demo-pdf-theme-card';
-        card.dataset.theme = key;
-        
-        card.innerHTML = `
-          <div class="demo-pdf-theme-card__preview">
-            <div class="demo-pdf-theme-card__preview-bg" style="background: ${theme.bg}; color: ${theme.text};">
+      // Reset preview when re-rendering (only if preview is shown)
+      if (previewActions && !previewActions.hidden) {
+        resetPdfPreview();
+      }
+      
+      // Get themes to render based on filter
+      let themesToRender = [];
+      if (filter === 'free') {
+        themesToRender = freeThemes;
+      } else if (filter === 'pro') {
+        themesToRender = proThemes;
+      } else {
+        themesToRender = Object.values(allThemes);
+      }
+
+      // Sort: Free themes first, then Pro themes
+      themesToRender.sort((a, b) => {
+        if (a.isPro === b.isPro) return 0;
+        return a.isPro ? 1 : -1;
+      });
+
+      // Render theme cards
+      themesToRender.forEach((theme, index) => {
+        if (!theme || !theme.key) return;
+        const card = createThemeCard(theme, index);
+        if (card) {
+          gallery.appendChild(card);
+        }
+      });
+    }
+
+    function createThemeCard(theme, index) {
+      const card = document.createElement('div');
+      card.className = `demo-pdf-theme-card ${theme.isPro ? 'demo-pdf-theme-card--pro' : 'demo-pdf-theme-card--free'}`;
+      card.dataset.theme = theme.key;
+      
+      // Create preview with theme colors
+      const previewBg = theme.colors.background;
+      const previewText = theme.colors.text;
+      const previewAccent = theme.colors.accent;
+      
+      // Get font family for preview (use name font)
+      const nameFont = theme.fonts.name || 'serif';
+      
+      card.innerHTML = `
+        <div class="demo-pdf-theme-card__preview" style="background: ${previewBg}; color: ${previewText};">
+          <div class="demo-pdf-theme-card__preview-content">
+            <div class="demo-pdf-theme-card__preview-name" style="font-family: '${nameFont}', ${nameFont.includes('Sans') || nameFont === 'Inter' ? 'sans-serif' : 'serif'}; color: ${previewText};">
               ELARA KEATS
             </div>
+            <div class="demo-pdf-theme-card__preview-stats" style="color: ${previewAccent};">
+              5'11" • 32-25-35
+            </div>
+            <div class="demo-pdf-theme-card__preview-colors">
+              <div class="demo-pdf-theme-card__swatch" style="background: ${previewBg}; border: 1px solid ${previewText}20;"></div>
+              <div class="demo-pdf-theme-card__swatch" style="background: ${previewText};"></div>
+              <div class="demo-pdf-theme-card__swatch" style="background: ${previewAccent};"></div>
+            </div>
           </div>
-          <div class="demo-pdf-theme-card__name">${theme.name}</div>
-          <div class="demo-pdf-theme-card__badge ${theme.isPro ? 'demo-pdf-theme-card__badge--pro' : 'demo-pdf-theme-card__badge--free'}">
-            ${theme.isPro ? 'Pro' : 'Free'}
+          ${theme.isPro ? '<div class="demo-pdf-theme-card__pro-badge">Pro</div>' : ''}
+        </div>
+        <div class="demo-pdf-theme-card__info">
+          <div class="demo-pdf-theme-card__name">
+            ${theme.name}
+            <span class="demo-pdf-theme-card__badge ${theme.isPro ? 'demo-pdf-theme-card__badge--pro' : 'demo-pdf-theme-card__badge--free'}">
+              ${theme.isPro ? 'Pro' : 'Free'}
+            </span>
           </div>
-          ${theme.isPro ? '<div class="demo-pdf-theme-card__lock">🔒</div>' : ''}
-        `;
+          <div class="demo-pdf-theme-card__personality">${theme.personality || theme.description || ''}</div>
+          ${theme.isPro ? '<div class="demo-pdf-theme-card__features">Full customization</div>' : '<div class="demo-pdf-theme-card__features">ZipSite watermark</div>'}
+        </div>
+      `;
 
-        // Stagger animation
-        setTimeout(() => {
-          card.classList.add('is-visible');
-        }, index * 100);
+      // Stagger animation
+      setTimeout(() => {
+        card.classList.add('is-visible');
+      }, index * 100);
 
-        gallery.appendChild(card);
-      });
+      return card;
     }
 
     function updatePdfPreview(themeKey, theme) {
       if (!previewContent || !previewTitle) return;
 
-      // Update title
+      // Update title and description
       previewTitle.textContent = `${theme.name} Theme`;
+      if (previewDescription) {
+        previewDescription.textContent = theme.description || theme.personality || '';
+      }
+
+      // Update badge
+      if (previewBadge) {
+        previewBadge.textContent = theme.isPro ? 'Pro Theme' : 'Free Theme';
+        previewBadge.className = `demo-pdf-themes__preview-badge ${theme.isPro ? 'demo-pdf-themes__preview-badge--pro' : 'demo-pdf-themes__preview-badge--free'}`;
+      }
 
       // Show preview actions
       if (previewActions) {
@@ -178,7 +274,7 @@
       }
 
       // Create iframe preview with error handling
-      const previewUrl = `/pdf/view/${demoSlug}?theme=${themeKey}`;
+      const previewUrl = `${baseUrl}/pdf/view/${demoSlug}?theme=${themeKey}&_=${Date.now()}`;
       
       previewContent.innerHTML = `
         <div class="demo-pdf-themes__preview-loading" style="padding: 2rem; text-align: center; color: #666;">
@@ -227,7 +323,7 @@
 
       // Update download button
       if (downloadBtn) {
-        downloadBtn.href = `/pdf/${demoSlug}?theme=${themeKey}`;
+        downloadBtn.href = `${baseUrl}/pdf/${demoSlug}?theme=${themeKey}&download=1`;
         downloadBtn.textContent = `Download ${theme.name} PDF`;
       }
     }
@@ -236,6 +332,9 @@
       if (!previewContent || !previewTitle) return;
 
       previewTitle.textContent = 'Select a theme';
+      if (previewDescription) {
+        previewDescription.textContent = '';
+      }
       previewContent.innerHTML = `
         <div class="demo-pdf-themes__preview-placeholder">
           <div class="demo-pdf-themes__preview-placeholder-icon">📄</div>
@@ -251,11 +350,22 @@
         closeBtn.hidden = true;
       }
 
+      if (previewBadge) {
+        previewBadge.textContent = '';
+      }
+
       // Remove selected state
       document.querySelectorAll('.demo-pdf-theme-card').forEach(c => {
         c.classList.remove('is-selected');
       });
     }
+
+    // Store instance for filter tabs
+    themeGalleryInstance = {
+      renderThemeCards: renderThemeCards,
+      updatePdfPreview: updatePdfPreview,
+      resetPdfPreview: resetPdfPreview
+    };
   }
 
   // Copy Portfolio URL
@@ -325,7 +435,6 @@
       observer.observe(card);
     });
 
-    // Theme cards are already handled in renderThemeCards with staggered animation
+    // Theme cards are already handled in createThemeCard with staggered animation
   }
 })();
-

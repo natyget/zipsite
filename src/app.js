@@ -228,7 +228,7 @@ app.get('/', async (req, res, next) => {
 });
 
 // Render static pages using EJS with universal header
-['features', 'pricing', 'demo', 'press', 'legal'].forEach((page) => {
+['features', 'pricing', 'press', 'legal'].forEach((page) => {
   app.get(`/${page}`, (req, res) => {
     res.locals.currentPage = page;
     res.render(`public/${page}`, {
@@ -237,6 +237,43 @@ app.get('/', async (req, res, next) => {
       currentPage: page
     });
   });
+});
+
+// Demo page with PDF themes data
+app.get('/demo', async (req, res) => {
+  try {
+    const { getAllThemes, getFreeThemes, getProThemes } = require('./lib/themes');
+    const allThemes = getAllThemes();
+    const freeThemes = getFreeThemes();
+    const proThemes = getProThemes();
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    
+    res.locals.currentPage = 'demo';
+    res.render('public/demo', {
+      title: 'Demo — ZipSite',
+      layout: 'layout',
+      currentPage: 'demo',
+      allThemes,
+      freeThemes,
+      proThemes,
+      baseUrl,
+      demoSlug: 'elara-k'
+    });
+  } catch (error) {
+    console.error('[Demo Route] Error:', error);
+    // Fallback to basic demo page if theme loading fails
+    res.locals.currentPage = 'demo';
+    res.render('public/demo', {
+      title: 'Demo — ZipSite',
+      layout: 'layout',
+      currentPage: 'demo',
+      allThemes: {},
+      freeThemes: [],
+      proThemes: [],
+      baseUrl: `${req.protocol}://${req.get('host')}`,
+      demoSlug: 'elara-k'
+    });
+  }
 });
 
 app.use('/', authRoutes);
