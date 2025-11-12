@@ -160,7 +160,7 @@ async function renderCompCard(slug, theme = null) {
       
       await page.emulateMediaType('print');
       
-      // Generate PDF with timeout
+      // Generate PDF with timeout and optimization settings
       let buffer;
       try {
         buffer = await page.pdf({
@@ -168,8 +168,21 @@ async function renderCompCard(slug, theme = null) {
           height: '8.5in',
           margin: { top: '0.2in', bottom: '0.2in', left: '0.2in', right: '0.2in' },
           printBackground: true,
-          timeout: 30000 // 30 second timeout
+          timeout: 30000, // 30 second timeout
+          // Optimize for smaller file size
+          preferCSSPageSize: false,
+          // Disable tagged PDF to reduce size (helps with file size)
+          tagged: false,
+          // Note: Puppeteer automatically compresses images in PDFs
         });
+        
+        console.log('[renderCompCard] PDF generated, size:', buffer.length, 'bytes (', (buffer.length / 1024 / 1024).toFixed(2), 'MB)');
+        
+        // Check if PDF is too large (Netlify Functions have ~6MB response limit)
+        const maxSize = 5 * 1024 * 1024; // 5MB safety limit
+        if (buffer.length > maxSize) {
+          console.warn('[renderCompCard] PDF is large (', (buffer.length / 1024 / 1024).toFixed(2), 'MB). Consider optimizing images.');
+        }
       } catch (pdfError) {
         console.error('[renderCompCard] Error generating PDF:', {
           message: pdfError.message,

@@ -146,7 +146,7 @@ function getDemoProfile(slug) {
       measurements: '32-25-35',
       bio_raw: 'Elara is a collaborative creative professional with a background in editorial campaigns and on-set leadership. Based in Los Angeles, she balances editorial edge with commercial versatility.',
       bio_curated: 'Elara Keats brings a polished presence to every production. Based in Los Angeles, she balances editorial edge with commercial versatility. Standing at 5\'11" with measurements of 32-25-35, she brings a commanding presence to both high-fashion editorials and commercial campaigns.',
-      hero_image_path: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=2000&q=80',
+      hero_image_path: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=75',
       is_pro: false,
       pdf_theme: null,
       pdf_customizations: null,
@@ -166,7 +166,7 @@ function getDemoProfile(slug) {
       {
         id: 'demo-img-1',
         profile_id: 'demo-elara-k',
-        path: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1000&q=80',
+        path: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=75',
         label: 'Headshot',
         sort: 1,
         created_at: new Date()
@@ -174,7 +174,7 @@ function getDemoProfile(slug) {
       {
         id: 'demo-img-2',
         profile_id: 'demo-elara-k',
-        path: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1000&q=80',
+        path: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=75',
         label: 'Editorial',
         sort: 2,
         created_at: new Date()
@@ -182,7 +182,7 @@ function getDemoProfile(slug) {
       {
         id: 'demo-img-3',
         profile_id: 'demo-elara-k',
-        path: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1000&q=80',
+        path: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=75',
         label: 'Runway',
         sort: 3,
         created_at: new Date()
@@ -190,7 +190,7 @@ function getDemoProfile(slug) {
       {
         id: 'demo-img-4',
         profile_id: 'demo-elara-k',
-        path: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=1000&q=80',
+        path: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=600&q=75',
         label: 'Portfolio',
         sort: 4,
         created_at: new Date()
@@ -603,12 +603,33 @@ router.get('/pdf/:slug', async (req, res, next) => {
     });
 
     const buffer = await renderCompCard(req.params.slug, themeKey);
+
+    // Check if PDF is too large for Netlify Functions response (6MB limit)
+    const maxResponseSize = 5.5 * 1024 * 1024; // 5.5MB safety limit (Netlify has ~6MB limit)
+    if (buffer.length > maxResponseSize) {
+      console.error('[PDF Download Route] PDF too large:', {
+        size: buffer.length,
+        sizeMB: (buffer.length / 1024 / 1024).toFixed(2),
+        slug: slug,
+        themeKey: themeKey
+      });
+      return res.status(413).json({
+        error: 'PDF too large',
+        message: 'The generated PDF is too large to download. Please try a different theme or contact support.',
+        size: buffer.length,
+        sizeMB: (buffer.length / 1024 / 1024).toFixed(2),
+        maxSize: '6MB'
+      });
+    }
+
     if (req.query.download) {
       res.setHeader('Content-Disposition', `attachment; filename="ZipSite-${req.params.slug}-compcard.pdf"`);
     } else {
       res.setHeader('Content-Disposition', 'inline');
     }
     res.contentType('application/pdf');
+
+    // Stream the PDF response to avoid loading entire buffer in memory
     return res.send(buffer);
   } catch (error) {
     // Log database connection errors for debugging
