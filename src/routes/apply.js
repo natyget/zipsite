@@ -62,15 +62,64 @@ router.get('/apply', (req, res) => {
   });
 });
 
-router.post('/apply', upload.array('photos', 12), async (req, res, next) => {
-  const isLoggedIn = Boolean(req.currentUser);
-  let user = null;
-  let userId = null;
+// Multer error handler middleware
+const handleMulterError = (err, req, res, next) => {
+  if (err) {
+    console.error('[Apply] Multer error:', {
+      message: err.message,
+      code: err.code,
+      field: err.field,
+      name: err.name
+    });
+    // If it's a multer error, continue anyway (we don't require photos)
+    // Only fail if it's a critical error
+    if (err.code === 'LIMIT_FILE_SIZE' || err.code === 'LIMIT_FILE_COUNT') {
+      // These are warnings, not critical errors
+      console.warn('[Apply] File upload warning:', err.message);
+    } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      // Unexpected file field - ignore it
+      console.warn('[Apply] Unexpected file field:', err.field);
+    } else {
+      // Other multer errors - log and continue
+      console.error('[Apply] Multer error (non-critical):', err.message);
+    }
+  }
+  next();
+};
+
+router.post('/apply', upload.array('photos', 12), handleMulterError, async (req, res, next) => {
+  try {
+    console.log('[Apply] POST /apply route hit');
+    console.log('[Apply] Request method:', req.method);
+    console.log('[Apply] Request URL:', req.url);
+    console.log('[Apply] Request body keys:', Object.keys(req.body || {}));
+    console.log('[Apply] Request body values:', {
+      email: req.body?.email ? `${req.body.email.substring(0, 10)}...` : 'missing',
+      first_name: req.body?.first_name || 'missing',
+      last_name: req.body?.last_name || 'missing',
+      has_password: !!req.body?.password,
+      has_password_confirm: !!req.body?.password_confirm,
+      city: req.body?.city || 'missing',
+      height_cm: req.body?.height_cm || 'missing',
+      measurements: req.body?.measurements || 'missing',
+      bio: req.body?.bio ? `${req.body.bio.substring(0, 20)}...` : 'missing'
+    });
+    console.log('[Apply] Is logged in:', Boolean(req.currentUser));
+    console.log('[Apply] Files uploaded:', req.files?.length || 0);
+  
+    const isLoggedIn = Boolean(req.currentUser);
+    let user = null;
+    let userId = null;
+    let signupParsed = null; // Store signup validation result for use in success message
+    let normalizedEmail = null; // Store normalized email for use in success message
 
   // If not logged in, validate account creation fields
   if (!isLoggedIn) {
+    console.log('[Apply] User is not logged in, validating signup...');
+    
     // Check password confirmation
     if (req.body.password !== req.body.password_confirm) {
+      console.log('[Apply] Password confirmation mismatch');
       return res.status(422).render('apply/index', {
         title: 'Start your ZipSite profile',
         values: req.body,
@@ -80,7 +129,8 @@ router.post('/apply', upload.array('photos', 12), async (req, res, next) => {
       });
     }
 
-    const signupParsed = signupSchema.safeParse({
+    console.log('[Apply] Validating signup schema...');
+    signupParsed = signupSchema.safeParse({
       first_name: req.body.first_name,
       last_name: req.body.last_name,
       email: req.body.email,
@@ -90,8 +140,14 @@ router.post('/apply', upload.array('photos', 12), async (req, res, next) => {
 
     if (!signupParsed.success) {
       const signupErrors = signupParsed.error.flatten().fieldErrors;
+      console.log('[Apply] Signup validation failed:', signupErrors);
+      
       const applyParsed = applyProfileSchema.safeParse(req.body);
       const applyErrors = applyParsed.success ? {} : applyParsed.error.flatten().fieldErrors;
+      
+      if (!applyParsed.success) {
+        console.log('[Apply] Profile validation also failed:', applyParsed.error.flatten().fieldErrors);
+      }
       
       return res.status(422).render('apply/index', {
         title: 'Start your ZipSite profile',
@@ -102,22 +158,34 @@ router.post('/apply', upload.array('photos', 12), async (req, res, next) => {
       });
     }
 
+    console.log('[Apply] Signup validation passed:', {
+      email: signupParsed.data.email,
+      first_name: signupParsed.data.first_name,
+      last_name: signupParsed.data.last_name,
+      role: signupParsed.data.role
+    });
+
     // Validate profile fields
+    console.log('[Apply] Validating profile schema...');
     const applyParsed = applyProfileSchema.safeParse(req.body);
     if (!applyParsed.success) {
+      const profileErrors = applyParsed.error.flatten().fieldErrors;
+      console.log('[Apply] Profile validation failed:', profileErrors);
       return res.status(422).render('apply/index', {
         title: 'Start your ZipSite profile',
         values: req.body,
-        errors: applyParsed.error.flatten().fieldErrors,
+        errors: profileErrors,
         layout: 'layout',
         isLoggedIn: false
       });
     }
 
+    console.log('[Apply] Profile validation passed');
+
     // Create account
     try {
       // Normalize email (lowercase, trim) for consistent storage and lookup
-      const normalizedEmail = signupParsed.data.email.toLowerCase().trim();
+      normalizedEmail = signupParsed.data.email.toLowerCase().trim();
       
       console.log('[Signup/Apply] Creating account for email:', normalizedEmail);
       
@@ -388,10 +456,21 @@ router.post('/apply', upload.array('photos', 12), async (req, res, next) => {
     req.session.profileId = profileId;
 
     // Set welcome message based on whether user was just created
+    // Use a more prominent success message for new signups
     if (!isLoggedIn) {
-      addMessage(req, 'success', 'Welcome to ZipSite! Your profile is ready. Upload media to finish your comp card.');
+      // New user signup - show prominent welcome message with user's name
+      const welcomeMessage = `🎉 Welcome to ZipSite, ${first_name}! Your account has been created and your profile is ready. Upload photos to complete your comp card.`;
+      addMessage(req, 'success', welcomeMessage);
+      console.log('[Apply] New user signup completed:', {
+        userId: userId,
+        email: normalizedEmail,
+        profileId: profileId,
+        name: `${first_name} ${last_name}`,
+        message: welcomeMessage
+      });
     } else {
-      addMessage(req, 'success', 'Application saved successfully! Upload media to finish your comp card.');
+      // Existing user updating profile
+      addMessage(req, 'success', '✅ Application saved successfully! Upload media to finish your comp card.');
     }
     
     // Ensure session is saved with all data (userId, role, profileId) before redirect
@@ -401,14 +480,23 @@ router.post('/apply', upload.array('photos', 12), async (req, res, next) => {
           console.error('[Apply] Session save error:', err);
           reject(err);
         } else {
+          console.log('[Apply] Session saved successfully before redirect');
           resolve();
         }
       });
     });
     
+    // Use 303 See Other for POST redirect (best practice)
+    // This ensures the message is displayed on the dashboard
+    console.log('[Apply] Redirecting to dashboard with success message');
     return res.redirect(303, '/dashboard/talent');
   } catch (error) {
-    console.error('[Apply] Error in POST /apply:', error);
+    console.error('[Apply] Error in POST /apply:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
     return next(error);
   }
 });
