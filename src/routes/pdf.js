@@ -24,6 +24,16 @@ function isDatabaseError(error) {
     return true;
   }
 
+  // Check for PostgreSQL error codes
+  // 42P01 = relation does not exist (missing tables - need to run migrations)
+  // 42P07 = relation already exists
+  // 3D000 = database does not exist
+  // 28P01 = authentication failed
+  const pgErrorCodes = ['42P01', '42P07', '3D000', '28P01'];
+  if (pgErrorCodes.includes(error.code)) {
+    return true;
+  }
+
   // Check for database-related error messages
   if (error.message) {
     const dbErrorKeywords = [
@@ -36,11 +46,35 @@ function isDatabaseError(error) {
       'ECONNREFUSED',
       'ENOTFOUND',
       'ETIMEDOUT',
-      'ECONNRESET'
+      'ECONNRESET',
+      'relation "',
+      'does not exist',
+      'table',
+      'relation does not exist'
     ];
 
     const errorMessage = error.message.toLowerCase();
     return dbErrorKeywords.some(keyword => errorMessage.includes(keyword.toLowerCase()));
+  }
+
+  return false;
+}
+
+// Helper function to detect missing tables error (needs migrations)
+function isMissingTablesError(error) {
+  if (!error) return false;
+
+  // PostgreSQL error code for "relation does not exist"
+  if (error.code === '42P01') {
+    return true;
+  }
+
+  // Check error message for "relation" or "does not exist"
+  if (error.message && (
+    error.message.includes('relation') && error.message.includes('does not exist') ||
+    error.message.includes('table') && error.message.includes('does not exist')
+  )) {
+    return true;
   }
 
   return false;
@@ -213,6 +247,24 @@ router.get('/pdf/view/:slug', async (req, res, next) => {
       stack: error.stack
     });
 
+    // Check if it's a missing tables error (needs migrations)
+    if (isMissingTablesError(error)) {
+      console.error('[PDF View Route] Missing tables error detected - migrations need to be run');
+      return res.status(500).render('errors/500', {
+        title: 'Database Setup Required',
+        layout: 'layout',
+        error: {
+          message: 'Database tables do not exist. Please run migrations to set up the database.',
+          code: error.code,
+          name: error.name,
+          details: process.env.NODE_ENV !== 'production' ? error.message : undefined,
+          migrationRequired: true
+        },
+        isDevelopment: process.env.NODE_ENV !== 'production',
+        isDatabaseError: true
+      });
+    }
+
     // Check if it's a database connection error
     if (isDatabaseError(error)) {
       console.error('[PDF View Route] Database connection error detected');
@@ -294,6 +346,19 @@ router.get('/pdf/:slug', async (req, res, next) => {
       name: error.name,
       stack: error.stack
     });
+
+    // Check if it's a missing tables error (needs migrations)
+    if (isMissingTablesError(error)) {
+      console.error('[PDF Download Route] Missing tables error detected - migrations need to be run');
+      return res.status(500).json({
+        error: 'Database setup required',
+        message: 'Database tables do not exist. Please run migrations to set up the database.',
+        code: error.code,
+        migrationRequired: true,
+        details: process.env.NODE_ENV !== 'production' ? error.message : undefined,
+        instructions: 'Call POST /api/migrate to run database migrations.'
+      });
+    }
 
     // Check if it's a database connection error
     if (isDatabaseError(error)) {

@@ -1,6 +1,8 @@
 [build]
   # Netlify automatically runs 'npm install' before the build command
-  # We just need to ensure the build completes successfully
+  # Note: Migrations should be run AFTER deployment via /api/migrate endpoint
+  # or manually using: netlify functions:invoke migrate
+  # Running migrations during build may fail if database isn't accessible during build time
   command = "npm run build"
   publish = "public"
 

@@ -1,10 +1,55 @@
 <section class="panel">
-  <h1><%= typeof isDatabaseError !== 'undefined' && isDatabaseError ? 'Database Connection Error' : 'Unexpected error' %></h1>
-  <p><%= typeof isDatabaseError !== 'undefined' && isDatabaseError ? 
-    'Unable to connect to the database. Please check your database configuration in Netlify environment variables.' : 
-    'Something went wrong. Please try again later.' %></p>
+  <h1>
+    <% if (typeof error !== 'undefined' && error.migrationRequired) { %>
+      Database Setup Required
+    <% } else if (typeof isDatabaseError !== 'undefined' && isDatabaseError) { %>
+      Database Connection Error
+    <% } else { %>
+      Unexpected error
+    <% } %>
+  </h1>
+  <p>
+    <% if (typeof error !== 'undefined' && error.migrationRequired) { %>
+      Database tables do not exist. Please run migrations to set up the database.
+    <% } else if (typeof isDatabaseError !== 'undefined' && isDatabaseError) { %>
+      Unable to connect to the database. Please check your database configuration in Netlify environment variables.
+    <% } else { %>
+      Something went wrong. Please try again later.
+    <% } %>
+  </p>
   
-  <% if (typeof isDatabaseError !== 'undefined' && isDatabaseError) { %>
+  <% if (typeof error !== 'undefined' && error.migrationRequired) { %>
+    <div style="margin-top: 2rem; padding: 1.5rem; background: #d1ecf1; border: 1px solid #0c5460; border-radius: 4px;">
+      <h3 style="margin-top: 0; color: #0c5460;">Run Database Migrations</h3>
+      <p style="margin-bottom: 1rem;">The database is connected, but tables need to be created. Run migrations to set up the database:</p>
+      <ol style="margin-left: 1.5rem; margin-bottom: 1rem;">
+        <li><strong>Option 1: Use the Migration Endpoint (Recommended)</strong>
+          <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+            <li>Call <code>POST /api/migrate</code> with your migration secret (if set)</li>
+            <li>Using curl: <code>curl -X POST "https://yoursite.netlify.app/api/migrate?secret=YOUR_SECRET"</code></li>
+            <li>Or use the Netlify Functions dashboard to invoke the migration</li>
+          </ul>
+        </li>
+        <li><strong>Option 2: Run Migrations Locally</strong>
+          <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+            <li>Set <code>DATABASE_URL</code> and <code>DB_CLIENT=pg</code> in your environment</li>
+            <li>Run <code>npm run migrate</code> to create all tables</li>
+            <li>This will run migrations against your Neon database</li>
+          </ul>
+        </li>
+        <li><strong>Option 3: Set Up Migration Secret (Optional)</strong>
+          <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+            <li>In Netlify: Site settings → Environment variables</li>
+            <li>Add <code>MIGRATION_SECRET</code> = a random secret string</li>
+            <li>Use this secret when calling <code>POST /api/migrate?secret=YOUR_SECRET</code></li>
+          </ul>
+        </li>
+      </ol>
+      <p style="margin-bottom: 0;">
+        <strong>Check migration status:</strong> Visit <code>GET /api/migrate/status</code> to see current migration status.
+      </p>
+    </div>
+  <% } else if (typeof isDatabaseError !== 'undefined' && isDatabaseError) { %>
     <div style="margin-top: 2rem; padding: 1.5rem; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
       <h3 style="margin-top: 0; color: #856404;">Database Configuration Required</h3>
       <p style="margin-bottom: 1rem;">To fix this error, please:</p>

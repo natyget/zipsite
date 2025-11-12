@@ -8,10 +8,13 @@
     "start": "node src/app.js",
     "dev": "nodemon server.js",
     "migrate": "knex migrate:latest",
+    "migrate:status": "knex migrate:status",
+    "migrate:rollback": "knex migrate:rollback",
     "seed": "knex seed:run",
     "test": "jest",
     "test:db": "node scripts/test-neon-connection.js",
-    "build": "echo 'Build complete'"
+    "build": "echo 'Build complete'",
+    "build:migrate": "npm run migrate && npm run build"
   },
   "dependencies": {
     "bcrypt": "5.1.1",

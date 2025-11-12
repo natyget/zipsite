@@ -276,6 +276,91 @@ app.get('/demo', async (req, res) => {
   }
 });
 
+// Migration endpoint (protected by secret token)
+// Call this once after deployment to set up database tables
+app.post('/api/migrate', async (req, res) => {
+  try {
+    // Check for migration secret (required for security)
+    const migrationSecret = process.env.MIGRATION_SECRET;
+    const providedSecret = req.query.secret || req.headers['x-migration-secret'];
+    
+    if (migrationSecret && providedSecret !== migrationSecret) {
+      return res.status(401).json({ 
+        error: 'Unauthorized',
+        message: 'Invalid migration secret. Set MIGRATION_SECRET in environment variables and provide it as ?secret=... or X-Migration-Secret header.'
+      });
+    }
+
+    // If no secret is set, warn but allow (for initial setup)
+    if (!migrationSecret) {
+      console.warn('[Migration] WARNING: MIGRATION_SECRET not set. Migration endpoint is unprotected!');
+    }
+
+    console.log('[Migration] Starting database migrations...');
+    
+    // Run migrations
+    const [batchNo, log] = await knex.migrate.latest();
+    
+    console.log('[Migration] Migrations completed:', {
+      batchNo,
+      migrationsRun: log.length,
+      log: log
+    });
+
+    // Get migration status
+    const currentVersion = await knex.migrate.currentVersion();
+    const status = await knex.migrate.status();
+    
+    return res.json({
+      success: true,
+      message: 'Migrations completed successfully',
+      batchNo,
+      migrationsRun: log.length,
+      currentVersion,
+      status: status === 0 ? 'up to date' : `${status} migrations pending`,
+      log: log
+    });
+  } catch (error) {
+    console.error('[Migration] Error running migrations:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
+
+    return res.status(500).json({
+      success: false,
+      error: 'Migration failed',
+      message: error.message,
+      code: error.code,
+      details: process.env.NODE_ENV !== 'production' ? error.stack : undefined
+    });
+  }
+});
+
+// Migration status endpoint (read-only, no secret required)
+app.get('/api/migrate/status', async (req, res) => {
+  try {
+    const currentVersion = await knex.migrate.currentVersion();
+    const status = await knex.migrate.status();
+    const list = await knex.migrate.list();
+    
+    return res.json({
+      currentVersion,
+      status: status === 0 ? 'up to date' : `${Math.abs(status)} migrations ${status > 0 ? 'pending' : 'ahead'}`,
+      pending: status,
+      list: list
+    });
+  } catch (error) {
+    console.error('[Migration Status] Error:', error.message);
+    return res.status(500).json({
+      error: 'Failed to get migration status',
+      message: error.message,
+      code: error.code
+    });
+  }
+});
+
 app.use('/', authRoutes);
 app.use('/', applyRoutes);
 app.use('/', dashboardRoutes);
@@ -344,16 +429,28 @@ app.use((err, req, res, next) => {
     return next(err);
   }
   
+  // Check if it's a missing tables error (needs migrations)
+  const isMissingTablesError = err.code === '42P01' || 
+                                (err.message && (
+                                  err.message.includes('relation') && err.message.includes('does not exist') ||
+                                  err.message.includes('table') && err.message.includes('does not exist')
+                                ));
+  
   // Check if it's a database connection error
   const isDatabaseError = err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' || 
                           err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET' ||
+                          err.code === '42P01' || // PostgreSQL: relation does not exist
+                          err.code === '42P07' || // PostgreSQL: relation already exists
+                          err.code === '3D000' || // PostgreSQL: database does not exist
+                          err.code === '28P01' || // PostgreSQL: authentication failed
                           (err.message && (
                             err.message.includes('DATABASE_URL') ||
                             err.message.includes('database') ||
                             err.message.includes('connect') ||
                             err.message.includes('connection') ||
                             err.message.includes('Cannot find module \'pg\'') ||
-                            err.message.includes('Knex: run')
+                            err.message.includes('Knex: run') ||
+                            (err.message.includes('relation') && err.message.includes('does not exist'))
                           ));
   
   // In production, show generic error; in development, show more details
@@ -365,19 +462,39 @@ app.use((err, req, res, next) => {
     message: err.message,
     code: err.code,
     name: err.name,
-    stack: isDevelopment ? err.stack : undefined
+    stack: isDevelopment ? err.stack : undefined,
+    migrationRequired: isMissingTablesError
   } : null;
   
   if (req.accepts('html')) {
     // Tell 500 page to use the old 'layout' file
+    let title = 'Server error';
+    if (isMissingTablesError) {
+      title = 'Database Setup Required';
+    } else if (isDatabaseError) {
+      title = 'Database Connection Error';
+    }
+    
     return res.status(500).render('errors/500', {
-      title: isDatabaseError ? 'Database Connection Error' : 'Server error',
+      title: title,
       layout: 'layout', // Use simple layout for error
       error: errorDetails,
       isDevelopment: showErrorDetails,
       isDatabaseError: isDatabaseError
     });
   }
+  
+  // JSON error response
+  if (isMissingTablesError) {
+    return res.status(500).json({ 
+      error: 'Database setup required',
+      message: 'Database tables do not exist. Please run migrations to set up the database.',
+      code: err.code,
+      migrationRequired: true,
+      instructions: 'Call POST /api/migrate to run database migrations.'
+    });
+  }
+  
   return res.status(500).json({ 
     error: isDatabaseError ? 'Database connection error' : 'Server error',
     message: showErrorDetails ? err.message : undefined,

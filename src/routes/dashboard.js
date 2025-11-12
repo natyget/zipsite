@@ -73,15 +73,42 @@ router.get('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =>
       stack: error.stack
     });
     
+    // Check if it's a missing tables error (needs migrations)
+    const isMissingTablesError = error.code === '42P01' || 
+                                  (error.message && (
+                                    error.message.includes('relation') && error.message.includes('does not exist') ||
+                                    error.message.includes('table') && error.message.includes('does not exist')
+                                  ));
+    
+    if (isMissingTablesError) {
+      console.error('[Dashboard/Talent] Missing tables error detected - migrations need to be run');
+      return res.status(500).render('errors/500', {
+        title: 'Database Setup Required',
+        layout: 'layout',
+        error: {
+          message: 'Database tables do not exist. Please run migrations to set up the database.',
+          code: error.code,
+          name: error.name,
+          details: process.env.NODE_ENV !== 'production' ? error.message : undefined,
+          migrationRequired: true
+        },
+        isDevelopment: process.env.NODE_ENV !== 'production',
+        isDatabaseError: true
+      });
+    }
+    
     // Check if it's a database connection error
     if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT' || 
-        error.code === 'ECONNRESET' || error.message && (
+        error.code === 'ECONNRESET' || error.code === '42P01' || error.code === '42P07' || 
+        error.code === '3D000' || error.code === '28P01' ||
+        error.message && (
           error.message.includes('connect') || 
           error.message.includes('connection') || 
           error.message.includes('DATABASE_URL') || 
           error.message.includes('database') ||
           error.message.includes('Cannot find module \'pg\'') ||
-          error.message.includes('Knex: run')
+          error.message.includes('Knex: run') ||
+          (error.message.includes('relation') && error.message.includes('does not exist'))
         )) {
       console.error('[Dashboard/Talent] Database connection error detected');
       // Return a more helpful error for database connection issues
