@@ -501,11 +501,63 @@ router.get('/pdf/view/:slug', async (req, res, next) => {
 });
 
 router.get('/pdf/:slug', async (req, res, next) => {
+  const slug = req.params.slug;
+  let data = null;
+  let isDemo = false;
+
   try {
-    const data = await loadProfile(req.params.slug);
+    console.log('[PDF Download] Loading profile for slug:', slug, 'query:', req.query);
+
+    // For demo slug, ALWAYS use demo data first (works even if database is empty)
+    if (slug === 'elara-k') {
+      const demoData = getDemoProfile(slug);
+      if (demoData) {
+        console.log('[PDF Download] Using demo profile data for demo slug:', slug);
+        data = demoData;
+        isDemo = true;
+      }
+    }
+
+    // Try to load from database (only if not already using demo data)
     if (!data) {
+      try {
+        data = await loadProfile(slug);
+        if (data) {
+          console.log('[PDF Download] Profile loaded from database:', slug);
+        }
+      } catch (dbError) {
+        // If database error, check if it's a connection error and we have demo data
+        if (isDatabaseError(dbError) && slug === 'elara-k') {
+          console.log('[PDF Download] Database error, using demo fallback for:', slug);
+          const demoData = getDemoProfile(slug);
+          if (demoData) {
+            data = demoData;
+            isDemo = true;
+          }
+        } else {
+          // Re-throw database errors that aren't handled
+          throw dbError;
+        }
+      }
+    }
+
+    // If profile not found in database and not using demo, try demo fallback
+    if (!data && slug === 'elara-k') {
+      console.log('[PDF Download] Profile not found in database, checking demo fallback');
+      const demoData = getDemoProfile(slug);
+      if (demoData) {
+        data = demoData;
+        isDemo = true;
+        console.log('[PDF Download] Using demo profile fallback for slug:', slug);
+      }
+    }
+
+    // If still no data, return 404
+    if (!data) {
+      console.log('[PDF Download] Profile not found for slug:', slug);
       return res.status(404).json({ error: 'Profile not found' });
     }
+
     const { profile } = data;
 
     // Get theme from query parameter
@@ -524,8 +576,8 @@ router.get('/pdf/:slug', async (req, res, next) => {
       theme = getTheme(themeKey);
     }
 
-    // Save theme preference if user is logged in and owns this profile
-    if (req.session.userId && profile.user_id === req.session.userId && themeKey !== profile.pdf_theme) {
+    // Save theme preference if user is logged in and owns this profile (skip for demo)
+    if (!isDemo && req.session.userId && profile.user_id === req.session.userId && themeKey !== profile.pdf_theme) {
       try {
         await knex('profiles')
           .where({ id: profile.id })
