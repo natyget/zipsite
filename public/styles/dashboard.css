@@ -752,6 +752,79 @@
   border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
+/* Analytics Grid (Main Content) */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 1200px) {
+  .analytics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Analytics Card */
+.analytics-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  transition: var(--transition-fast);
+}
+
+.analytics-card:hover {
+  border-color: var(--accent-gold);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.analytics-card__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.analytics-card__header svg {
+  color: var(--accent-gold);
+  margin-bottom: 12px;
+}
+
+.analytics-card__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+.analytics-card__value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.analytics-card__subtext {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+
+/* Analytics Stat (Sidebar) */
 .analytics-stat {
   display: flex;
   flex-direction: column;
@@ -857,15 +930,14 @@
 
 /* Section Navigation */
 .dash-nav {
-  background: var(--bg-surface);
+  background: rgba(255, 255, 255, 0.95);
   border-bottom: 1px solid var(--border-color);
   position: sticky;
-  top: 0;
+  top: 80px; /* Below header */
   z-index: 90;
   backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.95);
   margin-bottom: 32px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .dash-nav__inner {
@@ -988,7 +1060,16 @@ html {
 /* Section Scroll Offset */
 section[id],
 div[data-section] {
-  scroll-margin-top: 120px;
+  scroll-margin-top: 160px;
+}
+
+/* Ensure sections are visible */
+[id="overview"],
+[id="profile-details"],
+[id="portfolio-imagery"],
+[id="analytics"] {
+  min-height: 200px;
+  scroll-margin-top: 160px;
 }
 
 /* Improve panel header spacing */

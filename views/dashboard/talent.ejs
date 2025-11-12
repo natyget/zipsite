@@ -165,13 +165,15 @@
         </svg>
         <span class="dash-nav__text">Portfolio Imagery</span>
       </a>
-      <a href="#analytics" class="dash-nav__link" data-section="analytics">
-        <svg class="dash-nav__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 12L6 8L9 11L14 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M10 6H14V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="dash-nav__text">Analytics</span>
-      </a>
+      <% if (typeof profile !== 'undefined' && profile && profile.id) { %>
+        <a href="#analytics" class="dash-nav__link" data-section="analytics">
+          <svg class="dash-nav__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 12L6 8L9 11L14 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 6H14V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="dash-nav__text">Analytics</span>
+        </a>
+      <% } %>
     </div>
   </nav>
 
@@ -182,7 +184,7 @@
     <div class="dash-grid__column">
 
       <!-- Profile Details Form -->
-      <div class="dash-panel" id="profile-details" data-section="profile-details">
+      <section class="dash-panel" id="profile-details" data-section="profile-details">
         <header class="dash-panel__header">
           <h3>Profile Details</h3>
           <p>Your essential stats for agency rosters and comp cards</p>
@@ -819,10 +821,10 @@
                 </div>
           </form>
         </div>
-      </div>
+      </section>
 
       <!-- Portfolio Imagery -->
-      <div class="dash-panel" id="portfolio-imagery" data-section="portfolio-imagery">
+      <section class="dash-panel" id="portfolio-imagery" data-section="portfolio-imagery">
         <header class="dash-panel__header">
           <h3>Portfolio Imagery</h3>
           <p>Upload 6-12 high-quality images. The first image becomes your hero shot.</p>
@@ -902,7 +904,74 @@
               </div>
               <% } %>
         </div>
-      </div>
+      </section>
+
+      <!-- Analytics Section (Main Content) -->
+      <% if (typeof profile !== 'undefined' && profile && profile.id) { %>
+        <section class="dash-panel" id="analytics" data-section="analytics">
+          <header class="dash-panel__header">
+            <h3>Portfolio Analytics</h3>
+            <p>Track your portfolio views and PDF downloads</p>
+          </header>
+          <div class="dash-panel__body">
+            <div class="analytics-loading" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+              <div style="margin-bottom: 16px;">Loading analytics...</div>
+              <div style="font-size: 13px; color: var(--text-tertiary);">This may take a moment</div>
+            </div>
+            <div class="analytics-content" style="display: none;">
+              <div class="analytics-grid">
+                <div class="analytics-card">
+                  <div class="analytics-card__header">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 12px;">
+                      <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <h4 class="analytics-card__title">Total Views</h4>
+                  </div>
+                  <div class="analytics-card__value" id="analytics-views-total">—</div>
+                  <div class="analytics-card__subtext" id="analytics-views-week">This week: —</div>
+                </div>
+                <div class="analytics-card">
+                  <div class="analytics-card__header">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 12px;">
+                      <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M10 9H9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <h4 class="analytics-card__title">Total Downloads</h4>
+                  </div>
+                  <div class="analytics-card__value" id="analytics-downloads-total">—</div>
+                  <div class="analytics-card__subtext" id="analytics-downloads-week">This week: —</div>
+                </div>
+                <div class="analytics-card">
+                  <div class="analytics-card__header">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 12px;">
+                      <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <h4 class="analytics-card__title">This Month</h4>
+                  </div>
+                  <div class="analytics-card__value" id="analytics-monthly-total">—</div>
+                  <div class="analytics-card__subtext" id="analytics-monthly-breakdown">Views & Downloads</div>
+                </div>
+              </div>
+              <div class="analytics-themes" style="margin-top: 32px; padding-top: 32px; border-top: 1px solid var(--border-color);">
+                <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary);">Downloads by Theme</h4>
+                <div class="analytics-themes-list" id="analytics-themes-list">
+                  <!-- Theme breakdown will be populated by JavaScript -->
+                </div>
+              </div>
+            </div>
+            <div class="analytics-error" style="display: none; padding: 40px; text-align: center; color: var(--text-tertiary);">
+              <div style="margin-bottom: 8px; font-size: 14px;">Analytics unavailable</div>
+              <div style="font-size: 13px; color: var(--text-tertiary);">Unable to load analytics data at this time</div>
+            </div>
+          </div>
+        </section>
+      <% } %>
     </div>
 
     <!-- Right Column: Sidebar -->
@@ -979,26 +1048,26 @@
         </div>
       </div>
 
-      <!-- Portfolio Analytics -->
+      <!-- Quick Analytics (Sidebar Summary) -->
       <% if (typeof profile !== 'undefined' && profile && profile.id) { %>
-        <div class="dash-panel dash-panel--compact dash-sidebar__analytics" id="analytics" data-section="analytics">
+        <div class="dash-panel dash-panel--compact dash-sidebar__analytics" id="analytics-sidebar">
           <header class="dash-panel__header">
-            <h3>Portfolio Analytics</h3>
+            <h3>Quick Analytics</h3>
           </header>
           <div class="dash-panel__body">
-            <div class="analytics-loading" style="padding: 16px; text-align: center; color: var(--text-secondary);">
-              Loading analytics...
+            <div class="analytics-loading" style="padding: 16px; text-align: center; color: var(--text-secondary); font-size: 13px;">
+              Loading...
             </div>
             <div class="analytics-content" style="display: none;">
               <div class="analytics-stat">
                 <span class="analytics-stat__label">Views</span>
-                <span class="analytics-stat__value" id="analytics-views-total">—</span>
-                <span class="analytics-stat__subtext" id="analytics-views-week">—</span>
+                <span class="analytics-stat__value" id="analytics-sidebar-views-total">—</span>
+                <span class="analytics-stat__subtext" id="analytics-sidebar-views-week">—</span>
               </div>
               <div class="analytics-stat">
                 <span class="analytics-stat__label">Downloads</span>
-                <span class="analytics-stat__value" id="analytics-downloads-total">—</span>
-                <span class="analytics-stat__subtext" id="analytics-downloads-week">—</span>
+                <span class="analytics-stat__value" id="analytics-sidebar-downloads-total">—</span>
+                <span class="analytics-stat__subtext" id="analytics-sidebar-downloads-week">—</span>
               </div>
             </div>
             <div class="analytics-error" style="display: none; padding: 16px; text-align: center; color: var(--text-tertiary); font-size: 13px;">

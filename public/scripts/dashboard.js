@@ -669,7 +669,7 @@
 
     // Form submission handler - Use AJAX instead of form submission
     uploadForm.addEventListener('submit', async function(e) {
-      e.preventDefault();
+        e.preventDefault();
 
       if (selectedFiles.length === 0) {
         alert('Please select at least one image to upload.');
@@ -1060,7 +1060,7 @@
       console.warn('[PDF Modal] PDF theme modal not found');
       return;
     }
-
+    
     // Get button data - use sidebar button if available, fallback to main button
     const activePdfBtn = sidebarPdfBtn || pdfBtn;
     if (!activePdfBtn) {
@@ -1105,7 +1105,7 @@
           <div class="pdf-theme-card__preview" style="background: ${theme.colors.background}; color: ${theme.colors.text};">
             <div class="pdf-theme-card__preview-name" style="font-family: ${theme.fonts.name || 'serif'}, serif;">
               ${theme.name}
-            </div>
+          </div>
             <div class="pdf-theme-card__preview-colors">
               <div class="pdf-theme-card__swatch" style="background: ${theme.colors.background};"></div>
               <div class="pdf-theme-card__swatch" style="background: ${theme.colors.text};"></div>
@@ -1113,8 +1113,8 @@
             </div>
           </div>
           <div class="pdf-theme-card__info">
-            <div class="pdf-theme-card__name">
-              ${theme.name}
+          <div class="pdf-theme-card__name">
+            ${theme.name}
               ${theme.isPro ? '<span class="pdf-theme-card__badge pdf-theme-card__badge--pro">Pro</span>' : '<span class="pdf-theme-card__badge pdf-theme-card__badge--free">Free</span>'}
             </div>
             <div class="pdf-theme-card__description">${theme.personality || theme.description || ''}</div>
@@ -1290,11 +1290,11 @@
     // Event listeners
     // Handle both main and sidebar PDF download buttons
     if (pdfBtn) {
-      pdfBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        openModal();
-      });
+    pdfBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openModal();
+    });
     }
     
     if (sidebarPdfBtn) {
@@ -1360,12 +1360,19 @@
 
 // Load Analytics
 async function loadAnalytics() {
-  const analyticsPanel = document.getElementById('analytics-panel');
-  if (!analyticsPanel) return;
+  // Find analytics section in main content area
+  const analyticsSection = document.getElementById('analytics');
+  if (!analyticsSection) {
+    // If no main analytics section, just load sidebar analytics
+    return loadSidebarAnalytics();
+  }
+  
+  // Also load sidebar analytics if it exists
+  loadSidebarAnalytics();
 
-  const loadingEl = analyticsPanel.querySelector('.analytics-loading');
-  const contentEl = analyticsPanel.querySelector('.analytics-content');
-  const errorEl = analyticsPanel.querySelector('.analytics-error');
+  const loadingEl = analyticsSection.querySelector('.analytics-loading');
+  const contentEl = analyticsSection.querySelector('.analytics-content');
+  const errorEl = analyticsSection.querySelector('.analytics-error');
 
   try {
     const response = await fetch('/dashboard/talent/analytics', {
@@ -1383,20 +1390,59 @@ async function loadAnalytics() {
       const viewsTotal = document.getElementById('analytics-views-total');
       const viewsWeek = document.getElementById('analytics-views-week');
       if (viewsTotal) {
-        viewsTotal.textContent = data.analytics.views.total || 0;
+        viewsTotal.textContent = (data.analytics.views?.total || 0).toLocaleString();
       }
       if (viewsWeek) {
-        viewsWeek.textContent = `${data.analytics.views.thisWeek || 0} this week`;
+        viewsWeek.textContent = `This week: ${data.analytics.views?.thisWeek || 0}`;
       }
 
       // Update downloads
       const downloadsTotal = document.getElementById('analytics-downloads-total');
       const downloadsWeek = document.getElementById('analytics-downloads-week');
       if (downloadsTotal) {
-        downloadsTotal.textContent = data.analytics.downloads.total || 0;
+        downloadsTotal.textContent = (data.analytics.downloads?.total || 0).toLocaleString();
       }
       if (downloadsWeek) {
-        downloadsWeek.textContent = `${data.analytics.downloads.thisWeek || 0} this week`;
+        downloadsWeek.textContent = `This week: ${data.analytics.downloads?.thisWeek || 0}`;
+      }
+
+      // Update monthly stats
+      const monthlyTotal = document.getElementById('analytics-monthly-total');
+      const monthlyBreakdown = document.getElementById('analytics-monthly-breakdown');
+      if (monthlyTotal) {
+        const monthlyViews = data.analytics.views?.thisMonth || 0;
+        const monthlyDownloads = data.analytics.downloads?.thisMonth || 0;
+        monthlyTotal.textContent = (monthlyViews + monthlyDownloads).toLocaleString();
+      }
+      if (monthlyBreakdown) {
+        const monthlyViews = data.analytics.views?.thisMonth || 0;
+        const monthlyDownloads = data.analytics.downloads?.thisMonth || 0;
+        monthlyBreakdown.textContent = `${monthlyViews} views, ${monthlyDownloads} downloads`;
+      }
+
+      // Update theme breakdown
+      const themesList = document.getElementById('analytics-themes-list');
+      if (themesList && data.analytics.downloads?.byTheme) {
+        const themes = data.analytics.downloads.byTheme;
+        // byTheme is an array of objects: [{ theme: 'classic-serif', count: 5 }, ...]
+        if (Array.isArray(themes) && themes.length > 0) {
+          themesList.innerHTML = themes
+            .sort((a, b) => (b.count || 0) - (a.count || 0)) // Sort by count descending
+            .map(item => {
+              const theme = item.theme || 'unknown';
+              const count = item.count || 0;
+              return `
+                <div class="analytics-theme-item" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; margin-bottom: 8px; background: var(--bg-surface-elevated); border-radius: 8px; border: 1px solid var(--border-color);">
+                  <span style="font-size: 14px; font-weight: 500; color: var(--text-primary); text-transform: capitalize;">${theme.replace(/-/g, ' ')}</span>
+                  <span style="font-size: 16px; font-weight: 600; color: var(--accent-gold);">${count}</span>
+                </div>
+              `;
+            }).join('');
+        } else {
+          themesList.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-tertiary); font-size: 13px;">No theme data yet. Download your first PDF to see theme statistics.</div>';
+        }
+      } else if (themesList) {
+        themesList.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-tertiary); font-size: 13px;">No theme data yet. Download your first PDF to see theme statistics.</div>';
       }
 
       // Show content
@@ -1408,6 +1454,62 @@ async function loadAnalytics() {
     }
   } catch (error) {
     console.error('Error loading analytics:', error);
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (contentEl) contentEl.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'block';
+  }
+}
+
+// Load sidebar analytics (separate from main analytics)
+async function loadSidebarAnalytics() {
+  const sidebarAnalytics = document.getElementById('analytics-sidebar');
+  if (!sidebarAnalytics) return;
+
+  const loadingEl = sidebarAnalytics.querySelector('.analytics-loading');
+  const contentEl = sidebarAnalytics.querySelector('.analytics-content');
+  const errorEl = sidebarAnalytics.querySelector('.analytics-error');
+
+  try {
+    const response = await fetch('/dashboard/talent/analytics', {
+      credentials: 'same-origin'
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to load analytics');
+    }
+
+    const data = await response.json();
+
+    if (data.success && data.analytics) {
+      // Update views (sidebar version)
+      const viewsTotal = document.getElementById('analytics-sidebar-views-total');
+      const viewsWeek = document.getElementById('analytics-sidebar-views-week');
+      if (viewsTotal) {
+        viewsTotal.textContent = (data.analytics.views?.total || 0).toLocaleString();
+      }
+      if (viewsWeek) {
+        viewsWeek.textContent = `${data.analytics.views?.thisWeek || 0} this week`;
+      }
+
+      // Update downloads (sidebar version)
+      const downloadsTotal = document.getElementById('analytics-sidebar-downloads-total');
+      const downloadsWeek = document.getElementById('analytics-sidebar-downloads-week');
+      if (downloadsTotal) {
+        downloadsTotal.textContent = (data.analytics.downloads?.total || 0).toLocaleString();
+      }
+      if (downloadsWeek) {
+        downloadsWeek.textContent = `${data.analytics.downloads?.thisWeek || 0} this week`;
+      }
+
+      // Show content
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (errorEl) errorEl.style.display = 'none';
+      if (contentEl) contentEl.style.display = 'block';
+    } else {
+      throw new Error('Invalid analytics data');
+    }
+  } catch (error) {
+    console.error('Error loading sidebar analytics:', error);
     if (loadingEl) loadingEl.style.display = 'none';
     if (contentEl) contentEl.style.display = 'none';
     if (errorEl) errorEl.style.display = 'block';
@@ -1502,22 +1604,47 @@ function initSectionNavigation() {
     link.addEventListener('click', function(e) {
       e.preventDefault();
       const targetSection = this.getAttribute('data-section');
-      const targetElement = document.querySelector(`[data-section="${targetSection}"]`);
+      
+      // Find section in main content area (prefer main content over sidebar)
+      let targetElement = null;
+      const mainContent = document.querySelector('.dash-grid__column:not(.dash-sidebar)');
+      if (mainContent) {
+        targetElement = mainContent.querySelector(`[data-section="${targetSection}"]`);
+      }
+      
+      // Fallback to any section if not found in main content
+      if (!targetElement) {
+        targetElement = document.querySelector(`[data-section="${targetSection}"]`);
+      }
       
       if (targetElement) {
         // Update active state
         navLinks.forEach(l => l.classList.remove('dash-nav__link--active'));
         this.classList.add('dash-nav__link--active');
         
+        // Calculate offset (account for sticky header + nav)
+        // Header is sticky at top: 0, Nav is sticky at top: 80px
+        // We need to scroll past both
+        const header = document.querySelector('.dash-header');
+        const nav = document.getElementById('dash-nav');
+        const headerHeight = header ? header.offsetHeight : 80;
+        const navHeight = nav ? nav.offsetHeight : 60;
+        const offset = headerHeight + navHeight + 40; // Extra padding for visual spacing
+        
+        // Get element position
+        const elementTop = targetElement.getBoundingClientRect().top + window.pageYOffset;
+        const offsetTop = elementTop - offset;
+        
         // Smooth scroll to section
-        const offsetTop = targetElement.getBoundingClientRect().top + window.pageYOffset - 100;
         window.scrollTo({
-          top: offsetTop,
+          top: Math.max(0, offsetTop),
           behavior: 'smooth'
         });
         
         // Update URL without reloading
         history.pushState(null, null, `#${targetSection}`);
+      } else {
+        console.warn(`Section not found: ${targetSection}`);
       }
     });
   });
@@ -1526,26 +1653,42 @@ function initSectionNavigation() {
   let ticking = false;
   
   function updateActiveNav() {
-    const scrollPosition = window.pageYOffset + 150; // Offset for nav + header
+    // Only check sections in main content area (not sidebar)
+    const mainContent = document.querySelector('.dash-grid__column:not(.dash-sidebar)');
+    const mainSections = mainContent ? mainContent.querySelectorAll('[data-section]') : sections;
+    
+    // Calculate scroll position with proper offsets
+    const header = document.querySelector('.dash-header');
+    const nav = document.getElementById('dash-nav');
+    const headerHeight = header ? header.offsetHeight : 80;
+    const navHeight = nav ? nav.offsetHeight : 60;
+    const scrollPosition = window.pageYOffset + headerHeight + navHeight + 100; // Offset for nav + header + padding
     
     let currentSection = null;
     
-    // Find the section currently in view
-    sections.forEach(section => {
+    // Find the section currently in view (prioritize main content sections)
+    mainSections.forEach(section => {
       const sectionTop = section.getBoundingClientRect().top + window.pageYOffset;
       const sectionBottom = sectionTop + section.offsetHeight;
+      const sectionMiddle = sectionTop + (section.offsetHeight / 2);
       
-      if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
-        currentSection = section.getAttribute('data-section');
+      // Check if scroll position is within section bounds
+      if (scrollPosition >= sectionTop - 100 && scrollPosition <= sectionBottom) {
+        // If multiple sections match, prefer the one whose middle is closest to scroll position
+        if (!currentSection || Math.abs(sectionMiddle - scrollPosition) < Math.abs(
+          document.querySelector(`[data-section="${currentSection}"]`)?.getBoundingClientRect().top + window.pageYOffset - scrollPosition || Infinity
+        )) {
+          currentSection = section.getAttribute('data-section');
+        }
       }
     });
     
     // If no section is in view, check which one is closest to top
-    if (!currentSection && sections.length > 0) {
+    if (!currentSection && mainSections.length > 0) {
       let closestSection = null;
       let closestDistance = Infinity;
       
-      sections.forEach(section => {
+      mainSections.forEach(section => {
         const sectionTop = section.getBoundingClientRect().top + window.pageYOffset;
         const distance = Math.abs(sectionTop - scrollPosition);
         
@@ -1586,11 +1729,59 @@ function initSectionNavigation() {
   updateActiveNav();
   
   // Handle hash in URL on page load
-  if (window.location.hash) {
-    const hash = window.location.hash.substring(1);
-    const targetLink = nav.querySelector(`[data-section="${hash}"]`);
-    if (targetLink) {
-      targetLink.click();
+  function handleHashNavigation() {
+    if (window.location.hash) {
+      const hash = window.location.hash.substring(1);
+      const targetLink = nav.querySelector(`[data-section="${hash}"]`);
+      if (targetLink) {
+        // Small delay to ensure DOM is ready and all sections are rendered
+        setTimeout(() => {
+          // Find section in main content area
+          const mainContent = document.querySelector('.dash-grid__column:not(.dash-sidebar)');
+          let targetElement = null;
+          if (mainContent) {
+            targetElement = mainContent.querySelector(`[data-section="${hash}"]`);
+          }
+          if (!targetElement) {
+            targetElement = document.querySelector(`[data-section="${hash}"]`);
+          }
+          
+          if (targetElement) {
+            // Update active state
+            navLinks.forEach(l => l.classList.remove('dash-nav__link--active'));
+            targetLink.classList.add('dash-nav__link--active');
+            
+            // Calculate offset
+            const header = document.querySelector('.dash-header');
+            const nav = document.getElementById('dash-nav');
+            const headerHeight = header ? header.offsetHeight : 80;
+            const navHeight = nav ? nav.offsetHeight : 60;
+            const offset = headerHeight + navHeight + 40;
+            const elementTop = targetElement.getBoundingClientRect().top + window.pageYOffset;
+            const offsetTop = elementTop - offset;
+            
+            // Smooth scroll to section
+            window.scrollTo({
+              top: Math.max(0, offsetTop),
+              behavior: 'smooth'
+            });
+          }
+        }, 500);
+      }
+    } else {
+      // No hash - ensure overview is active on initial load
+      const overviewLink = nav.querySelector('[data-section="overview"]');
+      if (overviewLink && !document.querySelector('.dash-nav__link--active')) {
+        overviewLink.classList.add('dash-nav__link--active');
+      }
     }
   }
+  
+  // Handle initial hash on page load (with delay to ensure DOM is ready)
+  setTimeout(handleHashNavigation, 300);
+  
+  // Also handle popstate (back/forward browser buttons)
+  window.addEventListener('popstate', function(e) {
+    handleHashNavigation();
+  });
 }
