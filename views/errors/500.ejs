@@ -1,6 +1,6 @@
 <section class="panel">
   <h1>
-    <% if (typeof error !== 'undefined' && error.migrationRequired) { %>
+    <% if (typeof error !== 'undefined' && error !== null && error.migrationRequired) { %>
       Database Setup Required
     <% } else if (typeof isDatabaseError !== 'undefined' && isDatabaseError) { %>
       Database Connection Error
@@ -9,7 +9,7 @@
     <% } %>
   </h1>
   <p>
-    <% if (typeof error !== 'undefined' && error.migrationRequired) { %>
+    <% if (typeof error !== 'undefined' && error !== null && error.migrationRequired) { %>
       Database tables do not exist. Please run migrations to set up the database.
     <% } else if (typeof isDatabaseError !== 'undefined' && isDatabaseError) { %>
       Unable to connect to the database. Please check your database configuration in Netlify environment variables.
@@ -18,7 +18,7 @@
     <% } %>
   </p>
   
-  <% if (typeof error !== 'undefined' && error.migrationRequired) { %>
+  <% if (typeof error !== 'undefined' && error !== null && error.migrationRequired) { %>
     <div style="margin-top: 2rem; padding: 1.5rem; background: #d1ecf1; border: 1px solid #0c5460; border-radius: 4px;">
       <h3 style="margin-top: 0; color: #0c5460;">Run Database Migrations</h3>
       <p style="margin-bottom: 1rem;">The database is connected, but tables need to be created. Run migrations to set up the database:</p>
@@ -74,31 +74,31 @@
     </div>
   <% } %>
   
-  <% if (typeof isDevelopment !== 'undefined' && isDevelopment && typeof error !== 'undefined' && error) { %>
+  <% if (typeof isDevelopment !== 'undefined' && isDevelopment && typeof error !== 'undefined' && error !== null) { %>
     <div style="margin-top: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 4px; font-family: monospace; font-size: 0.9rem;">
       <h3>Error Details (Development Mode)</h3>
-      <p><strong>Message:</strong> <%= error.message %></p>
-      <% if (error.code) { %>
+      <p><strong>Message:</strong> <%= error && error.message ? error.message : 'Unknown error' %></p>
+      <% if (error && error.code) { %>
         <p><strong>Code:</strong> <%= error.code %></p>
       <% } %>
-      <% if (error.name) { %>
+      <% if (error && error.name) { %>
         <p><strong>Type:</strong> <%= error.name %></p>
       <% } %>
-      <% if (error.stack) { %>
+      <% if (error && error.stack) { %>
         <details style="margin-top: 1rem;">
           <summary style="cursor: pointer; font-weight: bold;">Stack Trace</summary>
           <pre style="margin-top: 0.5rem; white-space: pre-wrap; word-break: break-all;"><%= error.stack %></pre>
         </details>
       <% } %>
     </div>
-  <% } else if (typeof isDatabaseError !== 'undefined' && isDatabaseError && typeof error !== 'undefined' && error) { %>
+  <% } else if (typeof isDatabaseError !== 'undefined' && isDatabaseError && typeof error !== 'undefined' && error !== null) { %>
     <div style="margin-top: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 4px; font-family: monospace; font-size: 0.9rem;">
       <h3>Error Details</h3>
-      <p><strong>Message:</strong> <%= error.message %></p>
-      <% if (error.code) { %>
+      <p><strong>Message:</strong> <%= error && error.message ? error.message : 'Unknown error' %></p>
+      <% if (error && error.code) { %>
         <p><strong>Code:</strong> <%= error.code %></p>
       <% } %>
-      <% if (error.name) { %>
+      <% if (error && error.name) { %>
         <p><strong>Type:</strong> <%= error.name %></p>
       <% } %>
     </div>

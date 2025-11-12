@@ -113,6 +113,10 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     let signupParsed = null; // Store signup validation result for use in success message
     let normalizedEmail = null; // Store normalized email for use in success message
 
+    // Declare profile variables at function scope so they're available after if/else
+    let first_name, last_name, city, phone, height_cm, bust, waist, hips, shoe_size;
+    let eye_color, hair_color, measurements, bio, specialties, partner_agency_email;
+
   // If not logged in, validate account creation fields
   if (!isLoggedIn) {
     console.log('[Apply] User is not logged in, validating signup...');
@@ -214,23 +218,22 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     console.log('[Apply] Profile validation passed');
 
     // Extract profile data from validated result (specialties is already an array)
-    const {
-      first_name,
-      last_name,
-      city,
-      phone,
-      height_cm,
-      bust,
-      waist,
-      hips,
-      shoe_size,
-      eye_color,
-      hair_color,
-      measurements,
-      bio,
-      specialties,
-      partner_agency_email
-    } = applyParsed.data;
+    // Assign to function-scope variables so they're available after this block
+    first_name = applyParsed.data.first_name;
+    last_name = applyParsed.data.last_name;
+    city = applyParsed.data.city;
+    phone = applyParsed.data.phone;
+    height_cm = applyParsed.data.height_cm;
+    bust = applyParsed.data.bust;
+    waist = applyParsed.data.waist;
+    hips = applyParsed.data.hips;
+    shoe_size = applyParsed.data.shoe_size;
+    eye_color = applyParsed.data.eye_color;
+    hair_color = applyParsed.data.hair_color;
+    measurements = applyParsed.data.measurements;
+    bio = applyParsed.data.bio;
+    specialties = applyParsed.data.specialties;
+    partner_agency_email = applyParsed.data.partner_agency_email;
 
     // Create account
     try {
@@ -374,21 +377,22 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     }
 
     // Extract profile data from validated result
-    var first_name = parsed.data.first_name;
-    var last_name = parsed.data.last_name;
-    var city = parsed.data.city;
-    var phone = parsed.data.phone;
-    var height_cm = parsed.data.height_cm;
-    var bust = parsed.data.bust;
-    var waist = parsed.data.waist;
-    var hips = parsed.data.hips;
-    var shoe_size = parsed.data.shoe_size;
-    var eye_color = parsed.data.eye_color;
-    var hair_color = parsed.data.hair_color;
-    var measurements = parsed.data.measurements;
-    var bio = parsed.data.bio;
-    var specialties = parsed.data.specialties;
-    var partner_agency_email = parsed.data.partner_agency_email;
+    // Assign to function-scope variables (already declared above)
+    first_name = parsed.data.first_name;
+    last_name = parsed.data.last_name;
+    city = parsed.data.city;
+    phone = parsed.data.phone;
+    height_cm = parsed.data.height_cm;
+    bust = parsed.data.bust;
+    waist = parsed.data.waist;
+    hips = parsed.data.hips;
+    shoe_size = parsed.data.shoe_size;
+    eye_color = parsed.data.eye_color;
+    hair_color = parsed.data.hair_color;
+    measurements = parsed.data.measurements;
+    bio = parsed.data.bio;
+    specialties = parsed.data.specialties;
+    partner_agency_email = parsed.data.partner_agency_email;
   }
 
   let partnerAgencyId = null;
