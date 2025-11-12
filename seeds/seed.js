@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require('uuid');
  * @param {import('knex')} knex
  */
 exports.seed = async function seed(knex) {
+  // Delete existing data (optional - comment out if you want to keep existing data)
   await knex('commissions').del();
   await knex('images').del();
   await knex('profiles').del();
@@ -12,6 +13,7 @@ exports.seed = async function seed(knex) {
 
   const passwordHash = await bcrypt.hash('password123', 10);
 
+  // Create agency account
   const agencyId = uuidv4();
   await knex('users').insert({
     id: agencyId,
@@ -20,6 +22,7 @@ exports.seed = async function seed(knex) {
     role: 'AGENCY'
   });
 
+  // Create talent account
   const talentId = uuidv4();
   await knex('users').insert({
     id: talentId,
@@ -28,20 +31,84 @@ exports.seed = async function seed(knex) {
     role: 'TALENT'
   });
 
-  const profileId = uuidv4();
+  // Create Elara Keats placeholder account (for demo)
+  const elaraUserId = uuidv4();
+  await knex('users').insert({
+    id: elaraUserId,
+    email: 'elara@example.com',
+    password_hash: passwordHash,
+    role: 'TALENT'
+  });
+
+  // Create Elara Keats profile (placeholder/demo account)
+  const elaraProfileId = uuidv4();
   await knex('profiles').insert({
-    id: profileId,
-    user_id: talentId,
+    id: elaraProfileId,
+    user_id: elaraUserId,
     slug: 'elara-k',
     first_name: 'Elara',
     last_name: 'Keats',
     city: 'Los Angeles, CA',
-    height_cm: 177,
+    height_cm: 180,
     measurements: '32-25-35',
-    bio_raw:
-      'Elara is a collaborative creative professional with a background in editorial campaigns and on-set leadership.',
-    bio_curated:
-      'Elara Keats brings a polished presence to every production. Based in Los Angeles, she balances editorial edge with commercial versatility.',
+    bio_raw: 'Elara is a collaborative creative professional with a background in editorial campaigns and on-set leadership. Based in Los Angeles, she balances editorial edge with commercial versatility.',
+    bio_curated: 'Elara Keats brings a polished presence to every production. Based in Los Angeles, she balances editorial edge with commercial versatility. Standing at 5\'11" with measurements of 32-25-35, she brings a commanding presence to both high-fashion editorials and commercial campaigns.',
+    hero_image_path: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=2000&q=80',
+    is_pro: false,
+    pdf_theme: null,
+    pdf_customizations: null,
+    partner_agency_id: null
+  });
+
+  // Create Elara Keats images (using Unsplash URLs for demo)
+  const elaraImages = [
+    {
+      id: uuidv4(),
+      profile_id: elaraProfileId,
+      path: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1000&q=80',
+      label: 'Headshot',
+      sort: 1
+    },
+    {
+      id: uuidv4(),
+      profile_id: elaraProfileId,
+      path: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1000&q=80',
+      label: 'Editorial',
+      sort: 2
+    },
+    {
+      id: uuidv4(),
+      profile_id: elaraProfileId,
+      path: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1000&q=80',
+      label: 'Runway',
+      sort: 3
+    },
+    {
+      id: uuidv4(),
+      profile_id: elaraProfileId,
+      path: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=1000&q=80',
+      label: 'Portfolio',
+      sort: 4
+    }
+  ];
+
+  for (const img of elaraImages) {
+    await knex('images').insert(img);
+  }
+
+  // Create another talent profile (original example)
+  const profileId = uuidv4();
+  await knex('profiles').insert({
+    id: profileId,
+    user_id: talentId,
+    slug: 'talent-example',
+    first_name: 'Sample',
+    last_name: 'Talent',
+    city: 'New York, NY',
+    height_cm: 177,
+    measurements: '34-26-36',
+    bio_raw: 'Sample talent profile for testing.',
+    bio_curated: 'Sample talent profile for testing purposes.',
     hero_image_path: '/uploads/seed/elara-headshot.webp',
     partner_agency_id: agencyId
   });
