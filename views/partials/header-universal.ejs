@@ -25,7 +25,7 @@
     </nav>
 
     <div class="universal-header__actions">
-      <% if (user) { %>
+      <% if (user && user.id && user.role) { %>
         <% const dashboardHref = user.role === 'AGENCY' ? '/dashboard/agency' : '/dashboard/talent'; %>
         <% const dashboardLabel = user.role === 'AGENCY' ? 'Agency Portal' : 'My Portfolio'; %>
         <a class="universal-header__link" href="<%= dashboardHref %>"><%= dashboardLabel %></a>
@@ -45,7 +45,7 @@
         <li><a href="/pricing" <%= page === 'pricing' ? 'aria-current="page"' : '' %>>Pricing</a></li>
         <li><a href="/demo" <%= page === 'demo' ? 'aria-current="page"' : '' %>>Demo</a></li>
         <li><a href="/press" <%= page === 'press' ? 'aria-current="page"' : '' %>>Press</a></li>
-        <% if (user) { %>
+        <% if (user && user.id && user.role) { %>
           <% const dashboardHref = user.role === 'AGENCY' ? '/dashboard/agency' : '/dashboard/talent'; %>
           <% const dashboardLabel = user.role === 'AGENCY' ? 'Agency Portal' : 'My Portfolio'; %>
           <li><a href="<%= dashboardHref %>"><%= dashboardLabel %></a></li>

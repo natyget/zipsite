@@ -257,6 +257,18 @@ async function renderPdfView(req, res, data, isDemo) {
   // Merge theme with customizations
   const mergedTheme = mergeThemeWithCustomization(theme, customizations);
 
+  // Ensure mergedTheme has all required properties
+  if (!mergedTheme) {
+    console.error('[renderPdfView] mergedTheme is null, using default theme');
+    throw new Error('Theme merge failed');
+  }
+
+  // Ensure layout exists (fallback to default if missing)
+  if (!mergedTheme.layout) {
+    console.warn('[renderPdfView] mergedTheme.layout is missing, using default layout');
+    mergedTheme.layout = theme.layout || { headerPosition: 'top', imageGrid: { cols: 2, rows: 2 }, bioPosition: 'bottom-center', statsPosition: 'header-right' };
+  }
+
   // Build base URL for images
   const baseUrl = `${req.protocol}://${req.get('host')}`;
 
@@ -269,7 +281,7 @@ async function renderPdfView(req, res, data, isDemo) {
         width: 120,
         margin: 1,
         color: {
-          dark: mergedTheme.colors.background === '#000000' || mergedTheme.colors.background === '#1A1A1A' || mergedTheme.colors.background === '#2C3E50' ? '#FAF9F7' : '#0F172A',
+          dark: mergedTheme.colors && (mergedTheme.colors.background === '#000000' || mergedTheme.colors.background === '#1A1A1A' || mergedTheme.colors.background === '#2C3E50') ? '#FAF9F7' : '#0F172A',
           light: '#FFFFFF'
         }
       });
@@ -278,17 +290,17 @@ async function renderPdfView(req, res, data, isDemo) {
     }
   }
 
-  // Get font CSS values
+  // Get font CSS values (with fallbacks)
   const fontCSS = {
-    nameFont: getFontFamilyCSS(mergedTheme.fonts.name),
-    bioFont: getFontFamilyCSS(mergedTheme.fonts.bio),
-    statsFont: getFontFamilyCSS(mergedTheme.fonts.stats)
+    nameFont: getFontFamilyCSS(mergedTheme.fonts?.name || theme.fonts?.name),
+    bioFont: getFontFamilyCSS(mergedTheme.fonts?.bio || theme.fonts?.bio),
+    statsFont: getFontFamilyCSS(mergedTheme.fonts?.stats || theme.fonts?.stats)
   };
 
   // Generate Google Fonts URL
   const googleFontsUrl = generateThemeFontsUrl(mergedTheme);
 
-  // Generate layout classes
+  // Generate layout classes (with fallback)
   const layoutClasses = generateLayoutClasses(mergedTheme.layout);
   const imageGridCSS = getImageGridCSS(mergedTheme.layout);
 
@@ -300,26 +312,46 @@ async function renderPdfView(req, res, data, isDemo) {
 
   // Disable layout for PDF view - it's a standalone HTML document
   res.locals.layout = false;
-  return res.render('pdf/compcard', {
-    layout: false,
-    title: `${profile.first_name} ${profile.last_name} - Comp Card`,
-    profile,
-    images: gallery,
-    hero,
-    heightFeet: toFeetInches(profile.height_cm),
-    watermark: !profile.is_pro,
-    theme: mergedTheme,
-    themeKey: themeKey,
-    baseUrl,
-    isPro: profile.is_pro,
-    qrCode: qrCodeDataUrl,
-    portfolioUrl: `${baseUrl}/portfolio/${profile.slug}`,
-    fontCSS,
-    googleFontsUrl,
-    layoutClasses,
-    imageGridCSS,
-    agencyLogo
-  });
+
+  try {
+    console.log('[renderPdfView] Rendering template with data:', {
+      profileName: `${profile.first_name} ${profile.last_name}`,
+      imageCount: gallery.length,
+      hero: hero ? 'yes' : 'no',
+      themeKey: themeKey,
+      hasGoogleFonts: !!googleFontsUrl,
+      hasLayoutClasses: !!layoutClasses
+    });
+
+    return res.render('pdf/compcard', {
+      layout: false,
+      title: `${profile.first_name} ${profile.last_name} - Comp Card`,
+      profile,
+      images: gallery,
+      hero,
+      heightFeet: toFeetInches(profile.height_cm),
+      watermark: !profile.is_pro,
+      theme: mergedTheme,
+      themeKey: themeKey,
+      baseUrl,
+      isPro: profile.is_pro,
+      qrCode: qrCodeDataUrl,
+      portfolioUrl: `${baseUrl}/portfolio/${profile.slug}`,
+      fontCSS,
+      googleFontsUrl,
+      layoutClasses,
+      imageGridCSS,
+      agencyLogo
+    });
+  } catch (templateError) {
+    console.error('[renderPdfView] Template rendering error:', {
+      message: templateError.message,
+      stack: templateError.stack,
+      profileName: `${profile.first_name} ${profile.last_name}`,
+      themeKey: themeKey
+    });
+    throw templateError;
+  }
 }
 
 router.get('/pdf/view/:slug', async (req, res, next) => {
@@ -328,15 +360,20 @@ router.get('/pdf/view/:slug', async (req, res, next) => {
   let isDemo = false;
 
   try {
-    console.log('[PDF View] Loading profile for slug:', slug);
+    console.log('[PDF View] Route hit for slug:', slug, 'query:', req.query);
 
-    // For demo slug, try demo data first (works even if database is empty)
+    // For demo slug, ALWAYS use demo data first (works even if database is empty)
+    // This ensures demo page always works
     if (slug === 'elara-k') {
       const demoData = getDemoProfile(slug);
       if (demoData) {
         console.log('[PDF View] Using demo profile data for demo slug:', slug);
         data = demoData;
         isDemo = true;
+        // Skip database lookup for demo slug - use demo data directly
+      } else {
+        console.error('[PDF View] Demo data not found for slug:', slug);
+        return renderSimpleError(res, 500, 'Demo Error', 'Demo profile data is not available.');
       }
     }
 
@@ -367,7 +404,7 @@ router.get('/pdf/view/:slug', async (req, res, next) => {
     }
 
     // If profile not found in database and not using demo, try demo fallback
-    if (!data) {
+    if (!data && slug !== 'elara-k') {
       console.log('[PDF View] Profile not found in database, checking demo fallback');
       const demoData = getDemoProfile(slug);
       if (demoData) {
@@ -378,6 +415,12 @@ router.get('/pdf/view/:slug', async (req, res, next) => {
         console.log('[PDF View] Profile not found and no demo fallback available for slug:', slug);
         return renderSimpleError(res, 404, 'Profile not found', 'The profile "' + slug + '" does not exist.');
       }
+    }
+
+    // Ensure we have data
+    if (!data) {
+      console.error('[PDF View] No data available for slug:', slug);
+      return renderSimpleError(res, 500, 'Error', 'Unable to load profile data.');
     }
 
     // Render PDF view with profile data
