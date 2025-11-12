@@ -594,6 +594,14 @@ router.get('/pdf/:slug', async (req, res, next) => {
       url.searchParams.set('theme', themeKey);
     }
 
+    console.log('[PDF Download] Generating PDF:', {
+      slug: slug,
+      themeKey: themeKey,
+      pdfBaseUrl: config.pdfBaseUrl,
+      targetUrl: url.toString(),
+      isDemo: isDemo
+    });
+
     const buffer = await renderCompCard(req.params.slug, themeKey);
     if (req.query.download) {
       res.setHeader('Content-Disposition', `attachment; filename="ZipSite-${req.params.slug}-compcard.pdf"`);
@@ -643,13 +651,27 @@ router.get('/pdf/:slug', async (req, res, next) => {
       error.message.includes('navigation') ||
       error.message.includes('timeout') ||
       error.message.includes('ENOTFOUND') ||
-      error.message.includes('ECONNREFUSED')
+      error.message.includes('ECONNREFUSED') ||
+      error.message.includes('Failed to launch') ||
+      error.message.includes('Failed to load PDF view') ||
+      error.message.includes('Failed to generate PDF') ||
+      error.message.includes('Invalid PDF base URL')
     )) {
-      console.error('[PDF Download Route] Puppeteer error detected');
+      console.error('[PDF Download Route] Puppeteer error detected:', {
+        message: error.message,
+        code: error.code,
+        pdfBaseUrl: config.pdfBaseUrl,
+        slug: slug,
+        themeKey: req.query.theme
+      });
       return res.status(500).json({
         error: 'PDF generation error',
         message: 'Unable to generate PDF. Please try again later.',
-        details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+        details: process.env.NODE_ENV !== 'production' ? {
+          errorMessage: error.message,
+          pdfBaseUrl: config.pdfBaseUrl,
+          targetUrl: config.pdfBaseUrl ? `${config.pdfBaseUrl}/pdf/view/${slug}?theme=${req.query.theme || 'default'}` : 'N/A'
+        } : undefined
       });
     }
 

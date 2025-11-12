@@ -4,6 +4,16 @@ const knex = require('../db/knex');
 const config = require('../config');
 const { toFeetInches } = require('./stats');
 
+// Import Chromium for serverless environments (Netlify Functions, AWS Lambda)
+let chromium = null;
+if (config.isServerless) {
+  try {
+    chromium = require('@sparticuz/chromium');
+  } catch (error) {
+    console.warn('[renderCompCard] @sparticuz/chromium not available, falling back to default Puppeteer');
+  }
+}
+
 async function loadProfile(slug) {
   try {
     const profile = await knex('profiles').where({ slug }).first();
@@ -34,11 +44,21 @@ async function renderCompCard(slug, theme = null) {
     // Build URL with theme parameter
     let target;
     try {
+      console.log('[renderCompCard] Building PDF view URL:', {
+        pdfBaseUrl: config.pdfBaseUrl,
+        slug: slug,
+        theme: theme,
+        nodeEnv: config.nodeEnv,
+        isServerless: config.isServerless
+      });
+      
       const url = new URL(`/pdf/view/${slug}`, config.pdfBaseUrl);
       if (theme) {
         url.searchParams.set('theme', theme);
       }
       target = url.toString();
+      
+      console.log('[renderCompCard] Target URL:', target);
     } catch (urlError) {
       console.error('[renderCompCard] Error constructing URL:', {
         message: urlError.message,
@@ -62,16 +82,36 @@ async function renderCompCard(slug, theme = null) {
       '--disable-gpu'
     ];
     
+    // For serverless environments, use @sparticuz/chromium
+    let launchOptions = {
+      headless: 'new',
+      args: puppeteerArgs
+    };
+    
+    if (config.isServerless && chromium) {
+      // Use @sparticuz/chromium for Netlify Functions
+      console.log('[renderCompCard] Using @sparticuz/chromium for serverless environment');
+      launchOptions.executablePath = chromium.executablePath();
+      // Add serverless-specific args (chromium.args is already optimized for serverless)
+      launchOptions.args = [
+        ...chromium.args,
+        ...puppeteerArgs,
+        '--hide-scrollbars',
+        '--disable-web-security'
+      ];
+    } else if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+      // Allow custom executable path override
+      launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+    }
+    
     try {
-      browser = await puppeteer.launch({
-        headless: 'new',
-        args: puppeteerArgs,
-        // In serverless, we may need to set executable path if Chromium is in a specific location
-        // Puppeteer should handle this automatically, but we can override if needed
-        ...(process.env.PUPPETEER_EXECUTABLE_PATH && {
-          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
-        })
+      console.log('[renderCompCard] Launching Puppeteer:', {
+        isServerless: config.isServerless,
+        hasChromium: !!chromium,
+        executablePath: launchOptions.executablePath ? 'set' : 'default'
       });
+      
+      browser = await puppeteer.launch(launchOptions);
     } catch (launchError) {
       console.error('[renderCompCard] Error launching Puppeteer browser:', {
         message: launchError.message,
@@ -86,15 +126,19 @@ async function renderCompCard(slug, theme = null) {
       
       // Navigate to PDF view URL with timeout
       try {
+        console.log('[renderCompCard] Navigating to PDF view URL:', target);
         await page.goto(target, { 
           waitUntil: 'networkidle0',
           timeout: 30000 // 30 second timeout
         });
+        console.log('[renderCompCard] Successfully navigated to PDF view URL');
       } catch (navigationError) {
         console.error('[renderCompCard] Error navigating to PDF view URL:', {
           message: navigationError.message,
           target: target,
-          code: navigationError.code
+          code: navigationError.code,
+          name: navigationError.name,
+          stack: navigationError.stack
         });
         throw new Error(`Failed to load PDF view: ${navigationError.message}. Please check that the PDF view URL is accessible.`);
       }
