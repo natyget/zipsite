@@ -35,7 +35,10 @@ if (!config.isServerless) {
   }
 }
 
-app.set('trust proxy', 1);
+// Trust proxy settings for serverless environments (Netlify Functions)
+// In serverless, we need to trust all proxies to correctly parse client IP from headers
+// Setting to true trusts all proxies (safe in serverless where proxy chain is controlled)
+app.set('trust proxy', true);
 
 // +++ 2. SET UP THE NEW LAYOUT ENGINE +++
 app.use(ejsLayouts);
@@ -45,6 +48,120 @@ app.set('layout', 'layout'); // Default to public layout (dashboard routes expli
 // Disable EJS cache in development to see template changes immediately
 if (process.env.NODE_ENV !== 'production') {
   app.set('view cache', false);
+}
+
+// CRITICAL: Middleware to ensure req.ip is ALWAYS set BEFORE any rate limiters
+// This MUST be the first middleware after trust proxy to prevent "undefined IP" errors
+// In serverless (Netlify Functions), req.ip might be undefined even with trust proxy
+app.use((req, res, next) => {
+  // Express should set req.ip automatically with trust proxy, but verify it's set
+  // In serverless, we need to manually extract IP from headers
+  let ip = req.ip;
+  
+  // If req.ip is not set or invalid, get it from headers
+  if (!ip || ip === undefined || ip === null || ip === '') {
+    // Netlify Functions provide x-forwarded-for header with client IP
+    const forwardedFor = req.headers['x-forwarded-for'];
+    if (forwardedFor) {
+      // x-forwarded-for format: "client-ip, proxy1-ip, proxy2-ip"
+      // Take the first IP (client IP)
+      ip = forwardedFor.split(',')[0]?.trim();
+    }
+  }
+  
+  // Fallback to other headers if still no IP
+  if (!ip || ip === undefined || ip === null || ip === '') {
+    ip = req.headers['x-real-ip'] || 
+         req.headers['cf-connecting-ip'] ||
+         req.headers['x-client-ip'] ||
+         null;
+  }
+  
+  // Clean up IP if we have one (remove IPv6 prefix, port, brackets, etc.)
+  if (ip && typeof ip === 'string') {
+    // Remove brackets if present (e.g., "[2001:db8::1]" -> "2001:db8::1")
+    ip = ip.replace(/^\[|\]$/g, '');
+    // Remove IPv6 prefix if present (e.g., "::ffff:192.168.1.1" -> "192.168.1.1")
+    ip = ip.replace(/^::ffff:/, '');
+    // Remove port if present (e.g., "192.168.1.1:8080" -> "192.168.1.1")
+    const parts = ip.split(':');
+    if (parts.length === 2 && !ip.includes('::')) {
+      // IPv4 with port: "192.168.1.1:8080"
+      const port = parts[1];
+      if (/^\d+$/.test(port) && parseInt(port) < 65536) {
+        ip = parts[0];
+      }
+    } else if (parts.length > 2) {
+      // IPv6: check if last segment is a port
+      const lastPart = parts[parts.length - 1];
+      if (/^\d+$/.test(lastPart) && parseInt(lastPart) < 65536 && parseInt(lastPart) > 0) {
+        // Last segment is a port, remove it
+        ip = parts.slice(0, -1).join(':');
+      }
+    }
+  }
+  
+  // CRITICAL: Always set req.ip to a valid string value
+  // express-rate-limit requires req.ip to be defined, even if we use a custom keyGenerator
+  req.ip = (ip && typeof ip === 'string' && ip !== '') ? ip : '127.0.0.1';
+  
+  // Also ensure req.connection.remoteAddress is set (some libraries check this)
+  if (!req.connection) {
+    req.connection = {};
+  }
+  if (!req.connection.remoteAddress) {
+    req.connection.remoteAddress = req.ip;
+  }
+  
+  // Ensure req.socket.remoteAddress is set (additional fallback)
+  if (!req.socket) {
+    req.socket = {};
+  }
+  if (!req.socket.remoteAddress) {
+    req.socket.remoteAddress = req.ip;
+  }
+  
+  next();
+});
+
+// Custom key generator for rate limiting that works in serverless environments
+// This ensures we always return a valid key for rate limiting
+function rateLimitKeyGenerator(req) {
+  // Use req.ip (which we ensure is set above) as primary identifier
+  // This should now always be set thanks to our middleware
+  let ip = req.ip;
+  
+  // Clean up IP if needed (remove IPv6 prefix, port, etc.)
+  if (ip && ip !== '0.0.0.0') {
+    // Remove IPv6 prefix if present
+    ip = ip.replace(/^::ffff:/, '');
+    // Remove port if present
+    const parts = ip.split(':');
+    if (parts.length > 2) {
+      // IPv6 with port
+      ip = parts.slice(0, -1).join(':');
+    } else if (parts.length === 2 && !ip.includes('::')) {
+      // IPv4 with port
+      ip = parts[0];
+    }
+    return ip;
+  }
+  
+  // Fallback to session ID if available (more reliable in serverless)
+  if (req.session && req.sessionID) {
+    return `session:${req.sessionID}`;
+  }
+  
+  // Fallback to user ID if authenticated
+  if (req.session && req.session.userId) {
+    return `user:${req.session.userId}`;
+  }
+  
+  // Final fallback: use a combination that's unique enough
+  // This should rarely be used since we ensure req.ip is set
+  const userAgent = (req.headers['user-agent'] || 'unknown').substring(0, 50);
+  const path = req.path || req.url || 'unknown';
+  return `fallback:${path}:${userAgent}`;
 }
 
 // --- 3. COMMENT OUT YOUR OLD MIDDLEWARE ---
@@ -94,9 +211,33 @@ app.use(
 
 app.use(attachLocals);
 
-const authLimiter = rateLimit({ windowMs: 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false });
+// Rate limiters with custom key generator for serverless compatibility
+// Note: req.ip is always set by our middleware above, preventing "undefined IP" errors
+// In serverless environments (Netlify Functions), req.ip might be undefined initially
+// We provide a custom keyGenerator that always returns a valid key, so we can safely
+// disable IP validation to prevent "undefined request.ip" errors
+const authLimiter = rateLimit({ 
+  windowMs: 60 * 1000, 
+  max: 10, 
+  standardHeaders: true, 
+  legacyHeaders: false,
+  keyGenerator: rateLimitKeyGenerator
+  // Note: We don't disable validation because express-rate-limit v7 requires req.ip
+  // Our middleware above ensures req.ip is always set before this runs
+});
+
+const uploadLimiter = rateLimit({ 
+  windowMs: 60 * 1000, 
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: rateLimitKeyGenerator
+  // Note: We don't disable validation because express-rate-limit v7 requires req.ip
+  // Our middleware above ensures req.ip is always set before this runs
+});
+
 app.use(['/login', '/signup'], authLimiter);
-app.use('/upload', rateLimit({ windowMs: 60 * 1000, max: 20 }));
+app.use('/upload', uploadLimiter);
 
 // Route handlers - must come BEFORE static middleware to prevent static HTML files from overriding routes
 app.get('/', async (req, res, next) => {
