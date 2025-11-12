@@ -1,6 +1,33 @@
 <section class="panel">
-  <h1>Unexpected error</h1>
-  <p>Something went wrong. Please try again later.</p>
+  <h1><%= typeof isDatabaseError !== 'undefined' && isDatabaseError ? 'Database Connection Error' : 'Unexpected error' %></h1>
+  <p><%= typeof isDatabaseError !== 'undefined' && isDatabaseError ? 
+    'Unable to connect to the database. Please check your database configuration in Netlify environment variables.' : 
+    'Something went wrong. Please try again later.' %></p>
+  
+  <% if (typeof isDatabaseError !== 'undefined' && isDatabaseError) { %>
+    <div style="margin-top: 2rem; padding: 1.5rem; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
+      <h3 style="margin-top: 0; color: #856404;">Database Configuration Required</h3>
+      <p style="margin-bottom: 1rem;">To fix this error, please:</p>
+      <ol style="margin-left: 1.5rem; margin-bottom: 1rem;">
+        <li>Go to <a href="https://app.netlify.com" target="_blank">Netlify Dashboard</a></li>
+        <li>Select your site → Site settings → Environment variables</li>
+        <li>Check that <code>DATABASE_URL</code> is set correctly:
+          <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+            <li>Should start with <code>postgresql://</code> or <code>postgres://</code></li>
+            <li>Hostname should start with <code>ep-</code> (e.g., <code>ep-xxx-xxx.us-east-2.aws.neon.tech</code>)</li>
+            <li>Should include <code>?sslmode=require</code> at the end</li>
+            <li>Should NOT include <code>psql</code> command or quotes</li>
+          </ul>
+        </li>
+        <li>Verify that <code>DB_CLIENT</code> is set to <code>pg</code></li>
+        <li>Redeploy your site after updating environment variables</li>
+      </ol>
+      <p style="margin-bottom: 0;">
+        <strong>Need help?</strong> Check the <a href="https://docs.neon.tech" target="_blank">Neon documentation</a> or 
+        see <code>NETLIFY_ENV_SETUP.md</code> for detailed setup instructions.
+      </p>
+    </div>
+  <% } %>
   
   <% if (typeof isDevelopment !== 'undefined' && isDevelopment && typeof error !== 'undefined' && error) { %>
     <div style="margin-top: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 4px; font-family: monospace; font-size: 0.9rem;">
@@ -17,6 +44,17 @@
           <summary style="cursor: pointer; font-weight: bold;">Stack Trace</summary>
           <pre style="margin-top: 0.5rem; white-space: pre-wrap; word-break: break-all;"><%= error.stack %></pre>
         </details>
+      <% } %>
+    </div>
+  <% } else if (typeof isDatabaseError !== 'undefined' && isDatabaseError && typeof error !== 'undefined' && error) { %>
+    <div style="margin-top: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 4px; font-family: monospace; font-size: 0.9rem;">
+      <h3>Error Details</h3>
+      <p><strong>Message:</strong> <%= error.message %></p>
+      <% if (error.code) { %>
+        <p><strong>Code:</strong> <%= error.code %></p>
+      <% } %>
+      <% if (error.name) { %>
+        <p><strong>Type:</strong> <%= error.name %></p>
       <% } %>
     </div>
   <% } %>

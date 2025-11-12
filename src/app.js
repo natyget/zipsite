@@ -307,28 +307,44 @@ app.use((err, req, res, next) => {
     return next(err);
   }
   
+  // Check if it's a database connection error
+  const isDatabaseError = err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' || 
+                          err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET' ||
+                          (err.message && (
+                            err.message.includes('DATABASE_URL') ||
+                            err.message.includes('database') ||
+                            err.message.includes('connect') ||
+                            err.message.includes('connection') ||
+                            err.message.includes('Cannot find module \'pg\'') ||
+                            err.message.includes('Knex: run')
+                          ));
+  
   // In production, show generic error; in development, show more details
+  // BUT: Always show database connection errors with helpful messages
   const isDevelopment = config.nodeEnv !== 'production';
-  const errorDetails = isDevelopment ? {
+  const showErrorDetails = isDevelopment || isDatabaseError;
+  
+  const errorDetails = showErrorDetails ? {
     message: err.message,
     code: err.code,
     name: err.name,
-    stack: err.stack
+    stack: isDevelopment ? err.stack : undefined
   } : null;
   
   if (req.accepts('html')) {
     // Tell 500 page to use the old 'layout' file
     return res.status(500).render('errors/500', {
-      title: 'Server error',
+      title: isDatabaseError ? 'Database Connection Error' : 'Server error',
       layout: 'layout', // Use simple layout for error
       error: errorDetails,
-      isDevelopment
+      isDevelopment: showErrorDetails,
+      isDatabaseError: isDatabaseError
     });
   }
   return res.status(500).json({ 
-    error: 'Server error',
-    message: isDevelopment ? err.message : undefined,
-    code: isDevelopment ? err.code : undefined
+    error: isDatabaseError ? 'Database connection error' : 'Server error',
+    message: showErrorDetails ? err.message : undefined,
+    code: showErrorDetails ? err.code : undefined
   });
 });
 
