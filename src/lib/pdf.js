@@ -139,6 +139,13 @@ async function renderCompCard(slug, theme = null) {
     try {
       const page = await browser.newPage();
       
+      // Set viewport size to match PDF dimensions (important for proper rendering)
+      await page.setViewport({
+        width: 528, // 5.5in at 96 DPI
+        height: 816, // 8.5in at 96 DPI
+        deviceScaleFactor: 2 // Higher DPI for better quality
+      });
+      
       // Navigate to PDF view URL with timeout
       try {
         console.log('[renderCompCard] Navigating to PDF view URL:', target);
@@ -147,6 +154,50 @@ async function renderCompCard(slug, theme = null) {
           timeout: 30000 // 30 second timeout
         });
         console.log('[renderCompCard] Successfully navigated to PDF view URL');
+        
+        // Wait for fonts and images to load completely
+        // This ensures the page is fully rendered before generating PDF
+        try {
+          await page.evaluate(() => {
+            return Promise.all([
+              // Wait for all images to load
+              ...Array.from(document.images).map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise((resolve) => {
+                  img.onload = resolve;
+                  img.onerror = resolve; // Continue even if image fails
+                  setTimeout(resolve, 5000); // Timeout after 5 seconds
+                });
+              }),
+              // Wait for fonts to load
+              document.fonts.ready
+            ]);
+          });
+          
+          // Additional wait to ensure everything is rendered (using setTimeout in evaluate)
+          await page.evaluate(() => {
+            return new Promise(resolve => setTimeout(resolve, 1000));
+          });
+          
+          // Verify page has content
+          const hasContent = await page.evaluate(() => {
+            const compCard = document.querySelector('.comp-card');
+            return compCard !== null && compCard.innerHTML.trim().length > 0;
+          });
+          
+          if (!hasContent) {
+            console.warn('[renderCompCard] Warning: Page appears to have no content');
+            // Log page HTML for debugging
+            const pageHTML = await page.content();
+            console.log('[renderCompCard] Page HTML length:', pageHTML.length);
+          } else {
+            console.log('[renderCompCard] Page has content, ready for PDF generation');
+          }
+        } catch (waitError) {
+          console.warn('[renderCompCard] Error waiting for page load, continuing anyway:', waitError.message);
+        }
+        
+        console.log('[renderCompCard] Page fully loaded and rendered');
       } catch (navigationError) {
         console.error('[renderCompCard] Error navigating to PDF view URL:', {
           message: navigationError.message,
