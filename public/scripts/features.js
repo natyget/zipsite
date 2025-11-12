@@ -176,40 +176,214 @@
     }
   }
 
-  // Feature 3: Portfolio Toggle
+  // Feature 3: Portfolio Toggle with Morphing Animations
   function initPortfolioToggle() {
     const toggleButtons = document.querySelectorAll('.feature-demo__toggle-btn');
+    const portfolioFrame = document.getElementById('portfolio-frame');
     const brandZipsite = document.getElementById('portfolio-brand-zipsite');
+    const portfolioUrl = document.getElementById('portfolio-url');
+    const portfolioBadge = document.getElementById('portfolio-badge');
     const portfolioFeatures = document.getElementById('portfolio-features');
+    const proFeatures = portfolioFeatures?.querySelectorAll('.feature-demo__portfolio-feature--pro');
+    const galleryPreview = document.getElementById('portfolio-gallery-preview');
+    const proOverlay = document.getElementById('portfolio-pro-overlay');
 
-    if (!toggleButtons.length) return;
+    if (!toggleButtons.length || !portfolioFrame) return;
+
+    // Initial state - trigger reveal animations
+    setTimeout(() => {
+      if (portfolioFrame) {
+        portfolioFrame.classList.add('is-visible');
+      }
+      triggerRevealAnimations();
+    }, 100);
 
     toggleButtons.forEach(btn => {
       btn.addEventListener('click', () => {
-        // Update active state
-        toggleButtons.forEach(b => b.classList.remove('feature-demo__toggle-btn--active'));
-        btn.classList.add('feature-demo__toggle-btn--active');
-
         const view = btn.dataset.view;
+        const isPro = view === 'pro';
 
-        // Toggle ZipSite branding
-        if (brandZipsite) {
-          if (view === 'free') {
-            brandZipsite.style.display = 'inline';
-            brandZipsite.textContent = '— ZipSite';
+        // Prevent rapid clicking
+        if (portfolioFrame.dataset.state === view) return;
+
+        // Update active state with smooth transition
+        toggleButtons.forEach(b => {
+          b.classList.remove('feature-demo__toggle-btn--active');
+          b.style.pointerEvents = 'none';
+        });
+        
+        setTimeout(() => {
+          btn.classList.add('feature-demo__toggle-btn--active');
+          toggleButtons.forEach(b => {
+            b.style.pointerEvents = '';
+          });
+        }, 200);
+
+        // Morph portfolio frame state
+        portfolioFrame.dataset.state = view;
+
+        // Animate Pro features reveal
+        if (proFeatures && proFeatures.length > 0) {
+          proFeatures.forEach((feature, index) => {
+            if (isPro) {
+              setTimeout(() => {
+                feature.setAttribute('aria-hidden', 'false');
+                feature.classList.add('is-visible');
+              }, 300 + (index * 100));
+            } else {
+              feature.setAttribute('aria-hidden', 'true');
+              feature.classList.remove('is-visible');
+            }
+          });
+        }
+
+        // Animate gallery preview
+        if (galleryPreview) {
+          if (isPro) {
+            setTimeout(() => {
+              galleryPreview.setAttribute('aria-hidden', 'false');
+            }, 400);
           } else {
-            brandZipsite.style.display = 'none';
+            galleryPreview.setAttribute('aria-hidden', 'true');
           }
         }
 
-        // Toggle Pro features
-        if (portfolioFeatures) {
-          if (view === 'pro') {
-            portfolioFeatures.style.display = 'flex';
+        // Animate pro overlay
+        if (proOverlay) {
+          if (isPro) {
+            proOverlay.setAttribute('aria-hidden', 'false');
           } else {
-            portfolioFeatures.style.display = 'none';
+            proOverlay.setAttribute('aria-hidden', 'true');
           }
         }
+      });
+    });
+
+    // Trigger reveal animations for scroll-triggered elements
+    function triggerRevealAnimations() {
+      const revealElements = document.querySelectorAll('[data-reveal]');
+      const revealItems = document.querySelectorAll('[data-reveal-item]');
+
+      revealElements.forEach((el, index) => {
+        setTimeout(() => {
+          el.classList.add('is-visible');
+        }, 200 + (index * 150));
+      });
+
+      // Stagger individual items
+      revealItems.forEach((item, index) => {
+        setTimeout(() => {
+          item.classList.add('is-visible');
+        }, 400 + (index * 100));
+      });
+    }
+
+    // Intersection Observer for scroll-triggered reveals
+    const portfolioSection = document.getElementById('feature-portfolio');
+    if (portfolioSection) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const portfolioDemo = entry.target.querySelector('.feature-demo--portfolio');
+            if (portfolioDemo) {
+              portfolioDemo.classList.add('is-visible');
+            }
+            
+            // Trigger reveal animations when section is visible
+            if (!portfolioFrame.classList.contains('is-visible')) {
+              setTimeout(() => {
+                portfolioFrame.classList.add('is-visible');
+                triggerRevealAnimations();
+              }, 200);
+            }
+          }
+        });
+      }, {
+        threshold: 0.2,
+        rootMargin: '0px 0px -100px 0px'
+      });
+
+      observer.observe(portfolioSection);
+    }
+
+    // Add micro-interactions and hover effects
+    addMicroInteractions();
+  }
+
+  // Micro-interactions for portfolio feature
+  function addMicroInteractions() {
+    const portfolioFrame = document.getElementById('portfolio-frame');
+    const stats = document.querySelectorAll('.feature-demo__portfolio-stat');
+    const features = document.querySelectorAll('.feature-demo__portfolio-feature');
+    const galleryItems = document.querySelectorAll('.gallery-preview__item');
+
+    // Add hover effects to stats
+    stats.forEach(stat => {
+      stat.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-4px) scale(1.02)';
+      });
+      stat.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0) scale(1)';
+      });
+    });
+
+    // Add click ripple effect to toggle buttons
+    const toggleButtons = document.querySelectorAll('.feature-demo__toggle-btn');
+    toggleButtons.forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        const ripple = document.createElement('span');
+        const rect = this.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        ripple.classList.add('ripple-effect');
+        
+        this.appendChild(ripple);
+        
+        setTimeout(() => {
+          ripple.remove();
+        }, 600);
+      });
+    });
+
+    // Add parallax effect to hero image on scroll
+    if (portfolioFrame) {
+      const heroImg = portfolioFrame.querySelector('.feature-demo__portfolio-hero-img');
+      if (heroImg) {
+        let ticking = false;
+        window.addEventListener('scroll', () => {
+          if (!ticking) {
+            window.requestAnimationFrame(() => {
+              const rect = portfolioFrame.getBoundingClientRect();
+              const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+              
+              if (isVisible) {
+                const scrollProgress = Math.max(0, Math.min(1, (window.innerHeight - rect.top) / window.innerHeight));
+                const translateY = scrollProgress * 20;
+                heroImg.style.transform = `translateY(${translateY}px) scale(1.02)`;
+              }
+              
+              ticking = false;
+            });
+            ticking = true;
+          }
+        });
+      }
+    }
+
+    // Add gallery item interactions
+    galleryItems.forEach((item, index) => {
+      item.addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.15) translateY(-4px)';
+        this.style.zIndex = '4';
+      });
+      item.addEventListener('mouseleave', function() {
+        this.style.transform = 'scale(1) translateY(0)';
+        this.style.zIndex = '3';
       });
     });
   }
