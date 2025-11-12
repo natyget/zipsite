@@ -486,18 +486,29 @@
   </style>
 </head>
 <body>
+  <%
+    // Ensure theme exists with fallback values
+    const bgColor = (typeof theme !== 'undefined' && theme && theme.colors && theme.colors.background) ? theme.colors.background : '#FAF9F7';
+    const textColor = (typeof theme !== 'undefined' && theme && theme.colors && theme.colors.text) ? theme.colors.text : '#2D2D2D';
+    const accentColor = (typeof theme !== 'undefined' && theme && theme.colors && theme.colors.accent) ? theme.colors.accent : '#C9A55A';
+    const nameFont = (typeof fontCSS !== 'undefined' && fontCSS && fontCSS.nameFont) ? fontCSS.nameFont : '"Playfair Display", serif';
+    const bioFont = (typeof fontCSS !== 'undefined' && fontCSS && fontCSS.bioFont) ? fontCSS.bioFont : '"Lora", serif';
+    const statsFont = (typeof fontCSS !== 'undefined' && fontCSS && fontCSS.statsFont) ? fontCSS.statsFont : '"Inter", sans-serif';
+    const gridCols = (typeof theme !== 'undefined' && theme && theme.layout && theme.layout.imageGrid && theme.layout.imageGrid.cols) ? theme.layout.imageGrid.cols : 2;
+    const gridRows = (typeof theme !== 'undefined' && theme && theme.layout && theme.layout.imageGrid && theme.layout.imageGrid.rows) ? theme.layout.imageGrid.rows : 2;
+  %>
   <div class="comp-card <%= typeof layoutClasses !== 'undefined' ? layoutClasses : '' %> <%= isPro ? 'comp-card--pro' : '' %>" 
        style="
-         --bg-color: <%= typeof theme !== 'undefined' && theme.colors ? theme.colors.background : '#FAF9F7' %>;
-         --text-color: <%= typeof theme !== 'undefined' && theme.colors ? theme.colors.text : '#2D2D2D' %>;
-         --accent-color: <%= typeof theme !== 'undefined' && theme.colors ? theme.colors.accent : '#C9A55A' %>;
-         --name-font: <%= typeof fontCSS !== 'undefined' && fontCSS.nameFont ? fontCSS.nameFont : '"Playfair Display", serif' %>;
-         --bio-font: <%= typeof fontCSS !== 'undefined' && fontCSS.bioFont ? fontCSS.bioFont : '"Lora", serif' %>;
-         --stats-font: <%= typeof fontCSS !== 'undefined' && fontCSS.statsFont ? fontCSS.statsFont : '"Inter", sans-serif' %>;
-         --grid-cols: <%= typeof theme !== 'undefined' && theme.layout && theme.layout.imageGrid ? theme.layout.imageGrid.cols : 2 %>;
-         --grid-rows: <%= typeof theme !== 'undefined' && theme.layout && theme.layout.imageGrid ? theme.layout.imageGrid.rows : 2 %>;
-         background: var(--bg-color);
-         color: var(--text-color);
+         --bg-color: <%= bgColor %>;
+         --text-color: <%= textColor %>;
+         --accent-color: <%= accentColor %>;
+         --name-font: <%= nameFont %>;
+         --bio-font: <%= bioFont %>;
+         --stats-font: <%= statsFont %>;
+         --grid-cols: <%= gridCols %>;
+         --grid-rows: <%= gridRows %>;
+         background: <%= bgColor %> !important;
+         color: <%= textColor %> !important;
        ">
     
     <!-- Header: Name, Location, Stats -->

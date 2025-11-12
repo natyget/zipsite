@@ -292,14 +292,49 @@ function renderPdfView(req, res, data, isDemo) {
 
   // Ensure mergedTheme has all required properties
   if (!mergedTheme) {
-    console.error('[renderPdfView] mergedTheme is null, using default theme');
-    throw new Error('Theme merge failed');
+    console.error('[renderPdfView] mergedTheme is null, falling back to default theme');
+    // Fallback to default theme if merge failed
+    mergedTheme = getTheme(getDefaultTheme());
+  }
+
+  // Ensure mergedTheme has all required properties with fallbacks
+  if (!mergedTheme.colors) {
+    console.warn('[renderPdfView] mergedTheme.colors is missing, using default colors');
+    mergedTheme.colors = {
+      background: '#FAF9F7',
+      text: '#2D2D2D',
+      accent: '#C9A55A'
+    };
+  }
+
+  if (!mergedTheme.fonts) {
+    console.warn('[renderPdfView] mergedTheme.fonts is missing, using default fonts');
+    mergedTheme.fonts = {
+      name: 'Playfair Display',
+      bio: 'Lora',
+      stats: 'Inter'
+    };
   }
 
   // Ensure layout exists (fallback to default if missing)
   if (!mergedTheme.layout) {
     console.warn('[renderPdfView] mergedTheme.layout is missing, using default layout');
-    mergedTheme.layout = theme.layout || { headerPosition: 'top', imageGrid: { cols: 2, rows: 2 }, bioPosition: 'bottom-center', statsPosition: 'header-right' };
+    mergedTheme.layout = {
+      headerPosition: 'top',
+      imageGrid: { cols: 2, rows: 2 },
+      bioPosition: 'bottom-center',
+      statsPosition: 'header-right'
+    };
+  }
+
+  // Ensure profile has required fields
+  if (!profile || !profile.first_name || !profile.last_name) {
+    console.error('[renderPdfView] Profile is missing required fields:', {
+      hasProfile: !!profile,
+      hasFirstName: !!(profile && profile.first_name),
+      hasLastName: !!(profile && profile.last_name)
+    });
+    throw new Error('Profile is missing required fields (first_name, last_name)');
   }
 
   // Build base URL for images
@@ -344,37 +379,67 @@ function renderPdfView(req, res, data, isDemo) {
   // Disable layout for PDF view - it's a standalone HTML document
   res.locals.layout = false;
 
+  // Set content type to HTML (important for PDF rendering)
+  res.set('Content-Type', 'text/html; charset=utf-8');
+
   console.log('[renderPdfView] Rendering template with data:', {
     profileName: `${profile.first_name} ${profile.last_name}`,
     imageCount: gallery.length,
     hero: hero ? 'yes' : 'no',
     themeKey: themeKey,
     hasGoogleFonts: !!googleFontsUrl,
-    hasLayoutClasses: !!layoutClasses
+    hasLayoutClasses: !!layoutClasses,
+    hasTheme: !!mergedTheme,
+    hasThemeColors: !!(mergedTheme && mergedTheme.colors),
+    bgColor: mergedTheme && mergedTheme.colors ? mergedTheme.colors.background : 'not set',
+    textColor: mergedTheme && mergedTheme.colors ? mergedTheme.colors.text : 'not set',
+    baseUrl: baseUrl
   });
 
-  // Call res.render() directly - it will send the response
-  // res.render() doesn't return a Promise, so we don't need to await it
-  res.render('pdf/compcard', {
-    layout: false,
-    title: `${profile.first_name} ${profile.last_name} - Comp Card`,
-    profile,
-    images: gallery,
-    hero,
-    heightFeet: toFeetInches(profile.height_cm),
-    watermark: !profile.is_pro,
-    theme: mergedTheme,
-    themeKey: themeKey,
-    baseUrl,
-    isPro: profile.is_pro,
-    qrCode: qrCodeDataUrl,
-    portfolioUrl: `${baseUrl}/portfolio/${profile.slug}`,
-    fontCSS,
-    googleFontsUrl,
-    layoutClasses,
-    imageGridCSS,
-    agencyLogo
-  });
+  // Verify critical data before rendering
+  if (!profile || !profile.first_name || !profile.last_name) {
+    console.error('[renderPdfView] CRITICAL: Profile missing required fields!');
+    return renderSimpleError(res, 500, 'Error', 'Profile data is incomplete.');
+  }
+
+  if (!mergedTheme || !mergedTheme.colors) {
+    console.error('[renderPdfView] CRITICAL: Theme is missing colors!');
+    return renderSimpleError(res, 500, 'Error', 'Theme configuration is incomplete.');
+  }
+
+  try {
+    // Call res.render() directly - it will send the response
+    // res.render() doesn't return a Promise, so we don't need to await it
+    res.render('pdf/compcard', {
+      layout: false,
+      title: `${profile.first_name} ${profile.last_name} - Comp Card`,
+      profile,
+      images: gallery,
+      hero,
+      heightFeet: toFeetInches(profile.height_cm),
+      watermark: !profile.is_pro,
+      theme: mergedTheme,
+      themeKey: themeKey,
+      baseUrl,
+      isPro: profile.is_pro,
+      qrCode: qrCodeDataUrl,
+      portfolioUrl: `${baseUrl}/portfolio/${profile.slug}`,
+      fontCSS,
+      googleFontsUrl,
+      layoutClasses,
+      imageGridCSS,
+      agencyLogo
+    });
+
+    console.log('[renderPdfView] Template rendered successfully');
+  } catch (renderError) {
+    console.error('[renderPdfView] ERROR rendering template:', {
+      message: renderError.message,
+      stack: renderError.stack,
+      profileName: profile ? `${profile.first_name} ${profile.last_name}` : 'no profile'
+    });
+    return renderSimpleError(res, 500, 'Error', 'Failed to render PDF template.');
+  }
 }
 
 router.get('/pdf/view/:slug', async (req, res, next) => {

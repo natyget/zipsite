@@ -158,43 +158,117 @@ async function renderCompCard(slug, theme = null) {
         // Wait for fonts and images to load completely
         // This ensures the page is fully rendered before generating PDF
         try {
+          console.log('[renderCompCard] Waiting for page content to load...');
+          
+          // Wait for network to be idle (already waited with networkidle0, but add extra buffer)
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Wait for all images to load
           await page.evaluate(() => {
-            return Promise.all([
-              // Wait for all images to load
-              ...Array.from(document.images).map(img => {
-                if (img.complete) return Promise.resolve();
+            return Promise.all(
+              Array.from(document.images).map(img => {
+                if (img.complete && img.naturalHeight !== 0) {
+                  return Promise.resolve();
+                }
                 return new Promise((resolve) => {
-                  img.onload = resolve;
-                  img.onerror = resolve; // Continue even if image fails
-                  setTimeout(resolve, 5000); // Timeout after 5 seconds
+                  const timeout = setTimeout(resolve, 10000); // 10 second timeout per image
+                  img.onload = () => {
+                    clearTimeout(timeout);
+                    resolve();
+                  };
+                  img.onerror = () => {
+                    clearTimeout(timeout);
+                    resolve(); // Continue even if image fails
+                  };
                 });
-              }),
-              // Wait for fonts to load
-              document.fonts.ready
-            ]);
+              })
+            );
           });
           
-          // Additional wait to ensure everything is rendered (using setTimeout in evaluate)
+          // Wait for fonts to load
+          await page.evaluate(async () => {
+            try {
+              await document.fonts.ready;
+            } catch (e) {
+              // Fonts might not be available, continue anyway
+            }
+          });
+          
+          // Wait for CSS to apply and layout to stabilize
           await page.evaluate(() => {
-            return new Promise(resolve => setTimeout(resolve, 1000));
+            return new Promise(resolve => {
+              // Wait for next animation frame
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  setTimeout(resolve, 500); // Additional 500ms for layout stability
+                });
+              });
+            });
           });
           
-          // Verify page has content
-          const hasContent = await page.evaluate(() => {
+          // Verify page has content and is visible
+          const pageInfo = await page.evaluate(() => {
             const compCard = document.querySelector('.comp-card');
-            return compCard !== null && compCard.innerHTML.trim().length > 0;
+            const body = document.body;
+            const computedStyle = compCard ? window.getComputedStyle(compCard) : null;
+            
+            return {
+              hasCompCard: compCard !== null,
+              compCardHTML: compCard ? compCard.innerHTML.length : 0,
+              compCardText: compCard ? compCard.textContent.trim().length : 0,
+              bodyHTML: body.innerHTML.length,
+              bodyText: body.textContent.trim().length,
+              bgColor: computedStyle ? computedStyle.backgroundColor : null,
+              color: computedStyle ? computedStyle.color : null,
+              display: computedStyle ? computedStyle.display : null,
+              visibility: computedStyle ? computedStyle.visibility : null,
+              opacity: computedStyle ? computedStyle.opacity : null,
+              width: computedStyle ? computedStyle.width : null,
+              height: computedStyle ? computedStyle.height : null
+            };
           });
           
-          if (!hasContent) {
-            console.warn('[renderCompCard] Warning: Page appears to have no content');
-            // Log page HTML for debugging
+          console.log('[renderCompCard] Page content check:', pageInfo);
+          
+          if (!pageInfo.hasCompCard || pageInfo.compCardHTML === 0) {
+            console.error('[renderCompCard] ERROR: Page has no comp-card content!');
+            // Log full page HTML for debugging
             const pageHTML = await page.content();
-            console.log('[renderCompCard] Page HTML length:', pageHTML.length);
+            console.error('[renderCompCard] Full page HTML length:', pageHTML.length);
+            console.error('[renderCompCard] First 1000 chars of HTML:', pageHTML.substring(0, 1000));
+            
+            // Check if there are any errors in the console
+            const consoleLogs = await page.evaluate(() => {
+              return window.consoleErrors || [];
+            });
+            if (consoleLogs.length > 0) {
+              console.error('[renderCompCard] Console errors:', consoleLogs);
+            }
+          } else if (pageInfo.compCardText === 0) {
+            console.warn('[renderCompCard] WARNING: Comp card has no text content (might be CSS issue)');
+            console.warn('[renderCompCard] Styles:', {
+              bgColor: pageInfo.bgColor,
+              color: pageInfo.color,
+              display: pageInfo.display,
+              visibility: pageInfo.visibility,
+              opacity: pageInfo.opacity
+            });
           } else {
-            console.log('[renderCompCard] Page has content, ready for PDF generation');
+            console.log('[renderCompCard] Page content verified, ready for PDF generation');
+            console.log('[renderCompCard] Content stats:', {
+              compCardHTML: pageInfo.compCardHTML,
+              compCardText: pageInfo.compCardText,
+              bodyHTML: pageInfo.bodyHTML,
+              bodyText: pageInfo.bodyText
+            });
           }
+          
+          // Additional safety wait
+          await new Promise(resolve => setTimeout(resolve, 500));
         } catch (waitError) {
-          console.warn('[renderCompCard] Error waiting for page load, continuing anyway:', waitError.message);
+          console.error('[renderCompCard] Error waiting for page load:', waitError.message);
+          console.error('[renderCompCard] Stack:', waitError.stack);
+          // Continue anyway - sometimes pages load even if wait fails
         }
         
         console.log('[renderCompCard] Page fully loaded and rendered');
