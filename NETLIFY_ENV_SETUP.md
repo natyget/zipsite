@@ -28,7 +28,10 @@ This error means your function is trying to connect to a local PostgreSQL databa
 
 4. **Copy the Complete String**
    - Click the copy button next to the connection string
-   - Make sure you copy the ENTIRE string including:
+   - **⚠️ CRITICAL**: Copy ONLY the connection string itself, NOT the command!
+   - **DO NOT** copy commands like `psql 'postgresql://...'` or `PGPASSWORD=... psql ...`
+   - **DO NOT** include quotes around the connection string
+   - Make sure you copy the ENTIRE connection string including:
      - `postgresql://` prefix
      - Username and password
      - Your unique hostname (starts with `ep-`)
@@ -37,18 +40,45 @@ This error means your function is trying to connect to a local PostgreSQL databa
 
 5. **Verify the Format**
    - Should start with `postgresql://` or `postgres://`
+   - Should NOT start with `psql`, `PGPASSWORD`, or any command
+   - Should NOT have quotes around it (`'...'` or `"..."`)
    - Should contain your unique hostname (NOT `host.neon.tech`)
    - Should end with `?sslmode=require`
    - Should be a long string (not a short placeholder)
+   
+   **What to copy:**
+   - ✅ `postgresql://user:pass@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require`
+   
+   **What NOT to copy:**
+   - ❌ `psql 'postgresql://user:pass@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require'`
+   - ❌ `'postgresql://user:pass@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require'`
+   - ❌ Any command that includes `psql` or `PGPASSWORD`
 
 **Example of CORRECT connection string:**
 ```
 postgresql://myuser:mypassword@ep-cool-darkness-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
 ```
 
-**Example of WRONG (placeholder - will cause errors):**
+**Examples of WRONG (will cause errors):**
+
+❌ **Placeholder (wrong hostname):**
 ```
-postgresql://user:password@host.neon.tech/dbname?sslmode=require  ❌ DON'T USE THIS!
+postgresql://user:password@host.neon.tech/dbname?sslmode=require
+```
+
+❌ **Includes psql command (wrong - copied entire command):**
+```
+psql 'postgresql://user:password@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require'
+```
+
+❌ **Includes quotes (wrong - quotes should not be included):**
+```
+'postgresql://user:password@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require'
+```
+
+❌ **Includes PGPASSWORD command (wrong - copied entire command):**
+```
+PGPASSWORD=password psql -h ep-xxx-xxx.us-east-2.aws.neon.tech -U user -d neondb
 ```
 
 ### Step 2: Set Environment Variables in Netlify
@@ -187,13 +217,36 @@ After setting environment variables:
 - Make sure you redeployed after setting variables
 - Check that variables are set for the correct scope (Production, Preview, etc.)
 
-### Issue 3: Invalid DATABASE_URL format
+### Issue 3: Invalid DATABASE_URL format (includes `psql` command or quotes)
+
+**Problem**: Your DATABASE_URL contains a command (like `psql`) or quotes instead of just the connection string.
+
+**Error message**: `Invalid DATABASE_URL format. Expected postgresql:// or postgres://, got: psql 'postgresql://...`
 
 **Solution**:
-- Ensure DATABASE_URL starts with `postgresql://` or `postgres://`
-- Check that it includes `?sslmode=require` at the end
-- Verify there are no extra spaces or quotes
-- Copy the connection string directly from Neon dashboard
+1. **Go to Neon Console** (https://console.neon.tech)
+2. **Select your project**
+3. **Click "Connection Details"** or **"Connection String"**
+4. **Find the connection string** (it starts with `postgresql://`)
+5. **Copy ONLY the connection string**, NOT the command:
+   - ✅ **CORRECT**: `postgresql://user:pass@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require`
+   - ❌ **WRONG**: `psql 'postgresql://user:pass@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require'`
+   - ❌ **WRONG**: `'postgresql://user:pass@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require'`
+6. **Update DATABASE_URL in Netlify**:
+   - Go to Netlify Dashboard → Site settings → Environment variables
+   - Find `DATABASE_URL`
+   - Click "Edit" and paste ONLY the connection string (no `psql`, no quotes)
+7. **Verify**:
+   - Should start with `postgresql://` or `postgres://`
+   - Should NOT start with `psql` or contain quotes
+   - Should end with `?sslmode=require`
+8. **Redeploy your site** after updating
+
+**Common mistakes to avoid**:
+- ❌ Copying the entire `psql` command
+- ❌ Including quotes (`'...'` or `"..."`)
+- ❌ Including `PGPASSWORD` or other environment variables
+- ❌ Copying example commands from documentation
 
 ### Issue 4: Environment variables not taking effect
 
