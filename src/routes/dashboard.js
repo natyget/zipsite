@@ -70,7 +70,21 @@ router.get('/dashboard', async (req, res, next) => {
 
 router.get('/dashboard/talent', requireRole('TALENT'), async (req, res, next) => {
   try {
+    console.log('[Dashboard/Talent] Loading profile for user:', {
+      userId: req.session.userId,
+      role: req.session.role
+    });
+    
     const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
+    
+    console.log('[Dashboard/Talent] Profile lookup result:', {
+      userId: req.session.userId,
+      profileFound: !!profile,
+      profileId: profile?.id || null,
+      profileSlug: profile?.slug || null,
+      profileName: profile ? `${profile.first_name} ${profile.last_name}` : null
+    });
+    
     if (!profile) {
       // Logged-in user without profile - show dashboard with empty state
       // Don't redirect to /apply since /apply is only for logged-out users

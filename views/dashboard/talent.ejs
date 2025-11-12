@@ -99,13 +99,19 @@
       </div>
 
       <div class="dash-hero__actions">
-        <button type="button" class="button-primary" id="pdf-download-btn" data-slug="<%= slug %>" data-theme="<%= (typeof currentTheme !== 'undefined' ? currentTheme : safeProfile.pdf_theme) || 'classic-serif' %>" data-is-pro="<%= safeProfile.is_pro ? 'true' : 'false' %>">Download Comp Card</button>
-        <% if (safeProfile.is_pro) { %>
-          <a href="/dashboard/pdf-customizer" class="button-secondary">Customize PDF</a>
-        <% } %>
-        <a href="/portfolio/<%= slug %>" class="button-secondary" target="_blank" rel="noopener">View Portfolio</a>
-        <% if (!safeProfile.is_pro) { %>
-          <a href="/pro/upgrade" class="button-primary">Upgrade to Pro</a>
+        <% if (typeof profile !== 'undefined' && profile && profile.id) { %>
+          <!-- Only show these buttons when profile exists -->
+          <button type="button" class="button-primary" id="pdf-download-btn" data-slug="<%= slug %>" data-theme="<%= (typeof currentTheme !== 'undefined' ? currentTheme : safeProfile.pdf_theme) || 'classic-serif' %>" data-is-pro="<%= safeProfile.is_pro ? 'true' : 'false' %>">Download Comp Card</button>
+          <% if (safeProfile.is_pro) { %>
+            <a href="/dashboard/pdf-customizer" class="button-secondary">Customize PDF</a>
+          <% } %>
+          <a href="/portfolio/<%= slug %>" class="button-secondary" target="_blank" rel="noopener">View Portfolio</a>
+          <% if (!safeProfile.is_pro) { %>
+            <a href="/pro/upgrade" class="button-primary">Upgrade to Pro</a>
+          <% } %>
+        <% } else { %>
+          <!-- Show message when no profile exists -->
+          <p class="dash-hero__no-profile-message">Complete your profile below to unlock PDF downloads and portfolio features.</p>
         <% } %>
       </div>
     </div>
@@ -366,13 +372,26 @@
   
   <script>
     // Pass theme data to JavaScript
-    window.PDF_THEME_DATA = {
-      allThemes: <%- JSON.stringify(typeof allThemes !== 'undefined' ? allThemes : {}) %>,
-      freeThemes: <%- JSON.stringify(typeof freeThemes !== 'undefined' ? freeThemes : []) %>,
-      proThemes: <%- JSON.stringify(typeof proThemes !== 'undefined' ? proThemes : []) %>,
-      currentTheme: '<%= (typeof currentTheme !== 'undefined' ? currentTheme : safeProfile.pdf_theme) || 'classic-serif' %>',
-      isPro: <%= safeProfile.is_pro ? 'true' : 'false' %>,
-      profileSlug: '<%= slug %>',
-      baseUrl: '<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>'
-    };
+    <% if (typeof profile !== 'undefined' && profile && profile.id) { %>
+      window.PDF_THEME_DATA = {
+        allThemes: <%- JSON.stringify(typeof allThemes !== 'undefined' ? allThemes : {}) %>,
+        freeThemes: <%- JSON.stringify(typeof freeThemes !== 'undefined' ? freeThemes : []) %>,
+        proThemes: <%- JSON.stringify(typeof proThemes !== 'undefined' ? proThemes : []) %>,
+        currentTheme: '<%= (typeof currentTheme !== 'undefined' ? currentTheme : safeProfile.pdf_theme) || 'classic-serif' %>',
+        isPro: <%= safeProfile.is_pro ? 'true' : 'false' %>,
+        profileSlug: '<%= slug %>',
+        baseUrl: '<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>'
+      };
+    <% } else { %>
+      // No profile exists - set empty data to prevent errors
+      window.PDF_THEME_DATA = {
+        allThemes: {},
+        freeThemes: [],
+        proThemes: [],
+        currentTheme: 'classic-serif',
+        isPro: false,
+        profileSlug: '',
+        baseUrl: '<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>'
+      };
+    <% } %>
   </script>

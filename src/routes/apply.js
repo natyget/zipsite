@@ -414,9 +414,16 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       partnerAgencyId = agency.id;
     }
 
+    // Check for existing profile using userId (for both logged-in and new users)
     console.log('[Apply] Checking for existing profile for user:', userId);
     const existingProfile = await knex('profiles').where({ user_id: userId }).first();
-    console.log('[Apply] Existing profile:', existingProfile ? 'found' : 'not found');
+    
+    console.log('[Apply] Profile lookup result:', {
+      userId: userId,
+      existingProfileFound: !!existingProfile,
+      existingProfileId: existingProfile?.id || null,
+      existingProfileSlug: existingProfile?.slug || null
+    });
     
     const curatedBio = curateBio(bio, first_name, last_name);
     const cleanedMeasurements = normalizeMeasurements(measurements);
@@ -454,12 +461,21 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
           slug,
           updated_at: knex.fn.now()
         });
-      console.log('[Apply] Profile updated successfully:', profileId);
+      console.log('[Apply] Profile updated successfully:', {
+        profileId: profileId,
+        userId: userId,
+        slug: slug
+      });
     } else {
-      console.log('[Apply] Creating new profile for logged-in user');
+      console.log('[Apply] Creating new profile:', {
+        userId: userId,
+        name: `${first_name} ${last_name}`,
+        isLoggedIn: isLoggedIn
+      });
       const slug = await ensureUniqueSlug(knex, 'profiles', `${first_name}-${last_name}`);
       profileId = uuidv4();
-      await knex('profiles').insert({
+      
+      const profileData = {
         id: profileId,
         user_id: userId,
         slug,
@@ -479,8 +495,25 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         bio_curated: curatedBio,
         specialties: specialtiesJson,
         partner_agency_id: partnerAgencyId
+      };
+      
+      console.log('[Apply] Inserting profile into database:', {
+        profileId: profileId,
+        userId: userId,
+        slug: slug,
+        name: `${first_name} ${last_name}`,
+        user_id: profileData.user_id
       });
-      console.log('[Apply] Profile created successfully:', profileId);
+      
+      await knex('profiles').insert(profileData);
+      
+      console.log('[Apply] Profile created successfully:', {
+        profileId: profileId,
+        userId: userId,
+        slug: slug,
+        linkedToUser: true,
+        user_id: profileData.user_id
+      });
     }
 
     // Process and save uploaded images
@@ -575,7 +608,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       });
     });
     
-    // Verify profile was created/updated before redirecting
+    // Verify profile was created/updated and is linked to the user before redirecting
     const verifyProfile = await knex('profiles').where({ id: profileId }).first();
     if (!verifyProfile) {
       console.error('[Apply] ERROR: Profile not found after creation!', { profileId, userId });
@@ -589,10 +622,31 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       });
     }
     
-    console.log('[Apply] Profile verified, redirecting to dashboard:', {
+    // Verify the profile is linked to the correct user
+    if (verifyProfile.user_id !== userId) {
+      console.error('[Apply] ERROR: Profile user_id mismatch!', {
+        profileId: verifyProfile.id,
+        profileUserId: verifyProfile.user_id,
+        sessionUserId: userId,
+        expectedMatch: verifyProfile.user_id === userId
+      });
+      addMessage(req, 'error', 'Profile linking error. Please contact support.');
+      return res.status(500).render('apply/index', {
+        title: 'Start your ZipSite profile',
+        values: req.body,
+        errors: {},
+        layout: 'layout',
+        isLoggedIn
+      });
+    }
+    
+    console.log('[Apply] Profile verified and linked to user, redirecting to dashboard:', {
       profileId: verifyProfile.id,
+      userId: verifyProfile.user_id,
+      sessionUserId: userId,
       slug: verifyProfile.slug,
-      name: `${verifyProfile.first_name} ${verifyProfile.last_name}`
+      name: `${verifyProfile.first_name} ${verifyProfile.last_name}`,
+      linkedCorrectly: verifyProfile.user_id === userId
     });
     
     // Use 303 See Other for POST redirect (best practice)
