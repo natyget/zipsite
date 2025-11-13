@@ -1,10 +1,11 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
 const knex = require('../db/knex');
-const { loginSchema, signupSchema, agencySignupSchema } = require('../lib/validation');
+const { loginSchema, agencySignupSchema } = require('../lib/validation');
 const { addMessage } = require('../middleware/context');
 const { ensureUniqueSlug } = require('../lib/slugify');
+const { verifyIdToken, createUser: createFirebaseUser, getUserByEmail } = require('../lib/firebase-admin');
+const { extractIdToken } = require('../middleware/firebase-auth');
 
 const router = express.Router();
 
@@ -39,7 +40,7 @@ router.get('/login', async (req, res) => {
   });
 });
 
-// POST /login
+// POST /login - Verify Firebase token and create session
 router.post('/login', async (req, res, next) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -54,63 +55,63 @@ router.post('/login', async (req, res, next) => {
     });
   }
 
-  const { email, password } = parsed.data;
+  const idToken = extractIdToken(req) || req.body.firebase_token;
   const nextPath = safeNext(req.body.next);
 
-  // Normalize email (lowercase, trim)
-  const normalizedEmail = email.toLowerCase().trim();
-
-  console.log('[Login] Attempting login for email:', normalizedEmail);
+  if (!idToken) {
+    console.log('[Login] No Firebase token provided');
+    res.locals.currentPage = 'login';
+    return res.status(401).render('auth/login', {
+      title: 'Sign in',
+      values: req.body,
+      errors: { email: ['Authentication failed. Please try again.'] },
+      layout: 'layout',
+      currentPage: 'login'
+    });
+  }
 
   try {
-    const user = await knex('users').where({ email: normalizedEmail }).first();
-    
+    // Verify Firebase ID token
+    const decodedToken = await verifyIdToken(idToken);
+    const firebaseUid = decodedToken.uid;
+    const email = decodedToken.email;
+
+    if (!firebaseUid || !email) {
+      console.log('[Login] Invalid token data:', { firebaseUid, email });
+      res.locals.currentPage = 'login';
+      return res.status(401).render('auth/login', {
+        title: 'Sign in',
+        values: req.body,
+        errors: { email: ['Invalid authentication token.'] },
+        layout: 'layout',
+        currentPage: 'login'
+      });
+    }
+
+    console.log('[Login] Firebase token verified for:', { firebaseUid, email });
+
+    // Look up user in database by Firebase UID
+    let user = await knex('users').where({ firebase_uid: firebaseUid }).first();
+
+    // Fallback: Try to find user by email (for migration period)
     if (!user) {
-      console.log('[Login] User not found for email:', normalizedEmail);
-      // Also check if there are any users in the database (for debugging)
-      const userCount = await knex('users').count('id as count').first();
-      console.log('[Login] Total users in database:', userCount?.count || 0);
+      const normalizedEmail = email.toLowerCase().trim();
+      user = await knex('users').where({ email: normalizedEmail }).first();
       
-      res.locals.currentPage = 'login';
-      return res.status(401).render('auth/login', {
-        title: 'Sign in',
-        values: req.body,
-        errors: { email: ['Invalid credentials'] },
-        layout: 'layout',
-        currentPage: 'login'
-      });
+      // If user exists but doesn't have firebase_uid, update it
+      if (user && !user.firebase_uid) {
+        await knex('users').where({ id: user.id }).update({ firebase_uid: firebaseUid });
+        console.log('[Login] Updated user with Firebase UID:', { userId: user.id, firebaseUid });
+      }
     }
 
-    console.log('[Login] User found:', {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      hasPasswordHash: !!user.password_hash,
-      passwordHashLength: user.password_hash?.length || 0
-    });
-
-    if (!user.password_hash) {
-      console.error('[Login] User has no password hash!', { userId: user.id, email: user.email });
+    if (!user) {
+      console.log('[Login] User not found in database for Firebase UID:', firebaseUid);
       res.locals.currentPage = 'login';
       return res.status(401).render('auth/login', {
         title: 'Sign in',
         values: req.body,
-        errors: { email: ['Invalid credentials'] },
-        layout: 'layout',
-        currentPage: 'login'
-      });
-    }
-
-    const valid = await bcrypt.compare(password, user.password_hash);
-    console.log('[Login] Password comparison result:', valid);
-    
-    if (!valid) {
-      console.log('[Login] Invalid password for email:', normalizedEmail);
-      res.locals.currentPage = 'login';
-      return res.status(401).render('auth/login', {
-        title: 'Sign in',
-        values: req.body,
-        errors: { email: ['Invalid credentials'] },
+        errors: { email: ['Account not found. Please sign up first.'] },
         layout: 'layout',
         currentPage: 'login'
       });
@@ -136,37 +137,35 @@ router.post('/login', async (req, res, next) => {
 
     return res.redirect(nextPath || redirectForRole(user.role));
   } catch (error) {
-    // Log database connection errors for debugging
-    console.error('[Login Route] Database error:', {
+    console.error('[Login Route] Error:', {
       message: error.message,
       code: error.code,
-      name: error.name,
-      stack: error.stack
+      name: error.name
     });
-    
-    // Check if it's a database connection error
-    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT' || 
-        error.code === 'ECONNRESET' || error.code === '42P01' || error.code === '42P07' || 
-        error.code === '3D000' || error.code === '28P01' ||
-        error.message && (error.message.includes('connect') || error.message.includes('connection') || 
-        error.message.includes('DATABASE_URL') || error.message.includes('database') ||
-        error.message.includes('relation') || error.message.includes('does not exist'))) {
-      console.error('[Login Route] Database connection error detected');
-      // Return a more helpful error for database connection issues
-      return res.status(500).render('errors/500', {
-        title: 'Database Connection Error',
+
+    // Handle Firebase-specific errors
+    if (error.message.includes('Token expired') || error.message.includes('expired')) {
+      res.locals.currentPage = 'login';
+      return res.status(401).render('auth/login', {
+        title: 'Sign in',
+        values: req.body,
+        errors: { email: ['Your session has expired. Please sign in again.'] },
         layout: 'layout',
-        error: {
-          message: 'Unable to connect to the database. Please check your database configuration.',
-          code: error.code,
-          name: error.name,
-          details: process.env.NODE_ENV !== 'production' ? error.message : undefined
-        },
-        isDevelopment: process.env.NODE_ENV !== 'production',
-        isDatabaseError: true
+        currentPage: 'login'
       });
     }
-    
+
+    if (error.message.includes('Invalid token') || error.message.includes('verification failed')) {
+      res.locals.currentPage = 'login';
+      return res.status(401).render('auth/login', {
+        title: 'Sign in',
+        values: req.body,
+        errors: { email: ['Invalid authentication token. Please try again.'] },
+        layout: 'layout',
+        currentPage: 'login'
+      });
+    }
+
     // For other errors, pass to error handler
     return next(error);
   }
@@ -203,7 +202,7 @@ router.get('/partners', (req, res, next) => {
   }
 });
 
-// POST /partners - Agency signup
+// POST /partners - Agency signup (Firebase user should be created client-side first)
 router.post('/partners', async (req, res, next) => {
   const parsed = agencySignupSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -217,17 +216,52 @@ router.post('/partners', async (req, res, next) => {
     });
   }
 
-  const { email, password, agency_name, company_website, contact_name, contact_role } = parsed.data;
+  const { email, agency_name, company_website, contact_name, contact_role } = parsed.data;
+  const idToken = extractIdToken(req) || req.body.firebase_token;
 
   // Normalize email (lowercase, trim) for consistent storage and lookup
   const normalizedEmail = email.toLowerCase().trim();
 
   console.log('[Signup/Partners] Creating agency account for email:', normalizedEmail);
 
+  if (!idToken) {
+    console.log('[Signup/Partners] No Firebase token provided');
+    res.locals.currentPage = 'partners';
+    return res.status(422).render('auth/partners', {
+      title: 'Partner with ZipSite',
+      values: req.body,
+      errors: { email: ['Authentication failed. Please try again.'] },
+      layout: 'layout',
+      currentPage: 'partners'
+    });
+  }
+
   try {
-    const existing = await knex('users').where({ email: normalizedEmail }).first();
+    // Verify Firebase ID token
+    const decodedToken = await verifyIdToken(idToken);
+    const firebaseUid = decodedToken.uid;
+    const firebaseEmail = decodedToken.email;
+
+    if (firebaseEmail.toLowerCase().trim() !== normalizedEmail) {
+      console.log('[Signup/Partners] Email mismatch:', { firebaseEmail, normalizedEmail });
+      res.locals.currentPage = 'partners';
+      return res.status(422).render('auth/partners', {
+        title: 'Partner with ZipSite',
+        values: req.body,
+        errors: { email: ['Email does not match authenticated account.'] },
+        layout: 'layout',
+        currentPage: 'partners'
+      });
+    }
+
+    // Check if user already exists
+    let existing = await knex('users').where({ firebase_uid: firebaseUid }).first();
+    if (!existing) {
+      existing = await knex('users').where({ email: normalizedEmail }).first();
+    }
+
     if (existing) {
-      console.log('[Signup/Partners] Email already exists:', normalizedEmail);
+      console.log('[Signup/Partners] User already exists:', { firebaseUid, email: normalizedEmail });
       res.locals.currentPage = 'partners';
       return res.status(422).render('auth/partners', {
         title: 'Partner with ZipSite',
@@ -238,25 +272,21 @@ router.post('/partners', async (req, res, next) => {
       });
     }
 
-    console.log('[Signup/Partners] Hashing password...');
-    const passwordHash = await bcrypt.hash(password, 10);
     const userId = uuidv4();
 
     console.log('[Signup/Partners] Inserting agency user into database...', {
       id: userId,
       email: normalizedEmail,
+      firebase_uid: firebaseUid,
       role: 'AGENCY',
-      agency_name: agency_name || null,
-      hasPasswordHash: !!passwordHash,
-      passwordHashLength: passwordHash?.length || 0
+      agency_name: agency_name || null
     });
 
-    // Insert agency user with agency_name
-    // Note: company_website field doesn't exist in schema, we'll skip it for now
+    // Insert agency user with Firebase UID
     await knex('users').insert({
       id: userId,
       email: normalizedEmail,
-      password_hash: passwordHash,
+      firebase_uid: firebaseUid,
       role: 'AGENCY',
       agency_name: agency_name || null
     });
@@ -273,14 +303,6 @@ router.post('/partners', async (req, res, next) => {
       console.error('[Signup/Partners] ERROR: User was not created!', { userId, email: normalizedEmail });
       throw new Error('Failed to create agency account');
     }
-
-    console.log('[Signup/Partners] User verified in database:', {
-      id: createdUser.id,
-      email: createdUser.email,
-      role: createdUser.role,
-      hasPasswordHash: !!createdUser.password_hash,
-      passwordHashLength: createdUser.password_hash?.length || 0
-    });
 
     req.session.userId = userId;
     req.session.role = 'AGENCY';
@@ -310,9 +332,21 @@ router.post('/partners', async (req, res, next) => {
     console.error('[Signup/Partners] Error creating agency account:', {
       message: error.message,
       code: error.code,
-      name: error.name,
-      stack: error.stack
+      name: error.name
     });
+
+    // Handle Firebase-specific errors
+    if (error.message.includes('Email already exists')) {
+      res.locals.currentPage = 'partners';
+      return res.status(422).render('auth/partners', {
+        title: 'Partner with ZipSite',
+        values: req.body,
+        errors: { email: ['That email is already registered'] },
+        layout: 'layout',
+        currentPage: 'partners'
+      });
+    }
+
     return next(error);
   }
 });

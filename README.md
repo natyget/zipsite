@@ -73,6 +73,14 @@ Default environment variables (override in `.env`):
 - `PORT=3000` - Server port
 - `SESSION_SECRET=change-me` - Session encryption secret (generate with `openssl rand -base64 32`)
 - `DB_CLIENT=sqlite3` - Database client (`sqlite3` for local, `pg` for Postgres/Neon)
+- `FIREBASE_PROJECT_ID` - Firebase project ID
+- `FIREBASE_PRIVATE_KEY` - Firebase service account private key (from Firebase Console > Project Settings > Service Accounts)
+- `FIREBASE_CLIENT_EMAIL` - Firebase service account client email
+- `FIREBASE_CLIENT_ID` - Firebase service account client ID
+- `FIREBASE_AUTH_DOMAIN` - Firebase auth domain (typically `{project-id}.firebaseapp.com`)
+- `FIREBASE_API_KEY` - Firebase Web API key (from Firebase Console > Project Settings > General > Your apps)
+
+See `.env.example` for a complete example configuration.
 - `DATABASE_URL` - Database connection string
   - SQLite: `sqlite://./dev.sqlite3`
   - Postgres/Neon: `postgresql://user:password@host:5432/dbname?sslmode=require`

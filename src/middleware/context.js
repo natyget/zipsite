@@ -1,4 +1,5 @@
 const knex = require('../db/knex');
+const config = require('../config');
 
 async function attachLocals(req, res, next) {
   res.locals.currentUser = null;
@@ -7,6 +8,7 @@ async function attachLocals(req, res, next) {
     res.locals.isDashboard = false;
   }
 
+  // Try to load user from session first
   if (req.session && req.session.userId) {
     try {
       const user = await knex('users').where({ id: req.session.userId }).first();
@@ -52,12 +54,60 @@ async function attachLocals(req, res, next) {
         return next(error);
       }
     }
+  } else {
+    // No session, try Firebase token as fallback
+    const { extractIdToken } = require('../middleware/firebase-auth');
+    const { verifyIdToken } = require('../lib/firebase-admin');
+    
+    const idToken = extractIdToken(req);
+    if (idToken) {
+      try {
+        const decodedToken = await verifyIdToken(idToken);
+        const firebaseUid = decodedToken.uid;
+        
+        if (firebaseUid) {
+          // Look up user by Firebase UID
+          const user = await knex('users').where({ firebase_uid: firebaseUid }).first();
+          if (user) {
+            req.currentUser = user;
+            res.locals.currentUser = { id: user.id, role: user.role, email: user.email };
+            
+            // Create session for this request
+            req.session.userId = user.id;
+            req.session.role = user.role;
+            
+            if (user.role === 'TALENT') {
+              try {
+                const profile = await knex('profiles').where({ user_id: user.id }).first();
+                if (profile) {
+                  req.currentProfile = profile;
+                  res.locals.currentProfile = profile;
+                }
+              } catch (profileError) {
+                console.error('[attachLocals] Error loading profile:', profileError.message);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        // Token verification failed, continue without authentication
+        // This is fine for public routes
+        console.log('[attachLocals] Firebase token verification failed (non-critical):', error.message);
+      }
+    }
   }
 
   res.locals.messages = req.session?.messages || [];
   if (req.session) {
     req.session.messages = [];
   }
+
+  // Add Firebase config to res.locals for client-side use
+  res.locals.firebaseConfig = {
+    apiKey: config.firebase.apiKey || '',
+    authDomain: config.firebase.authDomain || '',
+    projectId: config.firebase.projectId || ''
+  };
 
   next();
 }

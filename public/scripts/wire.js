@@ -1704,21 +1704,91 @@
         // Last step: submit form
         // Only submit if we're actually on the last step
         if (currentStep === totalSteps - 1 && validateCurrentStep()) {
+          // Check if user needs to create Firebase account (not logged in)
+          const emailInput = applyForm.querySelector('#email');
+          const passwordInput = applyForm.querySelector('#password');
+          const firebaseTokenInput = applyForm.querySelector('#firebase_token');
+          
           const submitButton = applyForm.querySelector('[type="submit"]');
-          if (submitButton) {
-            const loadingText = submitButton?.dataset.loadingText;
-            if (loadingText) {
-              submitButton.disabled = true;
-              submitButton.textContent = loadingText;
+          const originalText = submitButton ? submitButton.textContent : '';
+          
+          // If email/password fields exist and no token, create Firebase user first
+          if (emailInput && passwordInput && (!firebaseTokenInput || !firebaseTokenInput.value)) {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            
+            if (email && password && window.FirebaseAuth && window.FirebaseAuth.auth) {
+              // Show loading state
+              if (submitButton) {
+                submitButton.disabled = true;
+                const loadingText = submitButton?.dataset.loadingText || 'Creating account…';
+                submitButton.textContent = loadingText;
+              }
+              
+              try {
+                // Create Firebase user
+                const userCredential = await window.FirebaseAuth.signUp(email, password);
+                
+                // Get ID token
+                const idToken = await userCredential.user.getIdToken();
+                
+                // Set token in hidden input
+                if (firebaseTokenInput) {
+                  firebaseTokenInput.value = idToken;
+                }
+                
+                // Continue with form submission
+                if (applyForm._formSubmitHandler) {
+                  applyForm.removeEventListener('submit', applyForm._formSubmitHandler);
+                }
+                mergeOtherFields();
+                applyForm.submit();
+              } catch (error) {
+                console.error('[Apply Form] Firebase signup error:', error);
+                
+                // Reset button state
+                if (submitButton) {
+                  submitButton.disabled = false;
+                  submitButton.textContent = originalText;
+                }
+                
+                // Show error
+                const errorMessage = window.getFirebaseErrorMessage ? window.getFirebaseErrorMessage(error) : error.message || 'Account creation failed. Please try again.';
+                alert(errorMessage);
+                return;
+              }
+            } else {
+              // No Firebase Auth available, submit normally (will fail on backend)
+              if (submitButton) {
+                const loadingText = submitButton?.dataset.loadingText;
+                if (loadingText) {
+                  submitButton.disabled = true;
+                  submitButton.textContent = loadingText;
+                }
+              }
+              if (applyForm._formSubmitHandler) {
+                applyForm.removeEventListener('submit', applyForm._formSubmitHandler);
+              }
+              mergeOtherFields();
+              applyForm.submit();
             }
+          } else {
+            // User already logged in or token exists, submit normally
+            if (submitButton) {
+              const loadingText = submitButton?.dataset.loadingText;
+              if (loadingText) {
+                submitButton.disabled = true;
+                submitButton.textContent = loadingText;
+              }
+            }
+            // Remove the submit handler temporarily to allow submission
+            if (applyForm._formSubmitHandler) {
+              applyForm.removeEventListener('submit', applyForm._formSubmitHandler);
+            }
+            // Merge "Other" fields before submission
+            mergeOtherFields();
+            applyForm.submit();
           }
-          // Remove the submit handler temporarily to allow submission
-          if (applyForm._formSubmitHandler) {
-            applyForm.removeEventListener('submit', applyForm._formSubmitHandler);
-          }
-          // Merge "Other" fields before submission
-          mergeOtherFields();
-          applyForm.submit();
         }
       }
     });
@@ -1731,7 +1801,7 @@
     });
 
     // Prevent form submission unless on last step
-    const formSubmitHandler = function(e) {
+    const formSubmitHandler = async function(e) {
       // Defensive check: prevent submission if not on last step
       if (currentStep < totalSteps - 1) {
         e.preventDefault();
@@ -1742,10 +1812,76 @@
         }
         return false;
       }
-      // On last step, allow submission to proceed
-      // But ensure button type is submit
-      if (nextButton.type !== 'submit') {
-        nextButton.type = 'submit';
+      
+      // On last step, handle Firebase signup if needed
+      const emailInput = applyForm.querySelector('#email');
+      const passwordInput = applyForm.querySelector('#password');
+      const firebaseTokenInput = applyForm.querySelector('#firebase_token');
+      
+      // If email/password fields exist and no token, create Firebase user first
+      if (emailInput && passwordInput && (!firebaseTokenInput || !firebaseTokenInput.value)) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        
+        if (email && password && window.FirebaseAuth && window.FirebaseAuth.auth) {
+          const submitButton = applyForm.querySelector('[type="submit"]');
+          const originalText = submitButton ? submitButton.textContent : '';
+          
+          // Show loading state
+          if (submitButton) {
+            submitButton.disabled = true;
+            const loadingText = submitButton?.dataset.loadingText || 'Creating account…';
+            submitButton.textContent = loadingText;
+          }
+          
+          try {
+            // Create Firebase user
+            const userCredential = await window.FirebaseAuth.signUp(email, password);
+            
+            // Get ID token
+            const idToken = await userCredential.user.getIdToken();
+            
+            // Set token in hidden input
+            if (firebaseTokenInput) {
+              firebaseTokenInput.value = idToken;
+            }
+            
+            // Remove the submit handler temporarily to allow submission
+            applyForm.removeEventListener('submit', formSubmitHandler);
+            
+            // Merge "Other" fields before submission
+            mergeOtherFields();
+            
+            // Submit form
+            applyForm.submit();
+          } catch (error) {
+            console.error('[Apply Form] Firebase signup error:', error);
+            
+            // Reset button state
+            if (submitButton) {
+              submitButton.disabled = false;
+              submitButton.textContent = originalText;
+            }
+            
+            // Show error
+            const errorMessage = window.getFirebaseErrorMessage ? window.getFirebaseErrorMessage(error) : error.message || 'Account creation failed. Please try again.';
+            alert(errorMessage);
+            return false;
+          }
+        } else {
+          // No Firebase Auth available, allow submission (will fail on backend)
+          if (nextButton.type !== 'submit') {
+            nextButton.type = 'submit';
+          }
+        }
+      } else {
+        // User already logged in or token exists, allow submission to proceed
+        if (nextButton.type !== 'submit') {
+          nextButton.type = 'submit';
+        }
       }
     };
     

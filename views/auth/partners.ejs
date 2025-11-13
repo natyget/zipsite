@@ -95,6 +95,7 @@
             <p class="form-field__help">Minimum 8 characters</p>
           </div>
           
+          <input type="hidden" name="firebase_token" id="firebase_token">
           <button type="submit" class="button button-primary button-block" data-loading-text="Creating account…">Create Agency Account</button>
         </form>
         
@@ -103,4 +104,71 @@
     </div>
   </div>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const partnersForm = document.querySelector('form[action="/partners"]');
+  if (!partnersForm) return;
+
+  partnersForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const email = partnersForm.querySelector('#email').value.trim();
+    const password = partnersForm.querySelector('#password').value;
+    const firebaseTokenInput = partnersForm.querySelector('#firebase_token');
+    const submitButton = partnersForm.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+
+    if (!email || !password) {
+      alert('Please enter your email and password.');
+      return;
+    }
+
+    // Check if Firebase Auth is available
+    if (!window.FirebaseAuth || !window.FirebaseAuth.auth) {
+      console.error('[Partners] Firebase Auth not initialized');
+      alert('Authentication system not ready. Please refresh the page and try again.');
+      return;
+    }
+
+    try {
+      // Show loading state
+      submitButton.disabled = true;
+      submitButton.textContent = submitButton.dataset.loadingText || 'Creating account…';
+
+      // Create Firebase user
+      const userCredential = await window.FirebaseAuth.signUp(email, password);
+      
+      // Get ID token
+      const idToken = await userCredential.user.getIdToken();
+      
+      // Set token in hidden input
+      firebaseTokenInput.value = idToken;
+
+      // Submit form to backend
+      partnersForm.submit();
+    } catch (error) {
+      console.error('[Partners] Authentication error:', error);
+      
+      // Reset button state
+      submitButton.disabled = false;
+      submitButton.textContent = originalText;
+
+      // Show error message
+      const errorMessage = window.getFirebaseErrorMessage ? window.getFirebaseErrorMessage(error) : error.message || 'Account creation failed. Please try again.';
+      
+      // Find or create error display
+      let errorDisplay = partnersForm.querySelector('.auth-error');
+      if (!errorDisplay) {
+        errorDisplay = document.createElement('div');
+        errorDisplay.className = 'auth-error field-error';
+        errorDisplay.style.cssText = 'margin-bottom: 1rem; padding: 0.75rem; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c33;';
+        partnersForm.insertBefore(errorDisplay, partnersForm.firstChild);
+      }
+      errorDisplay.textContent = errorMessage;
+      errorDisplay.style.display = 'block';
+    }
+  });
+});
+</script>
 

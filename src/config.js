@@ -39,5 +39,14 @@ module.exports = {
   // URL is the main production URL
   // PDF_BASE_URL can be used as a custom override
   // Fall back to localhost for local development
-  pdfBaseUrl: process.env.DEPLOY_PRIME_URL || process.env.URL || process.env.PDF_BASE_URL || 'http://localhost:3000'
+  pdfBaseUrl: process.env.DEPLOY_PRIME_URL || process.env.URL || process.env.PDF_BASE_URL || 'http://localhost:3000',
+  // Firebase configuration
+  firebase: {
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    clientId: process.env.FIREBASE_CLIENT_ID,
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+    apiKey: process.env.FIREBASE_API_KEY
+  }
 };

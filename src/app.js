@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const config = require('./config');
 const knex = require('./db/knex');
 const { attachLocals } = require('./middleware/context');
+const { initializeFirebaseAdmin } = require('./lib/firebase-admin');
 
 // +++ 1. ADD THIS LINE +++
 const ejsLayouts = require('express-ejs-layouts');
@@ -270,6 +271,9 @@ app.use(
     }
   })
 );
+
+// Initialize Firebase Admin SDK
+initializeFirebaseAdmin();
 
 app.use(attachLocals);
 

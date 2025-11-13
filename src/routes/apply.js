@@ -1,6 +1,5 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
-const bcrypt = require('bcrypt');
 const knex = require('../db/knex');
 const { applyProfileSchema, signupSchema } = require('../lib/validation');
 const { normalizeMeasurements, curateBio } = require('../lib/curate');
@@ -8,6 +7,8 @@ const { ensureUniqueSlug } = require('../lib/slugify');
 const { addMessage } = require('../middleware/context');
 const { upload, processImage } = require('../lib/uploader');
 const { calculateAge, generateSocialMediaUrl, parseSocialMediaHandle, convertKgToLbs, convertLbsToKg } = require('../lib/profile-helpers');
+const { verifyIdToken } = require('../lib/firebase-admin');
+const { extractIdToken } = require('../middleware/firebase-auth');
 
 const router = express.Router();
 
@@ -147,7 +148,6 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     let reference_name, reference_email, reference_phone;
     let emergency_contact_name, emergency_contact_phone, emergency_contact_relationship;
     let work_eligibility, work_status, union_membership, ethnicity, tattoos, piercings, comfort_levels, previous_representations;
-    let passwordHash = null; // Store password hash for transaction use
 
   // If not logged in, validate account creation fields
   if (!isLoggedIn) {
@@ -381,16 +381,51 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       ? JSON.stringify(languages)
       : null;
 
-    // Create account
+    // Create account (Firebase user should be created client-side first)
     try {
       // Normalize email (lowercase, trim) for consistent storage and lookup
       normalizedEmail = signupParsed.data.email.toLowerCase().trim();
       
       console.log('[Signup/Apply] Creating account for email:', normalizedEmail);
       
-      const existing = await knex('users').where({ email: normalizedEmail }).first();
+      // Get Firebase token from request
+      const idToken = extractIdToken(req) || req.body.firebase_token;
+      
+      if (!idToken) {
+        console.log('[Signup/Apply] No Firebase token provided');
+        return res.status(422).render('apply/index', {
+          title: 'Start your ZipSite profile',
+          values: req.body,
+          errors: { email: ['Authentication failed. Please try again.'] },
+          layout: 'layout',
+          isLoggedIn: false
+        });
+      }
+
+      // Verify Firebase ID token
+      const decodedToken = await verifyIdToken(idToken);
+      const firebaseUid = decodedToken.uid;
+      const firebaseEmail = decodedToken.email;
+
+      if (firebaseEmail.toLowerCase().trim() !== normalizedEmail) {
+        console.log('[Signup/Apply] Email mismatch:', { firebaseEmail, normalizedEmail });
+        return res.status(422).render('apply/index', {
+          title: 'Start your ZipSite profile',
+          values: req.body,
+          errors: { email: ['Email does not match authenticated account.'] },
+          layout: 'layout',
+          isLoggedIn: false
+        });
+      }
+
+      // Check if user already exists
+      let existing = await knex('users').where({ firebase_uid: firebaseUid }).first();
+      if (!existing) {
+        existing = await knex('users').where({ email: normalizedEmail }).first();
+      }
+
       if (existing) {
-        console.log('[Signup/Apply] Email already exists:', normalizedEmail);
+        console.log('[Signup/Apply] User already exists:', { firebaseUid, email: normalizedEmail });
         return res.status(422).render('apply/index', {
           title: 'Start your ZipSite profile',
           values: req.body,
@@ -400,19 +435,16 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         });
       }
 
-      console.log('[Signup/Apply] Hashing password...');
-      passwordHash = await bcrypt.hash(signupParsed.data.password, 10);
       userId = uuidv4();
 
       console.log('[Signup/Apply] Preparing user data:', {
         id: userId,
         email: normalizedEmail,
-        role: 'TALENT',
-        hasPasswordHash: !!passwordHash,
-        passwordHashLength: passwordHash?.length || 0
+        firebase_uid: firebaseUid,
+        role: 'TALENT'
       });
 
-      // Store password hash for use in transaction
+      // Store Firebase UID for use in transaction
       // User will be created in transaction below along with profile
       // Session is set early so user is logged in even if profile creation fails
       req.session.userId = userId;
@@ -436,13 +468,47 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
           }
         });
       });
+
+      // Store firebaseUid for use in transaction
+      req.firebaseUid = firebaseUid;
     } catch (error) {
       console.error('[Signup/Apply] Error preparing account:', {
         message: error.message,
         code: error.code,
-        name: error.name,
-        stack: error.stack
+        name: error.name
       });
+
+      // Handle Firebase-specific errors
+      if (error.message.includes('Email already exists')) {
+        return res.status(422).render('apply/index', {
+          title: 'Start your ZipSite profile',
+          values: req.body,
+          errors: { email: ['That email is already registered'] },
+          layout: 'layout',
+          isLoggedIn: false
+        });
+      }
+
+      if (error.message.includes('Token expired') || error.message.includes('expired')) {
+        return res.status(422).render('apply/index', {
+          title: 'Start your ZipSite profile',
+          values: req.body,
+          errors: { email: ['Your session has expired. Please try again.'] },
+          layout: 'layout',
+          isLoggedIn: false
+        });
+      }
+
+      if (error.message.includes('Invalid token') || error.message.includes('verification failed')) {
+        return res.status(422).render('apply/index', {
+          title: 'Start your ZipSite profile',
+          values: req.body,
+          errors: { email: ['Invalid authentication token. Please try again.'] },
+          layout: 'layout',
+          isLoggedIn: false
+        });
+      }
+
       return next(error);
     }
   } else {
@@ -689,14 +755,14 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       });
       
       // Wrap user and profile creation in a transaction
-      // Use the password hash that was already computed above
+      // Use the Firebase UID that was extracted from the token above
       await knex.transaction(async (trx) => {
         try {
-          // Insert user first
+          // Insert user first with Firebase UID
           await trx('users').insert({
             id: userId,
             email: normalizedEmail,
-            password_hash: passwordHash,
+            firebase_uid: req.firebaseUid,
             role: 'TALENT'
           });
           

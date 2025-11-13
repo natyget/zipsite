@@ -52,6 +52,7 @@ const fieldError = (name) => {
             <% } %>
           </div>
           
+          <input type="hidden" name="firebase_token" id="firebase_token">
           <button type="submit" class="button button-primary button-block" data-loading-text="Signing in…">Sign in</button>
         </form>
         
@@ -60,3 +61,70 @@ const fieldError = (name) => {
     </div>
   </div>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const loginForm = document.querySelector('form[action="/login"]');
+  if (!loginForm) return;
+
+  loginForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const email = loginForm.querySelector('#email').value.trim();
+    const password = loginForm.querySelector('#password').value;
+    const firebaseTokenInput = loginForm.querySelector('#firebase_token');
+    const submitButton = loginForm.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+
+    if (!email || !password) {
+      alert('Please enter your email and password.');
+      return;
+    }
+
+    // Check if Firebase Auth is available
+    if (!window.FirebaseAuth || !window.FirebaseAuth.auth) {
+      console.error('[Login] Firebase Auth not initialized');
+      alert('Authentication system not ready. Please refresh the page and try again.');
+      return;
+    }
+
+    try {
+      // Show loading state
+      submitButton.disabled = true;
+      submitButton.textContent = submitButton.dataset.loadingText || 'Signing in…';
+
+      // Sign in with Firebase
+      const userCredential = await window.FirebaseAuth.signIn(email, password);
+      
+      // Get ID token
+      const idToken = await userCredential.user.getIdToken();
+      
+      // Set token in hidden input
+      firebaseTokenInput.value = idToken;
+
+      // Submit form to backend
+      loginForm.submit();
+    } catch (error) {
+      console.error('[Login] Authentication error:', error);
+      
+      // Reset button state
+      submitButton.disabled = false;
+      submitButton.textContent = originalText;
+
+      // Show error message
+      const errorMessage = window.getFirebaseErrorMessage ? window.getFirebaseErrorMessage(error) : error.message || 'Authentication failed. Please try again.';
+      
+      // Find or create error display
+      let errorDisplay = loginForm.querySelector('.auth-error');
+      if (!errorDisplay) {
+        errorDisplay = document.createElement('div');
+        errorDisplay.className = 'auth-error field-error';
+        errorDisplay.style.cssText = 'margin-bottom: 1rem; padding: 0.75rem; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c33;';
+        loginForm.insertBefore(errorDisplay, loginForm.firstChild);
+      }
+      errorDisplay.textContent = errorMessage;
+      errorDisplay.style.display = 'block';
+    }
+  });
+});
+</script>
