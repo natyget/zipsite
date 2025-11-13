@@ -333,18 +333,17 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
       
       // Extract all fields from parsed data
       const {
-        city, height_cm, measurements, bio,
+        city, city_secondary, height_cm, bio,
         gender, date_of_birth, weight_kg, weight_lbs, dress_size, hair_length, skin_tone,
         languages, availability_travel, availability_schedule, experience_level, training, portfolio_url,
         instagram_handle, twitter_handle, tiktok_handle,
-        reference_name, reference_email, reference_phone, reference_relationship,
+        reference_name, reference_email, reference_phone,
         emergency_contact_name, emergency_contact_phone, emergency_contact_relationship,
-        nationality, union_membership, ethnicity, tattoos, piercings,
-        phone, bust, waist, hips, shoe_size, eye_color, hair_color, specialties
+        work_eligibility, work_status, union_membership, ethnicity, tattoos, piercings, comfort_levels, previous_representations,
+        phone, bust, waist, hips, shoe_size, eye_color, hair_color, specialties, experience_details
       } = parsed.data;
       
       const curatedBio = curateBio(bio, placeholderFirstName, placeholderLastName);
-      const cleanedMeasurements = normalizeMeasurements(measurements);
       
       // Calculate age from date of birth
       let age = null;
@@ -384,6 +383,7 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
         first_name: placeholderFirstName,
         last_name: placeholderLastName,
         city,
+        city_secondary: city_secondary || null,
         phone: phone || null,
         height_cm,
         bust: bust || null,
@@ -392,10 +392,10 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
         shoe_size: shoe_size || null,
         eye_color: eye_color || null,
         hair_color: hair_color || null,
-        measurements: cleanedMeasurements,
         bio_raw: bio,
         bio_curated: curatedBio,
         specialties: specialtiesJson,
+        experience_details: typeof experience_details === 'string' ? experience_details : (experience_details ? JSON.stringify(experience_details) : null),
         gender: gender || null,
         date_of_birth: date_of_birth || null,
         age: age,
@@ -419,15 +419,17 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
         reference_name: reference_name || null,
         reference_email: reference_email || null,
         reference_phone: reference_phone || null,
-        reference_relationship: reference_relationship || null,
         emergency_contact_name: emergency_contact_name || null,
         emergency_contact_phone: emergency_contact_phone || null,
         emergency_contact_relationship: emergency_contact_relationship || null,
-        nationality: nationality || null,
+        work_eligibility: work_eligibility || null,
+        work_status: work_status || null,
         union_membership: union_membership || null,
         ethnicity: ethnicity || null,
         tattoos: tattoos || null,
         piercings: piercings || null,
+        comfort_levels: comfort_levels && Array.isArray(comfort_levels) && comfort_levels.length > 0 ? JSON.stringify(comfort_levels) : null,
+        previous_representations: typeof previous_representations === 'string' ? previous_representations : (previous_representations ? JSON.stringify(previous_representations) : null),
         is_pro: false,
         pdf_theme: null,
         pdf_customizations: null
@@ -560,7 +562,8 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
     };
     
     // Only update fields that are explicitly in parsed.data (were submitted in form)
-    if (city !== undefined) updateData.city = city;
+    if (city !== undefined) updateData.city = city || null;
+    if (city_secondary !== undefined) updateData.city_secondary = city_secondary || null;
     if (phone !== undefined) updateData.phone = phone || null;
     if (height_cm !== undefined) updateData.height_cm = height_cm;
     if (bust !== undefined) updateData.bust = bust || null;
@@ -569,12 +572,16 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
     if (shoe_size !== undefined) updateData.shoe_size = shoe_size || null;
     if (eye_color !== undefined) updateData.eye_color = eye_color || null;
     if (hair_color !== undefined) updateData.hair_color = hair_color || null;
-    if (measurements !== undefined) updateData.measurements = cleanedMeasurements;
     if (bio !== undefined) {
       updateData.bio_raw = bio;
       updateData.bio_curated = curatedBio;
     }
     if (specialties !== undefined) updateData.specialties = specialtiesJson;
+    if (experience_details !== undefined) {
+      updateData.experience_details = typeof experience_details === 'string' 
+        ? experience_details 
+        : (experience_details ? JSON.stringify(experience_details) : null);
+    }
     if (gender !== undefined) updateData.gender = gender || null;
     if (date_of_birth !== undefined) {
       updateData.date_of_birth = date_of_birth || null;
@@ -608,15 +615,33 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
     if (reference_name !== undefined) updateData.reference_name = reference_name || null;
     if (reference_email !== undefined) updateData.reference_email = reference_email || null;
     if (reference_phone !== undefined) updateData.reference_phone = reference_phone || null;
-    if (reference_relationship !== undefined) updateData.reference_relationship = reference_relationship || null;
     if (emergency_contact_name !== undefined) updateData.emergency_contact_name = emergency_contact_name || null;
     if (emergency_contact_phone !== undefined) updateData.emergency_contact_phone = emergency_contact_phone || null;
     if (emergency_contact_relationship !== undefined) updateData.emergency_contact_relationship = emergency_contact_relationship || null;
-    if (nationality !== undefined) updateData.nationality = nationality || null;
+    if (work_eligibility !== undefined) updateData.work_eligibility = work_eligibility || null;
+    if (work_status !== undefined) {
+      // Handle work_status "Other" option
+      const workStatusOther = req.body.work_status_other;
+      if (work_status === 'Other' && workStatusOther) {
+        updateData.work_status = workStatusOther || null;
+      } else {
+        updateData.work_status = work_status || null;
+      }
+    }
     if (union_membership !== undefined) updateData.union_membership = union_membership || null;
     if (ethnicity !== undefined) updateData.ethnicity = ethnicity || null;
     if (tattoos !== undefined) updateData.tattoos = tattoos || null;
     if (piercings !== undefined) updateData.piercings = piercings || null;
+    if (comfort_levels !== undefined) {
+      updateData.comfort_levels = comfort_levels && Array.isArray(comfort_levels) && comfort_levels.length > 0 
+        ? JSON.stringify(comfort_levels) 
+        : null;
+    }
+    if (previous_representations !== undefined) {
+      updateData.previous_representations = typeof previous_representations === 'string' 
+        ? previous_representations 
+        : (previous_representations ? JSON.stringify(previous_representations) : null);
+    }
 
     await knex('profiles')
       .where({ id: profile.id })

@@ -123,11 +123,6 @@ const bioSchema = z
   .min(10, 'Tell us more so we can curate')
   .max(600, 'Bio is too long');
 
-const measurementsSchema = z
-  .string({ required_error: 'Measurements required' })
-  .trim()
-  .min(2, 'Measurements required')
-  .max(60, 'Too long');
 
 const phoneSchema = z
   .string()
@@ -306,6 +301,7 @@ const applyProfileSchema = z
     first_name: nameSchema,
     last_name: nameSchema,
     city: nameSchema,
+    city_secondary: nameSchema.optional(),
     phone: phoneSchema,
     height_cm: heightSchema,
     bust: bustSchema,
@@ -314,9 +310,32 @@ const applyProfileSchema = z
     shoe_size: z.string().trim().max(10).optional(),
     eye_color: z.string().trim().max(30).optional(),
     hair_color: z.string().trim().max(30).optional(),
-    measurements: measurementsSchema,
     bio: bioSchema,
     specialties: z.array(z.string()).optional(),
+    experience_details: z.union([
+      z.string().transform((val) => {
+        if (!val || val.trim() === '') return null;
+        try {
+          return JSON.parse(val);
+        } catch {
+          return null;
+        }
+      }),
+      z.record(z.string(), z.string()).optional(),
+      z.null()
+    ]).optional(),
+    experience_details: z.union([
+      z.string().transform((val) => {
+        if (!val || val.trim() === '') return null;
+        try {
+          return JSON.parse(val);
+        } catch {
+          return null;
+        }
+      }),
+      z.record(z.string(), z.string()).optional(),
+      z.null()
+    ]).optional(),
     partner_agency_email: z
       .string()
       .trim()
@@ -327,6 +346,12 @@ const applyProfileSchema = z
     // New comprehensive fields
     gender: genderSchema,
     date_of_birth: dateOfBirthSchema,
+    weight: z.preprocess((val) => {
+      if (val === '' || val === null || val === undefined) return undefined;
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return isNaN(num) ? undefined : num;
+    }, z.number().min(30).max(440).optional()),
+    weight_unit: z.enum(['kg', 'lbs']).optional(),
     weight_kg: weightSchema,
     weight_lbs: weightSchema,
     dress_size: dressSizeSchema,
@@ -347,23 +372,45 @@ const applyProfileSchema = z
     reference_name: referenceNameSchema,
     reference_email: referenceEmailSchema,
     reference_phone: referencePhoneSchema,
-    reference_relationship: referenceRelationshipSchema,
     emergency_contact_name: emergencyContactNameSchema,
     emergency_contact_phone: emergencyContactPhoneSchema,
     emergency_contact_relationship: emergencyContactRelationshipSchema,
-    nationality: nationalitySchema,
+    work_eligibility: z.enum(['Yes', 'No']).optional(),
+    work_status: z.string().trim().max(50).optional(),
     union_membership: unionMembershipSchema,
     ethnicity: ethnicitySchema,
     tattoos: tattoosSchema,
-    piercings: piercingsSchema
+    piercings: piercingsSchema,
+    comfort_levels: z.array(z.string()).optional(),
+    previous_representations: z.union([
+      z.string().transform((val) => {
+        if (!val || val.trim() === '') return null;
+        try {
+          return JSON.parse(val);
+        } catch {
+          return null;
+        }
+      }),
+      z.array(z.object({
+        has_manager: z.boolean().optional(),
+        has_agency: z.boolean().optional(),
+        manager_name: z.string().optional(),
+        manager_contact: z.string().optional(),
+        agency_name: z.string().optional(),
+        agent_name: z.string().optional(),
+        agency_contact: z.string().optional(),
+        reason_leaving: z.string().optional()
+      })).optional(),
+      z.null()
+    ]).optional()
   })
   .strict();
 
 const talentProfileUpdateSchema = z
   .object({
     city: nameSchema,
+    city_secondary: nameSchema.optional(),
     height_cm: heightSchema,
-    measurements: measurementsSchema,
     bio: bioSchema,
     // Include all updatable fields
     phone: phoneSchema,
@@ -374,8 +421,26 @@ const talentProfileUpdateSchema = z
     eye_color: z.string().trim().max(30).optional(),
     hair_color: z.string().trim().max(30).optional(),
     specialties: z.array(z.string()).optional(),
+    experience_details: z.union([
+      z.string().transform((val) => {
+        if (!val || val.trim() === '') return null;
+        try {
+          return JSON.parse(val);
+        } catch {
+          return null;
+        }
+      }),
+      z.record(z.string(), z.string()).optional(),
+      z.null()
+    ]).optional(),
     gender: genderSchema,
     date_of_birth: dateOfBirthSchema,
+    weight: z.preprocess((val) => {
+      if (val === '' || val === null || val === undefined) return undefined;
+      const num = typeof val === 'string' ? parseFloat(val) : val;
+      return isNaN(num) ? undefined : num;
+    }, z.number().min(30).max(440).optional()),
+    weight_unit: z.enum(['kg', 'lbs']).optional(),
     weight_kg: weightSchema,
     weight_lbs: weightSchema,
     dress_size: dressSizeSchema,
@@ -396,15 +461,37 @@ const talentProfileUpdateSchema = z
     reference_name: referenceNameSchema,
     reference_email: referenceEmailSchema,
     reference_phone: referencePhoneSchema,
-    reference_relationship: referenceRelationshipSchema,
     emergency_contact_name: emergencyContactNameSchema,
     emergency_contact_phone: emergencyContactPhoneSchema,
     emergency_contact_relationship: emergencyContactRelationshipSchema,
-    nationality: nationalitySchema,
+    work_eligibility: z.enum(['Yes', 'No']).optional(),
+    work_status: z.string().trim().max(50).optional(),
     union_membership: unionMembershipSchema,
     ethnicity: ethnicitySchema,
     tattoos: tattoosSchema,
-    piercings: piercingsSchema
+    piercings: piercingsSchema,
+    comfort_levels: z.array(z.string()).optional(),
+    previous_representations: z.union([
+      z.string().transform((val) => {
+        if (!val || val.trim() === '') return null;
+        try {
+          return JSON.parse(val);
+        } catch {
+          return null;
+        }
+      }),
+      z.array(z.object({
+        has_manager: z.boolean().optional(),
+        has_agency: z.boolean().optional(),
+        manager_name: z.string().optional(),
+        manager_contact: z.string().optional(),
+        agency_name: z.string().optional(),
+        agent_name: z.string().optional(),
+        agency_contact: z.string().optional(),
+        reason_leaving: z.string().optional()
+      })).optional(),
+      z.null()
+    ]).optional()
   })
   .strict();
 

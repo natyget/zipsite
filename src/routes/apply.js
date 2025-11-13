@@ -31,7 +31,6 @@ router.get('/apply', (req, res) => {
     last_name: '',
     city: '',
     phone: '',
-    measurements: '',
     height_cm: '',
     bust: '',
     waist: '',
@@ -48,6 +47,8 @@ router.get('/apply', (req, res) => {
     // New comprehensive fields
     gender: '',
     date_of_birth: '',
+    weight: '',
+    weight_unit: '',
     weight_kg: '',
     weight_lbs: '',
     dress_size: '',
@@ -65,15 +66,17 @@ router.get('/apply', (req, res) => {
     reference_name: '',
     reference_email: '',
     reference_phone: '',
-    reference_relationship: '',
     emergency_contact_name: '',
     emergency_contact_phone: '',
     emergency_contact_relationship: '',
-    nationality: '',
+    work_eligibility: '',
+    work_status: '',
     union_membership: '',
     ethnicity: '',
     tattoos: false,
-    piercings: false
+    piercings: false,
+    comfort_levels: [],
+    previous_representations: []
   };
 
   return res.render('apply/index', {
@@ -124,7 +127,6 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       has_password_confirm: !!req.body?.password_confirm,
       city: req.body?.city || 'missing',
       height_cm: req.body?.height_cm || 'missing',
-      measurements: req.body?.measurements || 'missing',
       bio: req.body?.bio ? `${req.body.bio.substring(0, 20)}...` : 'missing'
     });
     console.log('[Apply] Is logged in:', Boolean(req.currentUser));
@@ -137,14 +139,14 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     let normalizedEmail = null; // Store normalized email for use in success message
 
     // Declare profile variables at function scope so they're available after if/else
-    let first_name, last_name, city, phone, height_cm, bust, waist, hips, shoe_size;
-    let eye_color, hair_color, measurements, bio, specialties, partner_agency_email;
+    let first_name, last_name, city, city_secondary, phone, height_cm, bust, waist, hips, shoe_size;
+    let eye_color, hair_color, bio, specialties, experience_details, partner_agency_email;
     let gender, date_of_birth, age, weight_kg, weight_lbs, dress_size, hair_length, skin_tone;
     let languages, availability_travel, availability_schedule, experience_level, training, portfolio_url;
     let instagram_handle, instagram_url, twitter_handle, twitter_url, tiktok_handle, tiktok_url;
-    let reference_name, reference_email, reference_phone, reference_relationship;
+    let reference_name, reference_email, reference_phone;
     let emergency_contact_name, emergency_contact_phone, emergency_contact_relationship;
-    let nationality, union_membership, ethnicity, tattoos, piercings;
+    let work_eligibility, work_status, union_membership, ethnicity, tattoos, piercings, comfort_levels, previous_representations;
     let passwordHash = null; // Store password hash for transaction use
 
   // If not logged in, validate account creation fields
@@ -238,7 +240,6 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       shoe_size: req.body.shoe_size,
       eye_color: req.body.eye_color,
       hair_color: req.body.hair_color,
-      measurements: req.body.measurements,
       bio: req.body.bio,
       specialties: specialtiesArray.length > 0 ? specialtiesArray : undefined,
       partner_agency_email: req.body.partner_agency_email,
@@ -265,15 +266,17 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       reference_name: req.body.reference_name,
       reference_email: req.body.reference_email,
       reference_phone: req.body.reference_phone,
-      reference_relationship: req.body.reference_relationship,
       emergency_contact_name: req.body.emergency_contact_name,
       emergency_contact_phone: req.body.emergency_contact_phone,
       emergency_contact_relationship: req.body.emergency_contact_relationship,
-      nationality: req.body.nationality,
+      work_eligibility: req.body.work_eligibility,
+      work_status: req.body.work_status,
       union_membership: req.body.union_membership,
       ethnicity: req.body.ethnicity,
       tattoos: req.body.tattoos,
-      piercings: req.body.piercings
+      piercings: req.body.piercings,
+      comfort_levels: req.body.comfort_levels,
+      previous_representations: req.body.previous_representations
     };
 
     // Validate profile fields (with specialties already converted to array)
@@ -298,6 +301,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     first_name = applyParsed.data.first_name;
     last_name = applyParsed.data.last_name;
     city = applyParsed.data.city;
+    city_secondary = applyParsed.data.city_secondary;
     phone = applyParsed.data.phone;
     height_cm = applyParsed.data.height_cm;
     bust = applyParsed.data.bust;
@@ -306,16 +310,30 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     shoe_size = applyParsed.data.shoe_size;
     eye_color = applyParsed.data.eye_color;
     hair_color = applyParsed.data.hair_color;
-    measurements = applyParsed.data.measurements;
     bio = applyParsed.data.bio;
     specialties = applyParsed.data.specialties;
+    experience_details = applyParsed.data.experience_details;
     partner_agency_email = applyParsed.data.partner_agency_email;
     
     // Extract new comprehensive fields
     gender = applyParsed.data.gender;
     date_of_birth = applyParsed.data.date_of_birth;
+    // Handle weight - prefer hidden fields (populated by JS), fallback to weight/weight_unit
+    const weight = applyParsed.data.weight;
+    const weight_unit = applyParsed.data.weight_unit;
     weight_kg = applyParsed.data.weight_kg;
     weight_lbs = applyParsed.data.weight_lbs;
+    
+    // If weight/weight_unit provided but kg/lbs not, convert
+    if (weight && weight_unit && (!weight_kg && !weight_lbs)) {
+      if (weight_unit === 'kg') {
+        weight_kg = weight;
+        weight_lbs = convertKgToLbs(weight);
+      } else {
+        weight_lbs = weight;
+        weight_kg = convertLbsToKg(weight);
+      }
+    }
     dress_size = applyParsed.data.dress_size;
     hair_length = applyParsed.data.hair_length;
     skin_tone = applyParsed.data.skin_tone;
@@ -334,15 +352,17 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     reference_name = applyParsed.data.reference_name;
     reference_email = applyParsed.data.reference_email;
     reference_phone = applyParsed.data.reference_phone;
-    reference_relationship = applyParsed.data.reference_relationship;
     emergency_contact_name = applyParsed.data.emergency_contact_name;
     emergency_contact_phone = applyParsed.data.emergency_contact_phone;
     emergency_contact_relationship = applyParsed.data.emergency_contact_relationship;
-    nationality = applyParsed.data.nationality;
+    work_eligibility = applyParsed.data.work_eligibility;
+    work_status = applyParsed.data.work_status;
     union_membership = applyParsed.data.union_membership;
     ethnicity = applyParsed.data.ethnicity;
     tattoos = applyParsed.data.tattoos;
     piercings = applyParsed.data.piercings;
+    comfort_levels = applyParsed.data.comfort_levels;
+    previous_representations = applyParsed.data.previous_representations;
     
     // Calculate age from date of birth
     if (date_of_birth) {
@@ -472,7 +492,6 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       shoe_size: req.body.shoe_size,
       eye_color: req.body.eye_color,
       hair_color: req.body.hair_color,
-      measurements: req.body.measurements,
       bio: req.body.bio,
       specialties: specialtiesArray.length > 0 ? specialtiesArray : undefined,
       partner_agency_email: req.body.partner_agency_email,
@@ -499,15 +518,17 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       reference_name: req.body.reference_name,
       reference_email: req.body.reference_email,
       reference_phone: req.body.reference_phone,
-      reference_relationship: req.body.reference_relationship,
       emergency_contact_name: req.body.emergency_contact_name,
       emergency_contact_phone: req.body.emergency_contact_phone,
       emergency_contact_relationship: req.body.emergency_contact_relationship,
-      nationality: req.body.nationality,
+      work_eligibility: req.body.work_eligibility,
+      work_status: req.body.work_status,
       union_membership: req.body.union_membership,
       ethnicity: req.body.ethnicity,
       tattoos: req.body.tattoos,
-      piercings: req.body.piercings
+      piercings: req.body.piercings,
+      comfort_levels: req.body.comfort_levels,
+      previous_representations: req.body.previous_representations
     };
 
     // Validate profile data
@@ -532,6 +553,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     first_name = parsed.data.first_name;
     last_name = parsed.data.last_name;
     city = parsed.data.city;
+    city_secondary = parsed.data.city_secondary;
     phone = parsed.data.phone;
     height_cm = parsed.data.height_cm;
     bust = parsed.data.bust;
@@ -540,16 +562,30 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     shoe_size = parsed.data.shoe_size;
     eye_color = parsed.data.eye_color;
     hair_color = parsed.data.hair_color;
-    measurements = parsed.data.measurements;
     bio = parsed.data.bio;
     specialties = parsed.data.specialties;
+    experience_details = parsed.data.experience_details;
     partner_agency_email = parsed.data.partner_agency_email;
     
     // Extract new comprehensive fields
     gender = parsed.data.gender;
     date_of_birth = parsed.data.date_of_birth;
+    // Handle weight - prefer hidden fields (populated by JS), fallback to weight/weight_unit
+    const weight = parsed.data.weight;
+    const weight_unit = parsed.data.weight_unit;
     weight_kg = parsed.data.weight_kg;
     weight_lbs = parsed.data.weight_lbs;
+    
+    // If weight/weight_unit provided but kg/lbs not, convert
+    if (weight && weight_unit && (!weight_kg && !weight_lbs)) {
+      if (weight_unit === 'kg') {
+        weight_kg = weight;
+        weight_lbs = convertKgToLbs(weight);
+      } else {
+        weight_lbs = weight;
+        weight_kg = convertLbsToKg(weight);
+      }
+    }
     dress_size = parsed.data.dress_size;
     hair_length = parsed.data.hair_length;
     skin_tone = parsed.data.skin_tone;
@@ -568,15 +604,17 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     reference_name = parsed.data.reference_name;
     reference_email = parsed.data.reference_email;
     reference_phone = parsed.data.reference_phone;
-    reference_relationship = parsed.data.reference_relationship;
     emergency_contact_name = parsed.data.emergency_contact_name;
     emergency_contact_phone = parsed.data.emergency_contact_phone;
     emergency_contact_relationship = parsed.data.emergency_contact_relationship;
-    nationality = parsed.data.nationality;
+    work_eligibility = parsed.data.work_eligibility;
+    work_status = parsed.data.work_status;
     union_membership = parsed.data.union_membership;
     ethnicity = parsed.data.ethnicity;
     tattoos = parsed.data.tattoos;
     piercings = parsed.data.piercings;
+    comfort_levels = parsed.data.comfort_levels;
+    previous_representations = parsed.data.previous_representations;
     
     // Calculate age from date of birth
     if (date_of_birth) {
@@ -630,9 +668,14 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     });
     
     const curatedBio = curateBio(bio, first_name, last_name);
-    const cleanedMeasurements = normalizeMeasurements(measurements);
     const specialtiesJson = specialties && Array.isArray(specialties) && specialties.length > 0 
       ? JSON.stringify(specialties) 
+      : null;
+    const experienceDetailsJson = experience_details 
+      ? (typeof experience_details === 'string' ? experience_details : JSON.stringify(experience_details))
+      : null;
+    const previousRepsJson = previous_representations 
+      ? (typeof previous_representations === 'string' ? previous_representations : JSON.stringify(previous_representations))
       : null;
 
     let profileId;
@@ -676,6 +719,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
             first_name,
             last_name,
             city,
+            city_secondary: city_secondary || null,
             phone: phone || null,
             height_cm,
             bust: bust || null,
@@ -684,10 +728,10 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
             shoe_size: shoe_size || null,
             eye_color: eye_color || null,
             hair_color: hair_color || null,
-            measurements: cleanedMeasurements,
             bio_raw: bio,
             bio_curated: curatedBio,
             specialties: specialtiesJson,
+            experience_details: experienceDetailsJson,
             partner_agency_id: partnerAgencyId,
             // New comprehensive fields
             gender: gender || null,
@@ -713,15 +757,17 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
             reference_name: reference_name || null,
             reference_email: reference_email || null,
             reference_phone: reference_phone || null,
-            reference_relationship: reference_relationship || null,
             emergency_contact_name: emergency_contact_name || null,
             emergency_contact_phone: emergency_contact_phone || null,
             emergency_contact_relationship: emergency_contact_relationship || null,
-            nationality: nationality || null,
+            work_eligibility: work_eligibility || null,
+            work_status: (work_status === 'Other' && req.body.work_status_other) ? req.body.work_status_other : (work_status || null),
             union_membership: union_membership || null,
             ethnicity: ethnicity || null,
             tattoos: tattoos || null,
             piercings: piercings || null,
+            comfort_levels: comfort_levels && Array.isArray(comfort_levels) && comfort_levels.length > 0 ? JSON.stringify(comfort_levels) : null,
+            previous_representations: previousRepsJson,
             is_pro: false // New signups are always Free
           };
           

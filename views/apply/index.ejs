@@ -106,6 +106,13 @@
                     <p class="field-error" role="alert"><%= fieldError('city') %></p>
                   <% } %>
                 </div>
+                <div class="form-field <%= fieldError('city_secondary') ? 'has-error' : '' %>">
+                  <label for="city_secondary">SECONDARY CITY <span class="muted">(optional)</span></label>
+                  <input id="city_secondary" name="city_secondary" value="<%= valueFor('city_secondary', '') %>" placeholder="Los Angeles, CA">
+                  <% if (fieldError('city_secondary')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('city_secondary') %></p>
+                  <% } %>
+                </div>
               </div>
 
               <div class="form-grid">
@@ -114,13 +121,6 @@
                   <input id="height_cm" name="height_cm" type="text" value="<%= valueFor('height_cm', '') %>" placeholder="5' 11&quot; or 180 cm" required>
                   <% if (fieldError('height_cm')) { %>
                     <p class="field-error" role="alert"><%= fieldError('height_cm') %></p>
-                  <% } %>
-                </div>
-                <div class="form-field <%= fieldError('measurements') ? 'has-error' : '' %>">
-                  <label for="measurements">MEASUREMENTS</label>
-                  <input id="measurements" name="measurements" value="<%= valueFor('measurements', '') %>" placeholder="32-24-34" required>
-                  <% if (fieldError('measurements')) { %>
-                    <p class="field-error" role="alert"><%= fieldError('measurements') %></p>
                   <% } %>
                 </div>
               </div>
@@ -152,21 +152,57 @@
               <div class="form-grid">
                 <div class="form-field <%= fieldError('shoe_size') ? 'has-error' : '' %>">
                   <label for="shoe_size">SHOE SIZE</label>
-                  <input id="shoe_size" name="shoe_size" type="text" value="<%= valueFor('shoe_size', '') %>" placeholder="9 US">
+                  <% 
+                    const shoeSizeValue = valueFor('shoe_size', '');
+                    const shoeSizeOptions = ['5 US', '5.5 US', '6 US', '6.5 US', '7 US', '7.5 US', '8 US', '8.5 US', '9 US', '9.5 US', '10 US', '10.5 US', '11 US', '11.5 US', '12 US', '13 US'];
+                    const isShoeSizeOther = shoeSizeValue && !shoeSizeOptions.includes(shoeSizeValue);
+                  %>
+                  <select id="shoe_size" name="shoe_size">
+                    <option value="">Select...</option>
+                    <% shoeSizeOptions.forEach(opt => { %>
+                      <option value="<%= opt %>" <%= shoeSizeValue === opt ? 'selected' : '' %>><%= opt %></option>
+                    <% }); %>
+                    <option value="Other" <%= isShoeSizeOther ? 'selected' : '' %>>Other</option>
+                  </select>
+                  <input type="text" id="shoe_size_other" name="shoe_size_other" value="<%= isShoeSizeOther ? shoeSizeValue : '' %>" placeholder="Enter shoe size" style="margin-top: 0.5rem; display: <%= isShoeSizeOther ? 'block' : 'none' %>;">
                   <% if (fieldError('shoe_size')) { %>
                     <p class="field-error" role="alert"><%= fieldError('shoe_size') %></p>
                   <% } %>
                 </div>
                 <div class="form-field <%= fieldError('eye_color') ? 'has-error' : '' %>">
                   <label for="eye_color">EYE COLOR</label>
-                  <input id="eye_color" name="eye_color" type="text" value="<%= valueFor('eye_color', '') %>" placeholder="Brown">
+                  <% 
+                    const eyeColorValue = valueFor('eye_color', '');
+                    const eyeColorOptions = ['Brown', 'Blue', 'Green', 'Hazel', 'Gray', 'Amber', 'Other'];
+                    const isEyeColorOther = eyeColorValue && !eyeColorOptions.includes(eyeColorValue);
+                  %>
+                  <select id="eye_color" name="eye_color">
+                    <option value="">Select...</option>
+                    <% eyeColorOptions.filter(opt => opt !== 'Other').forEach(opt => { %>
+                      <option value="<%= opt %>" <%= eyeColorValue === opt ? 'selected' : '' %>><%= opt %></option>
+                    <% }); %>
+                    <option value="Other" <%= isEyeColorOther ? 'selected' : '' %>>Other</option>
+                  </select>
+                  <input type="text" id="eye_color_other" name="eye_color_other" value="<%= isEyeColorOther ? eyeColorValue : '' %>" placeholder="Enter eye color" style="margin-top: 0.5rem; display: <%= isEyeColorOther ? 'block' : 'none' %>;">
                   <% if (fieldError('eye_color')) { %>
                     <p class="field-error" role="alert"><%= fieldError('eye_color') %></p>
                   <% } %>
                 </div>
                 <div class="form-field <%= fieldError('hair_color') ? 'has-error' : '' %>">
                   <label for="hair_color">HAIR COLOR</label>
-                  <input id="hair_color" name="hair_color" type="text" value="<%= valueFor('hair_color', '') %>" placeholder="Blonde">
+                  <% 
+                    const hairColorValue = valueFor('hair_color', '');
+                    const hairColorOptions = ['Black', 'Brown', 'Blonde', 'Red', 'Auburn', 'Gray', 'White', 'Other'];
+                    const isHairColorOther = hairColorValue && !hairColorOptions.includes(hairColorValue);
+                  %>
+                  <select id="hair_color" name="hair_color">
+                    <option value="">Select...</option>
+                    <% hairColorOptions.filter(opt => opt !== 'Other').forEach(opt => { %>
+                      <option value="<%= opt %>" <%= hairColorValue === opt ? 'selected' : '' %>><%= opt %></option>
+                    <% }); %>
+                    <option value="Other" <%= isHairColorOther ? 'selected' : '' %>>Other</option>
+                  </select>
+                  <input type="text" id="hair_color_other" name="hair_color_other" value="<%= isHairColorOther ? hairColorValue : '' %>" placeholder="Enter hair color" style="margin-top: 0.5rem; display: <%= isHairColorOther ? 'block' : 'none' %>;">
                   <% if (fieldError('hair_color')) { %>
                     <p class="field-error" role="alert"><%= fieldError('hair_color') %></p>
                   <% } %>
@@ -195,7 +231,7 @@
                     <p class="field-error" role="alert"><%= fieldError('date_of_birth') %></p>
                   <% } %>
                 </div>
-                <div class="form-field <%= fieldError('dress_size') ? 'has-error' : '' %>">
+                <div class="form-field <%= fieldError('dress_size') ? 'has-error' : '' %>" id="dress-size-field">
                   <label for="dress_size">DRESS SIZE</label>
                   <input id="dress_size" name="dress_size" type="text" value="<%= valueFor('dress_size', '') %>" placeholder="6 US">
                   <% if (fieldError('dress_size')) { %>
@@ -205,18 +241,19 @@
               </div>
 
               <div class="form-grid">
-                <div class="form-field <%= fieldError('weight_kg') ? 'has-error' : '' %>">
-                  <label for="weight_kg">WEIGHT (kg)</label>
-                  <input id="weight_kg" name="weight_kg" type="number" step="0.1" min="30" max="200" value="<%= valueFor('weight_kg', '') %>" placeholder="65">
-                  <% if (fieldError('weight_kg')) { %>
-                    <p class="field-error" role="alert"><%= fieldError('weight_kg') %></p>
-                  <% } %>
-                </div>
-                <div class="form-field <%= fieldError('weight_lbs') ? 'has-error' : '' %>">
-                  <label for="weight_lbs">WEIGHT (lbs)</label>
-                  <input id="weight_lbs" name="weight_lbs" type="number" step="0.1" min="66" max="440" value="<%= valueFor('weight_lbs', '') %>" placeholder="143">
-                  <% if (fieldError('weight_lbs')) { %>
-                    <p class="field-error" role="alert"><%= fieldError('weight_lbs') %></p>
+                <div class="form-field <%= fieldError('weight') || fieldError('weight_unit') ? 'has-error' : '' %>">
+                  <label for="weight">WEIGHT</label>
+                  <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
+                    <input id="weight" name="weight" type="number" step="0.1" min="30" max="440" value="<%= valueFor('weight', '') || (valueFor('weight_kg', '') ? valueFor('weight_kg', '') : valueFor('weight_lbs', '')) %>" placeholder="143" style="flex: 1;">
+                    <select id="weight_unit" name="weight_unit" style="width: auto; min-width: 80px;">
+                      <option value="lbs" <%= (!valueFor('weight_unit', '') && valueFor('weight_kg', '')) ? '' : (valueFor('weight_unit', '') === 'lbs' ? 'selected' : (!valueFor('weight_lbs', '') ? 'selected' : '')) %>>lbs</option>
+                      <option value="kg" <%= valueFor('weight_unit', '') === 'kg' ? 'selected' : '' %>>kg</option>
+                    </select>
+                  </div>
+                  <input type="hidden" id="weight_kg" name="weight_kg" value="<%= valueFor('weight_kg', '') %>">
+                  <input type="hidden" id="weight_lbs" name="weight_lbs" value="<%= valueFor('weight_lbs', '') %>">
+                  <% if (fieldError('weight') || fieldError('weight_unit')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('weight') || fieldError('weight_unit') %></p>
                   <% } %>
                 </div>
                 <div class="form-field <%= fieldError('hair_length') ? 'has-error' : '' %>">
@@ -237,7 +274,19 @@
               <div class="form-grid">
                 <div class="form-field <%= fieldError('skin_tone') ? 'has-error' : '' %>">
                   <label for="skin_tone">SKIN TONE</label>
-                  <input id="skin_tone" name="skin_tone" type="text" value="<%= valueFor('skin_tone', '') %>" placeholder="Fair, Medium, Olive, etc.">
+                  <% 
+                    const skinToneValue = valueFor('skin_tone', '');
+                    const skinToneOptions = ['Fair', 'Light', 'Medium', 'Olive', 'Tan', 'Brown', 'Dark', 'Other'];
+                    const isSkinToneOther = skinToneValue && !skinToneOptions.includes(skinToneValue);
+                  %>
+                  <select id="skin_tone" name="skin_tone">
+                    <option value="">Select...</option>
+                    <% skinToneOptions.filter(opt => opt !== 'Other').forEach(opt => { %>
+                      <option value="<%= opt %>" <%= skinToneValue === opt ? 'selected' : '' %>><%= opt %></option>
+                    <% }); %>
+                    <option value="Other" <%= isSkinToneOther ? 'selected' : '' %>>Other</option>
+                  </select>
+                  <input type="text" id="skin_tone_other" name="skin_tone_other" value="<%= isSkinToneOther ? skinToneValue : '' %>" placeholder="Enter skin tone" style="margin-top: 0.5rem; display: <%= isSkinToneOther ? 'block' : 'none' %>;">
                   <% if (fieldError('skin_tone')) { %>
                     <p class="field-error" role="alert"><%= fieldError('skin_tone') %></p>
                   <% } %>
@@ -257,39 +306,37 @@
               </div>
 
               <div class="form-field">
-                <label>SPECIALTIES / CATEGORIES</label>
+                <label>EXPERIENCE</label>
                 <p class="form-field__help">Select all that apply</p>
-                <div class="checkbox-group">
+                <div class="checkbox-group" id="experience-checkboxes">
                   <% 
                     const specialtiesValue = valueFor('specialties', '');
+                    const experienceDetailsValue = valueFor('experience_details', '');
+                    let experienceDetailsObj = {};
+                    if (experienceDetailsValue) {
+                      try {
+                        experienceDetailsObj = typeof experienceDetailsValue === 'string' ? JSON.parse(experienceDetailsValue) : experienceDetailsValue;
+                      } catch (e) {
+                        experienceDetailsObj = {};
+                      }
+                    }
                     const specialtiesArray = Array.isArray(specialtiesValue) ? specialtiesValue : (specialtiesValue ? [specialtiesValue] : []);
                     const hasSpecialty = (val) => specialtiesArray.includes(val);
+                    const experienceOptions = ['Runway', 'Acting', 'Dancing', 'Music', 'Art', 'Content Creation'];
                   %>
+                  <% experienceOptions.forEach(option => { %>
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="specialties" value="<%= option %>" <%= hasSpecialty(option) ? 'checked' : '' %> data-experience="<%= option.toLowerCase().replace(/\s+/g, '-') %>">
+                      <span><%= option %></span>
+                    </label>
+                  <% }); %>
                   <label class="checkbox-label">
-                    <input type="checkbox" name="specialties" value="Editorial" <%= hasSpecialty('Editorial') ? 'checked' : '' %>>
-                    <span>Editorial</span>
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" name="specialties" value="Commercial" <%= hasSpecialty('Commercial') ? 'checked' : '' %>>
-                    <span>Commercial</span>
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" name="specialties" value="Runway" <%= hasSpecialty('Runway') ? 'checked' : '' %>>
-                    <span>Runway</span>
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" name="specialties" value="Fitness" <%= hasSpecialty('Fitness') ? 'checked' : '' %>>
-                    <span>Fitness</span>
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" name="specialties" value="Parts" <%= hasSpecialty('Parts') ? 'checked' : '' %>>
-                    <span>Parts (Hands, Feet, etc.)</span>
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" name="specialties" value="Other" <%= hasSpecialty('Other') ? 'checked' : '' %>>
+                    <input type="checkbox" name="specialties" value="Other" <%= hasSpecialty('Other') ? 'checked' : '' %> data-experience="other">
                     <span>Other</span>
                   </label>
                 </div>
+                <div id="experience-details-container" style="margin-top: 1rem;"></div>
+                <input type="hidden" id="experience_details" name="experience_details" value='<%= typeof experienceDetailsValue === "string" ? experienceDetailsValue : JSON.stringify(experienceDetailsObj) %>'>
               </div>
 
               <div class="form-field <%= fieldError('partner_agency_email') ? 'has-error' : '' %>">
@@ -302,59 +349,49 @@
 
               <div class="form-field">
                 <label>LANGUAGES</label>
-                <p class="form-field__help">Select all languages you speak</p>
-                <div class="checkbox-group">
-                  <% 
-                    const languagesValue = valueFor('languages', '');
-                    let languagesArray = [];
-                    if (Array.isArray(languagesValue)) {
-                      languagesArray = languagesValue;
-                    } else if (typeof languagesValue === 'string') {
-                      try {
-                        languagesArray = JSON.parse(languagesValue);
-                      } catch {
-                        languagesArray = languagesValue ? languagesValue.split(',').map(l => l.trim()).filter(l => l) : [];
-                      }
+                <p class="form-field__help">Add languages you speak</p>
+                <% 
+                  const languagesValue = valueFor('languages', '');
+                  let languagesArray = [];
+                  if (Array.isArray(languagesValue)) {
+                    languagesArray = languagesValue;
+                  } else if (typeof languagesValue === 'string') {
+                    try {
+                      languagesArray = JSON.parse(languagesValue);
+                    } catch {
+                      languagesArray = languagesValue ? languagesValue.split(',').map(l => l.trim()).filter(l => l) : [];
                     }
-                    const hasLanguage = (val) => languagesArray.includes(val);
-                  %>
-                  <label class="checkbox-label">
-                    <input type="checkbox" name="languages" value="English" <%= hasLanguage('English') ? 'checked' : '' %>>
-                    <span>English</span>
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" name="languages" value="Spanish" <%= hasLanguage('Spanish') ? 'checked' : '' %>>
-                    <span>Spanish</span>
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" name="languages" value="French" <%= hasLanguage('French') ? 'checked' : '' %>>
-                    <span>French</span>
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" name="languages" value="Italian" <%= hasLanguage('Italian') ? 'checked' : '' %>>
-                    <span>Italian</span>
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" name="languages" value="German" <%= hasLanguage('German') ? 'checked' : '' %>>
-                    <span>German</span>
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" name="languages" value="Portuguese" <%= hasLanguage('Portuguese') ? 'checked' : '' %>>
-                    <span>Portuguese</span>
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" name="languages" value="Mandarin" <%= hasLanguage('Mandarin') ? 'checked' : '' %>>
-                    <span>Mandarin</span>
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" name="languages" value="Japanese" <%= hasLanguage('Japanese') ? 'checked' : '' %>>
-                    <span>Japanese</span>
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" name="languages" value="Korean" <%= hasLanguage('Korean') ? 'checked' : '' %>>
-                    <span>Korean</span>
-                  </label>
+                  }
+                  const languageOptions = ['English', 'Spanish', 'French', 'Italian', 'German', 'Portuguese', 'Mandarin', 'Japanese', 'Korean'];
+                  const selectedLanguages = languagesArray.filter(l => languageOptions.includes(l));
+                  const otherLanguages = languagesArray.filter(l => !languageOptions.includes(l));
+                %>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                  <select id="add-language-select" style="flex: 1;">
+                    <option value="">Select a language...</option>
+                    <% languageOptions.forEach(lang => { %>
+                      <option value="<%= lang %>" <%= selectedLanguages.includes(lang) ? 'disabled' : '' %>><%= lang %></option>
+                    <% }); %>
+                    <option value="Other">Other</option>
+                  </select>
+                  <button type="button" id="add-language-btn" class="button button-secondary" style="width: auto; padding: 0.5rem 1rem;">Add</button>
                 </div>
+                <input type="text" id="language-other-input" name="language_other_input" placeholder="Enter custom language" style="margin-bottom: 0.5rem; display: none; width: 100%; padding: 0.5rem;">
+                <div id="selected-languages-container" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+                  <% selectedLanguages.forEach(lang => { %>
+                    <span class="language-tag" data-language="<%= lang %>" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: #f0f0f0; border-radius: 4px; font-size: 0.9rem;">
+                      <%= lang %>
+                      <button type="button" class="remove-language" data-language="<%= lang %>" style="background: none; border: none; cursor: pointer; font-size: 1.2rem; line-height: 1; color: #666;">&times;</button>
+                    </span>
+                  <% }); %>
+                  <% otherLanguages.forEach(lang => { %>
+                    <span class="language-tag" data-language="<%= lang %>" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: #f0f0f0; border-radius: 4px; font-size: 0.9rem;">
+                      <%= lang %>
+                      <button type="button" class="remove-language" data-language="<%= lang %>" style="background: none; border: none; cursor: pointer; font-size: 1.2rem; line-height: 1; color: #666;">&times;</button>
+                    </span>
+                  <% }); %>
+                </div>
+                <input type="hidden" id="languages" name="languages" value='<%= JSON.stringify(languagesArray) %>'>
               </div>
 
               <div class="form-grid">
@@ -463,13 +500,6 @@
                     <p class="field-error" role="alert"><%= fieldError('reference_phone') %></p>
                   <% } %>
                 </div>
-                <div class="form-field <%= fieldError('reference_relationship') ? 'has-error' : '' %>">
-                  <label for="reference_relationship">RELATIONSHIP <span class="muted">(optional)</span></label>
-                  <input id="reference_relationship" name="reference_relationship" type="text" value="<%= valueFor('reference_relationship', '') %>" placeholder="Photographer, Agent, etc.">
-                  <% if (fieldError('reference_relationship')) { %>
-                    <p class="field-error" role="alert"><%= fieldError('reference_relationship') %></p>
-                  <% } %>
-                </div>
               </div>
 
               <div class="form-section-divider"></div>
@@ -499,13 +529,105 @@
               </div>
 
               <div class="form-section-divider"></div>
+              <h4 class="form-section-title">Previous Representation</h4>
+              <% 
+                const previousRepsValue = valueFor('previous_representations', '');
+                let previousRepsArray = [];
+                if (previousRepsValue) {
+                  try {
+                    previousRepsArray = typeof previousRepsValue === 'string' ? JSON.parse(previousRepsValue) : previousRepsValue;
+                  } catch (e) {
+                    previousRepsArray = [];
+                  }
+                }
+                if (!Array.isArray(previousRepsArray)) previousRepsArray = [];
+                if (previousRepsArray.length === 0) previousRepsArray = [{}];
+              %>
+              <div id="previous-representations-container">
+                <% previousRepsArray.forEach((rep, index) => { %>
+                  <div class="previous-representation-entry" data-index="<%= index %>" style="margin-bottom: 1.5rem; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 4px;">
+                    <% if (previousRepsArray.length > 1) { %>
+                      <button type="button" class="remove-rep-entry" data-index="<%= index %>" style="float: right; background: #dc3545; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">Remove</button>
+                    <% } %>
+                    <div class="form-grid">
+                      <div class="form-field">
+                        <label>
+                          <input type="checkbox" name="previous_rep_<%= index %>_has_manager" value="true" <%= rep.has_manager ? 'checked' : '' %>>
+                          <span>Had Manager</span>
+                        </label>
+                      </div>
+                      <div class="form-field">
+                        <label>
+                          <input type="checkbox" name="previous_rep_<%= index %>_has_agency" value="true" <%= rep.has_agency ? 'checked' : '' %>>
+                          <span>Had Agency</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="form-grid" id="manager-fields-<%= index %>" style="display: <%= rep.has_manager ? 'flex' : 'none' %>;">
+                      <div class="form-field">
+                        <label>Manager Name</label>
+                        <input type="text" name="previous_rep_<%= index %>_manager_name" value="<%= rep.manager_name || '' %>" placeholder="Manager name">
+                      </div>
+                      <div class="form-field">
+                        <label>Manager Contact</label>
+                        <input type="text" name="previous_rep_<%= index %>_manager_contact" value="<%= rep.manager_contact || '' %>" placeholder="Email or phone">
+                      </div>
+                    </div>
+                    <div class="form-grid" id="agency-fields-<%= index %>" style="display: <%= rep.has_agency ? 'flex' : 'none' %>;">
+                      <div class="form-field">
+                        <label>Agency Name</label>
+                        <input type="text" name="previous_rep_<%= index %>_agency_name" value="<%= rep.agency_name || '' %>" placeholder="Agency name">
+                      </div>
+                      <div class="form-field">
+                        <label>Agent Name</label>
+                        <input type="text" name="previous_rep_<%= index %>_agent_name" value="<%= rep.agent_name || '' %>" placeholder="Agent name">
+                      </div>
+                      <div class="form-field">
+                        <label>Agency/Agent Contact</label>
+                        <input type="text" name="previous_rep_<%= index %>_agency_contact" value="<%= rep.agency_contact || '' %>" placeholder="Email or phone">
+                      </div>
+                    </div>
+                    <div class="form-field" style="margin-top: 0.75rem;">
+                      <label>Reason for Leaving</label>
+                      <textarea name="previous_rep_<%= index %>_reason_leaving" rows="2" placeholder="Reason for leaving..."><%= rep.reason_leaving || '' %></textarea>
+                    </div>
+                  </div>
+                <% }); %>
+              </div>
+              <button type="button" id="add-previous-rep-btn" style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">+ Add Another</button>
+              <input type="hidden" id="previous_representations" name="previous_representations" value='<%= typeof previousRepsValue === "string" ? previousRepsValue : JSON.stringify(previousRepsArray) %>'>
+
+              <div class="form-section-divider"></div>
               <h4 class="form-section-title">Additional Information</h4>
               <div class="form-grid">
-                <div class="form-field <%= fieldError('nationality') ? 'has-error' : '' %>">
-                  <label for="nationality">NATIONALITY <span class="muted">(optional)</span></label>
-                  <input id="nationality" name="nationality" type="text" value="<%= valueFor('nationality', '') %>" placeholder="American, British, etc.">
-                  <% if (fieldError('nationality')) { %>
-                    <p class="field-error" role="alert"><%= fieldError('nationality') %></p>
+                <div class="form-field <%= fieldError('work_eligibility') ? 'has-error' : '' %>">
+                  <label for="work_eligibility">WORK ELIGIBILITY <span class="muted">(optional)</span></label>
+                  <select id="work_eligibility" name="work_eligibility">
+                    <option value="">Select...</option>
+                    <option value="Yes" <%= valueFor('work_eligibility', '') === 'Yes' ? 'selected' : '' %>>Yes</option>
+                    <option value="No" <%= valueFor('work_eligibility', '') === 'No' ? 'selected' : '' %>>No</option>
+                  </select>
+                  <% if (fieldError('work_eligibility')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('work_eligibility') %></p>
+                  <% } %>
+                </div>
+                <div class="form-field <%= fieldError('work_status') ? 'has-error' : '' %>">
+                  <label for="work_status">WORK STATUS <span class="muted">(optional)</span></label>
+                  <% 
+                    const workStatusValue = valueFor('work_status', '');
+                    const workStatusOptions = ['Citizen', 'PR', 'Visa', 'Other'];
+                    const isWorkStatusOther = workStatusValue && !workStatusOptions.includes(workStatusValue);
+                  %>
+                  <select id="work_status" name="work_status">
+                    <option value="">Select...</option>
+                    <% workStatusOptions.filter(opt => opt !== 'Other').forEach(opt => { %>
+                      <option value="<%= opt %>" <%= workStatusValue === opt ? 'selected' : '' %>><%= opt %></option>
+                    <% }); %>
+                    <option value="Other" <%= isWorkStatusOther ? 'selected' : '' %>>Other</option>
+                  </select>
+                  <input type="text" id="work_status_other" name="work_status_other" value="<%= isWorkStatusOther ? workStatusValue : '' %>" placeholder="Enter work status" style="margin-top: 0.5rem; display: <%= isWorkStatusOther ? 'block' : 'none' %>;">
+                  <% if (fieldError('work_status')) { %>
+                    <p class="field-error" role="alert"><%= fieldError('work_status') %></p>
                   <% } %>
                 </div>
                 <div class="form-field <%= fieldError('union_membership') ? 'has-error' : '' %>">
@@ -538,20 +660,66 @@
                   </label>
                 </div>
               </div>
+
+              <div class="form-field">
+                <label>COMFORT LEVEL</label>
+                <p class="form-field__help">Select all that apply</p>
+                <% 
+                  const comfortLevelsValue = valueFor('comfort_levels', '');
+                  let comfortLevelsArray = [];
+                  if (Array.isArray(comfortLevelsValue)) {
+                    comfortLevelsArray = comfortLevelsValue;
+                  } else if (typeof comfortLevelsValue === 'string') {
+                    try {
+                      comfortLevelsArray = JSON.parse(comfortLevelsValue);
+                    } catch {
+                      comfortLevelsArray = comfortLevelsValue ? comfortLevelsValue.split(',').map(c => c.trim()).filter(c => c) : [];
+                    }
+                  }
+                  const hasComfortLevel = (val) => comfortLevelsArray.includes(val);
+                  const comfortOptions = ['Swimwear', 'Lingerie', 'Implied Nudity', 'Not Comfortable'];
+                %>
+                <div class="checkbox-group">
+                  <% comfortOptions.forEach(option => { %>
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="comfort_levels" value="<%= option %>" <%= hasComfortLevel(option) ? 'checked' : '' %>>
+                      <span><%= option %></span>
+                    </label>
+                  <% }); %>
+                </div>
+              </div>
             </div>
 
             <!-- Step 3: PHOTOS -->
             <div class="form-step" data-step="3">
+              <!-- Digitals - Mandatory First Section -->
               <div class="form-field">
-                <label for="photos">UPLOAD PHOTOS</label>
-                <p class="form-field__help">Upload 2-12 high-resolution portraits. JPEG, PNG, or WebP. Maximum 10MB per image.</p>
-                <div class="file-upload-area" id="file-upload-area">
-                  <input type="file" id="photos" name="photos" accept="image/jpeg,image/png,image/webp" multiple>
+                <label for="digitals">DIGITALS <span style="color: #dc3545;">*</span></label>
+                <p class="form-field__help">Upload high-resolution digitals. JPEG, PNG, or WebP. Maximum 10MB per image.</p>
+                <div class="file-upload-area" id="digitals-upload-area">
+                  <input type="file" id="digitals" name="digitals" accept="image/jpeg,image/png,image/webp" multiple>
                   <div class="file-upload-dropzone">
                     <p class="file-upload-text">Drag and drop images here, or <span class="file-upload-link">browse</span></p>
                     <p class="file-upload-hint">You can select multiple files</p>
                   </div>
-                  <div class="file-preview-grid" id="file-preview-grid"></div>
+                  <div class="file-preview-grid" id="digitals-preview-grid"></div>
+                </div>
+              </div>
+
+              <!-- Experience-specific upload blocks (auto-generated) -->
+              <div id="experience-uploads-container"></div>
+
+              <!-- Additional Images - Optional -->
+              <div class="form-field" style="margin-top: 2rem;">
+                <label for="additional_images">ADDITIONAL IMAGES <span class="muted">(optional)</span></label>
+                <p class="form-field__help">Upload any additional images for your portfolio.</p>
+                <div class="file-upload-area" id="additional-images-upload-area">
+                  <input type="file" id="additional_images" name="additional_images" accept="image/jpeg,image/png,image/webp" multiple>
+                  <div class="file-upload-dropzone">
+                    <p class="file-upload-text">Drag and drop images here, or <span class="file-upload-link">browse</span></p>
+                    <p class="file-upload-hint">You can select multiple files</p>
+                  </div>
+                  <div class="file-preview-grid" id="additional-images-preview-grid"></div>
                 </div>
               </div>
             </div>
@@ -619,8 +787,6 @@
                     <dd id="review-weight"></dd>
                     <dt>Dress Size:</dt>
                     <dd id="review-dress-size"></dd>
-                    <dt>Measurements:</dt>
-                    <dd id="review-measurements"></dd>
                     <dt>Bust:</dt>
                     <dd id="review-bust"></dd>
                     <dt>Waist:</dt>
@@ -663,8 +829,10 @@
                 <div class="review-section">
                   <h4>Additional Information</h4>
                   <dl>
-                    <dt>Nationality:</dt>
-                    <dd id="review-nationality"></dd>
+                    <dt>Work Eligibility:</dt>
+                    <dd id="review-work-eligibility"></dd>
+                    <dt>Work Status:</dt>
+                    <dd id="review-work-status"></dd>
                     <dt>Union Membership:</dt>
                     <dd id="review-union-membership"></dd>
                     <dt>Ethnicity:</dt>
