@@ -1,33 +1,34 @@
 <% if (profile.is_pro) { %>
-  <!-- Pro Portfolio - Modern Techy Design -->
+  <!-- Pro Portfolio - Vogue Editorial Style -->
   <div class="portfolio-pro-wrapper">
-    <!-- Hero Section with Glassmorphic Card -->
-    <section class="portfolio-pro-hero">
-      <div class="portfolio-pro-hero__bg">
-        <% if (profile.hero_image_path) { %>
-          <div class="portfolio-pro-hero__image-wrapper">
-            <img src="<%= profile.hero_image_path %>" alt="<%= profile.first_name %> <%= profile.last_name %>" class="portfolio-pro-hero__image">
-            <div class="portfolio-pro-hero__overlay"></div>
-          </div>
-        <% } %>
-      </div>
-      
-      <div class="portfolio-pro-hero__content">
-        <div class="portfolio-pro-card portfolio-pro-hero__card">
-          <div class="portfolio-pro-hero__header">
-            <span class="portfolio-pro-badge">Pro</span>
-            <span class="portfolio-pro-eyebrow">ZipSite Portfolio</span>
-          </div>
-          
-          <h1 class="portfolio-pro-name">
-            <span class="portfolio-pro-name__first"><%= profile.first_name %></span>
-            <span class="portfolio-pro-name__last"><%= profile.last_name %></span>
-          </h1>
-          
-          <p class="portfolio-pro-location"><%= profile.city %></p>
-          
-          <!-- Stats as Pills -->
-          <div class="portfolio-pro-stats">
+    <div class="portfolio-pro-container">
+      <!-- Hero Section - Editorial Style -->
+      <section class="portfolio-pro-hero">
+        <div class="portfolio-pro-hero__bg">
+          <% if (profile.hero_image_path) { %>
+            <div class="portfolio-pro-hero__image-wrapper">
+              <img src="<%= profile.hero_image_path %>" alt="<%= profile.first_name %> <%= profile.last_name %>" class="portfolio-pro-hero__image">
+              <div class="portfolio-pro-hero__overlay"></div>
+            </div>
+          <% } %>
+        </div>
+        
+        <div class="portfolio-pro-hero__content">
+          <div class="portfolio-pro-hero__card">
+            <div class="portfolio-pro-hero__header">
+              <span class="portfolio-pro-badge">Pro</span>
+              <span class="portfolio-pro-eyebrow">ZipSite Portfolio</span>
+            </div>
+            
+            <h1 class="portfolio-pro-name">
+              <span class="portfolio-pro-name__first"><%= profile.first_name %></span>
+              <span class="portfolio-pro-name__last"><%= profile.last_name %></span>
+            </h1>
+            
+            <p class="portfolio-pro-location"><%= profile.city %></p>
+            
+            <!-- Stats Grid - Editorial Style -->
+            <div class="portfolio-pro-stats">
             <% if (profile.height_cm) { %>
               <div class="portfolio-pro-stat">
                 <span class="portfolio-pro-stat__label">Height</span>
@@ -110,10 +111,9 @@
       </div>
     </section>
 
-    <!-- Bio Section -->
-    <section class="portfolio-pro-bio">
-      <div class="portfolio-pro-container">
-        <div class="portfolio-pro-card portfolio-pro-bio__card">
+      <!-- Bio Section - Editorial Style -->
+      <section class="portfolio-pro-bio">
+        <div class="portfolio-pro-bio__card">
           <h2 class="portfolio-pro-section-title">About</h2>
           <div class="portfolio-pro-bio__content">
             <p><%= profile.bio_curated %></p>
@@ -202,22 +202,23 @@
       </div>
     </section>
 
-    <!-- Gallery Section -->
-    <section class="portfolio-pro-gallery">
-      <div class="portfolio-pro-container">
-        <h2 class="portfolio-pro-section-title">Gallery</h2>
-        <div class="portfolio-pro-gallery__grid">
-          <% images.forEach((item) => { %>
-            <figure class="portfolio-pro-gallery__item">
-              <img src="<%= item.path %>" alt="<%= item.label || 'Portfolio image' %>" class="portfolio-pro-gallery__image">
-              <% if (item.label) { %>
-                <figcaption class="portfolio-pro-gallery__caption"><%= item.label %></figcaption>
-              <% } %>
-            </figure>
-          <% }) %>
+      <!-- Gallery Section - Editorial Style -->
+      <section class="portfolio-pro-gallery">
+        <div class="portfolio-pro-container">
+          <h2 class="portfolio-pro-section-title">Gallery</h2>
+          <div class="portfolio-pro-gallery__grid">
+            <% images.forEach((item) => { %>
+              <figure class="portfolio-pro-gallery__item">
+                <img src="<%= item.path %>" alt="<%= item.label || 'Portfolio image' %>" class="portfolio-pro-gallery__image">
+                <% if (item.label) { %>
+                  <figcaption class="portfolio-pro-gallery__caption"><%= item.label %></figcaption>
+                <% } %>
+              </figure>
+            <% }) %>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   </div>
 <% } else { %>
   <!-- Free Portfolio - Existing Design -->
