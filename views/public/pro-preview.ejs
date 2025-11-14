@@ -1,12 +1,16 @@
 <!-- Editorial Header: Compact and elegant -->
 <section class="demo-header" id="demo-header">
   <div class="demo-header__container">
-    <span class="demo-header__badge">Pro Preview</span>
+    <span class="demo-header__badge">Pro</span>
     <h1 class="demo-header__headline">
       <span class="demo-header__headline-fashion">Experience Pro.</span>
       <span class="demo-header__headline-ai">Editorial quality. Zero compromises.</span>
     </h1>
-    <p class="demo-header__subheadline">Explore the live portfolio and premium PDF themes that define professional talent representation.</p>
+    <p class="demo-header__subheadline">Everything you need for a professional portfolio. Try it yourself below.</p>
+    <div class="demo-header__pricing">
+      <span class="demo-header__pricing-amount">$9.99<span class="demo-header__pricing-period">/month</span></span>
+      <span class="demo-header__pricing-note">Upgrade anytime</span>
+    </div>
     <div class="demo-header__accent"></div>
   </div>
 </section>
@@ -24,8 +28,9 @@
             <div class="demo-portfolio-preview__badges">
               <span class="demo-portfolio-preview__badge demo-portfolio-preview__badge--pro">No Branding</span>
               <span class="demo-portfolio-preview__badge demo-portfolio-preview__badge--pro">Custom Domain</span>
-              <span class="demo-portfolio-preview__badge demo-portfolio-preview__badge--pro">Analytics</span>
+              <span class="demo-portfolio-preview__badge demo-portfolio-preview__badge--pro">Full Analytics</span>
             </div>
+            <p class="demo-portfolio-preview__try-text">Try it yourself — interact with the live portfolio below</p>
           </div>
           <div class="demo-portfolio-preview__controls">
             <button class="demo-portfolio-preview__control-btn" data-view="desktop" aria-label="Desktop view">
@@ -87,50 +92,123 @@
         </div>
       </div>
 
-      <!-- Right Column: PDF Comp Card Themes -->
-      <div class="demo-pdf-themes">
-        <div class="demo-pdf-themes__header">
-          <h2 class="demo-pdf-themes__title">PDF Comp Card Themes</h2>
-          <p class="demo-pdf-themes__subtitle">Professional themes for every style</p>
-          <div class="demo-pdf-themes__tabs">
-            <button class="demo-pdf-themes__tab demo-pdf-themes__tab--active" data-theme-filter="all" aria-label="All themes">
-              All Themes
-            </button>
-            <button class="demo-pdf-themes__tab" data-theme-filter="free" aria-label="Free themes">
-              Free
-            </button>
-            <button class="demo-pdf-themes__tab" data-theme-filter="pro" aria-label="Pro themes">
-              Pro
-            </button>
+      <!-- Right Column: Why Pro? Feature Highlights -->
+      <div class="demo-why-pro">
+        <div class="demo-why-pro__header">
+          <h2 class="demo-why-pro__title">Why Pro?</h2>
+          <p class="demo-why-pro__subtitle">Everything you need for professional representation</p>
+        </div>
+        
+        <div class="demo-why-pro__features">
+          <div class="demo-why-pro__feature">
+            <div class="demo-why-pro__feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </div>
+            <div class="demo-why-pro__feature-content">
+              <h3 class="demo-why-pro__feature-title">Custom Branding</h3>
+              <p class="demo-why-pro__feature-description">No watermarks. Full control over colors, fonts, and branding. Make it truly yours.</p>
+            </div>
+          </div>
+          
+          <div class="demo-why-pro__feature">
+            <div class="demo-why-pro__feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+            </div>
+            <div class="demo-why-pro__feature-content">
+              <h3 class="demo-why-pro__feature-title">Custom Domain</h3>
+              <p class="demo-why-pro__feature-description">Your own branded link: <strong>yourname.zipsite.com</strong>. Share with confidence.</p>
+            </div>
+          </div>
+          
+          <div class="demo-why-pro__feature">
+            <div class="demo-why-pro__feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+            </div>
+            <div class="demo-why-pro__feature-content">
+              <h3 class="demo-why-pro__feature-title">Full Analytics</h3>
+              <p class="demo-why-pro__feature-description">Track views, downloads, and engagement with comprehensive analytics dashboard.</p>
+            </div>
+          </div>
+          
+          <div class="demo-why-pro__feature">
+            <div class="demo-why-pro__feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+              </svg>
+            </div>
+            <div class="demo-why-pro__feature-content">
+              <h3 class="demo-why-pro__feature-title">Priority AI Processing</h3>
+              <p class="demo-why-pro__feature-description">Faster processing, enhanced refinement. Your portfolio gets curated first.</p>
+            </div>
           </div>
         </div>
         
-        <div class="demo-pdf-themes__gallery" id="pdf-themes-gallery">
-          <!-- Theme cards will be populated by JavaScript -->
-        </div>
-        
-        <div class="demo-pdf-themes__preview" id="pdf-theme-preview">
-          <div class="demo-pdf-themes__preview-header">
-            <div class="demo-pdf-themes__preview-title-group">
-              <h3 class="demo-pdf-themes__preview-title" id="preview-theme-name">Select a theme</h3>
-              <p class="demo-pdf-themes__preview-subtitle" id="preview-theme-description"></p>
-            </div>
-            <button class="demo-pdf-themes__preview-close" id="close-pdf-preview" aria-label="Close preview" hidden>&times;</button>
-          </div>
-          <div class="demo-pdf-themes__preview-content" id="pdf-preview-content">
-            <div class="demo-pdf-themes__preview-placeholder">
-              <div class="demo-pdf-themes__preview-placeholder-icon">📄</div>
-              <p class="demo-pdf-themes__preview-placeholder-text">Click a theme above to preview</p>
-            </div>
-          </div>
-          <div class="demo-pdf-themes__preview-actions" id="pdf-preview-actions" hidden>
-            <a href="#" class="demo-pdf-themes__download-btn button button-primary" id="download-pdf-btn" target="_blank">
-              Download Sample PDF
-            </a>
-            <span class="demo-pdf-themes__preview-badge" id="preview-theme-badge"></span>
-          </div>
+        <div class="demo-why-pro__cta">
+          <a href="#pdf-themes" class="demo-why-pro__link">View Premium PDF Themes ↓</a>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing Section -->
+<section class="demo-pricing-section" id="demo-pricing">
+  <div class="demo-pricing-section__container">
+    <div class="demo-pricing-section__card">
+      <div class="demo-pricing-section__header">
+        <div class="demo-pricing-section__badge">Pro</div>
+        <div class="demo-pricing-section__price">
+          <span class="demo-pricing-section__currency">$</span>
+          <span class="demo-pricing-section__amount">9.99</span>
+          <span class="demo-pricing-section__period">/month</span>
+        </div>
+        <p class="demo-pricing-section__tagline">The professional standard for working talent and agencies.</p>
+      </div>
+      
+      <div class="demo-pricing-section__features">
+        <div class="demo-pricing-section__feature-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Custom URL & Branding</span>
+        </div>
+        <div class="demo-pricing-section__feature-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Premium PDF Themes</span>
+        </div>
+        <div class="demo-pricing-section__feature-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Full Analytics Suite</span>
+        </div>
+        <div class="demo-pricing-section__feature-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Priority AI Processing</span>
+        </div>
+        <div class="demo-pricing-section__feature-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Video Reels Support</span>
+        </div>
+      </div>
+      
+      <a href="/pro/upgrade" class="demo-pricing-section__cta button button-primary">Upgrade to Pro</a>
+      <p class="demo-pricing-section__note">Cancel anytime. No questions asked.</p>
     </div>
   </div>
 </section>
@@ -145,49 +223,59 @@
     
     <div class="demo-comparison__grid">
       <div class="comparison-card">
-        <div class="comparison-card__icon">🌐</div>
-        <div class="comparison-card__title">Portfolio URL</div>
+        <div class="comparison-card__icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+        </div>
+        <div class="comparison-card__title">Custom URL</div>
         <div class="comparison-card__free">Default URL<br><small>zipsite.com/portfolio/yourname</small></div>
         <div class="comparison-card__pro">Custom URL<br><small>yourname.zipsite.com</small></div>
       </div>
       
       <div class="comparison-card">
-        <div class="comparison-card__icon">✨</div>
+        <div class="comparison-card__icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+        </div>
         <div class="comparison-card__title">Branding</div>
-        <div class="comparison-card__free">Default Branding<br><small>Watermark, ZipSite colors, non-customizable</small></div>
-        <div class="comparison-card__pro">Custom Branding<br><small>Full customization</small></div>
+        <div class="comparison-card__free">Default Branding<br><small>Watermark, ZipSite colors</small></div>
+        <div class="comparison-card__pro">Custom Branding<br><small>No watermarks, full control</small></div>
       </div>
       
       <div class="comparison-card">
-        <div class="comparison-card__icon">🎨</div>
+        <div class="comparison-card__icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+        </div>
+        <div class="comparison-card__title">Analytics</div>
+        <div class="comparison-card__free">Basic Analytics<br><small>Limited data</small></div>
+        <div class="comparison-card__pro">Full Analytics<br><small>Advanced tracking</small></div>
+      </div>
+      
+      <div class="comparison-card">
+        <div class="comparison-card__icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+          </svg>
+        </div>
         <div class="comparison-card__title">PDF Themes</div>
-        <div class="comparison-card__free">3 high-quality themes<br><small>With ZipSite watermark</small></div>
+        <div class="comparison-card__free">3 themes<br><small>With watermark</small></div>
         <div class="comparison-card__pro">4+ premium themes<br><small>Full customization</small></div>
       </div>
       
       <div class="comparison-card">
-        <div class="comparison-card__icon">🎭</div>
-        <div class="comparison-card__title">PDF Customization</div>
-        <div class="comparison-card__free">Locked themes</div>
-        <div class="comparison-card__pro">Fonts, colors, layouts<br><small>Agency logo placement</small></div>
-      </div>
-      
-      <div class="comparison-card">
-        <div class="comparison-card__icon">📊</div>
-        <div class="comparison-card__title">Analytics</div>
-        <div class="comparison-card__free">Basic Analytics<br><small>Basic dashboard, limited data</small></div>
-        <div class="comparison-card__pro">Full Analytics<br><small>Full analytics suite</small></div>
-      </div>
-      
-      <div class="comparison-card">
-        <div class="comparison-card__icon">🎬</div>
-        <div class="comparison-card__title">Video Support</div>
-        <div class="comparison-card__free">—</div>
-        <div class="comparison-card__pro">Reels & lookbooks</div>
-      </div>
-      
-      <div class="comparison-card">
-        <div class="comparison-card__icon">⚡</div>
+        <div class="comparison-card__icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+          </svg>
+        </div>
         <div class="comparison-card__title">AI Processing</div>
         <div class="comparison-card__free">Standard</div>
         <div class="comparison-card__pro">Priority</div>
@@ -206,33 +294,97 @@
     
     <div class="demo-customization__grid">
       <div class="demo-customization__feature">
-        <div class="demo-customization__feature-icon">🔤</div>
+        <div class="demo-customization__feature-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 7 4 4 20 4 20 7"></polyline>
+            <line x1="9" y1="20" x2="15" y2="20"></line>
+            <line x1="12" y1="4" x2="12" y2="20"></line>
+          </svg>
+        </div>
         <h3 class="demo-customization__feature-title">Custom Fonts</h3>
         <p class="demo-customization__feature-description">Choose from 20+ curated Google Fonts for name, bio, and stats. Perfect typography for every style.</p>
       </div>
       
       <div class="demo-customization__feature">
-        <div class="demo-customization__feature-icon">🎨</div>
+        <div class="demo-customization__feature-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
+            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
+            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
+            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path>
+          </svg>
+        </div>
         <h3 class="demo-customization__feature-title">Color Palettes</h3>
         <p class="demo-customization__feature-description">Customize background, text, and accent colors. Use preset palettes or create your own.</p>
       </div>
       
       <div class="demo-customization__feature">
-        <div class="demo-customization__feature-icon">📐</div>
+        <div class="demo-customization__feature-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+            <line x1="15" y1="3" x2="15" y2="21"></line>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="3" y1="15" x2="21" y2="15"></line>
+          </svg>
+        </div>
         <h3 class="demo-customization__feature-title">Layout Control</h3>
         <p class="demo-customization__feature-description">Adjust header position, image grid, bio placement, and stats positioning for the perfect layout.</p>
       </div>
       
       <div class="demo-customization__feature">
-        <div class="demo-customization__feature-icon">🏢</div>
+        <div class="demo-customization__feature-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+        </div>
         <h3 class="demo-customization__feature-title">Agency Branding</h3>
         <p class="demo-customization__feature-description">Upload your agency logo or use a URL. Place it anywhere with customizable size and position.</p>
       </div>
     </div>
     
     <div class="demo-customization__cta">
-      <a href="/apply" class="button button-primary">Upgrade to Pro</a>
+      <a href="/pro/upgrade" class="button button-primary">Upgrade to Pro</a>
       <a href="/pricing" class="button button-secondary">View Pricing</a>
+    </div>
+  </div>
+</section>
+
+<!-- PDF Themes Section (Simplified) -->
+<section class="demo-pdf-themes-section" id="pdf-themes">
+  <div class="demo-pdf-themes-section__container">
+    <div class="demo-pdf-themes-section__header">
+      <h2 class="demo-pdf-themes-section__title">Premium PDF Themes</h2>
+      <p class="demo-pdf-themes-section__subtitle">Professional comp card themes for every aesthetic</p>
+    </div>
+    
+    <div class="demo-pdf-themes-section__gallery" id="pdf-themes-gallery">
+      <!-- Theme cards will be populated by JavaScript -->
+    </div>
+    
+    <div class="demo-pdf-themes-section__preview" id="pdf-theme-preview">
+      <div class="demo-pdf-themes-section__preview-header">
+        <div class="demo-pdf-themes-section__preview-title-group">
+          <h3 class="demo-pdf-themes-section__preview-title" id="preview-theme-name">Select a theme</h3>
+          <p class="demo-pdf-themes-section__preview-subtitle" id="preview-theme-description"></p>
+        </div>
+        <button class="demo-pdf-themes-section__preview-close" id="close-pdf-preview" aria-label="Close preview" hidden>&times;</button>
+      </div>
+      <div class="demo-pdf-themes-section__preview-content" id="pdf-preview-content">
+        <div class="demo-pdf-themes-section__preview-placeholder">
+          <div class="demo-pdf-themes-section__preview-placeholder-icon">📄</div>
+          <p class="demo-pdf-themes-section__preview-placeholder-text">Click a theme above to preview</p>
+        </div>
+      </div>
+      <div class="demo-pdf-themes-section__preview-actions" id="pdf-preview-actions" hidden>
+        <a href="#" class="demo-pdf-themes-section__download-btn button button-primary" id="download-pdf-btn" target="_blank">
+          Download Sample PDF
+        </a>
+        <span class="demo-pdf-themes-section__preview-badge" id="preview-theme-badge"></span>
+      </div>
     </div>
   </div>
 </section>

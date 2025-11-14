@@ -19,7 +19,7 @@
         <li><a href="/" <%= page === '/' || page === 'home' ? 'aria-current="page"' : '' %>>Home</a></li>
         <li><a href="/features" <%= page === 'features' ? 'aria-current="page"' : '' %>>Features</a></li>
         <li><a href="/pricing" <%= page === 'pricing' ? 'aria-current="page"' : '' %>>Pricing</a></li>
-        <li><a href="/pro-preview" <%= page === 'pro-preview' ? 'aria-current="page"' : '' %>>Pro Preview</a></li>
+        <li><a href="/pro" <%= page === 'pro' ? 'aria-current="page"' : '' %>>Pro</a></li>
         <li><a href="/press" <%= page === 'press' ? 'aria-current="page"' : '' %>>Press</a></li>
       </ul>
     </nav>
@@ -43,7 +43,7 @@
         <li><a href="/" <%= page === '/' || page === 'home' ? 'aria-current="page"' : '' %>>Home</a></li>
         <li><a href="/features" <%= page === 'features' ? 'aria-current="page"' : '' %>>Features</a></li>
         <li><a href="/pricing" <%= page === 'pricing' ? 'aria-current="page"' : '' %>>Pricing</a></li>
-        <li><a href="/pro-preview" <%= page === 'pro-preview' ? 'aria-current="page"' : '' %>>Pro Preview</a></li>
+        <li><a href="/pro" <%= page === 'pro' ? 'aria-current="page"' : '' %>>Pro</a></li>
         <li><a href="/press" <%= page === 'press' ? 'aria-current="page"' : '' %>>Press</a></li>
         <% if (user && user.id && user.role) { %>
           <% const dashboardHref = user.role === 'AGENCY' ? '/dashboard/agency' : '/dashboard/talent'; %>

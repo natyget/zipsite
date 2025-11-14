@@ -139,8 +139,12 @@
   let themeGalleryInstance = null;
 
   function initThemeFilter() {
+    // Themes filter is now optional - only if tabs exist
     const tabs = document.querySelectorAll('.demo-pdf-themes__tab');
-    const gallery = document.getElementById('pdf-themes-gallery');
+    if (!tabs.length) return; // No tabs on new page layout
+    
+    const gallery = document.getElementById('pdf-themes-gallery') || 
+                    document.querySelector('.demo-pdf-themes-section__gallery');
     
     if (!tabs.length || !gallery) return;
 
@@ -168,14 +172,24 @@
 
   // PDF Theme Gallery
   function initPdfThemeGallery() {
-    const gallery = document.getElementById('pdf-themes-gallery');
-    const previewContent = document.getElementById('pdf-preview-content');
-    const previewTitle = document.getElementById('preview-theme-name');
-    const previewDescription = document.getElementById('preview-theme-description');
-    const previewActions = document.getElementById('pdf-preview-actions');
-    const previewBadge = document.getElementById('preview-theme-badge');
-    const downloadBtn = document.getElementById('download-pdf-btn');
-    const closeBtn = document.getElementById('close-pdf-preview');
+    // Try new section first, fall back to old selector
+    const gallery = document.getElementById('pdf-themes-gallery') || 
+                    document.querySelector('.demo-pdf-themes-section__gallery');
+    // Support both new and old selectors for preview elements
+    const previewContent = document.getElementById('pdf-preview-content') ||
+                          document.querySelector('.demo-pdf-themes-section__preview-content');
+    const previewTitle = document.getElementById('preview-theme-name') ||
+                        document.querySelector('.demo-pdf-themes-section__preview-title');
+    const previewDescription = document.getElementById('preview-theme-description') ||
+                              document.querySelector('.demo-pdf-themes-section__preview-subtitle');
+    const previewActions = document.getElementById('pdf-preview-actions') ||
+                          document.querySelector('.demo-pdf-themes-section__preview-actions');
+    const previewBadge = document.getElementById('preview-theme-badge') ||
+                        document.querySelector('.demo-pdf-themes-section__preview-badge');
+    const downloadBtn = document.getElementById('download-pdf-btn') ||
+                       document.querySelector('.demo-pdf-themes-section__download-btn');
+    const closeBtn = document.getElementById('close-pdf-preview') ||
+                    document.querySelector('.demo-pdf-themes-section__preview-close');
 
     if (!gallery) return;
 
@@ -183,23 +197,30 @@
     renderThemeCards('all');
 
     // Theme card click handler
-    gallery.addEventListener('click', (e) => {
-      const card = e.target.closest('.demo-pdf-theme-card');
-      if (!card) return;
+    if (gallery) {
+      gallery.addEventListener('click', (e) => {
+        const card = e.target.closest('.demo-pdf-theme-card');
+        if (!card) return;
 
-      const themeKey = card.dataset.theme;
-      const theme = allThemes[themeKey];
-      if (!theme) return;
+        const themeKey = card.dataset.theme;
+        const theme = allThemes[themeKey];
+        if (!theme) return;
 
-      // Update selected state
-      document.querySelectorAll('.demo-pdf-theme-card').forEach(c => {
-        c.classList.remove('is-selected');
+        // Update selected state
+        document.querySelectorAll('.demo-pdf-theme-card').forEach(c => {
+          c.classList.remove('is-selected');
+        });
+        card.classList.add('is-selected');
+
+        // Update preview - try new section first, fall back to old
+        const previewContainer = document.querySelector('#pdf-theme-preview') ||
+                                 document.querySelector('.demo-pdf-themes-section__preview') ||
+                                 document.querySelector('.demo-pdf-themes__preview');
+        if (previewContainer) {
+          updatePdfPreview(themeKey, theme);
+        }
       });
-      card.classList.add('is-selected');
-
-      // Update preview
-      updatePdfPreview(themeKey, theme);
-    });
+    }
 
     // Close preview handler
     if (closeBtn) {
@@ -304,10 +325,14 @@
         previewDescription.textContent = theme.description || theme.personality || '';
       }
 
-      // Update badge
+      // Update badge (support both old and new class names)
       if (previewBadge) {
         previewBadge.textContent = theme.isPro ? 'Pro Theme' : 'Free Theme';
-        previewBadge.className = `demo-pdf-themes__preview-badge ${theme.isPro ? 'demo-pdf-themes__preview-badge--pro' : 'demo-pdf-themes__preview-badge--free'}`;
+        const isNewSection = previewBadge.closest('.demo-pdf-themes-section__preview');
+        const badgeClass = isNewSection ? 
+          `demo-pdf-themes-section__preview-badge ${theme.isPro ? 'demo-pdf-themes-section__preview-badge--pro' : 'demo-pdf-themes-section__preview-badge--free'}` :
+          `demo-pdf-themes__preview-badge ${theme.isPro ? 'demo-pdf-themes__preview-badge--pro' : 'demo-pdf-themes__preview-badge--free'}`;
+        previewBadge.className = badgeClass;
       }
 
       // Show preview actions
@@ -620,12 +645,36 @@
     };
   }
 
-  // Copy Portfolio URL
+  // Copy Portfolio URL with Toast Notification
   function initCopyUrl() {
     const copyBtn = document.getElementById('copy-portfolio-url');
     const urlElement = document.getElementById('portfolio-url');
 
     if (!copyBtn || !urlElement) return;
+
+    // Create toast notification element
+    const toast = document.createElement('div');
+    toast.className = 'copy-toast';
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      font-family: var(--font-sans);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.3);
+      z-index: 10000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    `;
+    toast.textContent = 'URL copied to clipboard!';
+    document.body.appendChild(toast);
 
     copyBtn.addEventListener('click', async () => {
       const url = urlElement.textContent;
@@ -634,7 +683,7 @@
       try {
         await navigator.clipboard.writeText(fullUrl);
         
-        // Visual feedback
+        // Visual feedback on button
         const originalHTML = copyBtn.innerHTML;
         copyBtn.innerHTML = `
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -642,10 +691,24 @@
           </svg>
         `;
         copyBtn.style.color = 'rgba(201, 165, 90, 1)';
+        copyBtn.style.backgroundColor = 'rgba(201, 165, 90, 0.15)';
+
+        // Show toast
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+        toast.style.pointerEvents = 'auto';
 
         setTimeout(() => {
           copyBtn.innerHTML = originalHTML;
           copyBtn.style.color = '';
+          copyBtn.style.backgroundColor = '';
+          
+          // Hide toast
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(20px)';
+          setTimeout(() => {
+            toast.style.pointerEvents = 'none';
+          }, 300);
         }, 2000);
       } catch (err) {
         console.error('Failed to copy URL:', err);
@@ -656,6 +719,14 @@
         textArea.select();
         document.execCommand('copy');
         document.body.removeChild(textArea);
+        
+        // Show toast for fallback too
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(20px)';
+        }, 2000);
       }
     });
   }

@@ -447,8 +447,8 @@ app.get('/', async (req, res, next) => {
   });
 });
 
-// Pro Preview page with PDF themes data
-app.get('/pro-preview', async (req, res) => {
+// Pro page with PDF themes data
+app.get('/pro', async (req, res) => {
   try {
     const { getAllThemes, getFreeThemes, getProThemes } = require('./lib/themes');
     const allThemes = getAllThemes();
@@ -456,11 +456,11 @@ app.get('/pro-preview', async (req, res) => {
     const proThemes = getProThemes();
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
-    res.locals.currentPage = 'pro-preview';
+    res.locals.currentPage = 'pro';
     res.render('public/pro-preview', {
-      title: 'Pro Preview — ZipSite',
+      title: 'Pro — ZipSite',
       layout: 'layout',
-      currentPage: 'pro-preview',
+      currentPage: 'pro',
       allThemes,
       freeThemes,
       proThemes,
@@ -468,13 +468,13 @@ app.get('/pro-preview', async (req, res) => {
       demoSlug: 'elara-k'
     });
   } catch (error) {
-    console.error('[Pro Preview Route] Error:', error);
-    // Fallback to basic pro preview page if theme loading fails
-    res.locals.currentPage = 'pro-preview';
+    console.error('[Pro Route] Error:', error);
+    // Fallback to basic pro page if theme loading fails
+    res.locals.currentPage = 'pro';
     res.render('public/pro-preview', {
-      title: 'Pro Preview — ZipSite',
+      title: 'Pro — ZipSite',
       layout: 'layout',
-      currentPage: 'pro-preview',
+      currentPage: 'pro',
       allThemes: {},
       freeThemes: [],
       proThemes: [],
