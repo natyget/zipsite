@@ -26,7 +26,8 @@ router.get('/pro/upgrade', requireRole('TALENT'), async (req, res, next) => {
       trialDaysRemaining,
       isInTrial: isInTrialPeriod,
       isCanceling: isCancelingSubscription,
-      layout: 'layouts/dashboard'
+      layout: 'layout',
+      currentPage: 'pro-upgrade'
     });
   } catch (error) {
     return next(error);

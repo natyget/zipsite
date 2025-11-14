@@ -209,8 +209,12 @@
         </div>
       </div>
       
-      <a href="/pro/upgrade" class="demo-pricing-section__cta button button-primary">Start 14-Day Free Trial</a>
-      <p class="demo-pricing-section__note">No credit card required. Cancel anytime.</p>
+      <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+        <button id="start-trial-btn-pro" class="demo-pricing-section__cta button button-primary">Start 14-Day Free Trial</button>
+      <% } else { %>
+        <a href="/pro/upgrade" class="demo-pricing-section__cta button button-primary">Start 14-Day Free Trial</a>
+      <% } %>
+      <p class="demo-pricing-section__note">Credit card required. Cancel anytime.</p>
     </div>
   </div>
 </section>
@@ -400,5 +404,42 @@
     demoSlug: '<%= typeof demoSlug !== 'undefined' ? demoSlug : 'elara-k' %>',
     baseUrl: '<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>'
   };
+
+  // Handle Start Trial button click (for logged-in users)
+  const startTrialBtnPro = document.getElementById('start-trial-btn-pro');
+  if (startTrialBtnPro) {
+    startTrialBtnPro.addEventListener('click', async function() {
+      startTrialBtnPro.disabled = true;
+      startTrialBtnPro.textContent = 'Processing...';
+
+      try {
+        const response = await fetch('/stripe/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'same-origin'
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to create checkout session');
+        }
+
+        // Redirect to Stripe Checkout
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          throw new Error('No checkout URL received');
+        }
+      } catch (error) {
+        console.error('[Pro Page] Error starting trial:', error);
+        alert('There was an error starting your trial. Please try again or contact support.');
+        startTrialBtnPro.disabled = false;
+        startTrialBtnPro.textContent = 'Start 14-Day Free Trial';
+      }
+    });
+  }
 </script>
 <script src="/scripts/pro-preview.js?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>" defer></script>
