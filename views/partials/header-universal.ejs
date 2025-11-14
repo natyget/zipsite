@@ -78,30 +78,55 @@
     </div>
   </div>
   
-  <div class="universal-header__nav-panel" id="universalNav" hidden>
-    <nav class="universal-header__mobile-nav" aria-label="Primary">
-      <ul>
-        <li><a href="/" <%= page === '/' || page === 'home' ? 'aria-current="page"' : '' %>>Home</a></li>
-        <li><a href="/features" <%= page === 'features' ? 'aria-current="page"' : '' %>>Features</a></li>
-        <li><a href="/pricing" <%= page === 'pricing' ? 'aria-current="page"' : '' %>>Pricing</a></li>
-        <li><a href="/pro" <%= page === 'pro' ? 'aria-current="page"' : '' %>>Pro</a></li>
-        <li><a href="/press" <%= page === 'press' ? 'aria-current="page"' : '' %>>Press</a></li>
+  <div class="universal-header__nav-panel" id="universalNav" aria-hidden="true" hidden>
+    <div class="universal-header__nav-panel-inner">
+      <div class="universal-header__nav-panel-top">
+        <span class="universal-header__nav-panel-logo">ZIPSITE</span>
+        <button class="universal-header__close" type="button" aria-label="Close menu">
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+
+      <% if (user && user.id && user.role) { %>
+        <div class="universal-header__mobile-user">
+          <div class="universal-header__mobile-avatar" data-initial="<%= user.email ? user.email.charAt(0).toUpperCase() : 'U' %>"></div>
+          <div class="universal-header__mobile-user-info">
+            <span class="universal-header__mobile-user-email"><%= user.email %></span>
+            <% if (userProfile && userProfile.is_pro) { %>
+              <span class="universal-header__badge universal-header__badge--pro">Pro</span>
+            <% } else if (userProfile && !userProfile.is_pro) { %>
+              <span class="universal-header__badge universal-header__badge--free">Free</span>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+
+      <nav class="universal-header__mobile-nav" aria-label="Primary">
+        <ul>
+          <li><a href="/" <%= page === '/' || page === 'home' ? 'aria-current="page"' : '' %>>Home</a></li>
+          <li><a href="/features" <%= page === 'features' ? 'aria-current="page"' : '' %>>Features</a></li>
+          <li><a href="/pricing" <%= page === 'pricing' ? 'aria-current="page"' : '' %>>Pricing</a></li>
+          <li><a href="/pro" <%= page === 'pro' ? 'aria-current="page"' : '' %>>Pro</a></li>
+          <li><a href="/press" <%= page === 'press' ? 'aria-current="page"' : '' %>>Press</a></li>
+        </ul>
+      </nav>
+
+      <div class="universal-header__mobile-actions">
         <% if (user && user.id && user.role) { %>
           <% const dashboardHref = user.role === 'AGENCY' ? '/dashboard/agency' : '/dashboard/talent'; %>
-          <% const dashboardLabel = user.role === 'AGENCY' ? 'Agency Portal' : 'My Portfolio'; %>
-          <li><a href="<%= dashboardHref %>"><%= dashboardLabel %></a></li>
-          <li><a href="/dashboard/settings">Settings</a></li>
-          <li>
-            <form method="post" action="/logout" style="display: inline;">
-              <button type="submit" style="background: none; border: none; color: inherit; font: inherit; cursor: pointer; padding: 0; text-decoration: underline;">Logout</button>
-            </form>
-          </li>
+          <a href="<%= dashboardHref %>" class="universal-header__mobile-link">Go to Dashboard</a>
+          <a href="/dashboard/settings" class="universal-header__mobile-link">Settings</a>
+          <form method="post" action="/logout" class="universal-header__mobile-logout">
+            <button type="submit">Logout</button>
+          </form>
         <% } else { %>
-          <li><a href="/login">Login</a></li>
-          <li><a class="universal-header__cta universal-header__cta--primary" href="/apply">Start Creating</a></li>
+          <a href="/login" class="universal-header__mobile-link">Login</a>
+          <a class="universal-header__cta universal-header__cta--primary universal-header__mobile-cta" href="/apply">Start Creating</a>
         <% } %>
-      </ul>
-    </nav>
+      </div>
+    </div>
   </div>
 </header>
+<div class="universal-header__overlay" id="universalNavOverlay" hidden aria-hidden="true"></div>
 

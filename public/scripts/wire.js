@@ -2217,44 +2217,104 @@
   function initUniversalHeaderMenu() {
     const menuToggle = document.querySelector('.universal-header__menu-toggle');
     const navPanel = document.getElementById('universalNav');
+    const navOverlay = document.getElementById('universalNavOverlay');
+    const closeButton = navPanel?.querySelector('.universal-header__close');
+    const focusableSelectors = 'a[href], button:not([disabled]), textarea, input, select';
+    let lastFocusedElement = null;
 
-    if (menuToggle && navPanel) {
-      const toggleMenu = () => {
-        const expanded = menuToggle.getAttribute('aria-expanded') === 'true';
-        menuToggle.setAttribute('aria-expanded', String(!expanded));
-        if (expanded) {
-          navPanel.setAttribute('hidden', '');
-        } else {
-          navPanel.removeAttribute('hidden');
+    if (!menuToggle || !navPanel || !navOverlay) return;
+
+    const isOpen = () => navPanel.classList.contains('is-open');
+
+    const trapFocus = (event) => {
+      if (!isOpen() || event.key !== 'Tab') return;
+      const focusableElements = navPanel.querySelectorAll(focusableSelectors);
+      if (!focusableElements.length) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey) {
+        if (document.activeElement === firstElement) {
+          event.preventDefault();
+          lastElement.focus();
         }
-      };
+      } else if (document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
 
-      menuToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleMenu();
-      });
+    const openNav = () => {
+      if (isOpen()) return;
+      lastFocusedElement = document.activeElement;
+      navPanel.removeAttribute('hidden');
+      navPanel.setAttribute('aria-hidden', 'false');
+      navPanel.classList.add('is-open');
+      navOverlay.hidden = false;
+      navOverlay.classList.add('is-visible');
+      document.body.classList.add('nav-open');
+      menuToggle.setAttribute('aria-expanded', 'true');
 
-      const navLinks = navPanel.querySelectorAll('a');
-      navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-          toggleMenu();
-        });
-      });
+      const focusable = navPanel.querySelectorAll(focusableSelectors);
+      if (focusable.length) {
+        focusable[0].focus();
+      }
+    };
 
-      document.addEventListener('click', (e) => {
-        if (!navPanel.hidden && !navPanel.contains(e.target) && !menuToggle.contains(e.target)) {
-          if (menuToggle.getAttribute('aria-expanded') === 'true') {
-            toggleMenu();
-          }
-        }
-      });
+    const closeNav = () => {
+      if (!isOpen()) return;
+      navPanel.classList.remove('is-open');
+      navPanel.setAttribute('aria-hidden', 'true');
+      navOverlay.classList.remove('is-visible');
+      menuToggle.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('nav-open');
 
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !navPanel.hidden) {
-          toggleMenu();
-        }
+      setTimeout(() => {
+        navPanel.setAttribute('hidden', '');
+        navOverlay.hidden = true;
+      }, 250);
+
+      if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+        lastFocusedElement.focus();
+      }
+    };
+
+    menuToggle.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (isOpen()) {
+        closeNav();
+      } else {
+        openNav();
+      }
+    });
+
+    closeButton?.addEventListener('click', (event) => {
+      event.preventDefault();
+      closeNav();
+    });
+
+    navOverlay.addEventListener('click', closeNav);
+    navPanel.addEventListener('keydown', trapFocus);
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && isOpen()) {
+        closeNav();
+      }
+    });
+
+    const navLinks = navPanel.querySelectorAll('a');
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        closeNav();
       });
-    }
+    });
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 1024 && isOpen()) {
+        closeNav();
+      }
+    });
   }
 
   function initUniversalHeaderUserMenu() {
