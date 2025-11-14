@@ -1,33 +1,49 @@
-<% // DO NOT AUTO-FORMAT THIS BLOCK
-  const elara=(typeof elaraProfile !=='undefined' && elaraProfile ? elaraProfile : {});
-  const floatingTalentsData=(typeof floatingTalents !=='undefined' && floatingTalents ? floatingTalents : []); // Image path normalization helper
-  function normalizeImagePath(path) { if (!path) {
-  return 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=2000&q=90' ; } if
-  (path.startsWith('http://') || path.startsWith('https://')) { return path; } if (path.startsWith('/')) { return path;
-  } return '/' + path; } // Get hero image for elara let elaraHero=(elara && elara.hero_image_path) || null; if
-  (!elaraHero && typeof elaraImages !=='undefined' && Array.isArray(elaraImages) && elaraImages.length> 0) {
-  elaraHero = elaraImages[0].path;
+<%
+// DO NOT AUTO-FORMAT THIS BLOCK
+
+  // Base data objects
+  var elara = (typeof elaraProfile !== 'undefined' && elaraProfile) ? elaraProfile : {};
+  var floatingTalentsData = (typeof floatingTalents !== 'undefined' && floatingTalents) ? floatingTalents : [];
+
+  // Image path normalization helper
+  function normalizeImagePath(path) {
+    if (!path) {
+      return 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=2000&q=90';
+    }
+    if (path.indexOf('http://') === 0 || path.indexOf('https://') === 0) {
+      return path;
+    }
+    if (path.indexOf('/') === 0) {
+      return path;
+    }
+    return '/' + path;
+  }
+
+  // Get hero image for elara
+  var elaraHero = (elara && elara.hero_image_path) || null;
+  if (!elaraHero && typeof elaraImages !== 'undefined' && Array.isArray(elaraImages) && elaraImages.length > 0) {
+    elaraHero = elaraImages[0].path;
   }
   if (!elaraHero) {
-  elaraHero = 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=2000&q=90';
+    elaraHero = 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=2000&q=90';
   }
 
   // Get gallery images for elara
-  let galleryImages = [];
+  var galleryImages = [];
   if (typeof elaraImages !== 'undefined' && Array.isArray(elaraImages)) {
-  galleryImages = elaraImages.slice(1, 5);
+    galleryImages = elaraImages.slice(1, 5);
   }
-  if (galleryImages.length === 0) {
-  galleryImages = [
-  { path: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80' },
-  { path: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80' },
-  { path: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=900&q=80' },
-  { path: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=900&q=80' }
-  ];
+  if (!galleryImages || galleryImages.length === 0) {
+    galleryImages = [
+      { path: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80' },
+      { path: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80' },
+      { path: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=900&q=80' },
+      { path: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=900&q=80' }
+    ];
   }
 
   // Build talent data for transformation hero with realistic placeholders
-  const heroTalent = {
+  var heroTalent = {
     first_name: elara.first_name || 'Elara',
     last_name: elara.last_name || 'Keats',
     city: elara.city || 'Los Angeles, CA',
@@ -42,58 +58,113 @@
 
   // Format height helper
   function formatHeight(heightCm) {
-  if (!heightCm) return null;
-  const feet = Math.floor(heightCm / 30.48);
-  const inches = Math.round((heightCm % 30.48) / 2.54);
-  return `${feet}'${inches}"`;
+    if (!heightCm) return null;
+    var feet = Math.floor(heightCm / 30.48);
+    var inches = Math.round((heightCm % 30.48) / 2.54);
+    return feet + "'" + inches + '"';
   }
 
   function formatHeightWithCm(heightCm) {
-  if (!heightCm) return "5' 11\" / 180cm";
-  const feet = Math.floor(heightCm / 30.48);
-  const inches = Math.round((heightCm % 30.48) / 2.54);
-  return `${feet}' ${inches}" / ${heightCm}cm`;
+    if (!heightCm) return "5' 11\" / 180cm";
+    var feet = Math.floor(heightCm / 30.48);
+    var inches = Math.round((heightCm % 30.48) / 2.54);
+    return feet + "' " + inches + '" / ' + heightCm + 'cm';
   }
 
   // Placeholder talent data for featured section (always show 8 items)
-  const placeholderTalents = [
-  { first_name: 'Aiko', last_name: 'Ren', city: 'Tokyo / New York', hero_image:
-  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80', slug: 'aiko-ren' },
-  { first_name: 'Bianca', last_name: 'Cole', city: 'Los Angeles', hero_image:
-  'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80', slug: 'bianca-cole' },
-  { first_name: 'Cruz', last_name: 'Vega', city: 'Mexico City', hero_image:
-  'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80', slug: 'cruz-vega' },
-  { first_name: 'Daphne', last_name: 'Noor', city: 'Amsterdam', hero_image:
-  'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=900&q=80', slug: 'daphne-noor' },
-  { first_name: 'Elena', last_name: 'Volkov', city: 'Paris', hero_image:
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80', slug: 'elena-volkov'
-  },
-  { first_name: 'Finn', last_name: 'Murphy', city: 'London', hero_image:
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=900&q=80', slug: 'finn-murphy' },
-  { first_name: 'Gia', last_name: 'Santos', city: 'São Paulo', hero_image:
-  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=900&q=80', slug: 'gia-santos' },
-  { first_name: 'Hugo', last_name: 'Andersson', city: 'Stockholm', hero_image:
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80', slug: 'hugo-andersson'
-  }
+  var placeholderTalents = [
+    {
+      first_name: 'Aiko',
+      last_name: 'Ren',
+      city: 'Tokyo / New York',
+      hero_image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80',
+      slug: 'aiko-ren'
+    },
+    {
+      first_name: 'Bianca',
+      last_name: 'Cole',
+      city: 'Los Angeles',
+      hero_image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80',
+      slug: 'bianca-cole'
+    },
+    {
+      first_name: 'Cruz',
+      last_name: 'Vega',
+      city: 'Mexico City',
+      hero_image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80',
+      slug: 'cruz-vega'
+    },
+    {
+      first_name: 'Daphne',
+      last_name: 'Noor',
+      city: 'Amsterdam',
+      hero_image: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=900&q=80',
+      slug: 'daphne-noor'
+    },
+    {
+      first_name: 'Elena',
+      last_name: 'Volkov',
+      city: 'Paris',
+      hero_image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80',
+      slug: 'elena-volkov'
+    },
+    {
+      first_name: 'Finn',
+      last_name: 'Murphy',
+      city: 'London',
+      hero_image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=900&q=80',
+      slug: 'finn-murphy'
+    },
+    {
+      first_name: 'Gia',
+      last_name: 'Santos',
+      city: 'São Paulo',
+      hero_image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=900&q=80',
+      slug: 'gia-santos'
+    },
+    {
+      first_name: 'Hugo',
+      last_name: 'Andersson',
+      city: 'Stockholm',
+      hero_image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80',
+      slug: 'hugo-andersson'
+    }
   ];
 
   // Merge real talents with placeholders, always show 8
-  const featuredTalents = [];
+  var featuredTalents = [];
+
   if (elara && elara.slug) {
-  featuredTalents.push({
-  first_name: elara.first_name || 'Elara',
-  last_name: elara.last_name || 'Keats',
-  city: elara.city || 'Los Angeles, CA',
-  slug: elara.slug || 'elara-k',
-  hero_image: normalizeImagePath(elaraHero)
+    featuredTalents.push({
+      first_name: elara.first_name || 'Elara',
+      last_name: elara.last_name || 'Keats',
+      city: elara.city || 'Los Angeles, CA',
+      slug: elara.slug || 'elara-k',
+      hero_image: normalizeImagePath(elaraHero)
+    });
+  }
+
+  floatingTalentsData.forEach(function (talent) {
+    if (
+      talent &&
+      talent.slug &&
+      (!elara || talent.slug !== elara.slug) &&
+      featuredTalents.length < 8
+    ) {
+      featuredTalents.push({
+        first_name: talent.first_name || '',
+        last_name: talent.last_name || '',
+        city: talent.city || '',
+        slug: talent.slug,
+        hero_image: normalizeImagePath(talent.hero_image || talent.hero_image_path)
+      });
+    }
   });
-  }
-  floatingTalentsData.forEach(talent => {
-  if (talent && talent.slug && talent.slug !== (elara && elara.slug) && featuredTalents.length < 8) {
-    featuredTalents.push({ first_name: talent.first_name || '' , last_name: talent.last_name || '' , city: talent.city || '' , slug: talent.slug, hero_image: normalizeImagePath(talent.hero_image || talent.hero_image_path) });
-  }
-  }); // Fill with placeholders to reach 8
+
+  // Fill with placeholders to reach 8
   while (featuredTalents.length < 8) {
-    const placeholder = placeholderTalents[featuredTalents.length % placeholderTalents.length];
+    var placeholder = placeholderTalents[featuredTalents.length % placeholderTalents.length];
     featuredTalents.push(placeholder);
-  } %>
+  }
+
+%>
