@@ -18,11 +18,12 @@
     initScrollAnimations();
   });
 
-  // Portfolio Preview - Responsive View Toggle
+  // Portfolio Preview - Responsive View Toggle with Loading States
   function initPortfolioPreview() {
     const frame = document.getElementById('portfolio-preview-frame');
     const controlBtns = document.querySelectorAll('.demo-portfolio-preview__control-btn');
     const iframe = document.querySelector('.demo-portfolio-preview__iframe');
+    const iframeWrapper = document.querySelector('.demo-portfolio-preview__iframe-wrapper');
     const errorDiv = document.getElementById('portfolio-iframe-error');
 
     if (!frame || !controlBtns.length) return;
@@ -31,38 +32,75 @@
     frame.setAttribute('data-view', 'desktop');
     controlBtns[0]?.classList.add('is-active');
 
-    // Handle iframe load errors
+    // Add loading state to wrapper
+    if (iframeWrapper) {
+      iframeWrapper.classList.add('loading');
+    }
+
+    // Handle iframe load events
     if (iframe) {
+      // When iframe starts loading, show loading state
+      iframe.addEventListener('load', () => {
+        // Remove loading state
+        if (iframeWrapper) {
+          iframeWrapper.classList.remove('loading');
+        }
+        
+        // Add loaded class for fade-in animation
+        iframe.classList.add('loaded');
+        
+        // Hide error if it was showing
+        if (errorDiv) {
+          errorDiv.style.display = 'none';
+        }
+        
+        console.log('[Demo] Portfolio iframe loaded successfully');
+      });
+
+      // Handle iframe load errors
       iframe.addEventListener('error', () => {
         console.warn('[Demo] Portfolio iframe failed to load');
-        if (iframe) iframe.style.display = 'none';
-        if (errorDiv) errorDiv.style.display = 'block';
+        
+        // Remove loading state
+        if (iframeWrapper) {
+          iframeWrapper.classList.remove('loading');
+        }
+        
+        // Hide iframe and show error
+        if (iframe) {
+          iframe.style.display = 'none';
+        }
+        if (errorDiv) {
+          errorDiv.style.display = 'block';
+        }
       });
 
-      // Check if iframe loaded successfully after a timeout
-      iframe.addEventListener('load', () => {
-        // Iframe loaded successfully
-        if (errorDiv) errorDiv.style.display = 'none';
-      });
-
-      // Fallback: check after 5 seconds if iframe is still loading
-      setTimeout(() => {
-        try {
-          // Try to access iframe content - if it fails, show error
-          if (iframe.contentWindow && iframe.contentWindow.document) {
-            // Iframe loaded successfully
+      // Fallback: remove loading state after timeout (even if load event doesn't fire)
+      const loadingTimeout = setTimeout(() => {
+        if (iframeWrapper && iframeWrapper.classList.contains('loading')) {
+          iframeWrapper.classList.remove('loading');
+          
+          // Check if iframe actually loaded
+          try {
+            // Try to access iframe content - if it fails, it might still be loading
+            if (iframe.contentWindow && iframe.contentWindow.document) {
+              // Iframe loaded successfully
+              iframe.classList.add('loaded');
+              if (errorDiv) errorDiv.style.display = 'none';
+            }
+          } catch (e) {
+            // Cross-origin - this is expected for portfolio content
+            // Assume it's working unless we get an explicit error
+            iframe.classList.add('loaded');
             if (errorDiv) errorDiv.style.display = 'none';
-          }
-        } catch (e) {
-          // Cross-origin or error - this is expected for external content
-          // But if we get here and the iframe is blank, it might be an error
-          if (iframe.src && iframe.src !== 'about:blank') {
-            // Iframe might have failed - check if it's showing an error page
-            // We can't check content due to CORS, so we'll assume it's working
-            // unless we get an explicit error event
           }
         }
       }, 5000);
+
+      // Clear timeout if iframe loads before timeout
+      iframe.addEventListener('load', () => {
+        clearTimeout(loadingTimeout);
+      }, { once: true });
     }
 
     controlBtns.forEach(btn => {
@@ -76,13 +114,21 @@
         // Update frame view
         frame.setAttribute('data-view', view);
         
-        // Reload iframe to ensure proper sizing
+        // Add smooth transition effect
+        if (iframe) {
+          iframe.classList.remove('loaded');
+          if (iframeWrapper) {
+            iframeWrapper.classList.add('loading');
+          }
+        }
+        
+        // Reload iframe to ensure proper sizing (with delay for smooth transition)
         if (iframe && iframe.src) {
           const currentSrc = iframe.src;
           iframe.src = '';
           setTimeout(() => {
             iframe.src = currentSrc;
-          }, 100);
+          }, 200);
         }
       });
     });

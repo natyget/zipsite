@@ -7718,26 +7718,118 @@ body.filmstrip-hover {
   color: rgba(201, 165, 90, 1);
 }
 
+/* Demo Portfolio Preview - Enhanced Modern Frame */
 .demo-portfolio-preview__frame {
   position: relative;
-  background: #ffffff;
-  border-radius: 16px;
-  border: 2px solid #e2e8f0;
+  background: linear-gradient(135deg, #ffffff 0%, #faf9f7 100%);
+  border-radius: 24px;
+  border: 1px solid rgba(201, 165, 90, 0.2);
   overflow: hidden;
-  box-shadow: 0 20px 60px -40px rgba(15, 23, 42, 0.2);
-  transition: all 0.3s ease;
+  box-shadow: 
+    0 32px 80px -24px rgba(15, 23, 42, 0.25),
+    0 16px 48px -16px rgba(201, 165, 90, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset,
+    0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+
+.demo-portfolio-preview__frame::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, 
+    rgba(201, 165, 90, 0.4) 0%,
+    rgba(201, 165, 90, 0.2) 25%,
+    rgba(101, 126, 234, 0.2) 50%,
+    rgba(201, 165, 90, 0.2) 75%,
+    rgba(201, 165, 90, 0.4) 100%);
+  border-radius: 24px;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 .demo-portfolio-preview__frame:hover {
-  box-shadow: 0 30px 80px -40px rgba(15, 23, 42, 0.3);
+  box-shadow: 
+    0 40px 100px -24px rgba(15, 23, 42, 0.3),
+    0 24px 64px -16px rgba(201, 165, 90, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset,
+    0 0 60px -20px rgba(201, 165, 90, 0.3),
+    0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  transform: translateY(-4px);
+  border-color: rgba(201, 165, 90, 0.4);
 }
 
+.demo-portfolio-preview__frame:hover::before {
+  opacity: 1;
+}
+
+/* Device Frame Effect - MacBook/iPad style */
 .demo-portfolio-preview__iframe-wrapper {
   position: relative;
   width: 100%;
   height: 600px;
   overflow: hidden;
-  background: #faf9f7;
+  background: 
+    linear-gradient(rgba(201, 165, 90, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201, 165, 90, 0.02) 1px, transparent 1px),
+    linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+  background-size: 30px 30px, 30px 30px, 100% 100%;
+  background-position: 0 0, 0 0, 0 0;
+  border-radius: 16px;
+  margin: 8px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3) inset,
+    0 1px 0 rgba(255, 255, 255, 0.1) inset;
+  animation: gridMove 15s linear infinite;
+}
+
+@keyframes gridMove {
+  0% { background-position: 0 0, 0 0, 0 0; }
+  100% { background-position: 30px 30px, 30px 30px, 0 0; }
+}
+
+.demo-portfolio-preview__iframe-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, 
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.1) 50%,
+    transparent 100%);
+  border-radius: 16px 16px 0 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.demo-portfolio-preview__iframe-wrapper::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to top, 
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.1) 50%,
+    transparent 100%);
+  border-radius: 0 0 16px 16px;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .demo-portfolio-preview__iframe {
@@ -7746,82 +7838,162 @@ body.filmstrip-hover {
   border: none;
   display: block;
   transform-origin: top left;
-  transition: transform 0.3s ease;
+  transition: opacity 0.5s ease, transform 0.3s ease;
+  opacity: 0;
+  position: relative;
+  z-index: 0;
+}
+
+.demo-portfolio-preview__iframe.loaded {
+  opacity: 1;
 }
 
 .demo-portfolio-preview__frame[data-view="tablet"] .demo-portfolio-preview__iframe-wrapper {
   max-width: 768px;
   margin: 0 auto;
   height: 1024px;
+  border-radius: 20px;
 }
 
 .demo-portfolio-preview__frame[data-view="mobile"] .demo-portfolio-preview__iframe-wrapper {
   max-width: 375px;
   margin: 0 auto;
   height: 812px;
+  border-radius: 24px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3) inset,
+    0 1px 0 rgba(255, 255, 255, 0.1) inset,
+    0 0 0 2px rgba(0, 0, 0, 0.1);
 }
 
+/* Loading State */
+.demo-portfolio-preview__iframe-wrapper.loading {
+  background: linear-gradient(
+    90deg,
+    rgba(10, 10, 15, 0.8) 0%,
+    rgba(26, 26, 46, 0.9) 50%,
+    rgba(10, 10, 15, 0.8) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.demo-portfolio-preview__iframe-wrapper.loading::after {
+  content: 'Loading portfolio...';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.5);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  z-index: 2;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+/* Enhanced Overlay with Glassmorphism */
 .demo-portfolio-preview__overlay {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
   padding: 1.5rem;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(20px);
+  z-index: 2;
+  pointer-events: none;
 }
 
 .demo-portfolio-preview__frame:hover .demo-portfolio-preview__overlay {
   opacity: 1;
+  transform: translateY(0);
 }
 
 .demo-portfolio-preview__url-display {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.875rem 1.25rem;
+  border-radius: 12px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 1px 0 rgba(255, 255, 255, 0.2) inset;
+  transition: all 0.3s ease;
+}
+
+.demo-portfolio-preview__url-display:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(201, 165, 90, 0.4);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(201, 165, 90, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.3) inset;
+  transform: translateY(-2px);
 }
 
 .demo-portfolio-preview__url-label {
   font-family: var(--font-sans);
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.7);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .demo-portfolio-preview__url {
   flex: 1;
   font-family: 'Monaco', 'Menlo', monospace;
   font-size: 0.875rem;
-  color: #0f172a;
+  color: rgba(255, 255, 255, 0.95);
   background: transparent;
   border: none;
   padding: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  font-weight: 500;
 }
 
 .demo-portfolio-preview__copy-btn {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(201, 165, 90, 0.1);
-  border: none;
-  border-radius: 6px;
-  color: rgba(201, 165, 90, 1);
+  background: rgba(201, 165, 90, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(201, 165, 90, 0.3);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.95);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
 }
 
 .demo-portfolio-preview__copy-btn:hover {
-  background: rgba(201, 165, 90, 0.2);
-  transform: scale(1.05);
+  background: rgba(201, 165, 90, 0.35);
+  border-color: rgba(201, 165, 90, 0.5);
+  transform: scale(1.1);
+  box-shadow: 
+    0 4px 12px rgba(201, 165, 90, 0.3),
+    0 0 0 1px rgba(201, 165, 90, 0.2);
 }
 
 .demo-portfolio-preview__actions {
@@ -7831,6 +8003,89 @@ body.filmstrip-hover {
 .demo-portfolio-preview__action-btn {
   width: 100%;
   text-align: center;
+}
+
+/* Creative Visual Elements - Floating Particles */
+.demo-portfolio-preview__frame::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 10;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, rgba(201, 165, 90, 0.15), transparent),
+    radial-gradient(2px 2px at 60px 70px, rgba(255, 255, 255, 0.1), transparent),
+    radial-gradient(1px 1px at 50px 50px, rgba(201, 165, 90, 0.2), transparent),
+    radial-gradient(1px 1px at 80px 20px, rgba(255, 255, 255, 0.08), transparent);
+  background-size: 100px 100px;
+  background-repeat: repeat;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  border-radius: 24px;
+}
+
+.demo-portfolio-preview__frame:hover::after {
+  opacity: 1;
+  animation: particlesFloat 20s ease-in-out infinite;
+}
+
+@keyframes particlesFloat {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(10px, 10px) rotate(90deg); }
+  50% { transform: translate(-5px, 15px) rotate(180deg); }
+  75% { transform: translate(15px, -5px) rotate(270deg); }
+}
+
+/* Enhanced Frame Glow Effect Animation */
+@keyframes gradientGlow {
+  0%, 100% { 
+    opacity: 0;
+    filter: blur(0px);
+  }
+  50% { 
+    opacity: 0.6;
+    filter: blur(8px);
+  }
+}
+
+/* Tech Grid Overlay for iframe wrapper - Using a different approach */
+.demo-portfolio-preview__iframe-wrapper {
+  position: relative;
+}
+
+/* Note: ::before is already used for top gradient, so grid overlay is added via background */
+
+/* Smooth Transitions for View Changes */
+.demo-portfolio-preview__frame[data-view] {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced Responsive Styles for Preview */
+@media (max-width: 768px) {
+  .demo-portfolio-preview__frame {
+    border-radius: 20px;
+  }
+  
+  .demo-portfolio-preview__iframe-wrapper {
+    border-radius: 12px;
+    margin: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-portfolio-preview__frame::before,
+  .demo-portfolio-preview__frame::after,
+  .demo-portfolio-preview__iframe-wrapper::before {
+    animation: none !important;
+  }
+  
+  .demo-portfolio-preview__frame,
+  .demo-portfolio-preview__iframe-wrapper {
+    transition: none !important;
+  }
 }
 
 /* PDF Themes - Right Column */

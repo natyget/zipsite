@@ -46,7 +46,7 @@ function getDemoProfile(slug) {
       bio_raw: 'Elara is a collaborative creative professional with a background in editorial campaigns and on-set leadership. Based in Los Angeles, she balances editorial edge with commercial versatility.',
       bio_curated: 'Elara Keats brings a polished presence to every production. Based in Los Angeles, she balances editorial edge with commercial versatility. Standing at 5\'11" with measurements of 32-25-35, she brings a commanding presence to both high-fashion editorials and commercial campaigns.',
       hero_image_path: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=75',
-      is_pro: false,
+      is_pro: true,
       pdf_theme: null,
       pdf_customizations: null,
       phone: null,
