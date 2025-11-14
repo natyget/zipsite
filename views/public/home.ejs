@@ -1,495 +1,525 @@
-<% 
-  // DO NOT AUTO-FORMAT THIS BLOCK
-  const elara = typeof elaraProfile !== 'undefined' ? elaraProfile : {};
-  const floatingTalentsData = typeof floatingTalents !== 'undefined' ? floatingTalents : [];
-  
-  // Image path normalization helper function
-  function normalizeImagePath(path) {
-    if (!path) {
-      return 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=2000&q=90';
-    }
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
-    }
-    if (path.startsWith('/')) {
-      return path;
-    }
-    return '/' + path;
-  }
-  
-  // Get hero image for elara
-  let elaraHero = (elara && elara.hero_image_path) || null;
-  if (!elaraHero && typeof elaraImages !== 'undefined' && Array.isArray(elaraImages) && elaraImages.length > 0) {
-    elaraHero = elaraImages[0].path;
+<% // DO NOT AUTO-FORMAT THIS BLOCK const elara=typeof elaraProfile !=='undefined' ? elaraProfile : {}; const
+  floatingTalentsData=typeof floatingTalents !=='undefined' ? floatingTalents : []; // Image path normalization helper
+  function function normalizeImagePath(path) { if (!path) {
+  return 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=2000&q=90' ; } if
+  (path.startsWith('http://') || path.startsWith('https://')) { return path; } if (path.startsWith('/')) { return path;
+  } return '/' + path; } // Get hero image for elara let elaraHero=(elara && elara.hero_image_path) || null; if
+  (!elaraHero && typeof elaraImages !=='undefined' && Array.isArray(elaraImages) && elaraImages.length> 0) {
+  elaraHero = elaraImages[0].path;
   }
   if (!elaraHero) {
-    elaraHero = 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=2000&q=90';
+  elaraHero = 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=2000&q=90';
   }
 
   // Get gallery images for elara
   let galleryImages = [];
   if (typeof elaraImages !== 'undefined' && Array.isArray(elaraImages)) {
-    galleryImages = elaraImages.slice(1, 5);
+  galleryImages = elaraImages.slice(1, 5);
   }
   if (galleryImages.length === 0) {
-    galleryImages = [
-      { path: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80' },
-      { path: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80' },
-      { path: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=900&q=80' },
-      { path: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=900&q=80' }
-    ];
+  galleryImages = [
+  { path: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80' },
+  { path: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80' },
+  { path: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=900&q=80' },
+  { path: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=900&q=80' }
+  ];
   }
 
   // Build talent data for transformation hero with realistic placeholders
   const heroTalent = {
-    first_name: elara.first_name || 'Elara',
-    last_name: elara.last_name || 'Keats',
-    city: elara.city || 'Los Angeles, CA',
-    slug: elara.slug || 'elara-k',
-    hero_image: normalizeImagePath(elaraHero),
-    height_cm: elara.height_cm || 180,
-    measurements: elara.measurements || '32-25-35',
-    bio_raw: elara.bio_raw || 'hey! so i\'m elara, 23 years old, from LA. i do modeling - mostly fashion and some commercial stuff. love working with photographers and trying new creative projects. i\'m 5\'11, measurements are like 32-24-34 i think? available for bookings, feel free to reach out! instagram: @elarakeats',
-    bio_curated: elara.bio_curated || 'Elara Keats embodies the modern editorial aesthetic, seamlessly blending high-fashion sophistication with commercial versatility. Her striking presence and commanding frame—standing at 5\'11"—have graced campaigns for luxury brands and editorial spreads in leading fashion publications. Based in Los Angeles, she brings an effortless elegance to every project, whether on set for a Vogue editorial or in front of the camera for a commercial campaign. With a natural ability to adapt to diverse creative visions, Elara consistently delivers performances that capture the essence of contemporary style.',
-    gallery_images: galleryImages.slice(0, 4)
+  first_name: elara.first_name || 'Elara',
+  last_name: elara.last_name || 'Keats',
+  city: elara.city || 'Los Angeles, CA',
+  slug: elara.slug || 'elara-k',
+  hero_image: normalizeImagePath(elaraHero),
+  height_cm: elara.height_cm || 180,
+  measurements: elara.measurements || '32-25-35',
+  bio_raw: elara.bio_raw || 'hey! so i\'m elara, 23 years old, from LA. i do modeling - mostly fashion and some
+  commercial stuff. love working with photographers and trying new creative projects. i\'m 5\'11, measurements are like
+  32-24-34 i think? available for bookings, feel free to reach out! instagram: @elarakeats',
+  bio_curated: elara.bio_curated || 'Elara Keats embodies the modern editorial aesthetic, seamlessly blending
+  high-fashion sophistication with commercial versatility. Her striking presence and commanding frame—standing at
+  5\'11"—have graced campaigns for luxury brands and editorial spreads in leading fashion publications. Based in Los
+  Angeles, she brings an effortless elegance to every project, whether on set for a Vogue editorial or in front of the
+  camera for a commercial campaign. With a natural ability to adapt to diverse creative visions, Elara consistently
+  delivers performances that capture the essence of contemporary style.',
+  gallery_images: galleryImages.slice(0, 4)
   };
-  
+
   // Format height helper
   function formatHeight(heightCm) {
-    if (!heightCm) return null;
-    const feet = Math.floor(heightCm / 30.48);
-    const inches = Math.round((heightCm % 30.48) / 2.54);
-    return `${feet}'${inches}"`;
+  if (!heightCm) return null;
+  const feet = Math.floor(heightCm / 30.48);
+  const inches = Math.round((heightCm % 30.48) / 2.54);
+  return `${feet}'${inches}"`;
   }
 
   function formatHeightWithCm(heightCm) {
-    if (!heightCm) return "5' 11\" / 180cm";
-    const feet = Math.floor(heightCm / 30.48);
-    const inches = Math.round((heightCm % 30.48) / 2.54);
-    return `${feet}' ${inches}" / ${heightCm}cm`;
+  if (!heightCm) return "5' 11\" / 180cm";
+  const feet = Math.floor(heightCm / 30.48);
+  const inches = Math.round((heightCm % 30.48) / 2.54);
+  return `${feet}' ${inches}" / ${heightCm}cm`;
   }
 
   // Placeholder talent data for featured section (always show 8 items)
   const placeholderTalents = [
-    { first_name: 'Aiko', last_name: 'Ren', city: 'Tokyo / New York', hero_image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80', slug: 'aiko-ren' },
-    { first_name: 'Bianca', last_name: 'Cole', city: 'Los Angeles', hero_image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80', slug: 'bianca-cole' },
-    { first_name: 'Cruz', last_name: 'Vega', city: 'Mexico City', hero_image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80', slug: 'cruz-vega' },
-    { first_name: 'Daphne', last_name: 'Noor', city: 'Amsterdam', hero_image: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=900&q=80', slug: 'daphne-noor' },
-    { first_name: 'Elena', last_name: 'Volkov', city: 'Paris', hero_image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80', slug: 'elena-volkov' },
-    { first_name: 'Finn', last_name: 'Murphy', city: 'London', hero_image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=900&q=80', slug: 'finn-murphy' },
-    { first_name: 'Gia', last_name: 'Santos', city: 'São Paulo', hero_image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=900&q=80', slug: 'gia-santos' },
-    { first_name: 'Hugo', last_name: 'Andersson', city: 'Stockholm', hero_image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80', slug: 'hugo-andersson' }
+  { first_name: 'Aiko', last_name: 'Ren', city: 'Tokyo / New York', hero_image:
+  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80', slug: 'aiko-ren' },
+  { first_name: 'Bianca', last_name: 'Cole', city: 'Los Angeles', hero_image:
+  'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80', slug: 'bianca-cole' },
+  { first_name: 'Cruz', last_name: 'Vega', city: 'Mexico City', hero_image:
+  'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80', slug: 'cruz-vega' },
+  { first_name: 'Daphne', last_name: 'Noor', city: 'Amsterdam', hero_image:
+  'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=900&q=80', slug: 'daphne-noor' },
+  { first_name: 'Elena', last_name: 'Volkov', city: 'Paris', hero_image:
+  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80', slug: 'elena-volkov'
+  },
+  { first_name: 'Finn', last_name: 'Murphy', city: 'London', hero_image:
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=900&q=80', slug: 'finn-murphy' },
+  { first_name: 'Gia', last_name: 'Santos', city: 'São Paulo', hero_image:
+  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=900&q=80', slug: 'gia-santos' },
+  { first_name: 'Hugo', last_name: 'Andersson', city: 'Stockholm', hero_image:
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80', slug: 'hugo-andersson'
+  }
   ];
 
   // Merge real talents with placeholders, always show 8
   const featuredTalents = [];
   if (elara && elara.slug) {
-    featuredTalents.push({
-      first_name: elara.first_name || 'Elara',
-      last_name: elara.last_name || 'Keats',
-      city: elara.city || 'Los Angeles, CA',
-      slug: elara.slug || 'elara-k',
-      hero_image: normalizeImagePath(elaraHero)
-    });
+  featuredTalents.push({
+  first_name: elara.first_name || 'Elara',
+  last_name: elara.last_name || 'Keats',
+  city: elara.city || 'Los Angeles, CA',
+  slug: elara.slug || 'elara-k',
+  hero_image: normalizeImagePath(elaraHero)
+  });
   }
   floatingTalentsData.forEach(talent => {
-    if (talent && talent.slug && talent.slug !== (elara && elara.slug) && featuredTalents.length < 8) {
-      featuredTalents.push({
-        first_name: talent.first_name || '',
-        last_name: talent.last_name || '',
-        city: talent.city || '',
-        slug: talent.slug,
-        hero_image: normalizeImagePath(talent.hero_image || talent.hero_image_path)
-      });
-    }
-  });
-  
-  // Fill with placeholders to reach 8
-  while (featuredTalents.length < 8) {
-    const placeholder = placeholderTalents[featuredTalents.length % placeholderTalents.length];
-    featuredTalents.push(placeholder);
-  }
-%>
+  if (talent && talent.slug && talent.slug !== (elara && elara.slug) && featuredTalents.length < 8) {
+    featuredTalents.push({ first_name: talent.first_name || '' , last_name: talent.last_name || '' , city: talent.city
+    || '' , slug: talent.slug, hero_image: normalizeImagePath(talent.hero_image || talent.hero_image_path) }); } }); //
+    Fill with placeholders to reach 8 while (featuredTalents.length < 8) { const
+    placeholder=placeholderTalents[featuredTalents.length % placeholderTalents.length];
+    featuredTalents.push(placeholder); } %>
 
-<!-- Hero: Split-Screen AI Transformation -->
-<section class="transformation-hero" id="transformation-hero">
-  <div class="transformation-hero__container">
-    <!-- Header -->
-    <div class="transformation-hero__header">
-      <h1 class="transformation-hero__title">
-        <span class="transformation-hero__title-raw">Raw Data.</span>
-        <span class="transformation-hero__title-arrow">
-          <svg width="60" height="24" viewBox="0 0 60 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 12h56M48 4l8 8-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="52" cy="12" r="2" fill="currentColor"/>
-          </svg>
-        </span>
-        <span class="transformation-hero__title-accent">Transformed.</span>
-      </h1>
-      <p class="transformation-hero__subtitle">Watch ZipSite transform unorganized talent data into publication-ready portfolios</p>
-    </div>
+    <!-- Hero: Split-Screen AI Transformation -->
+    <section class="transformation-hero" id="transformation-hero">
+      <div class="transformation-hero__container">
+        <!-- Header -->
+        <div class="transformation-hero__header">
+          <h1 class="transformation-hero__title">
+            <span class="transformation-hero__title-word transformation-hero__title-raw">
+              <span class="transformation-hero__word-inner">Raw</span>
+            </span>
+            <span class="transformation-hero__title-word transformation-hero__title-word--small">
+              <span class="transformation-hero__word-inner">Data.</span>
+            </span>
+            <span class="transformation-hero__title-arrow">
+              <svg width="60" height="24" viewBox="0 0 60 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0 12h56M48 4l8 8-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+                <circle cx="52" cy="12" r="2" fill="currentColor" />
+              </svg>
+            </span>
+            <span class="transformation-hero__title-word transformation-hero__title-accent">
+              <span class="transformation-hero__word-inner">Transformed.</span>
+            </span>
+          </h1>
+          <p class="transformation-hero__subtitle">From messy submissions to polished portfolios in seconds</p>
+        </div>
 
-    <!-- Split-Screen Transformation -->
-    <div class="transformation-hero__split" id="transformation-split">
-      <!-- Left: Raw Input -->
-      <div class="transformation-hero__side transformation-hero__side--raw">
-        <div class="transformation-hero__label">Before</div>
-        <div class="email-draft">
-          <!-- Email Client Interface -->
-          <div class="email-draft__window">
-            <!-- Email Header -->
-            <div class="email-draft__header">
-              <div class="email-draft__toolbar">
-                <div class="email-draft__toolbar-button email-draft__toolbar-button--close"></div>
-                <div class="email-draft__toolbar-button email-draft__toolbar-button--minimize"></div>
-                <div class="email-draft__toolbar-button email-draft__toolbar-button--maximize"></div>
+        <!-- Split-Screen Transformation -->
+        <div class="transformation-hero__split" id="transformation-split">
+          <!-- Left: Raw Input -->
+          <div class="transformation-hero__side transformation-hero__side--raw">
+            <div class="transformation-hero__label">Before</div>
+            <div class="email-draft">
+              <!-- Email Client Interface -->
+              <div class="email-draft__window">
+                <!-- Email Header -->
+                <div class="email-draft__header">
+                  <div class="email-draft__toolbar">
+                    <div class="email-draft__toolbar-button email-draft__toolbar-button--close"></div>
+                    <div class="email-draft__toolbar-button email-draft__toolbar-button--minimize"></div>
+                    <div class="email-draft__toolbar-button email-draft__toolbar-button--maximize"></div>
+                  </div>
+                  <div class="email-draft__title">New Message</div>
+                </div>
+
+                <!-- Email Form -->
+                <div class="email-draft__form">
+                  <div class="email-draft__field">
+                    <span class="email-draft__field-label">From:</span>
+                    <span class="email-draft__field-value" id="raw-name">elara.k<%= Math.floor(Math.random() * 999) %>
+                        @gmail.com</span>
+                  </div>
+
+                  <div class="email-draft__field">
+                    <span class="email-draft__field-label">To:</span>
+                    <span class="email-draft__field-value">casting@agency.com</span>
+                  </div>
+
+                  <div class="email-draft__field email-draft__field--subject">
+                    <span class="email-draft__field-label">Subject:</span>
+                    <span class="email-draft__field-value email-draft__subject" id="raw-subject">Re: Fw: modeling
+                      submission - <%= heroTalent.first_name %>
+                        <%= heroTalent.last_name %> (open casting??)</span>
+                  </div>
+                </div>
+
+                <!-- Email Body -->
+                <div class="email-draft__body">
+                  <div class="email-draft__body-content" id="raw-bio">
+                    <p>hi!!!</p>
+                    <p>i saw on insta you guys are looking for new faces?? im <%= heroTalent.first_name.toLowerCase() %>
+                        <%= heroTalent.last_name.toLowerCase() %> and im a model based in <%=
+                            heroTalent.city.split(',')[0] %> (but i can travel anywhere, i have a passport!!) im really
+                            looking to get into more editorial and runway work.</p>
+                    <p>a bit about me:</p>
+                    <ul>
+                      <li>im <%= formatHeight(heroTalent.height_cm || 180) %>
+                      </li>
+                      <li>my measurements are <%= heroTalent.measurements || '32-25-35' %>
+                      </li>
+                      <li>my shoe is a 9</li>
+                      <li>i have brown hair/green eyes.</li>
+                    </ul>
+                    <p>My insta is @<%= heroTalent.first_name.toLowerCase() %>.<%=
+                          heroTalent.last_name.toLowerCase().charAt(0) %> -- i post most of my new work there. im a
+                          super hard worker and everyone says im professional, i have a background in some smaller
+                          campaigns. i was with [Agency Name] last year but left, it wasnt a good fit.</p>
+                    <p>I put my best photos (some are digitals my friend took, some are from real shoots but they are
+                      not edited yet) in this google drive. hope you can see them?</p>
+                    <p>here is the link:</p>
+                    <p class="email-draft__link">
+                      <a href="#"
+                        class="email-draft__link-url">https://www.google.com/search?q=https://drive.google.com/drive/folders/1aBcD-THIS-IS-A-MESSY-LINK-xyz</a>
+                    </p>
+                    <p>I also have a portfolio on a wix site i made, i think this is the link:</p>
+                    <p class="email-draft__link">
+                      <a href="#" class="email-draft__link-url">https://www.google.com/search?q=<%=
+                          heroTalent.first_name.toLowerCase() %>-portfolio.wixsite.com/mysite</a>
+                    </p>
+                    <p>Let me know what you think! Thx so much!! 🙏 I'm free for a meeting basically any time next week.
+                    </p>
+                    <p class="email-draft__signature">-<%= heroTalent.first_name %>
+                        <%= heroTalent.last_name.charAt(0) %>.</p>
+                  </div>
+                </div>
+
+                <!-- Email Footer/Actions -->
+                <div class="email-draft__footer">
+                  <div class="email-draft__attachment">
+                    <span class="email-draft__attachment-icon">📎</span>
+                    <span class="email-draft__attachment-text">IMG_001.jpg, photo2.jpg, photo3.jpg, photo4.jpg</span>
+                  </div>
+                  <div class="email-draft__actions">
+                    <button class="email-draft__button email-draft__button--send">Send</button>
+                    <button class="email-draft__button email-draft__button--draft">Save Draft</button>
+                  </div>
+                </div>
               </div>
-              <div class="email-draft__title">New Message</div>
             </div>
-            
-            <!-- Email Form -->
-            <div class="email-draft__form">
-              <div class="email-draft__field">
-                <span class="email-draft__field-label">From:</span>
-                <span class="email-draft__field-value" id="raw-name">elara.k<%= Math.floor(Math.random() * 999) %>@gmail.com</span>
-              </div>
-              
-              <div class="email-draft__field">
-                <span class="email-draft__field-label">To:</span>
-                <span class="email-draft__field-value">casting@agency.com</span>
-              </div>
-              
-              <div class="email-draft__field email-draft__field--subject">
-                <span class="email-draft__field-label">Subject:</span>
-                <span class="email-draft__field-value email-draft__subject" id="raw-subject">Re: Fw: modeling submission - <%= heroTalent.first_name %> <%= heroTalent.last_name %> (open casting??)</span>
+          </div>
+
+          <!-- Center: Transformation Zone -->
+          <div class="transformation-hero__center">
+            <div class="transformation-zone" id="transformation-zone">
+              <div class="transformation-zone__particles"></div>
+              <div class="transformation-zone__flow"></div>
+              <div class="transformation-zone__indicator">
+                <span class="transformation-zone__ai-label">AI</span>
+                <span class="transformation-zone__processing">Processing...</span>
               </div>
             </div>
-            
-            <!-- Email Body -->
-            <div class="email-draft__body">
-              <div class="email-draft__body-content" id="raw-bio">
-                <p>hi!!!</p>
-                <p>i saw on insta you guys are looking for new faces?? im <%= heroTalent.first_name.toLowerCase() %> <%= heroTalent.last_name.toLowerCase() %> and im a model based in <%= heroTalent.city.split(',')[0] %> (but i can travel anywhere, i have a passport!!) im really looking to get into more editorial and runway work.</p>
-                <p>a bit about me:</p>
-                <ul>
-                  <li>im <%= formatHeight(heroTalent.height_cm || 180) %></li>
-                  <li>my measurements are <%= heroTalent.measurements || '32-25-35' %></li>
-                  <li>my shoe is a 9</li>
-                  <li>i have brown hair/green eyes.</li>
-                </ul>
-                <p>My insta is @<%= heroTalent.first_name.toLowerCase() %>.<%= heroTalent.last_name.toLowerCase().charAt(0) %> -- i post most of my new work there. im a super hard worker and everyone says im professional, i have a background in some smaller campaigns. i was with [Agency Name] last year but left, it wasnt a good fit.</p>
-                <p>I put my best photos (some are digitals my friend took, some are from real shoots but they are not edited yet) in this google drive. hope you can see them?</p>
-                <p>here is the link:</p>
-                <p class="email-draft__link">
-                  <a href="#" class="email-draft__link-url">https://www.google.com/search?q=https://drive.google.com/drive/folders/1aBcD-THIS-IS-A-MESSY-LINK-xyz</a>
-                </p>
-                <p>I also have a portfolio on a wix site i made, i think this is the link:</p>
-                <p class="email-draft__link">
-                  <a href="#" class="email-draft__link-url">https://www.google.com/search?q=<%= heroTalent.first_name.toLowerCase() %>-portfolio.wixsite.com/mysite</a>
-                </p>
-                <p>Let me know what you think! Thx so much!! 🙏 I'm free for a meeting basically any time next week.</p>
-                <p class="email-draft__signature">-<%= heroTalent.first_name %> <%= heroTalent.last_name.charAt(0) %>.</p>
+            <button class="transformation-hero__replay" id="replay-transformation" aria-label="Replay transformation">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 4v6h6M23 20v-6h-6" />
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+              </svg>
+              Replay
+            </button>
+          </div>
+
+          <!-- Right: Curated Output -->
+          <div class="transformation-hero__side transformation-hero__side--curated">
+            <div class="transformation-hero__label">After</div>
+            <div class="portfolio-card">
+              <!-- Portfolio header with elegant typography -->
+              <div class="portfolio-card__header">
+                <div class="portfolio-card__name-wrapper">
+                  <h2 class="portfolio-card__name" id="curated-name">
+                    <span class="portfolio-card__name-first">
+                      <%= heroTalent.first_name %>
+                    </span>
+                    <span class="portfolio-card__name-last">
+                      <%= heroTalent.last_name %>
+                    </span>
+                  </h2>
+                  <div class="portfolio-card__location" id="curated-location">
+                    <%= heroTalent.city.split(',')[0] %>
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            <!-- Email Footer/Actions -->
-            <div class="email-draft__footer">
-              <div class="email-draft__attachment">
-                <span class="email-draft__attachment-icon">📎</span>
-                <span class="email-draft__attachment-text">IMG_001.jpg, photo2.jpg, photo3.jpg, photo4.jpg</span>
+
+              <!-- Hero image -->
+              <div class="portfolio-card__hero-image">
+                <img src="<%= heroTalent.hero_image %>" alt="<%= heroTalent.first_name %> <%= heroTalent.last_name %>"
+                  id="curated-hero-image">
+                <div class="portfolio-card__image-overlay"></div>
               </div>
-              <div class="email-draft__actions">
-                <button class="email-draft__button email-draft__button--send">Send</button>
-                <button class="email-draft__button email-draft__button--draft">Save Draft</button>
+
+              <!-- Portfolio content -->
+              <div class="portfolio-card__content">
+                <!-- Stats section -->
+                <div class="portfolio-card__stats">
+                  <div class="portfolio-card__stat">
+                    <div class="portfolio-card__stat-label">HEIGHT</div>
+                    <div class="portfolio-card__stat-value" id="curated-height">
+                      <%= formatHeight(heroTalent.height_cm || 180) %> / <%= heroTalent.height_cm || 180 %>cm
+                    </div>
+                  </div>
+                  <div class="portfolio-card__stat">
+                    <div class="portfolio-card__stat-label">MEASUREMENTS</div>
+                    <div class="portfolio-card__stat-value" id="curated-measurements">
+                      <%= heroTalent.measurements || '32-25-35' %>
+                    </div>
+                  </div>
+                  <div class="portfolio-card__stat">
+                    <div class="portfolio-card__stat-label">SHOE SIZE</div>
+                    <div class="portfolio-card__stat-value" id="curated-shoe">
+                      9 US
+                    </div>
+                  </div>
+                  <div class="portfolio-card__stat">
+                    <div class="portfolio-card__stat-label">LOCATION</div>
+                    <div class="portfolio-card__stat-value" id="curated-location-stat">
+                      <%= heroTalent.city.split(',')[0] %>, Available for Travel
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Gallery -->
+                <div class="portfolio-card__gallery">
+                  <% heroTalent.gallery_images.slice(0, 4).forEach((img, i)=> { %>
+                    <div class="portfolio-card__gallery-item">
+                      <img src="<%= normalizeImagePath(img.path) %>" alt="Portfolio image <%= i + 1 %>">
+                      <div class="portfolio-card__gallery-overlay"></div>
+                    </div>
+                    <% }); %>
+                </div>
+
+                <!-- Bio section -->
+                <div class="portfolio-card__bio">
+                  <p class="portfolio-card__bio-text" id="curated-bio">
+                    <%= heroTalent.bio_curated %>
+                  </p>
+                  <div class="portfolio-card__contact">
+                    <div class="portfolio-card__contact-item">
+                      <span class="portfolio-card__contact-label">Instagram</span>
+                      <span class="portfolio-card__contact-value">@<%= heroTalent.first_name.toLowerCase() %>.<%=
+                            heroTalent.last_name.toLowerCase().charAt(0) %></span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- Center: Transformation Zone -->
-      <div class="transformation-hero__center">
-        <div class="transformation-zone" id="transformation-zone">
-          <div class="transformation-zone__particles"></div>
-          <div class="transformation-zone__flow"></div>
-          <div class="transformation-zone__indicator">
-            <span class="transformation-zone__ai-label">AI</span>
-            <span class="transformation-zone__processing">Processing...</span>
-          </div>
+    <!-- Portfolio Showcase Grid -->
+    <section class="homepage-portfolio-showcase" id="homepage-portfolio-showcase">
+      <div class="homepage-portfolio-showcase__container">
+        <div class="homepage-portfolio-showcase__header">
+          <h2 class="homepage-portfolio-showcase__title">Featured Talent</h2>
+          <p class="homepage-portfolio-showcase__subtitle">Discover our curated portfolio of professional talent</p>
         </div>
-        <button class="transformation-hero__replay" id="replay-transformation" aria-label="Replay transformation">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 4v6h6M23 20v-6h-6"/>
-            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-          </svg>
-          Replay
-        </button>
-      </div>
 
-      <!-- Right: Curated Output -->
-      <div class="transformation-hero__side transformation-hero__side--curated">
-        <div class="transformation-hero__label">After</div>
-        <div class="portfolio-card">
-          <!-- Portfolio header with elegant typography -->
-          <div class="portfolio-card__header">
-            <div class="portfolio-card__name-wrapper">
-              <h2 class="portfolio-card__name" id="curated-name">
-                <span class="portfolio-card__name-first"><%= heroTalent.first_name %></span>
-                <span class="portfolio-card__name-last"><%= heroTalent.last_name %></span>
-              </h2>
-              <div class="portfolio-card__location" id="curated-location">
-                <%= heroTalent.city.split(',')[0] %>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Hero image -->
-          <div class="portfolio-card__hero-image">
-            <img src="<%= heroTalent.hero_image %>" alt="<%= heroTalent.first_name %> <%= heroTalent.last_name %>" id="curated-hero-image">
-            <div class="portfolio-card__image-overlay"></div>
-          </div>
-          
-          <!-- Portfolio content -->
-          <div class="portfolio-card__content">
-            <!-- Stats section -->
-            <div class="portfolio-card__stats">
-              <div class="portfolio-card__stat">
-                <div class="portfolio-card__stat-label">HEIGHT</div>
-                <div class="portfolio-card__stat-value" id="curated-height">
-                  <%= formatHeight(heroTalent.height_cm || 180) %> / <%= heroTalent.height_cm || 180 %>cm
+        <div class="homepage-portfolio-showcase__grid">
+          <% featuredTalents.slice(0, 8).forEach((talent, index)=> { %>
+            <a href="/portfolio/<%= talent.slug %>" class="homepage-portfolio-showcase__card" data-index="<%= index %>">
+              <div class="homepage-portfolio-showcase__image-wrapper">
+                <img src="<%= talent.hero_image %>" alt="<%= talent.first_name %> <%= talent.last_name %>"
+                  class="homepage-portfolio-showcase__image" loading="lazy">
+                <div class="homepage-portfolio-showcase__overlay">
+                  <div class="homepage-portfolio-showcase__overlay-content">
+                    <h3 class="homepage-portfolio-showcase__name">
+                      <%= talent.first_name %>
+                        <%= talent.last_name %>
+                    </h3>
+                    <p class="homepage-portfolio-showcase__location">
+                      <%= talent.city %>
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div class="portfolio-card__stat">
-                <div class="portfolio-card__stat-label">MEASUREMENTS</div>
-                <div class="portfolio-card__stat-value" id="curated-measurements">
-                  <%= heroTalent.measurements || '32-25-35' %>
-                </div>
-              </div>
-              <div class="portfolio-card__stat">
-                <div class="portfolio-card__stat-label">SHOE SIZE</div>
-                <div class="portfolio-card__stat-value" id="curated-shoe">
-                  9 US
-                </div>
-              </div>
-              <div class="portfolio-card__stat">
-                <div class="portfolio-card__stat-label">LOCATION</div>
-                <div class="portfolio-card__stat-value" id="curated-location-stat">
-                  <%= heroTalent.city.split(',')[0] %>, Available for Travel
-                </div>
-              </div>
-            </div>
-            
-            <!-- Gallery -->
-            <div class="portfolio-card__gallery">
-              <% heroTalent.gallery_images.slice(0, 4).forEach((img, i) => { %>
-                <div class="portfolio-card__gallery-item">
-                  <img src="<%= normalizeImagePath(img.path) %>" alt="Portfolio image <%= i + 1 %>">
-                  <div class="portfolio-card__gallery-overlay"></div>
-                </div>
-              <% }); %>
-            </div>
-            
-            <!-- Bio section -->
-            <div class="portfolio-card__bio">
-              <p class="portfolio-card__bio-text" id="curated-bio">
-                <%= heroTalent.bio_curated %>
-              </p>
-              <div class="portfolio-card__contact">
-                <div class="portfolio-card__contact-item">
-                  <span class="portfolio-card__contact-label">Instagram</span>
-                  <span class="portfolio-card__contact-value">@<%= heroTalent.first_name.toLowerCase() %>.<%= heroTalent.last_name.toLowerCase().charAt(0) %></span>
-                </div>
-              </div>
-            </div>
-          </div>
+            </a>
+            <% }); %>
         </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-<!-- Portfolio Showcase Grid -->
-<section class="homepage-portfolio-showcase" id="homepage-portfolio-showcase">
-  <div class="homepage-portfolio-showcase__container">
-    <div class="homepage-portfolio-showcase__header">
-      <h2 class="homepage-portfolio-showcase__title">Featured Talent</h2>
-      <p class="homepage-portfolio-showcase__subtitle">Discover our curated portfolio of professional talent</p>
-    </div>
-    
-    <div class="homepage-portfolio-showcase__grid">
-      <% featuredTalents.slice(0, 8).forEach((talent, index) => { %>
-        <a href="/portfolio/<%= talent.slug %>" class="homepage-portfolio-showcase__card" data-index="<%= index %>">
-          <div class="homepage-portfolio-showcase__image-wrapper">
-            <img 
-              src="<%= talent.hero_image %>" 
-              alt="<%= talent.first_name %> <%= talent.last_name %>"
-              class="homepage-portfolio-showcase__image"
-              loading="lazy">
-            <div class="homepage-portfolio-showcase__overlay">
-              <div class="homepage-portfolio-showcase__overlay-content">
-                <h3 class="homepage-portfolio-showcase__name">
-                  <%= talent.first_name %> <%= talent.last_name %>
-                </h3>
-                <p class="homepage-portfolio-showcase__location">
-                  <%= talent.city %>
-                </p>
+    <!-- Agency Partnership Section -->
+    <section class="homepage-agency" id="homepage-agency">
+      <div class="homepage-agency__container">
+        <div class="homepage-agency__content">
+          <div class="homepage-agency__header">
+            <span class="homepage-agency__badge">For Agencies</span>
+            <h2 class="homepage-agency__title">Streamline Your Talent Operations</h2>
+            <p class="homepage-agency__description">
+              ZipSite empowers agencies with AI-curated portfolios, advanced analytics, and seamless talent management
+              tools. Elevate your roster with publication-ready portfolios that showcase talent at their finest.
+            </p>
+          </div>
+
+          <div class="homepage-agency__features">
+            <div class="homepage-agency__feature">
+              <div class="homepage-agency__feature-icon-wrapper">
+                <span class="homepage-agency__feature-icon">✨</span>
+              </div>
+              <div class="homepage-agency__feature-content">
+                <h3 class="homepage-agency__feature-title">AI-Curated Portfolios</h3>
+                <p class="homepage-agency__feature-text">Every talent profile is automatically refined to publication
+                  standards. Bios are enhanced, stats are formatted, and images are curated—all with editorial
+                  precision.</p>
+                <div class="homepage-agency__feature-highlight">
+                  <span>Publication-ready in minutes</span>
+                </div>
+              </div>
+            </div>
+            <div class="homepage-agency__feature">
+              <div class="homepage-agency__feature-icon-wrapper">
+                <span class="homepage-agency__feature-icon">📊</span>
+              </div>
+              <div class="homepage-agency__feature-content">
+                <h3 class="homepage-agency__feature-title">Advanced Analytics</h3>
+                <p class="homepage-agency__feature-text">Track portfolio views, booking inquiries, and talent
+                  performance metrics. Gain insights into which portfolios drive the most engagement and bookings.</p>
+                <div class="homepage-agency__feature-highlight">
+                  <span>Data-driven decisions</span>
+                </div>
+              </div>
+            </div>
+            <div class="homepage-agency__feature">
+              <div class="homepage-agency__feature-icon-wrapper">
+                <span class="homepage-agency__feature-icon">🤝</span>
+              </div>
+              <div class="homepage-agency__feature-content">
+                <h3 class="homepage-agency__feature-title">Talent Management</h3>
+                <p class="homepage-agency__feature-text">Organize your entire roster in one place. Manage bookings,
+                  update portfolios, and collaborate seamlessly with your team and clients.</p>
+                <div class="homepage-agency__feature-highlight">
+                  <span>Streamlined workflow</span>
+                </div>
               </div>
             </div>
           </div>
-        </a>
-      <% }); %>
-    </div>
-  </div>
-</section>
 
-<!-- Agency Partnership Section -->
-<section class="homepage-agency" id="homepage-agency">
-  <div class="homepage-agency__container">
-    <div class="homepage-agency__content">
-      <div class="homepage-agency__header">
-        <span class="homepage-agency__badge">For Agencies</span>
-        <h2 class="homepage-agency__title">Streamline Your Talent Operations</h2>
-        <p class="homepage-agency__description">
-          ZipSite empowers agencies with AI-curated portfolios, advanced analytics, and seamless talent management tools. Elevate your roster with publication-ready portfolios that showcase talent at their finest.
-        </p>
-      </div>
-      
-      <div class="homepage-agency__features">
-        <div class="homepage-agency__feature">
-          <div class="homepage-agency__feature-icon-wrapper">
-            <span class="homepage-agency__feature-icon">✨</span>
-          </div>
-          <div class="homepage-agency__feature-content">
-            <h3 class="homepage-agency__feature-title">AI-Curated Portfolios</h3>
-            <p class="homepage-agency__feature-text">Every talent profile is automatically refined to publication standards. Bios are enhanced, stats are formatted, and images are curated—all with editorial precision.</p>
-            <div class="homepage-agency__feature-highlight">
-              <span>Publication-ready in minutes</span>
-            </div>
-          </div>
-        </div>
-        <div class="homepage-agency__feature">
-          <div class="homepage-agency__feature-icon-wrapper">
-            <span class="homepage-agency__feature-icon">📊</span>
-          </div>
-          <div class="homepage-agency__feature-content">
-            <h3 class="homepage-agency__feature-title">Advanced Analytics</h3>
-            <p class="homepage-agency__feature-text">Track portfolio views, booking inquiries, and talent performance metrics. Gain insights into which portfolios drive the most engagement and bookings.</p>
-            <div class="homepage-agency__feature-highlight">
-              <span>Data-driven decisions</span>
-            </div>
-          </div>
-        </div>
-        <div class="homepage-agency__feature">
-          <div class="homepage-agency__feature-icon-wrapper">
-            <span class="homepage-agency__feature-icon">🤝</span>
-          </div>
-          <div class="homepage-agency__feature-content">
-            <h3 class="homepage-agency__feature-title">Talent Management</h3>
-            <p class="homepage-agency__feature-text">Organize your entire roster in one place. Manage bookings, update portfolios, and collaborate seamlessly with your team and clients.</p>
-            <div class="homepage-agency__feature-highlight">
-              <span>Streamlined workflow</span>
-            </div>
+          <div class="homepage-agency__cta-wrapper">
+            <a href="/partners" class="homepage-agency__cta">
+              <span class="homepage-agency__cta-text">Partner With Us</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </a>
           </div>
         </div>
       </div>
-      
-      <div class="homepage-agency__cta-wrapper">
-        <a href="/partners" class="homepage-agency__cta">
-          <span class="homepage-agency__cta-text">Partner With Us</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
-          </svg>
-        </a>
+    </section>
+
+    <!-- Value Proposition Section -->
+    <section class="homepage-value-prop" id="homepage-value-prop">
+      <div class="homepage-value-prop__inner">
+        <div class="homepage-value-prop__content">
+          <div class="homepage-value-prop__icon">✨</div>
+          <h2 class="homepage-value-prop__headline">
+            See the magic?<br>
+            That's AI curation.
+          </h2>
+          <p class="homepage-value-prop__description">
+            ZipSite's AI transforms raw talent data into publication-ready comp cards. Refined bios, organized stats,
+            and editorial-quality presentation—all in minutes.
+          </p>
+        </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-<!-- Value Proposition Section -->
-<section class="homepage-value-prop" id="homepage-value-prop">
-  <div class="homepage-value-prop__inner">
-    <div class="homepage-value-prop__content">
-      <div class="homepage-value-prop__icon">✨</div>
-      <h2 class="homepage-value-prop__headline">
-        See the magic?<br>
-        That's AI curation.
-      </h2>
-      <p class="homepage-value-prop__description">
-        ZipSite's AI transforms raw talent data into publication-ready comp cards. Refined bios, organized stats, and editorial-quality presentation—all in minutes.
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- Testimonials Section -->
-<section class="homepage-testimonials" id="homepage-testimonials">
-  <div class="homepage-testimonials__inner">
-    <div class="homepage-testimonials__content">
-      <div class="testimonial__image-wrapper">
-        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80" alt="Sarah Chen" class="testimonial__image">
+    <!-- Testimonials Section -->
+    <section class="homepage-testimonials" id="homepage-testimonials">
+      <div class="homepage-testimonials__inner">
+        <div class="homepage-testimonials__content">
+          <div class="testimonial__image-wrapper">
+            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80"
+              alt="Sarah Chen" class="testimonial__image">
+          </div>
+          <blockquote class="testimonial">
+            <p class="testimonial__text">
+              "ZipSite transformed how we manage our talent roster. The AI curation maintains editorial standards while
+              saving hours of manual work. Every comp card is publication-ready."
+            </p>
+            <footer class="testimonial__author">
+              <span class="testimonial__name">Sarah Chen</span>
+              <span class="testimonial__role">Creative Director, Elite Model Management</span>
+            </footer>
+          </blockquote>
+        </div>
       </div>
-      <blockquote class="testimonial">
-        <p class="testimonial__text">
-          "ZipSite transformed how we manage our talent roster. The AI curation maintains editorial standards while saving hours of manual work. Every comp card is publication-ready."
-        </p>
-        <footer class="testimonial__author">
-          <span class="testimonial__name">Sarah Chen</span>
-          <span class="testimonial__role">Creative Director, Elite Model Management</span>
-        </footer>
-      </blockquote>
-    </div>
-  </div>
-</section>
+    </section>
 
-<!-- Final Funnel: Two Paths -->
-<section class="homepage-cta" id="homepage-cta">
-  <div class="homepage-cta__header">
-    <h2 class="homepage-cta__section-title">Choose Your Path</h2>
-    <p class="homepage-cta__section-subtitle">Start free or unlock the full experience</p>
-  </div>
-  <div class="homepage-cta__grid">
-    <div class="homepage-cta__column homepage-cta__column--free">
-      <div class="homepage-cta__badge homepage-cta__badge--free">FREE</div>
-      <div class="homepage-cta__icon homepage-cta__icon--free">📄</div>
-      <h3 class="homepage-cta__title">The Comp Card</h3>
-      <p class="homepage-cta__description">
-        A single, perfect, AI-curated PDF comp card. ZipSite's AI refines your bio, organizes your stats, and delivers a publication-ready portfolio. Free. Forever.
-      </p>
-      <ul class="homepage-cta__features">
-        <li>✓ AI-curated PDF comp card</li>
-        <li>✓ Publication-ready formatting</li>
-        <li>✓ Free forever</li>
-      </ul>
-      <a href="/apply" class="homepage-cta__button button button-primary">Create Free Comp Card</a>
-    </div>
-
-    <div class="homepage-cta__column homepage-cta__column--pro">
-      <div class="homepage-cta__popular-badge">MOST POPULAR</div>
-      <div class="homepage-cta__badge homepage-cta__badge--pro">PRO</div>
-      <div class="homepage-cta__icon homepage-cta__icon--pro">✨</div>
-      <h3 class="homepage-cta__title homepage-cta__title--pro">The Live Portfolio</h3>
-      <p class="homepage-cta__description homepage-cta__description--pro">
-        Your own public portfolio URL with multiple editorial themes, no watermarks, booking analytics, and priority AI curation.
-      </p>
-      <div class="homepage-cta__price homepage-cta__price--pro">
-        <span class="homepage-cta__price-amount homepage-cta__price-amount--pro">$9.99</span>
-        <span class="homepage-cta__price-period">/month</span>
+    <!-- Final Funnel: Two Paths -->
+    <section class="homepage-cta" id="homepage-cta">
+      <div class="homepage-cta__header">
+        <h2 class="homepage-cta__section-title">Choose Your Path</h2>
+        <p class="homepage-cta__section-subtitle">Start free or unlock the full experience</p>
       </div>
-      <ul class="homepage-cta__features homepage-cta__features--pro">
-        <li>✓ Live portfolio URL</li>
-        <li>✓ Multiple editorial themes</li>
-        <li>✓ Booking analytics</li>
-        <li>✓ Priority AI curation</li>
-        <li>✓ No watermarks</li>
-        <li>✓ Custom domain option</li>
-      </ul>
-      <a href="/pro/upgrade" class="homepage-cta__button homepage-cta__button--pro button button-secondary">Upgrade to Pro</a>
-    </div>
-  </div>
-</section>
+      <div class="homepage-cta__grid">
+        <div class="homepage-cta__column homepage-cta__column--free">
+          <div class="homepage-cta__badge homepage-cta__badge--free">FREE</div>
+          <div class="homepage-cta__icon homepage-cta__icon--free">📄</div>
+          <h3 class="homepage-cta__title">The Comp Card</h3>
+          <p class="homepage-cta__description">
+            A single, perfect, AI-curated PDF comp card. ZipSite's AI refines your bio, organizes your stats, and
+            delivers a publication-ready portfolio. Free. Forever.
+          </p>
+          <ul class="homepage-cta__features">
+            <li>✓ AI-curated PDF comp card</li>
+            <li>✓ Publication-ready formatting</li>
+            <li>✓ Free forever</li>
+          </ul>
+          <a href="/apply" class="homepage-cta__button button button-primary">Create Free Comp Card</a>
+        </div>
 
-<script>
-  // Pass talent data to JavaScript
-  window.heroTalent = <%- JSON.stringify(heroTalent) %>;
-</script>
-<script src="/scripts/homepage.js?v=<%= Date.now() %>" defer></script>
+        <div class="homepage-cta__column homepage-cta__column--pro">
+          <div class="homepage-cta__popular-badge">MOST POPULAR</div>
+          <div class="homepage-cta__badge homepage-cta__badge--pro">PRO</div>
+          <div class="homepage-cta__icon homepage-cta__icon--pro">✨</div>
+          <h3 class="homepage-cta__title homepage-cta__title--pro">The Live Portfolio</h3>
+          <p class="homepage-cta__description homepage-cta__description--pro">
+            Your own public portfolio URL with multiple editorial themes, no watermarks, booking analytics, and priority
+            AI curation.
+          </p>
+          <div class="homepage-cta__price homepage-cta__price--pro">
+            <span class="homepage-cta__price-amount homepage-cta__price-amount--pro">$9.99</span>
+            <span class="homepage-cta__price-period">/month</span>
+          </div>
+          <ul class="homepage-cta__features homepage-cta__features--pro">
+            <li>✓ Live portfolio URL</li>
+            <li>✓ Multiple editorial themes</li>
+            <li>✓ Booking analytics</li>
+            <li>✓ Priority AI curation</li>
+            <li>✓ No watermarks</li>
+            <li>✓ Custom domain option</li>
+          </ul>
+          <a href="/pro/upgrade" class="homepage-cta__button homepage-cta__button--pro button button-secondary">Upgrade
+            to Pro</a>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      // Pass talent data to JavaScript
+      window.heroTalent = <% - JSON.stringify(heroTalent) %>;
+    </script>
+    <script src="/scripts/homepage.js?v=<%= Date.now() %>" defer></script>
