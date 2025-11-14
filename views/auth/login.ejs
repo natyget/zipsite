@@ -168,10 +168,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
+      // Store original button text outside try-catch so it's available in error handler
+      const originalText = googleSignInBtn.innerHTML;
+
       try {
         // Show loading state
         googleSignInBtn.disabled = true;
-        const originalText = googleSignInBtn.innerHTML;
         googleSignInBtn.innerHTML = '<span>' + (googleSignInBtn.dataset.loadingText || 'Signing in…') + '</span>';
 
         // Sign in with Google
@@ -187,11 +189,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Reset button state
         googleSignInBtn.disabled = false;
-        googleSignInBtn.innerHTML = originalText || googleSignInBtn.innerHTML;
+        googleSignInBtn.innerHTML = originalText;
 
-        // Show error message
-        const errorMessage = window.getFirebaseErrorMessage ? window.getFirebaseErrorMessage(error) : error.message || 'Google Sign-In failed. Please try again.';
-        showError(errorMessage);
+        // Only show error message if it's not a user cancellation
+        if (error.code !== 'auth/popup-closed-by-user') {
+          const errorMessage = window.getFirebaseErrorMessage ? window.getFirebaseErrorMessage(error) : error.message || 'Google Sign-In failed. Please try again.';
+          showError(errorMessage);
+        }
       }
     });
   }
