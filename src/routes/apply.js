@@ -127,6 +127,9 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       last_name: req.body?.last_name || 'missing',
       has_password: !!req.body?.password,
       has_password_confirm: !!req.body?.password_confirm,
+      has_firebase_token: !!req.body?.firebase_token,
+      firebase_token_length: req.body?.firebase_token?.length || 0,
+      firebase_token_preview: req.body?.firebase_token ? `${req.body.firebase_token.substring(0, 20)}...` : 'missing',
       city: req.body?.city || 'missing',
       height_cm: req.body?.height_cm || 'missing',
       bio: req.body?.bio ? `${req.body.bio.substring(0, 20)}...` : 'missing'
@@ -155,9 +158,18 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       console.log('[Apply] User is not logged in, validating signup...');
 
       // Check if Firebase token exists (Google Sign-In)
-      const idToken = extractIdToken(req) || req.body.firebase_token;
+      // Check body first (for form submissions), then headers/cookies
+      const idToken = req.body?.firebase_token || extractIdToken(req);
       let firebaseEmail = null;
       let firebaseUid = null;
+
+      console.log('[Apply] Checking for Firebase token:', {
+        hasBodyToken: !!req.body?.firebase_token,
+        bodyTokenLength: req.body?.firebase_token?.length || 0,
+        extractedToken: !!extractIdToken(req),
+        idToken: !!idToken,
+        idTokenLength: idToken?.length || 0
+      });
 
       if (idToken) {
         try {
@@ -172,6 +184,8 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
           firebaseEmail = null;
           firebaseUid = null;
         }
+      } else {
+        console.log('[Apply] No Firebase token found in request');
       }
 
       // If Firebase token exists and is valid, use email from token and skip password validation

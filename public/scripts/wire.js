@@ -1924,6 +1924,18 @@
             }
           } else {
             // User already logged in or token exists, submit normally
+            // Double-check that Firebase token is still present
+            const tokenValue = firebaseTokenInput?.value;
+            if (tokenValue) {
+              console.log('[Apply Form] Submitting with Firebase token:', {
+                hasToken: !!tokenValue,
+                tokenLength: tokenValue.length,
+                tokenPreview: tokenValue.substring(0, 20) + '...'
+              });
+            } else {
+              console.warn('[Apply Form] No Firebase token found before submission');
+            }
+            
             if (submitButton) {
               const loadingText = submitButton?.dataset.loadingText;
               if (loadingText) {
@@ -1937,6 +1949,15 @@
             }
             // Merge "Other" fields before submission
             mergeOtherFields();
+            
+            // Ensure firebase_token is still in the form before submission
+            if (!firebaseTokenInput) {
+              console.error('[Apply Form] Firebase token input not found!');
+            } else if (!firebaseTokenInput.value && tokenValue) {
+              console.warn('[Apply Form] Firebase token was cleared, restoring...');
+              firebaseTokenInput.value = tokenValue;
+            }
+            
             applyForm.submit();
           }
         }
@@ -1971,7 +1992,21 @@
       // Check if already authenticated with Google (has Firebase token)
       if (firebaseTokenInput && firebaseTokenInput.value) {
         // User is authenticated with Google, proceed with form submission
+        console.log('[Apply Form] Submitting with Firebase token from form handler:', {
+          hasToken: !!firebaseTokenInput.value,
+          tokenLength: firebaseTokenInput.value.length,
+          tokenPreview: firebaseTokenInput.value.substring(0, 20) + '...'
+        });
+        
         mergeOtherFields();
+        
+        // Ensure token is still in the form
+        if (!firebaseTokenInput.value) {
+          console.error('[Apply Form] Firebase token was cleared before submission!');
+          e.preventDefault();
+          alert('Authentication error. Please sign in again with Google.');
+          return false;
+        }
         
         // Remove the submit handler temporarily to allow submission
         applyForm.removeEventListener('submit', formSubmitHandler);

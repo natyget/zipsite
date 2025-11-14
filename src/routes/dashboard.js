@@ -1401,8 +1401,9 @@ router.get('/dashboard/settings', requireRole('TALENT'), async (req, res, next) 
       .first();
     
     if (!profile) {
-      addMessage(req, 'error', 'Profile not found.');
-      return res.redirect('/apply');
+      // User doesn't have a profile yet - show message and redirect to dashboard
+      addMessage(req, 'info', 'Please complete your profile first. You can access settings after creating your profile.');
+      return res.redirect('/dashboard/talent');
     }
     
     return res.render('dashboard/settings/index', {
@@ -1436,8 +1437,9 @@ router.get('/dashboard/settings/:section', requireRole('TALENT'), async (req, re
       .first();
     
     if (!profile) {
-      addMessage(req, 'error', 'Profile not found.');
-      return res.redirect('/apply');
+      // User doesn't have a profile yet - show message and redirect to dashboard
+      addMessage(req, 'info', 'Please complete your profile first. You can access settings after creating your profile.');
+      return res.redirect('/dashboard/talent');
     }
     
     return res.render('dashboard/settings/index', {
