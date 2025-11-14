@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Check if Firebase Auth is available
-    if (!window.FirebaseAuth || !window.FirebaseAuth.auth) {
+    if (!window.FirebaseAuth || typeof window.FirebaseAuth.signUp !== 'function') {
       console.error('[Partners] Firebase Auth not initialized');
       alert('Authentication system not ready. Please refresh the page and try again.');
       return;

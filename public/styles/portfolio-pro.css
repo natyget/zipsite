@@ -1,0 +1,573 @@
+/* Portfolio Pro - Modern Techy Design */
+
+/* ============================================
+   Base & Layout
+   ============================================ */
+
+.portfolio-pro-body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.portfolio-pro-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.portfolio-pro-bg__gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(201, 165, 90, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(101, 126, 234, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.1); }
+}
+
+.portfolio-pro-bg__grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(201, 165, 90, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201, 165, 90, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.5;
+  animation: gridMove 20s linear infinite;
+}
+
+@keyframes gridMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
+}
+
+.portfolio-pro-bg__particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, rgba(201, 165, 90, 0.3), transparent),
+    radial-gradient(2px 2px at 60px 70px, rgba(255, 255, 255, 0.2), transparent),
+    radial-gradient(1px 1px at 50px 50px, rgba(201, 165, 90, 0.4), transparent),
+    radial-gradient(1px 1px at 80px 20px, rgba(255, 255, 255, 0.1), transparent),
+    radial-gradient(2px 2px at 40px 90px, rgba(201, 165, 90, 0.2), transparent);
+  background-size: 100px 100px;
+  background-repeat: repeat;
+  opacity: 0.4;
+  animation: particlesFloat 30s ease-in-out infinite;
+}
+
+@keyframes particlesFloat {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(20px, 20px) rotate(180deg); }
+}
+
+.portfolio-pro-main {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+.portfolio-pro-wrapper {
+  width: 100%;
+}
+
+.portfolio-pro-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* ============================================
+   Glassmorphic Card
+   ============================================ */
+
+.portfolio-pro-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.portfolio-pro-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(201, 165, 90, 0.3);
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(201, 165, 90, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   Hero Section
+   ============================================ */
+
+.portfolio-pro-hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  overflow: hidden;
+}
+
+.portfolio-pro-hero__bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.portfolio-pro-hero__image-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.portfolio-pro-hero__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.2;
+  filter: grayscale(100%) brightness(0.5);
+  animation: heroImageFloat 20s ease-in-out infinite;
+}
+
+@keyframes heroImageFloat {
+  0%, 100% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.1) translateY(-20px); }
+}
+
+.portfolio-pro-hero__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 15, 0.8) 0%,
+    rgba(26, 26, 46, 0.6) 50%,
+    rgba(22, 33, 62, 0.8) 100%
+  );
+  z-index: 1;
+}
+
+.portfolio-pro-hero__content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.portfolio-pro-hero__card {
+  padding: 3rem;
+  text-align: center;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.portfolio-pro-hero__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.portfolio-pro-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 1rem;
+  background: linear-gradient(135deg, rgba(201, 165, 90, 0.2), rgba(201, 165, 90, 0.1));
+  border: 1px solid rgba(201, 165, 90, 0.4);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #C9A55A;
+  box-shadow: 0 0 20px rgba(201, 165, 90, 0.2);
+}
+
+.portfolio-pro-eyebrow {
+  font-size: 0.875rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+}
+
+/* Animated Gradient Name */
+.portfolio-pro-name {
+  margin: 0 0 1rem 0;
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.portfolio-pro-name__first,
+.portfolio-pro-name__last {
+  background: linear-gradient(135deg, #ffffff 0%, #C9A55A 50%, #ffffff 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientText 4s ease infinite;
+}
+
+@keyframes gradientText {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.portfolio-pro-location {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 2.5rem 0;
+  letter-spacing: 0.05em;
+}
+
+/* Stats Pills */
+.portfolio-pro-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.portfolio-pro-stat {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.portfolio-pro-stat:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(201, 165, 90, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.portfolio-pro-stat__label {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.portfolio-pro-stat__value {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+/* ============================================
+   Bio Section
+   ============================================ */
+
+.portfolio-pro-bio {
+  padding: 6rem 0;
+  position: relative;
+}
+
+.portfolio-pro-bio__card {
+  padding: 3rem;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.portfolio-pro-section-title {
+  font-size: clamp(2rem, 5vw, 2.5rem);
+  font-weight: 700;
+  margin: 0 0 2rem 0;
+  background: linear-gradient(135deg, #ffffff 0%, #C9A55A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+.portfolio-pro-bio__content {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.portfolio-pro-bio__content p {
+  margin: 0 0 1.5rem 0;
+}
+
+.portfolio-pro-bio__subsection {
+  margin-top: 2.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.portfolio-pro-bio__subsection h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.portfolio-pro-social,
+.portfolio-pro-info {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.portfolio-pro-social li,
+.portfolio-pro-info li {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+}
+
+.portfolio-pro-link {
+  color: #C9A55A;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid transparent;
+}
+
+.portfolio-pro-link:hover {
+  color: #ffffff;
+  border-bottom-color: #C9A55A;
+}
+
+.portfolio-pro-info li span {
+  color: rgba(255, 255, 255, 0.5);
+  margin-right: 0.5rem;
+}
+
+/* ============================================
+   Gallery Section
+   ============================================ */
+
+.portfolio-pro-gallery {
+  padding: 6rem 0;
+  position: relative;
+}
+
+.portfolio-pro-gallery .portfolio-pro-section-title {
+  text-align: center;
+  margin-bottom: 3rem;
+  animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+.portfolio-pro-gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  animation: fadeInUp 0.8s ease-out 0.6s both;
+}
+
+.portfolio-pro-gallery__item {
+  margin: 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.portfolio-pro-gallery__item:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(201, 165, 90, 0.4);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(201, 165, 90, 0.2);
+  z-index: 10;
+}
+
+.portfolio-pro-gallery__image {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.portfolio-pro-gallery__item:hover .portfolio-pro-gallery__image {
+  transform: scale(1.1);
+}
+
+.portfolio-pro-gallery__caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+  color: #ffffff;
+  font-size: 0.875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+}
+
+.portfolio-pro-gallery__item:hover .portfolio-pro-gallery__caption {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+
+@media (max-width: 768px) {
+  .portfolio-pro-container {
+    padding: 0 1.5rem;
+  }
+
+  .portfolio-pro-hero {
+    padding: 2rem 1rem;
+    min-height: auto;
+  }
+
+  .portfolio-pro-hero__card {
+    padding: 2rem 1.5rem;
+  }
+
+  .portfolio-pro-name {
+    font-size: clamp(2.5rem, 10vw, 3.5rem);
+  }
+
+  .portfolio-pro-stats {
+    justify-content: flex-start;
+  }
+
+  .portfolio-pro-stat {
+    min-width: 100px;
+    padding: 0.625rem 1rem;
+  }
+
+  .portfolio-pro-bio,
+  .portfolio-pro-gallery {
+    padding: 4rem 0;
+  }
+
+  .portfolio-pro-bio__card {
+    padding: 2rem 1.5rem;
+  }
+
+  .portfolio-pro-gallery__grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .portfolio-pro-hero__header {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .portfolio-pro-stats {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .portfolio-pro-stat {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+/* ============================================
+   Performance Optimizations
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-pro-bg__gradient,
+  .portfolio-pro-bg__grid,
+  .portfolio-pro-bg__particles,
+  .portfolio-pro-hero__image,
+  .portfolio-pro-name__first,
+  .portfolio-pro-name__last {
+    animation: none;
+  }
+
+  .portfolio-pro-card,
+  .portfolio-pro-gallery__item {
+    transition: none;
+  }
+}
+
+/* Disable backdrop-filter on older browsers */
+@supports not (backdrop-filter: blur(20px)) {
+  .portfolio-pro-card {
+    background: rgba(10, 10, 15, 0.9);
+  }
+}
+

@@ -241,12 +241,14 @@ router.get('/portfolio/:slug', async (req, res, next) => {
 
     // Render portfolio page
     res.locals.currentPage = 'portfolio';
+    // Use pro layout for pro portfolios (no header/footer), regular layout for free
+    const layoutType = profile.is_pro ? 'portfolio-pro' : 'layout';
     return res.render('portfolio/show', {
       title: `${profile.first_name} ${profile.last_name}`,
       profile,
       images,
       heightFeet: toFeetInches(profile.height_cm),
-      layout: 'layout', // Portfolio is a public page, use public layout
+      layout: layoutType,
       currentPage: 'portfolio'
     });
   } catch (error) {
@@ -264,12 +266,13 @@ router.get('/portfolio/:slug', async (req, res, next) => {
       if (demoData) {
         console.log('[Portfolio Route] Using demo fallback in catch handler');
         res.locals.currentPage = 'portfolio';
+        const demoLayoutType = demoData.profile.is_pro ? 'portfolio-pro' : 'layout';
         return res.render('portfolio/show', {
           title: `${demoData.profile.first_name} ${demoData.profile.last_name}`,
           profile: demoData.profile,
           images: demoData.images,
           heightFeet: toFeetInches(demoData.profile.height_cm),
-          layout: 'layout',
+          layout: demoLayoutType,
           currentPage: 'portfolio'
         });
       }

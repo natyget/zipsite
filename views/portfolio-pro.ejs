@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof title !== 'undefined' ? title : 'Portfolio' %> — ZipSite Pro</title>
+  <link rel="stylesheet" href="/styles/global.css">
+  <link rel="stylesheet" href="/styles/portfolio-pro.css">
+  <style>
+    /* Prevent flash of unstyled content */
+    body { opacity: 0; transition: opacity 0.3s ease; }
+    body.loaded { opacity: 1; }
+  </style>
+</head>
+<body class="portfolio-pro-body">
+  <!-- Animated background elements -->
+  <div class="portfolio-pro-bg">
+    <div class="portfolio-pro-bg__gradient"></div>
+    <div class="portfolio-pro-bg__grid"></div>
+    <div class="portfolio-pro-bg__particles"></div>
+  </div>
+
+  <!-- Main content area -->
+  <main class="portfolio-pro-main">
+    <%- body %>
+  </main>
+
+  <!-- Scripts -->
+  <script src="/scripts/portfolio-pro.js" defer></script>
+  <script>
+    // Prevent flash of unstyled content
+    document.addEventListener('DOMContentLoaded', function() {
+      document.body.classList.add('loaded');
+    });
+  </script>
+</body>
+</html>
+

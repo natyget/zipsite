@@ -117,14 +117,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Check if Firebase Auth is available
-    if (!window.FirebaseAuth || !window.FirebaseAuth.auth) {
+    if (!window.FirebaseAuth || typeof window.FirebaseAuth.signIn !== 'function') {
       console.error('[Login] Firebase Auth not initialized');
-      console.error('[Login] Firebase config:', window.FIREBASE_CONFIG);
+      console.error('[Login] Firebase Auth available:', !!window.FirebaseAuth);
       
       // Provide more helpful error message
       let errorMsg = 'Authentication system not ready. ';
-      if (!window.FIREBASE_CONFIG || !window.FIREBASE_CONFIG.apiKey) {
-        errorMsg += 'Firebase configuration is missing. Please check that environment variables are set correctly.';
+      if (!window.firebaseAuth) {
+        errorMsg += 'Firebase is initializing. Please wait a moment and try again.';
       } else {
         errorMsg += 'Please refresh the page and try again.';
       }
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Google Sign-In
   if (googleSignInBtn) {
     googleSignInBtn.addEventListener('click', async function() {
-      if (!window.FirebaseAuth || !window.FirebaseAuth.auth) {
+      if (!window.FirebaseAuth || typeof window.FirebaseAuth.signInWithGoogle !== 'function') {
         console.error('[Login] Firebase Auth not initialized');
         alert('Authentication system not ready. Please refresh the page and try again.');
         return;

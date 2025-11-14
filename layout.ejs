@@ -95,52 +95,59 @@
           <% } %>
 
             <!-- Scripts -->
-            <!-- Firebase SDK -->
-            <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-            <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-            <!-- Firebase Config -->
-            <script>
-              (function() {
-                // Get config from EJS template variable
-                var firebaseConfigFromServer = <%- typeof firebaseConfig !== "undefined" && firebaseConfig ? JSON.stringify({
-                  apiKey: firebaseConfig.apiKey || '',
-                  authDomain: firebaseConfig.authDomain || '',
-                  projectId: firebaseConfig.projectId || ''
-                }) : JSON.stringify({
-                  apiKey: '',
-                  authDomain: '',
-                  projectId: ''
-                }) %>;
+            <!-- Firebase SDK - ES Module (Official CDN Guide) -->
+            <script type="module">
+              // Import the functions you need from the SDKs you need
+              import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+              import { getAuth } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+              
+              // Your web app's Firebase configuration (injected from server)
+              const firebaseConfig = <%- typeof firebaseConfig !== "undefined" && firebaseConfig ? JSON.stringify({
+                apiKey: firebaseConfig.apiKey || '',
+                authDomain: firebaseConfig.authDomain || '',
+                projectId: firebaseConfig.projectId || '',
+                storageBucket: firebaseConfig.storageBucket || '',
+                messagingSenderId: firebaseConfig.messagingSenderId || '',
+                appId: firebaseConfig.appId || '',
+                measurementId: firebaseConfig.measurementId || ''
+              }) : JSON.stringify({
+                apiKey: '',
+                authDomain: '',
+                projectId: '',
+                storageBucket: '',
+                messagingSenderId: '',
+                appId: '',
+                measurementId: ''
+              }) %>;
+              
+              // Initialize Firebase
+              let app;
+              let auth;
+              
+              try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
                 
-                // Set global config
-                window.FIREBASE_CONFIG = firebaseConfigFromServer || {
-                  apiKey: '',
-                  authDomain: '',
-                  projectId: ''
-                };
+                // Export auth instance to window for use by other scripts
+                window.firebaseAuth = auth;
+                window.firebaseApp = app;
                 
-                // Log config status for debugging
-                console.log('[Firebase] Config loaded:', {
-                  hasApiKey: !!window.FIREBASE_CONFIG.apiKey,
-                  hasAuthDomain: !!window.FIREBASE_CONFIG.authDomain,
-                  hasProjectId: !!window.FIREBASE_CONFIG.projectId,
-                  apiKeyLength: window.FIREBASE_CONFIG.apiKey ? window.FIREBASE_CONFIG.apiKey.length : 0,
-                  authDomain: window.FIREBASE_CONFIG.authDomain,
-                  projectId: window.FIREBASE_CONFIG.projectId
+                console.log('[Firebase] Initialized successfully:', {
+                  hasApiKey: !!firebaseConfig.apiKey,
+                  hasAuthDomain: !!firebaseConfig.authDomain,
+                  hasProjectId: !!firebaseConfig.projectId,
+                  authReady: !!auth
                 });
-                
-                if (!window.FIREBASE_CONFIG.apiKey || !window.FIREBASE_CONFIG.authDomain || !window.FIREBASE_CONFIG.projectId) {
-                  console.error('[Firebase] Configuration incomplete. Authentication will not work.');
-                  console.error('[Firebase] Missing values:', {
-                    apiKey: !window.FIREBASE_CONFIG.apiKey,
-                    authDomain: !window.FIREBASE_CONFIG.authDomain,
-                    projectId: !window.FIREBASE_CONFIG.projectId
-                  });
-                  console.error('[Firebase] Raw config object:', window.FIREBASE_CONFIG);
-                }
-              })();
+              } catch (error) {
+                console.error('[Firebase] Initialization error:', error);
+                console.error('[Firebase] Config used:', {
+                  apiKey: firebaseConfig.apiKey ? 'SET' : 'MISSING',
+                  authDomain: firebaseConfig.authDomain ? 'SET' : 'MISSING',
+                  projectId: firebaseConfig.projectId ? 'SET' : 'MISSING'
+                });
+              }
             </script>
-            <script src="/scripts/firebase-auth.js" defer></script>
+            <script type="module" src="/scripts/firebase-auth.js"></script>
             <script src="/scripts/main.js" defer></script>
             <script src="/scripts/wire.js" defer></script>
 </body>

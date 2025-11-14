@@ -1717,7 +1717,7 @@
             const email = emailInput.value.trim();
             const password = passwordInput.value;
             
-            if (email && password && window.FirebaseAuth && window.FirebaseAuth.auth) {
+            if (email && password && window.FirebaseAuth && typeof window.FirebaseAuth.signUp === 'function') {
               // Show loading state
               if (submitButton) {
                 submitButton.disabled = true;
@@ -1826,7 +1826,7 @@
         const email = emailInput.value.trim();
         const password = passwordInput.value;
         
-        if (email && password && window.FirebaseAuth && window.FirebaseAuth.auth) {
+        if (email && password && window.FirebaseAuth && typeof window.FirebaseAuth.signUp === 'function') {
           const submitButton = applyForm.querySelector('[type="submit"]');
           const originalText = submitButton ? submitButton.textContent : '';
           
