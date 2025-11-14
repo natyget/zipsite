@@ -1687,7 +1687,7 @@
     };
 
     // Next button handler
-    nextButton.addEventListener('click', function(e) {
+    nextButton.addEventListener('click', async function(e) {
       // Always prevent default to avoid accidental form submission
       e.preventDefault();
       e.stopPropagation();

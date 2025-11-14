@@ -100,25 +100,45 @@
             <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
             <!-- Firebase Config -->
             <script>
-              window.FIREBASE_CONFIG = <%- typeof firebaseConfig !== "undefined" && firebaseConfig ? JSON.stringify({
-                apiKey: firebaseConfig.apiKey || '',
-                authDomain: firebaseConfig.authDomain || '',
-                projectId: firebaseConfig.projectId || ''
-              }) : JSON.stringify({
-                apiKey: '',
-                authDomain: '',
-                projectId: ''
-              }) %>;
-              
-              // Log config status for debugging (remove in production if desired)
-              if (!window.FIREBASE_CONFIG.apiKey || !window.FIREBASE_CONFIG.authDomain || !window.FIREBASE_CONFIG.projectId) {
-                console.warn('[Firebase] Configuration incomplete. Authentication will not work.');
-                console.warn('[Firebase] Missing environment variables on server:', {
-                  apiKey: !window.FIREBASE_CONFIG.apiKey,
-                  authDomain: !window.FIREBASE_CONFIG.authDomain,
-                  projectId: !window.FIREBASE_CONFIG.projectId
+              (function() {
+                // Get config from EJS template variable
+                var firebaseConfigFromServer = <%- typeof firebaseConfig !== "undefined" && firebaseConfig ? JSON.stringify({
+                  apiKey: firebaseConfig.apiKey || '',
+                  authDomain: firebaseConfig.authDomain || '',
+                  projectId: firebaseConfig.projectId || ''
+                }) : JSON.stringify({
+                  apiKey: '',
+                  authDomain: '',
+                  projectId: ''
+                }) %>;
+                
+                // Set global config
+                window.FIREBASE_CONFIG = firebaseConfigFromServer || {
+                  apiKey: '',
+                  authDomain: '',
+                  projectId: ''
+                };
+                
+                // Log config status for debugging
+                console.log('[Firebase] Config loaded:', {
+                  hasApiKey: !!window.FIREBASE_CONFIG.apiKey,
+                  hasAuthDomain: !!window.FIREBASE_CONFIG.authDomain,
+                  hasProjectId: !!window.FIREBASE_CONFIG.projectId,
+                  apiKeyLength: window.FIREBASE_CONFIG.apiKey ? window.FIREBASE_CONFIG.apiKey.length : 0,
+                  authDomain: window.FIREBASE_CONFIG.authDomain,
+                  projectId: window.FIREBASE_CONFIG.projectId
                 });
-              }
+                
+                if (!window.FIREBASE_CONFIG.apiKey || !window.FIREBASE_CONFIG.authDomain || !window.FIREBASE_CONFIG.projectId) {
+                  console.error('[Firebase] Configuration incomplete. Authentication will not work.');
+                  console.error('[Firebase] Missing values:', {
+                    apiKey: !window.FIREBASE_CONFIG.apiKey,
+                    authDomain: !window.FIREBASE_CONFIG.authDomain,
+                    projectId: !window.FIREBASE_CONFIG.projectId
+                  });
+                  console.error('[Firebase] Raw config object:', window.FIREBASE_CONFIG);
+                }
+              })();
             </script>
             <script src="/scripts/firebase-auth.js" defer></script>
             <script src="/scripts/main.js" defer></script>
