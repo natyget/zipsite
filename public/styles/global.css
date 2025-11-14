@@ -9,6 +9,8 @@
   --shadow-soft: 0 24px 60px -40px rgba(15, 23, 42, 0.35);
   --radius-card: 18px;
   --max-width: 1240px;
+  /* Header height: padding-top (1.75rem = 28px) + min-height (2.5rem = 40px) + padding-bottom (1.75rem = 28px) ≈ 96px, rounded to 80px for safe-area */
+  --header-height: 80px;
 }
 
 * {
@@ -11417,7 +11419,7 @@ body.filmstrip-hover {
 .transformation-hero {
   position: relative;
   background: #FAF9F7;
-  padding: 4rem 2rem 4rem;
+  padding: calc(6rem + var(--header-height, 80px)) 2rem 4rem;
   margin-top: 0;
   overflow: hidden;
 }
@@ -15406,7 +15408,7 @@ body.filmstrip-hover {
 
 @media (max-width: 768px) {
   .transformation-hero {
-    padding: 6rem 1rem 3rem;
+    padding: calc(4rem + var(--header-height, 80px)) 1rem 3rem;
     min-height: auto;
   }
 
