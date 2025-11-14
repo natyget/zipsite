@@ -1,71 +1,176 @@
-<section class="hero" style="padding-bottom:3rem;">
-  <div class="container hero-grid">
-    <div class="hero-copy motion-reveal">
-      <span class="badge">Media</span>
-      <h1>Contact Us</h1>
-      <p>Get in touch with the ZipSite team. Download the press kit, explore our story, and connect directly for interviews, partnerships, or collaborations.</p>
-      <div class="hero-actions">
-        <a class="button button-primary" href="#press-kit">Download press kit</a>
-        <a class="button button-secondary" href="mailto:press@zipsite.com">Contact press</a>
+<!-- Editorial Header: Compact and elegant -->
+<section class="press-header" id="press-header">
+  <div class="press-header__container">
+    <span class="press-header__badge">Press</span>
+    <h1 class="press-header__headline">
+      <span class="press-header__headline-fashion">Media resources.</span>
+      <span class="press-header__headline-ai">Press inquiries.</span>
+    </h1>
+    <p class="press-header__subheadline">Get the latest news, download press materials, and connect with our team for media coverage, partnerships, and collaborations.</p>
+    <div class="press-header__accent"></div>
+  </div>
+</section>
+
+<!-- Press Releases / News Section -->
+<section class="press-spread press-spread--news" id="press-news">
+  <div class="press-spread__container">
+    <div class="press-spread__header">
+      <h2 class="press-spread__title">Latest News</h2>
+      <p class="press-spread__subtitle">Product launches, company updates, and industry insights.</p>
+    </div>
+    
+    <div class="press-news-grid" id="press-news-grid">
+      <!-- News Item 1 -->
+      <article class="press-news-card">
+        <div class="press-news-card__date">November 2024</div>
+        <h3 class="press-news-card__title">ZipSite Launches AI-Powered Talent Portfolio Platform</h3>
+        <p class="press-news-card__excerpt">Introducing editorial-quality portfolio creation for models, actors, and talent. Transform raw data into publication-ready comp cards and portfolios with AI precision.</p>
+        <a href="#" class="press-news-card__link">Read more →</a>
+      </article>
+
+      <!-- News Item 2 -->
+      <article class="press-news-card">
+        <div class="press-news-card__date">October 2024</div>
+        <h3 class="press-news-card__title">Pro Features Now Available for Agencies</h3>
+        <p class="press-news-card__excerpt">Agencies can now customize portfolios with custom branding, domains, and analytics. Professional tools for professional representation.</p>
+        <a href="#" class="press-news-card__link">Read more →</a>
+      </article>
+
+      <!-- News Item 3 -->
+      <article class="press-news-card">
+        <div class="press-news-card__date">September 2024</div>
+        <h3 class="press-news-card__title">ZipSite Beta Opens to Talent Community</h3>
+        <p class="press-news-card__excerpt">Early access program launches with select talent and agencies. Feedback shapes the future of portfolio management.</p>
+        <a href="#" class="press-news-card__link">Read more →</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- Media Kit Downloads Section -->
+<section class="press-spread press-spread--media-kit" id="press-kit">
+  <div class="press-spread__container">
+    <div class="press-spread__header">
+      <h2 class="press-spread__title">Press Materials</h2>
+      <p class="press-spread__subtitle">Logos, product imagery, and executive bios curated for editorial coverage.</p>
+    </div>
+    
+    <div class="media-kit-grid" id="media-kit-grid">
+      <!-- Media Kit Card 1: Brand Assets -->
+      <article class="media-kit-card">
+        <div class="media-kit-card__icon">🎨</div>
+        <h3 class="media-kit-card__title">Brand Assets</h3>
+        <p class="media-kit-card__description">Includes monochrome and inverted logo files, usage guidance, and typography lockups.</p>
+        <a href="#" class="media-kit-card__button button button-secondary">Download .zip</a>
+      </article>
+
+      <!-- Media Kit Card 2: Product Visuals -->
+      <article class="media-kit-card">
+        <div class="media-kit-card__icon">📸</div>
+        <h3 class="media-kit-card__title">Product Visuals</h3>
+        <p class="media-kit-card__description">High-resolution mockups of the comp card, pro site, and application flow.</p>
+        <a href="#" class="media-kit-card__button button button-secondary">Download .zip</a>
+      </article>
+
+      <!-- Media Kit Card 3: Executive Bios -->
+      <article class="media-kit-card">
+        <div class="media-kit-card__icon">👥</div>
+        <h3 class="media-kit-card__title">Executive Bios</h3>
+        <p class="media-kit-card__description">Brief introductions to the founding team and leadership quotes for media use.</p>
+        <a href="#" class="media-kit-card__button button button-secondary">Download .zip</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- Company Information Section -->
+<section class="press-spread press-spread--company" id="press-company">
+  <div class="press-spread__container">
+    <div class="press-spread__header">
+      <h2 class="press-spread__title">About ZipSite</h2>
+      <p class="press-spread__subtitle">Transforming how talent and agencies work together.</p>
+    </div>
+    
+    <div class="press-company-content">
+      <div class="press-company__text">
+        <p class="press-company__description">ZipSite is an AI-powered platform that transforms unorganized talent data into publication-ready portfolios and comp cards. We combine editorial precision with modern technology to help models, actors, and talent professionals create stunning portfolios that stand out.</p>
+        <p class="press-company__description">Founded in 2024, ZipSite serves both individual talent and agencies with tools that streamline portfolio creation, enhance brand presentation, and provide professional analytics.</p>
+      </div>
+      
+      <div class="press-company__stats">
+        <div class="press-company__stat">
+          <div class="press-company__stat-number">2024</div>
+          <div class="press-company__stat-label">Founded</div>
+        </div>
+        <div class="press-company__stat">
+          <div class="press-company__stat-number">AI-Powered</div>
+          <div class="press-company__stat-label">Editorial Curation</div>
+        </div>
+        <div class="press-company__stat">
+          <div class="press-company__stat-number">Professional</div>
+          <div class="press-company__stat-label">Grade Tools</div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section" id="press-kit" aria-labelledby="press-kit-heading">
-  <div class="container">
-    <div class="section-heading motion-reveal">
-      <h2 id="press-kit-heading">Press materials</h2>
-      <p>Logos, product imagery, and executive bios curated for editorial coverage.</p>
+<!-- Contact Section -->
+<section class="press-spread press-spread--contact" id="press-contact">
+  <div class="press-spread__container">
+    <div class="press-spread__header">
+      <h2 class="press-spread__title">Contact Us</h2>
+      <p class="press-spread__subtitle">We respond to press inquiries within one business day.</p>
     </div>
-    <div class="grid cols-3">
-      <article class="card motion-reveal" data-delay="40">
-        <h3>Brand marks</h3>
-        <p>Includes monochrome and inverted logo files, usage guidance, and typography lockups.</p>
-        <a class="button button-secondary" href="#">Download .zip</a>
-      </article>
-      <article class="card motion-reveal" data-delay="80">
-        <h3>Product visuals</h3>
-        <p>High-resolution mockups of the comp card, pro site, and application flow.</p>
-        <a class="button button-secondary" href="#">Download .zip</a>
-      </article>
-      <article class="card motion-reveal" data-delay="120">
-        <h3>Executive bios</h3>
-        <p>Brief introductions to the founding team and leadership quotes for media use.</p>
-        <a class="button button-secondary" href="#">Download .zip</a>
-      </article>
-    </div>
-  </div>
-</section>
-
-<section class="section" aria-labelledby="contact">
-  <div class="container">
-    <div class="section-heading motion-reveal">
-      <h2 id="contact">Contact</h2>
-      <p>We respond to press inquiries within one business day.</p>
-    </div>
-    <div class="grid" style="grid-template-columns: repeat(auto-fit,minmax(320px,1fr)); gap:3rem; align-items:start;">
-      <div class="motion-reveal">
-        <h3>Press</h3>
-        <p class="muted">press@zipsite.com</p>
-        <h3>Partnerships</h3>
-        <p class="muted">partners@zipsite.com</p>
-        <h3>Investors</h3>
-        <p class="muted">invest@zipsite.com</p>
+    
+    <div class="press-contact-section">
+      <!-- Contact Information -->
+      <div class="press-contact__info">
+        <div class="press-contact__item">
+          <h3 class="press-contact__item-title">Press</h3>
+          <p class="press-contact__item-value">
+            <a href="mailto:press@zipsite.com">press@zipsite.com</a>
+          </p>
+          <p class="press-contact__item-description">Media inquiries, interview requests, and editorial coverage.</p>
+        </div>
+        
+        <div class="press-contact__item">
+          <h3 class="press-contact__item-title">Partnerships</h3>
+          <p class="press-contact__item-value">
+            <a href="mailto:partners@zipsite.com">partners@zipsite.com</a>
+          </p>
+          <p class="press-contact__item-description">Agency partnerships, integrations, and collaboration opportunities.</p>
+        </div>
+        
+        <div class="press-contact__item">
+          <h3 class="press-contact__item-title">Investors</h3>
+          <p class="press-contact__item-value">
+            <a href="mailto:invest@zipsite.com">invest@zipsite.com</a>
+          </p>
+          <p class="press-contact__item-description">Investment inquiries and business opportunities.</p>
+        </div>
       </div>
-      <form class="motion-reveal" data-delay="120" action="https://formsubmit.co/press@zipsite.com" method="POST">
-        <label for="name">Name</label>
-        <input type="text" id="name" name="name" required>
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required>
-        <label for="message">Message</label>
-        <textarea id="message" name="message" rows="5" required></textarea>
+      
+      <!-- Contact Form -->
+      <form class="press-contact__form" action="https://formsubmit.co/press@zipsite.com" method="POST">
+        <div class="press-contact__field">
+          <label for="contact-name" class="press-contact__label">Name</label>
+          <input type="text" id="contact-name" name="name" class="press-contact__input" required>
+        </div>
+        
+        <div class="press-contact__field">
+          <label for="contact-email" class="press-contact__label">Email</label>
+          <input type="email" id="contact-email" name="email" class="press-contact__input" required>
+        </div>
+        
+        <div class="press-contact__field">
+          <label for="contact-message" class="press-contact__label">Message</label>
+          <textarea id="contact-message" name="message" rows="5" class="press-contact__textarea" required></textarea>
+        </div>
+        
         <input type="hidden" name="_subject" value="ZipSite Press Inquiry">
-        <input class="button button-primary" type="submit" value="Send inquiry">
+        <button type="submit" class="press-contact__submit button button-primary">Send Inquiry</button>
       </form>
     </div>
   </div>
 </section>
-
-<script src="/scripts/main.js" defer></script>
-

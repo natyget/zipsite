@@ -438,7 +438,7 @@ app.get('/', async (req, res, next) => {
 ['features', 'pricing', 'press', 'legal'].forEach((page) => {
   app.get(`/${page}`, (req, res) => {
     res.locals.currentPage = page;
-    const pageTitle = page === 'press' ? 'Contact Us' : (page.charAt(0).toUpperCase() + page.slice(1));
+    const pageTitle = page.charAt(0).toUpperCase() + page.slice(1);
     res.render(`public/${page}`, {
       title: pageTitle + ' — ZipSite',
       layout: 'layout',
