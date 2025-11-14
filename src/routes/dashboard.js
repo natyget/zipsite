@@ -243,7 +243,7 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
     'portfolio_url', 'instagram_handle', 'twitter_handle', 'tiktok_handle',
     'reference_name', 'reference_email', 'reference_phone',
     'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
-    'work_status', 'bio', 'date_of_birth', 'age', 'language_other_input'
+    'work_status', 'bio', 'date_of_birth'
   ];
   
   // Enum fields that need special handling - empty strings should be undefined
@@ -261,6 +261,17 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
     if (processedBody[field] === '') {
       processedBody[field] = undefined;
     }
+  }
+  
+  // Remove fields that aren't in the validation schema to avoid .strict() errors
+  // These are UI helper fields or calculated fields that shouldn't be validated
+  const fieldsToRemove = [
+    'age', // Calculated from date_of_birth, not a form field
+    'language_other_input' // UI helper field, not stored directly
+  ];
+  
+  for (const field of fieldsToRemove) {
+    delete processedBody[field];
   }
   
   console.log('[Dashboard/Talent POST] Processing profile update request:', {
