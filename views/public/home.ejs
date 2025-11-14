@@ -303,7 +303,7 @@
 
                 <!-- Gallery -->
                 <div class="portfolio-card__gallery">
-                  <% heroTalent.gallery_images.slice(0, 4).forEach((img, i)=> { %>
+                  <% heroTalent.gallery_images.slice(0, 4).forEach((img, i) => { %>
                     <div class="portfolio-card__gallery-item">
                       <img src="<%= normalizeImagePath(img.path) %>" alt="Portfolio image <%= i + 1 %>">
                       <div class="portfolio-card__gallery-overlay"></div>
@@ -340,7 +340,7 @@
         </div>
 
         <div class="homepage-portfolio-showcase__grid">
-          <% featuredTalents.slice(0, 8).forEach((talent, index)=> { %>
+          <% featuredTalents.slice(0, 8).forEach((talent, index) => { %>
             <a href="/portfolio/<%= talent.slug %>" class="homepage-portfolio-showcase__card" data-index="<%= index %>">
               <div class="homepage-portfolio-showcase__image-wrapper">
                 <img src="<%= talent.hero_image %>" alt="<%= talent.first_name %> <%= talent.last_name %>"
@@ -522,6 +522,6 @@
 
     <script>
       // Pass talent data to JavaScript
-      window.heroTalent = <% - JSON.stringify(heroTalent) %>;
+      window.heroTalent = <%- JSON.stringify(heroTalent) %>;
     </script>
     <script src="/scripts/homepage.js?v=<%= Date.now() %>" defer></script>
