@@ -408,6 +408,8 @@ const applyProfileSchema = z
 
 const talentProfileUpdateSchema = z
   .object({
+    first_name: nameSchema.optional(),
+    last_name: nameSchema.optional(),
     city: nameSchema.optional(),
     city_secondary: nameSchema.optional(),
     height_cm: heightSchema.optional(),

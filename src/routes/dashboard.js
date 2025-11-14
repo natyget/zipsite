@@ -210,8 +210,45 @@ router.get('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =>
 });
 
 router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) => {
-  const parsed = talentProfileUpdateSchema.safeParse(req.body);
+  // Preprocess req.body to merge "_other" fields into main fields before validation
+  // This is needed because the form submits both the select value and the "_other" text input
+  // We need to merge them into the main field before Zod validation
+  const processedBody = { ...req.body };
+  
+  // Merge "Other" fields into main fields
+  // If the main field value is "Other" and an "_other" field exists with a value, use the "_other" value
+  const otherFieldMappings = [
+    { main: 'shoe_size', other: 'shoe_size_other' },
+    { main: 'eye_color', other: 'eye_color_other' },
+    { main: 'hair_color', other: 'hair_color_other' },
+    { main: 'skin_tone', other: 'skin_tone_other' },
+    { main: 'work_status', other: 'work_status_other' }
+  ];
+  
+  for (const { main, other } of otherFieldMappings) {
+    if (processedBody[main] === 'Other' && processedBody[other] && processedBody[other].trim()) {
+      processedBody[main] = processedBody[other].trim();
+      console.log(`[Dashboard/Talent POST] Merged "${other}" into "${main}":`, processedBody[main]);
+    }
+    // Remove the "_other" field to avoid strict validation errors
+    delete processedBody[other];
+  }
+  
+  console.log('[Dashboard/Talent POST] Processing profile update request:', {
+    userId: req.session.userId,
+    bodyKeys: Object.keys(req.body),
+    processedBodyKeys: Object.keys(processedBody),
+    hasCity: !!processedBody.city,
+    hasPhone: !!processedBody.phone,
+    hasHeight: !!processedBody.height_cm
+  });
+  
+  const parsed = talentProfileUpdateSchema.safeParse(processedBody);
   if (!parsed.success) {
+    console.error('[Dashboard/Talent POST] Validation failed:', {
+      errors: parsed.error.flatten().fieldErrors,
+      body: processedBody
+    });
     const fieldErrors = parsed.error.flatten().fieldErrors;
     try {
       // Ensure userId exists in session
@@ -256,7 +293,7 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
           currentTheme: getDefaultTheme(),
           baseUrl: `${req.protocol}://${req.get('host')}`,
           formErrors: fieldErrors,
-          values: req.body,
+          values: processedBody,
           showProfileForm: true
         });
       }
@@ -287,7 +324,7 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
         currentTheme: profile.pdf_theme || getDefaultTheme(),
         baseUrl: `${req.protocol}://${req.get('host')}`,
         formErrors: fieldErrors,
-        values: req.body
+        values: processedBody
       });
     } catch (error) {
       console.error('[Dashboard/Talent POST] Error in validation error handler:', {
@@ -328,12 +365,10 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
       const placeholderFirstName = emailParts.charAt(0).toUpperCase() + emailParts.slice(1).split('.')[0];
       const placeholderLastName = 'User';
       
-      const profileId = uuidv4();
-      const slug = await ensureUniqueSlug(knex, 'profiles', `${placeholderFirstName}-${placeholderLastName}`);
-      
       // Extract all fields from parsed data (now optional)
+      // Note: "_other" fields have already been merged into main fields during preprocessing
       const {
-        city, city_secondary, height_cm, bio,
+        first_name, last_name, city, city_secondary, height_cm, bio,
         gender, date_of_birth, weight_kg, weight_lbs, dress_size, hair_length, skin_tone,
         languages, availability_travel, availability_schedule, experience_level, training, portfolio_url,
         instagram_handle, twitter_handle, tiktok_handle,
@@ -342,6 +377,23 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
         work_eligibility, work_status, union_membership, ethnicity, tattoos, piercings, comfort_levels, previous_representations,
         phone, bust, waist, hips, shoe_size, eye_color, hair_color, specialties, experience_details
       } = parsed.data;
+      
+      // Use provided names or placeholders
+      const finalFirstName = first_name || placeholderFirstName;
+      const finalLastName = last_name || placeholderLastName;
+      
+      const profileId = uuidv4();
+      const slug = await ensureUniqueSlug(knex, 'profiles', `${finalFirstName}-${finalLastName}`);
+      
+      console.log('[Dashboard/Talent POST] Creating profile with data:', {
+        userId: req.session.userId,
+        firstName: finalFirstName,
+        lastName: finalLastName,
+        city: city || null,
+        phone: phone || null,
+        height_cm: height_cm || null,
+        hasBio: !!bio
+      });
       
       // Calculate age from date of birth
       let age = null;
@@ -375,14 +427,14 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
       
       // Create minimal profile with the form data
       // Use provided values or defaults
-      const curatedBio = bio ? curateBio(bio, placeholderFirstName, placeholderLastName) : null;
+      const curatedBio = bio ? curateBio(bio, finalFirstName, finalLastName) : null;
       
       await knex('profiles').insert({
         id: profileId,
         user_id: req.session.userId,
         slug,
-        first_name: placeholderFirstName,
-        last_name: placeholderLastName,
+        first_name: finalFirstName,
+        last_name: finalLastName,
         city: city || null,
         city_secondary: city_secondary || null,
         phone: phone || null,
@@ -436,12 +488,14 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
         pdf_customizations: null
       });
       
-      console.log('[Dashboard/Talent POST] Created minimal profile:', {
+      console.log('[Dashboard/Talent POST] Created profile successfully:', {
         profileId,
         userId: req.session.userId,
         slug,
-        firstName: placeholderFirstName,
-        lastName: placeholderLastName
+        firstName: finalFirstName,
+        lastName: finalLastName,
+        city: city || null,
+        phone: phone || null
       });
       
       // Reload profile
@@ -463,7 +517,7 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
     // Profile exists - update it
     // Extract all fields from parsed data (now optional)
     const {
-      city, city_secondary, height_cm, measurements, bio,
+      first_name, last_name, city, city_secondary, height_cm, measurements, bio,
       gender, date_of_birth, weight_kg, weight_lbs, dress_size, hair_length, skin_tone,
       languages, availability_travel, availability_schedule, experience_level, training, portfolio_url,
       instagram_handle, twitter_handle, tiktok_handle,
@@ -473,7 +527,11 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
       phone, bust, waist, hips, shoe_size, eye_color, hair_color, specialties
     } = parsed.data;
     
-    const curatedBio = bio ? curateBio(bio, profile.first_name, profile.last_name) : profile.bio_curated;
+    // Update first_name and last_name if provided, otherwise keep existing
+    const updatedFirstName = first_name !== undefined ? first_name : profile.first_name;
+    const updatedLastName = last_name !== undefined ? last_name : profile.last_name;
+    
+    const curatedBio = bio ? curateBio(bio, updatedFirstName, updatedLastName) : profile.bio_curated;
     const cleanedMeasurements = normalizeMeasurements(measurements);
     
     // Calculate age from date of birth
@@ -562,6 +620,17 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
       updated_at: knex.fn.now()
     };
     
+    // Handle name updates - if name changes, we may need to update the slug
+    let needsSlugUpdate = false;
+    if (first_name !== undefined && first_name !== profile.first_name) {
+      updateData.first_name = first_name || null;
+      needsSlugUpdate = true;
+    }
+    if (last_name !== undefined && last_name !== profile.last_name) {
+      updateData.last_name = last_name || null;
+      needsSlugUpdate = true;
+    }
+    
     // Only update fields that are explicitly in parsed.data (were submitted in form)
     if (city !== undefined) updateData.city = city || null;
     if (city_secondary !== undefined) updateData.city_secondary = city_secondary || null;
@@ -621,13 +690,8 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
     if (emergency_contact_relationship !== undefined) updateData.emergency_contact_relationship = emergency_contact_relationship || null;
     if (work_eligibility !== undefined) updateData.work_eligibility = work_eligibility || null;
     if (work_status !== undefined) {
-      // Handle work_status "Other" option
-      const workStatusOther = req.body.work_status_other;
-      if (work_status === 'Other' && workStatusOther) {
-        updateData.work_status = workStatusOther || null;
-      } else {
-        updateData.work_status = work_status || null;
-      }
+      // Note: work_status_other has already been merged into work_status during preprocessing
+      updateData.work_status = work_status || null;
     }
     if (union_membership !== undefined) updateData.union_membership = union_membership || null;
     if (ethnicity !== undefined) updateData.ethnicity = ethnicity || null;
@@ -644,19 +708,47 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
         : (previous_representations ? JSON.stringify(previous_representations) : null);
     }
 
+    // Update slug if name changed (only if slug was auto-generated from name)
+    if (needsSlugUpdate && (first_name !== undefined || last_name !== undefined)) {
+      const finalFirstName = first_name !== undefined ? first_name : profile.first_name;
+      const finalLastName = last_name !== undefined ? last_name : profile.last_name;
+      
+      // Only update slug if the current slug matches the old name pattern
+      const oldNameSlug = `${profile.first_name}-${profile.last_name}`.toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+      if (profile.slug === oldNameSlug || profile.slug.startsWith(`${oldNameSlug}-`)) {
+        const newNameSlug = `${finalFirstName}-${finalLastName}`.toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+        const uniqueSlug = await ensureUniqueSlug(knex, 'profiles', newNameSlug);
+        updateData.slug = uniqueSlug;
+        console.log('[Dashboard/Talent POST] Updating slug due to name change:', {
+          oldSlug: profile.slug,
+          newSlug: uniqueSlug,
+          oldName: `${profile.first_name} ${profile.last_name}`,
+          newName: `${finalFirstName} ${finalLastName}`
+        });
+      }
+    }
+    
     await knex('profiles')
       .where({ id: profile.id })
       .update(updateData);
+    
+    console.log('[Dashboard/Talent POST] Profile updated successfully:', {
+      profileId: profile.id,
+      userId: req.session.userId,
+      updatedFields: Object.keys(updateData),
+      slugChanged: !!updateData.slug
+    });
 
     // Log activity (non-blocking)
     logActivity(req.session.userId, 'profile_updated', {
       profileId: profile.id,
-      slug: profile.slug
+      slug: updateData.slug || profile.slug,
+      nameChanged: needsSlugUpdate
     }).catch(err => {
       console.error('[Dashboard] Error logging activity:', err);
     });
 
-    addMessage(req, 'success', 'Profile updated.');
+    addMessage(req, 'success', 'Profile updated successfully.');
     return res.redirect('/dashboard/talent');
   } catch (error) {
     console.error('[Dashboard/Talent POST] Error updating profile:', {
@@ -681,56 +773,87 @@ router.post('/dashboard/talent/media', requireRole('TALENT'), upload.array('medi
       });
     }
 
+    // Ensure userId exists in session
+    if (!req.session || !req.session.userId) {
+      console.error('[Dashboard/Media Upload] No userId in session');
+      return res.status(401).json({ 
+        error: 'Session expired. Please log in again.',
+        success: false 
+      });
+    }
+
     let profile = await knex('profiles').where({ user_id: req.session.userId }).first();
     
     // If profile doesn't exist, create a minimal one
     if (!profile) {
       console.log('[Dashboard/Media Upload] Profile not found, creating minimal profile for user:', req.session.userId);
       
-      const currentUser = await knex('users').where({ id: req.session.userId }).first();
-      if (!currentUser) {
-        return res.status(404).json({ 
-          error: 'User not found.',
-          success: false 
+      try {
+        const currentUser = await knex('users').where({ id: req.session.userId }).first();
+        if (!currentUser) {
+          console.error('[Dashboard/Media Upload] User not found:', req.session.userId);
+          return res.status(404).json({ 
+            error: 'User not found.',
+            success: false 
+          });
+        }
+        
+        // Extract a name from email as placeholder
+        const emailParts = currentUser.email.split('@')[0];
+        const placeholderFirstName = emailParts.charAt(0).toUpperCase() + emailParts.slice(1).split('.')[0];
+        const placeholderLastName = 'User';
+        
+        const profileId = uuidv4();
+        const slug = await ensureUniqueSlug(knex, 'profiles', `${placeholderFirstName}-${placeholderLastName}`);
+        
+        await knex('profiles').insert({
+          id: profileId,
+          user_id: req.session.userId,
+          slug,
+          first_name: placeholderFirstName,
+          last_name: placeholderLastName,
+          is_pro: false,
+          pdf_theme: null,
+          pdf_customizations: null
+        });
+        
+        console.log('[Dashboard/Media Upload] Created minimal profile:', {
+          profileId,
+          userId: req.session.userId,
+          slug
+        });
+        
+        // Reload profile
+        profile = await knex('profiles').where({ id: profileId }).first();
+        
+        if (!profile) {
+          console.error('[Dashboard/Media Upload] Failed to reload created profile');
+          return res.status(500).json({ 
+            error: 'Failed to create profile. Please try again.',
+            success: false 
+          });
+        }
+        
+        // Log activity (non-blocking)
+        logActivity(req.session.userId, 'profile_created', {
+          profileId: profileId,
+          slug: slug,
+          action: 'created_via_upload'
+        }).catch(err => {
+          console.error('[Dashboard] Error logging activity:', err);
+        });
+      } catch (createError) {
+        console.error('[Dashboard/Media Upload] Error creating profile:', {
+          message: createError.message,
+          stack: createError.stack,
+          userId: req.session.userId
+        });
+        return res.status(500).json({ 
+          error: 'Failed to create profile. Please try again.',
+          success: false,
+          details: process.env.NODE_ENV !== 'production' ? createError.message : undefined
         });
       }
-      
-      // Extract a name from email as placeholder
-      const emailParts = currentUser.email.split('@')[0];
-      const placeholderFirstName = emailParts.charAt(0).toUpperCase() + emailParts.slice(1).split('.')[0];
-      const placeholderLastName = 'User';
-      
-      const profileId = uuidv4();
-      const slug = await ensureUniqueSlug(knex, 'profiles', `${placeholderFirstName}-${placeholderLastName}`);
-      
-      await knex('profiles').insert({
-        id: profileId,
-        user_id: req.session.userId,
-        slug,
-        first_name: placeholderFirstName,
-        last_name: placeholderLastName,
-        is_pro: false,
-        pdf_theme: null,
-        pdf_customizations: null
-      });
-      
-      console.log('[Dashboard/Media Upload] Created minimal profile:', {
-        profileId,
-        userId: req.session.userId,
-        slug
-      });
-      
-      // Reload profile
-      profile = await knex('profiles').where({ id: profileId }).first();
-      
-      // Log activity (non-blocking)
-      logActivity(req.session.userId, 'profile_created', {
-        profileId: profileId,
-        slug: slug,
-        action: 'created_via_upload'
-      }).catch(err => {
-        console.error('[Dashboard] Error logging activity:', err);
-      });
     }
 
     const countResult = await knex('images')
@@ -773,8 +896,14 @@ router.post('/dashboard/talent/media', requireRole('TALENT'), upload.array('medi
           created_at: new Date().toISOString()
         });
       } catch (fileError) {
-        console.error('Error processing file:', fileError);
-        console.error('File details:', { name: file.originalname, size: file.size, mimetype: file.mimetype });
+        console.error('[Dashboard/Media Upload] Error processing file:', {
+          message: fileError.message,
+          stack: fileError.stack,
+          fileName: file.originalname,
+          fileSize: file.size,
+          fileMimetype: file.mimetype,
+          profileId: profile.id
+        });
         // Continue with other files even if one fails
       }
     }
@@ -808,7 +937,15 @@ router.post('/dashboard/talent/media', requireRole('TALENT'), upload.array('medi
       });
     }
   } catch (error) {
-    console.error('[Dashboard/Media Upload] Error:', error);
+    console.error('[Dashboard/Media Upload] Error:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack,
+      userId: req.session?.userId,
+      hasFiles: !!req.files,
+      fileCount: req.files?.length || 0
+    });
     return res.status(500).json({ 
       error: 'An error occurred while uploading images.',
       success: false,
@@ -1526,7 +1663,7 @@ router.post('/dashboard/settings/slug', requireRole('TALENT'), async (req, res, 
     const cleanSlug = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
     
     if (cleanSlug !== profile.slug) {
-      const uniqueSlug = await ensureUniqueSlug(cleanSlug, profile.id);
+      const uniqueSlug = await ensureUniqueSlug(knex, 'profiles', cleanSlug);
       await knex('profiles')
         .where({ id: profile.id })
         .update({ slug: uniqueSlug, updated_at: knex.fn.now() });

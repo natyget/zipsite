@@ -979,13 +979,16 @@
 .dash-sidebar {
   position: sticky;
   top: calc(var(--header-height) + var(--nav-height) + 20px);
-  max-height: calc(100vh - var(--header-height) - var(--nav-height) - 40px);
+  max-height: calc(100vh - var(--header-height) - var(--nav-height) - 60px);
   overflow-y: auto;
+  overflow-x: visible;
   padding-right: 8px;
+  padding-bottom: 24px;
   animation: fadeInUp 0.5s ease-out 0.2s both;
   display: flex;
   flex-direction: column;
   gap: 24px;
+  align-items: stretch;
 }
 
 .dash-sidebar::-webkit-scrollbar {
@@ -1009,6 +1012,12 @@
 .dash-sidebar__status {
   background: linear-gradient(135deg, rgba(201, 165, 90, 0.03) 0%, rgba(201, 165, 90, 0.01) 100%);
   border: 1px solid rgba(201, 165, 90, 0.15);
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.dash-sidebar__status .dash-panel__body {
+  overflow: visible;
 }
 
 /* Profile Progress Bar */
@@ -1273,6 +1282,8 @@
   background: linear-gradient(135deg, rgba(201, 165, 90, 0.1) 0%, rgba(201, 165, 90, 0.05) 100%);
   border: 2px solid rgba(201, 165, 90, 0.3);
   box-shadow: 0 4px 12px rgba(201, 165, 90, 0.15);
+  overflow: visible;
+  flex-shrink: 0;
 }
 
 .dash-sidebar__upgrade .dash-panel__header h3 {
@@ -1280,16 +1291,30 @@
   font-weight: 600;
 }
 
+.dash-sidebar__upgrade .dash-panel__body {
+  overflow: visible;
+  padding-bottom: 28px;
+}
+
 .button-block {
   width: 100%;
   display: block;
   text-align: center;
+  margin-top: 8px;
+  white-space: nowrap;
+  overflow: visible;
 }
 
 /* Analytics Panel */
 .dash-sidebar__analytics {
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%);
   border: 1px solid rgba(16, 185, 129, 0.2);
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.dash-sidebar__analytics .dash-panel__body {
+  overflow: visible;
 }
 
 /* Analytics Grid (Main Content) */
@@ -1704,11 +1729,20 @@ div[data-section] {
 
 .dash-panel__body {
   padding: 40px;
+  overflow: visible;
+  min-height: fit-content;
 }
 
 /* Compact panel body spacing */
 .dash-panel--compact .dash-panel__body {
   padding: 28px;
+  overflow: visible;
+}
+
+.dash-panel--compact {
+  overflow: visible;
+  min-height: fit-content;
+  flex-shrink: 0;
 }
 
 /* Dashboard Panel - Clean, Light Design */
@@ -1716,13 +1750,15 @@ div[data-section] {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: 0;
   transition: var(--transition-fast);
   animation: fadeInUp 0.4s ease-out;
   box-shadow: 
     0 1px 3px rgba(15, 23, 42, 0.04),
     0 4px 12px rgba(15, 23, 42, 0.02);
+  min-height: fit-content;
+  flex-shrink: 0;
 }
 
 .dash-panel:hover {
@@ -1768,6 +1804,7 @@ div[data-section] {
 .dash-panel--compact .dash-panel__header {
   padding: 20px 24px 16px;
   background: var(--bg-surface);
+  overflow: visible;
 }
 
 /* Forms - Clean, Focused Design */
