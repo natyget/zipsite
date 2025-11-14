@@ -7904,10 +7904,11 @@ body.filmstrip-hover {
 
 .demo-header__pricing {
   display: inline-flex;
-  align-items: baseline;
-  gap: 1rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
   margin: 1.5rem 0 2rem;
-  padding: 0.75rem 1.5rem;
+  padding: 1.25rem 1.75rem;
   background: rgba(201, 165, 90, 0.08);
   border: 1px solid rgba(201, 165, 90, 0.2);
   border-radius: 12px;
@@ -7926,6 +7927,18 @@ body.filmstrip-hover {
   font-weight: 400;
   opacity: 0.8;
   margin-left: 0.15em;
+}
+
+.demo-header__pricing-trial {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: rgba(201, 165, 90, 1);
+  background: rgba(201, 165, 90, 0.12);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(201, 165, 90, 0.25);
+  white-space: nowrap;
 }
 
 .demo-header__pricing-note {
@@ -8023,6 +8036,19 @@ body.filmstrip-hover {
   font-weight: 400;
   color: #64748b;
   margin-left: 0.25em;
+}
+
+.demo-pricing-section__trial {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(201, 165, 90, 1);
+  background: rgba(201, 165, 90, 0.12);
+  padding: 0.625rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid rgba(201, 165, 90, 0.25);
+  margin: 1rem 0;
 }
 
 .demo-pricing-section__tagline {
@@ -8410,8 +8436,14 @@ body.filmstrip-hover {
 
   .demo-header__pricing {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
     align-items: center;
+    padding: 1rem 1.25rem;
+  }
+
+  .demo-header__pricing-trial {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.875rem;
   }
 
   .demo-showcase {
