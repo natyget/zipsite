@@ -331,7 +331,7 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
       const profileId = uuidv4();
       const slug = await ensureUniqueSlug(knex, 'profiles', `${placeholderFirstName}-${placeholderLastName}`);
       
-      // Extract all fields from parsed data
+      // Extract all fields from parsed data (now optional)
       const {
         city, city_secondary, height_cm, bio,
         gender, date_of_birth, weight_kg, weight_lbs, dress_size, hair_length, skin_tone,
@@ -342,8 +342,6 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
         work_eligibility, work_status, union_membership, ethnicity, tattoos, piercings, comfort_levels, previous_representations,
         phone, bust, waist, hips, shoe_size, eye_color, hair_color, specialties, experience_details
       } = parsed.data;
-      
-      const curatedBio = curateBio(bio, placeholderFirstName, placeholderLastName);
       
       // Calculate age from date of birth
       let age = null;
@@ -376,23 +374,26 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
       const cleanTiktokHandle = tiktok_handle ? parseSocialMediaHandle(tiktok_handle) : null;
       
       // Create minimal profile with the form data
+      // Use provided values or defaults
+      const curatedBio = bio ? curateBio(bio, placeholderFirstName, placeholderLastName) : null;
+      
       await knex('profiles').insert({
         id: profileId,
         user_id: req.session.userId,
         slug,
         first_name: placeholderFirstName,
         last_name: placeholderLastName,
-        city,
+        city: city || null,
         city_secondary: city_secondary || null,
         phone: phone || null,
-        height_cm,
+        height_cm: height_cm || null,
         bust: bust || null,
         waist: waist || null,
         hips: hips || null,
         shoe_size: shoe_size || null,
         eye_color: eye_color || null,
         hair_color: hair_color || null,
-        bio_raw: bio,
+        bio_raw: bio || null,
         bio_curated: curatedBio,
         specialties: specialtiesJson,
         experience_details: typeof experience_details === 'string' ? experience_details : (experience_details ? JSON.stringify(experience_details) : null),
@@ -460,9 +461,9 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
     }
 
     // Profile exists - update it
-    // Extract all fields from parsed data
+    // Extract all fields from parsed data (now optional)
     const {
-      city, height_cm, measurements, bio,
+      city, city_secondary, height_cm, measurements, bio,
       gender, date_of_birth, weight_kg, weight_lbs, dress_size, hair_length, skin_tone,
       languages, availability_travel, availability_schedule, experience_level, training, portfolio_url,
       instagram_handle, twitter_handle, tiktok_handle,
@@ -472,7 +473,7 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
       phone, bust, waist, hips, shoe_size, eye_color, hair_color, specialties
     } = parsed.data;
     
-    const curatedBio = curateBio(bio, profile.first_name, profile.last_name);
+    const curatedBio = bio ? curateBio(bio, profile.first_name, profile.last_name) : profile.bio_curated;
     const cleanedMeasurements = normalizeMeasurements(measurements);
     
     // Calculate age from date of birth
@@ -680,11 +681,55 @@ router.post('/dashboard/talent/media', requireRole('TALENT'), upload.array('medi
       });
     }
 
-    const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
+    let profile = await knex('profiles').where({ user_id: req.session.userId }).first();
+    
+    // If profile doesn't exist, create a minimal one
     if (!profile) {
-      return res.status(404).json({ 
-        error: 'Profile not found.',
-        success: false 
+      console.log('[Dashboard/Media Upload] Profile not found, creating minimal profile for user:', req.session.userId);
+      
+      const currentUser = await knex('users').where({ id: req.session.userId }).first();
+      if (!currentUser) {
+        return res.status(404).json({ 
+          error: 'User not found.',
+          success: false 
+        });
+      }
+      
+      // Extract a name from email as placeholder
+      const emailParts = currentUser.email.split('@')[0];
+      const placeholderFirstName = emailParts.charAt(0).toUpperCase() + emailParts.slice(1).split('.')[0];
+      const placeholderLastName = 'User';
+      
+      const profileId = uuidv4();
+      const slug = await ensureUniqueSlug(knex, 'profiles', `${placeholderFirstName}-${placeholderLastName}`);
+      
+      await knex('profiles').insert({
+        id: profileId,
+        user_id: req.session.userId,
+        slug,
+        first_name: placeholderFirstName,
+        last_name: placeholderLastName,
+        is_pro: false,
+        pdf_theme: null,
+        pdf_customizations: null
+      });
+      
+      console.log('[Dashboard/Media Upload] Created minimal profile:', {
+        profileId,
+        userId: req.session.userId,
+        slug
+      });
+      
+      // Reload profile
+      profile = await knex('profiles').where({ id: profileId }).first();
+      
+      // Log activity (non-blocking)
+      logActivity(req.session.userId, 'profile_created', {
+        profileId: profileId,
+        slug: slug,
+        action: 'created_via_upload'
+      }).catch(err => {
+        console.error('[Dashboard] Error logging activity:', err);
       });
     }
 

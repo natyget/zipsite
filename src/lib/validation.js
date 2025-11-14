@@ -408,15 +408,15 @@ const applyProfileSchema = z
 
 const talentProfileUpdateSchema = z
   .object({
-    city: nameSchema,
+    city: nameSchema.optional(),
     city_secondary: nameSchema.optional(),
-    height_cm: heightSchema,
-    bio: bioSchema,
+    height_cm: heightSchema.optional(),
+    bio: bioSchema.optional(),
     // Include all updatable fields
-    phone: phoneSchema,
-    bust: bustSchema,
-    waist: waistSchema,
-    hips: hipsSchema,
+    phone: phoneSchema.optional(),
+    bust: bustSchema.optional(),
+    waist: waistSchema.optional(),
+    hips: hipsSchema.optional(),
     shoe_size: z.string().trim().max(10).optional(),
     eye_color: z.string().trim().max(30).optional(),
     hair_color: z.string().trim().max(30).optional(),

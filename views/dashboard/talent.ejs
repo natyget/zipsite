@@ -201,7 +201,7 @@
               </div>
 
               <div class="form-field <%= fieldHasError('city_secondary') ? 'has-error' : '' %>">
-                <label for="city_secondary">Secondary City <span style="color: #666; font-size: 0.9em;">(optional)</span></label>
+                <label for="city_secondary">Secondary City <span class="form-label__optional">(optional)</span></label>
                 <input id="city_secondary" name="city_secondary" type="text" autocomplete="address-level2" value="<%= valueFor('city_secondary') %>"
                   placeholder="New York, NY">
                 <% if (fieldHasError('city_secondary')) { %>
@@ -378,8 +378,11 @@
             </div>
 
             <!-- Personal Details Section -->
-            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
-              <h4 style="margin-bottom: 1rem; font-size: 1.1rem; font-weight: 600;">Personal Details</h4>
+            <div class="form-section">
+              <div class="form-section__header">
+                <h4>Personal Details</h4>
+                <p>Additional information about yourself</p>
+              </div>
               
               <div class="form-grid">
                 <div class="form-field <%= fieldHasError('gender') ? 'has-error' : '' %>">

@@ -961,17 +961,17 @@
 .dash-grid {
   display: grid;
   grid-template-columns: 1fr minmax(300px, 380px);
-  gap: 40px;
+  gap: 48px;
   align-items: start;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 40px 40px;
+  padding: 0 40px 48px;
 }
 
 .dash-grid__column {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 40px;
   min-width: 0;
 }
 
@@ -1679,34 +1679,36 @@ div[data-section] {
 
 /* Improve panel header spacing */
 .dash-panel__header {
-  padding: 24px 32px;
+  padding: 28px 40px;
   border-bottom: 1px solid var(--border-color);
-  background: var(--bg-surface-elevated);
+  background: linear-gradient(180deg, var(--bg-surface-elevated) 0%, var(--bg-surface) 100%);
 }
 
 .dash-panel__header h3 {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
   color: var(--text-primary);
   font-family: var(--font-sans);
   letter-spacing: -0.01em;
+  line-height: 1.3;
 }
 
 .dash-panel__header p {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.6;
+  font-weight: 400;
 }
 
 .dash-panel__body {
-  padding: 32px;
+  padding: 40px;
 }
 
 /* Compact panel body spacing */
 .dash-panel--compact .dash-panel__body {
-  padding: 24px;
+  padding: 28px;
 }
 
 /* Dashboard Panel - Clean, Light Design */
@@ -1724,7 +1726,11 @@ div[data-section] {
 }
 
 .dash-panel:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 
+    0 4px 16px rgba(15, 23, 42, 0.1),
+    0 2px 8px rgba(15, 23, 42, 0.06);
+  border-color: rgba(201, 165, 90, 0.25);
+  transform: translateY(-1px);
 }
 
 @keyframes fadeInUp {
@@ -1751,9 +1757,11 @@ div[data-section] {
 }
 
 .dash-panel:hover {
-  box-shadow: var(--shadow-md);
-  border-color: rgba(201, 165, 90, 0.2);
-  transform: translateY(-2px);
+  box-shadow: 
+    0 4px 16px rgba(15, 23, 42, 0.1),
+    0 2px 8px rgba(15, 23, 42, 0.06);
+  border-color: rgba(201, 165, 90, 0.25);
+  transform: translateY(-1px);
 }
 
 /* Compact Panels for Right Column */
@@ -1766,19 +1774,43 @@ div[data-section] {
 .form-stacked {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 40px;
 }
 
 /* Form Section Separators */
 .form-section {
   position: relative;
-  padding-top: 32px;
-  margin-top: 32px;
+  padding-top: 40px;
+  margin-top: 40px;
+  border-top: 1px solid var(--border-color);
 }
 
 .form-section:first-child {
   padding-top: 0;
   margin-top: 0;
+  border-top: none;
+}
+
+.form-section__header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.form-section__header h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  letter-spacing: 0.01em;
+  font-family: var(--font-sans);
+}
+
+.form-section__header p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
 }
 
 .form-section::before {
@@ -1833,7 +1865,7 @@ div[data-section] {
 .form-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 24px;
   margin-bottom: 0;
 }
 
@@ -1862,12 +1894,20 @@ div[data-section] {
 @media (max-width: 1200px) {
   .form-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    gap: 20px;
   }
   
   .form-section {
-    padding-top: 24px;
-    margin-top: 24px;
+    padding-top: 32px;
+    margin-top: 32px;
+  }
+  
+  .form-stacked {
+    gap: 32px;
+  }
+  
+  .dash-grid {
+    gap: 40px;
   }
   
   .media-grid {
@@ -1878,14 +1918,29 @@ div[data-section] {
 .form-field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  position: relative;
 }
 
 .form-field label {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-secondary);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-field label span {
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-tertiary);
+  opacity: 0.8;
 }
 
 .form-field input,
@@ -1893,13 +1948,33 @@ div[data-section] {
 .form-field select {
   background: var(--bg-surface);
   border: 1.5px solid var(--border-color);
-  border-radius: 6px;
-  padding: 12px 16px;
+  border-radius: 8px;
+  padding: 13px 18px;
   font-size: 15px;
   color: var(--text-primary);
-  font-family: inherit;
+  font-family: var(--font-sans);
   transition: var(--transition-fast);
   -webkit-font-smoothing: antialiased;
+  appearance: none;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-field input:hover,
+.form-field textarea:hover,
+.form-field select:hover {
+  border-color: rgba(201, 165, 90, 0.3);
+  background: var(--bg-surface-elevated);
+}
+
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus {
+  border-color: var(--accent-gold);
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 3px rgba(201, 165, 90, 0.12), 0 2px 8px rgba(201, 165, 90, 0.08);
+  outline: none;
 }
 
 .form-field input::placeholder,
@@ -1909,6 +1984,19 @@ div[data-section] {
 }
 
 
+.form-field select {
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23475569' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 12px;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+.form-field select:focus {
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23C9A55A' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
 .form-field textarea {
   resize: vertical;
   min-height: 140px;
@@ -1917,11 +2005,12 @@ div[data-section] {
 }
 
 .form-field__help {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-tertiary);
-  margin: 0;
+  margin: 6px 0 0 0;
   line-height: 1.6;
   font-style: italic;
+  padding-left: 2px;
 }
 
 /* Form Error States */
@@ -1941,18 +2030,23 @@ div[data-section] {
 }
 
 .form-field__error {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--accent-error);
-  margin: 4px 0 0 0;
+  margin: 6px 0 0 0;
   font-weight: 500;
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.06);
+  border-radius: 6px;
+  border-left: 3px solid var(--accent-error);
 }
 
 .form-field__error::before {
   content: '⚠';
   font-size: 14px;
+  flex-shrink: 0;
 }
 
 /* Read-only Fields */
@@ -1994,8 +2088,38 @@ div[data-section] {
 .form-actions {
   display: flex;
   gap: 12px;
-  margin-top: 12px;
-  padding-top: 8px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+  justify-content: flex-end;
+}
+
+/* Form Section Styling Improvements */
+.form-stacked .form-grid + .form-grid {
+  margin-top: 0;
+}
+
+/* Better spacing for form groups */
+.form-grid + .form-grid {
+  margin-top: 0;
+}
+
+/* Enhanced form field spacing within grids */
+.form-grid .form-field:not(:last-child) {
+  margin-bottom: 0;
+}
+
+/* Improve optional label styling */
+.form-label__optional,
+.form-field label span.form-label__optional {
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-tertiary);
+  font-style: italic;
+  margin-left: 6px;
+  opacity: 0.7;
 }
 
 .form-actions button[type="submit"] {
@@ -2640,6 +2764,18 @@ button[disabled] {
     gap: 32px;
     padding: 0 32px 40px;
   }
+  
+  .dash-panel__header {
+    padding: 24px 32px;
+  }
+  
+  .dash-panel__body {
+    padding: 32px;
+  }
+  
+  .dash-panel__header h3 {
+    font-size: 20px;
+  }
 
   .dash-sidebar {
     position: static;
@@ -2682,13 +2818,38 @@ button[disabled] {
   }
 
   .form-section {
-    padding-top: 24px;
-    margin-top: 24px;
+    padding-top: 28px;
+    margin-top: 28px;
+  }
+  
+  .form-stacked {
+    gap: 28px;
   }
 
   .form-section__header {
     margin-bottom: 20px;
-    padding-bottom: 10px;
+    padding-bottom: 12px;
+  }
+  
+  .form-section__header h4 {
+    font-size: 15px;
+  }
+  
+  .dash-panel__header {
+    padding: 24px 24px;
+  }
+  
+  .dash-panel__body {
+    padding: 24px;
+  }
+  
+  .dash-panel__header h3 {
+    font-size: 18px;
+  }
+  
+  .dash-grid {
+    gap: 32px;
+    padding: 0 20px 40px;
   }
 
   .flash-messages {
