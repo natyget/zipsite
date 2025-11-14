@@ -168,6 +168,46 @@ PGPASSWORD=password psql -h ep-xxx-xxx.us-east-2.aws.neon.tech -U user -d neondb
    - Value: `8` (default)
    - Scopes: All scopes
 
+   #### Firebase Configuration (Required for Authentication)
+
+   **8. FIREBASE_PROJECT_ID**
+   - Key: `FIREBASE_PROJECT_ID`
+   - Value: `zipsite-78e85`
+   - Scopes: All scopes
+
+   **9. FIREBASE_PRIVATE_KEY**
+   - Key: `FIREBASE_PRIVATE_KEY`
+   - Value: Your full Firebase service account private key (from Firebase Console)
+   - **Important**: 
+     - Copy the entire private key including `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----`
+     - Replace all actual newlines with `\n` (backslash + n)
+     - Keep the entire value in quotes
+   - Example format:
+     ```
+     "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC4OO3EAracXChT\n...\n-----END PRIVATE KEY-----\n"
+     ```
+   - Scopes: All scopes
+
+   **10. FIREBASE_CLIENT_EMAIL**
+   - Key: `FIREBASE_CLIENT_EMAIL`
+   - Value: `firebase-adminsdk-fbsvc@zipsite-78e85.iam.gserviceaccount.com`
+   - Scopes: All scopes
+
+   **11. FIREBASE_CLIENT_ID**
+   - Key: `FIREBASE_CLIENT_ID`
+   - Value: `102912011769394336459`
+   - Scopes: All scopes
+
+   **12. FIREBASE_AUTH_DOMAIN**
+   - Key: `FIREBASE_AUTH_DOMAIN`
+   - Value: `zipsite-78e85.firebaseapp.com`
+   - Scopes: All scopes
+
+   **13. FIREBASE_API_KEY**
+   - Key: `FIREBASE_API_KEY`
+   - Value: `AIzaSyBqO78jrAfsec0NaWMqOCdSsWhI7cSokEc`
+   - Scopes: All scopes
+
 ### Step 3: Verify Environment Variables
 
 After adding all variables, you should see:
@@ -178,6 +218,12 @@ DATABASE_URL = postgresql://username:password@ep-xxx-xxx-xxx.us-east-2.aws.neon.
 SESSION_SECRET = <your-secret>
 NODE_ENV = production
 PDF_BASE_URL = https://your-site.netlify.app (optional)
+FIREBASE_PROJECT_ID = zipsite-78e85
+FIREBASE_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----\n..."
+FIREBASE_CLIENT_EMAIL = firebase-adminsdk-fbsvc@zipsite-78e85.iam.gserviceaccount.com
+FIREBASE_CLIENT_ID = 102912011769394336459
+FIREBASE_AUTH_DOMAIN = zipsite-78e85.firebaseapp.com
+FIREBASE_API_KEY = AIzaSyBqO78jrAfsec0NaWMqOCdSsWhI7cSokEc
 ```
 
 **⚠️ Important**: Your DATABASE_URL should have a unique hostname that **starts with `ep-`** (like `ep-xxx-xxx-xxx.us-east-2.aws.neon.tech`), NOT a placeholder like `host.neon.tech` or `localhost`!
