@@ -287,9 +287,37 @@
       <div class="feature-demo__filters-layout">
         <!-- Left: Filter Panel -->
         <div class="feature-demo__filters-panel">
-          <h3 class="feature-demo__filters-title">Filters</h3>
+          <div class="feature-demo__filters-panel-header">
+            <h3 class="feature-demo__filters-title">Filters</h3>
+            <button class="feature-demo__clear-filters" id="clear-filters" type="button" aria-label="Clear all filters">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              <span>Clear</span>
+            </button>
+          </div>
+          
+          <!-- Search Bar -->
           <div class="feature-demo__filter-group">
-            <label class="feature-demo__filter-label">Location</label>
+            <label class="feature-demo__filter-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+              <span>Search</span>
+            </label>
+            <input type="text" class="feature-demo__filter-input feature-demo__filter-input--search" id="filter-search" placeholder="Search by name...">
+          </div>
+
+          <div class="feature-demo__filter-group">
+            <label class="feature-demo__filter-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span>Location</span>
+            </label>
             <select class="feature-demo__filter-input" id="filter-location">
               <option value="">All Locations</option>
               <option value="NYC">New York, NY</option>
@@ -298,22 +326,54 @@
               <option value="Chicago">Chicago, IL</option>
             </select>
           </div>
+          
           <div class="feature-demo__filter-group">
-            <label class="feature-demo__filter-label">Height (minimum)</label>
-            <input type="range" class="feature-demo__filter-slider" id="filter-height" min="60" max="78" value="60"
-              step="1">
-            <div class="feature-demo__filter-value" id="height-value">5' 0"</div>
+            <label class="feature-demo__filter-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+              <span>Height (minimum)</span>
+            </label>
+            <div class="feature-demo__slider-wrapper">
+              <input type="range" class="feature-demo__filter-slider" id="filter-height" min="60" max="78" value="60" step="1">
+              <div class="feature-demo__filter-value" id="height-value">5' 0"</div>
+            </div>
           </div>
+          
           <div class="feature-demo__filter-group">
-            <label class="feature-demo__filter-label">Measurements</label>
+            <label class="feature-demo__filter-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="9" x2="15" y2="9"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+              </svg>
+              <span>Measurements</span>
+            </label>
             <input type="text" class="feature-demo__filter-input" id="filter-measurements" placeholder="e.g., 32-25-35">
           </div>
+          
           <div class="feature-demo__filter-group">
-            <label class="feature-demo__filter-label">Specializations</label>
+            <label class="feature-demo__filter-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                <path d="M2 17l10 5 10-5"></path>
+                <path d="M2 12l10 5 10-5"></path>
+              </svg>
+              <span>Specializations</span>
+            </label>
             <div class="feature-demo__filter-checkboxes">
-              <label><input type="checkbox" value="editorial" class="filter-specialization"> Editorial</label>
-              <label><input type="checkbox" value="runway" class="filter-specialization"> Runway</label>
-              <label><input type="checkbox" value="commercial" class="filter-specialization"> Commercial</label>
+              <label class="feature-demo__checkbox-label">
+                <input type="checkbox" value="editorial" class="filter-specialization">
+                <span>Editorial</span>
+              </label>
+              <label class="feature-demo__checkbox-label">
+                <input type="checkbox" value="runway" class="filter-specialization">
+                <span>Runway</span>
+              </label>
+              <label class="feature-demo__checkbox-label">
+                <input type="checkbox" value="commercial" class="filter-specialization">
+                <span>Commercial</span>
+              </label>
             </div>
           </div>
         </div>
@@ -321,14 +381,33 @@
         <!-- Right: Results Grid -->
         <div class="feature-demo__filters-results">
           <div class="feature-demo__results-header">
-            <span class="feature-demo__results-count" id="results-count">12 models</span>
+            <div class="feature-demo__results-header-left">
+              <span class="feature-demo__results-count" id="results-count">12 models</span>
+              <span class="feature-demo__results-subtitle" id="results-subtitle">Matching your criteria</span>
+            </div>
+            <div class="feature-demo__results-header-right">
+              <label class="feature-demo__sort-label">
+                <span>Sort:</span>
+                <select class="feature-demo__sort-select" id="sort-results">
+                  <option value="name">Name</option>
+                  <option value="height">Height</option>
+                  <option value="location">Location</option>
+                </select>
+              </label>
+            </div>
           </div>
           <div class="feature-demo__results-grid" id="results-grid">
             <!-- Talent cards will be populated by JavaScript -->
           </div>
           <div class="feature-demo__results-empty" id="results-empty" hidden>
-            <p>No models match your filters.</p>
-            <p class="feature-demo__results-empty-hint">Try adjusting your search criteria.</p>
+            <div class="feature-demo__results-empty-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </div>
+            <p class="feature-demo__results-empty-title">No models match your filters</p>
+            <p class="feature-demo__results-empty-hint">Try adjusting your search criteria or clearing filters.</p>
           </div>
         </div>
       </div>

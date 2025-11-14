@@ -390,13 +390,17 @@
 
   // Feature 4: Filter Demo
   function initFilterDemo() {
+    const searchFilter = document.getElementById('filter-search');
     const locationFilter = document.getElementById('filter-location');
     const heightFilter = document.getElementById('filter-height');
     const heightValue = document.getElementById('height-value');
     const measurementsFilter = document.getElementById('filter-measurements');
     const specializationCheckboxes = document.querySelectorAll('.filter-specialization');
+    const sortSelect = document.getElementById('sort-results');
+    const clearFiltersBtn = document.getElementById('clear-filters');
     const resultsGrid = document.getElementById('results-grid');
     const resultsCount = document.getElementById('results-count');
+    const resultsSubtitle = document.getElementById('results-subtitle');
     const resultsEmpty = document.getElementById('results-empty');
 
     if (!resultsGrid) return;
@@ -426,6 +430,7 @@
 
     // Filter talent based on criteria
     function filterTalent() {
+      const search = searchFilter?.value.trim().toLowerCase() || '';
       const location = locationFilter?.value || '';
       const minHeight = heightFilter ? parseInt(heightFilter.value) : 60;
       const measurements = measurementsFilter?.value.trim() || '';
@@ -434,6 +439,9 @@
         .map(cb => cb.value);
 
       const filtered = talentData.filter(talent => {
+        // Search filter
+        if (search && !talent.name.toLowerCase().includes(search)) return false;
+
         // Location filter
         if (location && talent.location !== location) return false;
 
@@ -454,7 +462,43 @@
         return true;
       });
 
-      renderResults(filtered);
+      // Sort results
+      const sorted = sortResults(filtered);
+      renderResults(sorted);
+    }
+
+    // Sort results based on selected option
+    function sortResults(results) {
+      const sortBy = sortSelect?.value || 'name';
+      const sorted = [...results];
+
+      switch (sortBy) {
+        case 'name':
+          sorted.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case 'height':
+          sorted.sort((a, b) => b.height - a.height);
+          break;
+        case 'location':
+          sorted.sort((a, b) => a.location.localeCompare(b.location));
+          break;
+        default:
+          break;
+      }
+
+      return sorted;
+    }
+
+    // Clear all filters
+    function clearFilters() {
+      if (searchFilter) searchFilter.value = '';
+      if (locationFilter) locationFilter.value = '';
+      if (heightFilter) heightFilter.value = '60';
+      if (heightValue) heightValue.textContent = inchesToFeetInches(60);
+      if (measurementsFilter) measurementsFilter.value = '';
+      specializationCheckboxes.forEach(cb => cb.checked = false);
+      if (sortSelect) sortSelect.value = 'name';
+      filterTalent();
     }
 
     // Render filtered results
@@ -466,6 +510,7 @@
       if (results.length === 0) {
         if (resultsEmpty) resultsEmpty.hidden = false;
         if (resultsCount) resultsCount.textContent = '0 models';
+        if (resultsSubtitle) resultsSubtitle.textContent = 'No matches found';
         return;
       }
 
@@ -473,15 +518,53 @@
       if (resultsCount) {
         resultsCount.textContent = `${results.length} ${results.length === 1 ? 'model' : 'models'}`;
       }
+      if (resultsSubtitle) {
+        resultsSubtitle.textContent = results.length === talentData.length 
+          ? 'All talent' 
+          : 'Matching your criteria';
+      }
 
-      results.forEach(talent => {
+      results.forEach((talent, index) => {
         const card = document.createElement('div');
         card.className = 'feature-demo__talent-card';
+        card.style.animationDelay = `${index * 0.03}s`;
+        
+        const heightFeetInches = inchesToFeetInches(talent.height);
+        const specializationLabels = {
+          editorial: 'Editorial',
+          runway: 'Runway',
+          commercial: 'Commercial'
+        };
+        const specializationsHtml = talent.specializations
+          .map(spec => `<span class="feature-demo__talent-card-specialization">${specializationLabels[spec] || spec}</span>`)
+          .join('');
+
         card.innerHTML = `
-          <img src="${talent.image}" alt="${talent.name}" class="feature-demo__talent-card-image" loading="lazy">
+          <div class="feature-demo__talent-card-image-wrapper">
+            <img src="${talent.image}" alt="${talent.name}" class="feature-demo__talent-card-image" loading="lazy">
+          </div>
           <div class="feature-demo__talent-card-info">
             <div class="feature-demo__talent-card-name">${talent.name}</div>
-            <div class="feature-demo__talent-card-location">${talent.location}</div>
+            <div class="feature-demo__talent-card-details">
+              <div class="feature-demo__talent-card-location">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>${talent.location === 'NYC' ? 'New York, NY' : talent.location === 'LA' ? 'Los Angeles, CA' : talent.location === 'Miami' ? 'Miami, FL' : talent.location === 'Chicago' ? 'Chicago, IL' : talent.location}</span>
+              </div>
+            </div>
+            <div class="feature-demo__talent-card-stats">
+              <div class="feature-demo__talent-card-stat">
+                <span class="feature-demo__talent-card-stat-label">Height</span>
+                <span class="feature-demo__talent-card-stat-value">${heightFeetInches}</span>
+              </div>
+              <div class="feature-demo__talent-card-stat">
+                <span class="feature-demo__talent-card-stat-label">Measurements</span>
+                <span class="feature-demo__talent-card-stat-value">${talent.measurements}</span>
+              </div>
+            </div>
+            ${specializationsHtml ? `<div class="feature-demo__talent-card-specializations">${specializationsHtml}</div>` : ''}
           </div>
         `;
         resultsGrid.appendChild(card);
@@ -498,6 +581,13 @@
     }
 
     // Filter on change
+    if (searchFilter) {
+      searchFilter.addEventListener('input', () => {
+        clearTimeout(searchFilter.searchTimeout);
+        searchFilter.searchTimeout = setTimeout(filterTalent, 300);
+      });
+    }
+
     if (locationFilter) {
       locationFilter.addEventListener('change', filterTalent);
     }
@@ -512,6 +602,16 @@
     specializationCheckboxes.forEach(cb => {
       cb.addEventListener('change', filterTalent);
     });
+
+    // Sort on change
+    if (sortSelect) {
+      sortSelect.addEventListener('change', filterTalent);
+    }
+
+    // Clear filters button
+    if (clearFiltersBtn) {
+      clearFiltersBtn.addEventListener('click', clearFilters);
+    }
 
     // Initial render
     filterTalent();

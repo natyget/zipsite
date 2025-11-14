@@ -72,7 +72,8 @@
       <%- include('partials/header-universal', { 
         currentUser: typeof currentUser !== 'undefined' ? currentUser : null,
         currentPage: typeof currentPage !== 'undefined' ? currentPage : '',
-        isHomepage: typeof isHomepage !== 'undefined' && isHomepage === true
+        isHomepage: typeof isHomepage !== 'undefined' && isHomepage === true,
+        profile: typeof currentProfile !== 'undefined' ? currentProfile : (typeof profile !== 'undefined' ? profile : null)
       }) %>
     <% } %>
 

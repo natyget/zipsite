@@ -2257,6 +2257,38 @@
     }
   }
 
+  function initUniversalHeaderUserMenu() {
+    const userMenuButton = document.getElementById('universal-user-menu-button');
+    const userMenu = document.getElementById('universal-user-menu');
+    const userDropdown = userMenuButton?.closest('.universal-header__user-dropdown');
+    
+    if (!userMenuButton || !userMenu || !userDropdown) return;
+    
+    // Toggle dropdown on button click
+    userMenuButton.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const isExpanded = userDropdown.getAttribute('aria-expanded') === 'true';
+      userDropdown.setAttribute('aria-expanded', !isExpanded);
+      userMenuButton.setAttribute('aria-expanded', !isExpanded);
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!userDropdown.contains(e.target)) {
+        userDropdown.setAttribute('aria-expanded', 'false');
+        userMenuButton.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Close dropdown on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && userDropdown.getAttribute('aria-expanded') === 'true') {
+        userDropdown.setAttribute('aria-expanded', 'false');
+        userMenuButton.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
   function initFooterAnimations() {
     const footer = document.querySelector('.universal-footer');
     if (!footer) return;
@@ -2298,6 +2330,7 @@
     handlePdfButtons();
     wireMobileNav();
     initUniversalHeaderMenu();
+    initUniversalHeaderUserMenu();
     initFooterAnimations();
   });
 })();
