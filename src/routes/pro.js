@@ -10,14 +10,11 @@ const router = express.Router();
 router.get('/pro/upgrade', requireRole('TALENT'), async (req, res, next) => {
   try {
     const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
-    if (!profile) {
-      addMessage(req, 'error', 'Create your profile before upgrading.');
-      return res.redirect('/apply');
-    }
+    // Allow upgrade access even without profile - user can upgrade and complete profile later
 
     return res.render('pro/upgrade', {
       title: 'Upgrade to Pro',
-      profile,
+      profile: profile || null,
       layout: 'layouts/dashboard'
     });
   } catch (error) {

@@ -1400,15 +1400,10 @@ router.get('/dashboard/settings', requireRole('TALENT'), async (req, res, next) 
       .where({ id: req.session.userId })
       .first();
     
-    if (!profile) {
-      // User doesn't have a profile yet - show message and redirect to dashboard
-      addMessage(req, 'info', 'Please complete your profile first. You can access settings after creating your profile.');
-      return res.redirect('/dashboard/talent');
-    }
-    
+    // Allow settings access even without profile - user can set account preferences
     return res.render('dashboard/settings/index', {
       title: 'Settings',
-      profile,
+      profile: profile || null,
       user: currentUser,
       currentUser,
       currentPage: 'settings',
@@ -1436,15 +1431,10 @@ router.get('/dashboard/settings/:section', requireRole('TALENT'), async (req, re
       .where({ id: req.session.userId })
       .first();
     
-    if (!profile) {
-      // User doesn't have a profile yet - show message and redirect to dashboard
-      addMessage(req, 'info', 'Please complete your profile first. You can access settings after creating your profile.');
-      return res.redirect('/dashboard/talent');
-    }
-    
+    // Allow settings access even without profile - user can set account preferences
     return res.render('dashboard/settings/index', {
       title: `${section.charAt(0).toUpperCase() + section.slice(1)} Settings`,
-      profile,
+      profile: profile || null,
       user: currentUser,
       currentUser,
       currentPage: 'settings',

@@ -164,15 +164,13 @@
         </svg>
         <span class="dash-nav__text">Portfolio Imagery</span>
       </a>
-      <% if (typeof profile !== 'undefined' && profile && profile.id) { %>
-        <a href="#analytics" class="dash-nav__link" data-section="analytics">
-          <svg class="dash-nav__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2 12L6 8L9 11L14 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M10 6H14V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span class="dash-nav__text">Analytics</span>
-        </a>
-      <% } %>
+      <a href="#analytics" class="dash-nav__link" data-section="analytics">
+        <svg class="dash-nav__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 12L6 8L9 11L14 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M10 6H14V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="dash-nav__text">Analytics</span>
+      </a>
     </div>
   </nav>
 
@@ -974,8 +972,7 @@
       </section>
 
       <!-- Analytics Section (Main Content) -->
-      <% if (typeof profile !== 'undefined' && profile && profile.id) { %>
-        <section class="dash-panel" id="analytics" data-section="analytics">
+      <section class="dash-panel" id="analytics" data-section="analytics">
           <header class="dash-panel__header">
             <h3>Portfolio Analytics</h3>
             <p>Track your portfolio views and PDF downloads</p>
@@ -1038,7 +1035,6 @@
             </div>
           </div>
         </section>
-      <% } %>
     </div>
 
     <!-- Right Column: Sidebar -->
@@ -1116,8 +1112,7 @@
       </div>
 
       <!-- Quick Analytics (Sidebar Summary) -->
-      <% if (typeof profile !== 'undefined' && profile && profile.id) { %>
-        <div class="dash-panel dash-panel--compact dash-sidebar__analytics" id="analytics-sidebar">
+      <div class="dash-panel dash-panel--compact dash-sidebar__analytics" id="analytics-sidebar">
           <header class="dash-panel__header">
             <h3>Quick Analytics</h3>
           </header>
@@ -1142,7 +1137,6 @@
             </div>
           </div>
         </div>
-      <% } %>
 
       <!-- Activity Feed -->
       <% if (typeof profile !== 'undefined' && profile && profile.id) { %>
