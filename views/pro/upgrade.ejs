@@ -62,32 +62,153 @@
   </div>
 </section>
 
+<% const hasActiveSubscription = subscription && (subscription.status === 'trialing' || subscription.status === 'active'); %>
+<% const subscriptionStatus = subscription ? subscription.status : 'none'; %>
+
 <section class="pro-payment">
   <div class="dash-panel">
     <header class="dash-panel__header">
-      <h3>Payment</h3>
-      <p>Secure checkout coming soon</p>
+      <h3><%= hasActiveSubscription ? 'Subscription Status' : 'Get Started' %></h3>
+      <p><%= hasActiveSubscription ? 'Manage your Pro subscription' : 'Start your 14-day free trial today' %></p>
     </header>
     <div class="dash-panel__body">
-      <div class="pro-payment__notice">
-        <p class="pro-payment__message">
-          Payment processing is currently under development. We're working with industry-leading payment providers to ensure secure, seamless transactions.
-        </p>
-        <p class="pro-payment__message">
-          <strong>Interested in early access?</strong> Contact us at <a href="mailto:pro@zipsite.me">pro@zipsite.me</a> to be notified when Pro subscriptions launch.
-        </p>
-      </div>
-      <div class="form-actions" style="display: flex; gap: 12px; flex-wrap: wrap;">
-        <a href="/dashboard/talent" class="button button-primary button-block" style="flex: 1; min-width: 200px; text-align: center;">
-          Upgrade to Pro - Coming Soon
-        </a>
-        <a href="/dashboard/talent" class="button button-secondary" style="flex: 0 0 auto;">
-          Return to Dashboard
-        </a>
-      </div>
+      <% if (hasActiveSubscription) { %>
+        <!-- Active Subscription / Trial Status -->
+        <div class="pro-payment__status">
+          <% if (isInTrial && trialDaysRemaining !== null) { %>
+            <div class="pro-payment__status-item pro-payment__status-item--trial">
+              <div class="pro-payment__status-icon">⏱</div>
+              <div class="pro-payment__status-content">
+                <h4 class="pro-payment__status-title">Free Trial Active</h4>
+                <p class="pro-payment__status-description">
+                  Your 14-day free trial is active. <strong><%= trialDaysRemaining %> <%= trialDaysRemaining === 1 ? 'day' : 'days' %> remaining</strong>.
+                </p>
+                <p class="pro-payment__status-note">
+                  After your trial ends, you'll be charged $9.99/month. Cancel anytime.
+                </p>
+              </div>
+            </div>
+          <% } else if (subscription.status === 'active') { %>
+            <div class="pro-payment__status-item pro-payment__status-item--active">
+              <div class="pro-payment__status-icon">✓</div>
+              <div class="pro-payment__status-content">
+                <h4 class="pro-payment__status-title">Pro Subscription Active</h4>
+                <p class="pro-payment__status-description">
+                  <% if (isCanceling) { %>
+                    Your subscription will be canceled at the end of the current billing period.
+                  <% } else { %>
+                    Your subscription is active and you have access to all Pro features.
+                  <% } %>
+                </p>
+                <% if (subscription.current_period_end) { %>
+                  <% const periodEnd = new Date(subscription.current_period_end); %>
+                  <p class="pro-payment__status-note">
+                    Next billing date: <strong><%= periodEnd.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></strong>
+                  </p>
+                <% } %>
+              </div>
+            </div>
+          <% } %>
+
+          <% if (subscription.status === 'past_due' || subscription.status === 'unpaid') { %>
+            <div class="pro-payment__status-item pro-payment__status-item--warning">
+              <div class="pro-payment__status-icon">⚠</div>
+              <div class="pro-payment__status-content">
+                <h4 class="pro-payment__status-title">Payment Required</h4>
+                <p class="pro-payment__status-description">
+                  There was an issue with your payment. Please update your payment method to continue your Pro subscription.
+                </p>
+              </div>
+            </div>
+          <% } %>
+
+          <div class="form-actions" style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px;">
+            <a href="/stripe/customer-portal" class="button button-primary" style="flex: 1; min-width: 200px; text-align: center;">
+              Manage Billing
+            </a>
+            <a href="/dashboard/talent" class="button button-secondary" style="flex: 0 0 auto;">
+              Return to Dashboard
+            </a>
+          </div>
+        </div>
+      <% } else { %>
+        <!-- No Subscription - Start Trial -->
+        <div class="pro-payment__start">
+          <div class="pro-payment__trial-info">
+            <div class="pro-payment__trial-badge">14-Day Free Trial</div>
+            <p class="pro-payment__trial-description">
+              Start your free trial today. No credit card required until the trial ends.
+              After 14 days, you'll be charged $9.99/month. Cancel anytime, no questions asked.
+            </p>
+          </div>
+
+          <div class="form-actions" style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px;">
+            <button id="start-trial-btn" class="button button-primary button-block" style="flex: 1; min-width: 200px;">
+              Start 14-Day Free Trial
+            </button>
+            <a href="/dashboard/talent" class="button button-secondary" style="flex: 0 0 auto;">
+              Return to Dashboard
+            </a>
+          </div>
+
+          <p class="pro-payment__security-note">
+            🔒 Secure checkout powered by Stripe. Your payment information is encrypted and secure.
+          </p>
+        </div>
+      <% } %>
     </div>
   </div>
 </section>
+
+<script>
+  // Initialize Stripe
+  const stripePublishableKey = '<%= typeof stripePublishableKey !== "undefined" ? stripePublishableKey : "" %>';
+  
+  if (!stripePublishableKey) {
+    console.error('[Pro Upgrade] Stripe publishable key not found');
+  }
+
+  // Handle Start Trial button click
+  const startTrialBtn = document.getElementById('start-trial-btn');
+  if (startTrialBtn) {
+    startTrialBtn.addEventListener('click', async function() {
+      // Disable button during processing
+      startTrialBtn.disabled = true;
+      startTrialBtn.textContent = 'Processing...';
+
+      try {
+        // Create checkout session
+        const response = await fetch('/stripe/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'same-origin'
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to create checkout session');
+        }
+
+        // Redirect to Stripe Checkout
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          throw new Error('No checkout URL received');
+        }
+      } catch (error) {
+        console.error('[Pro Upgrade] Error starting trial:', error);
+        alert('There was an error starting your trial. Please try again or contact support.');
+        
+        // Re-enable button
+        startTrialBtn.disabled = false;
+        startTrialBtn.textContent = 'Start 14-Day Free Trial';
+      }
+    });
+  }
+</script>
 
 <style>
   .pro-upgrade-hero {
@@ -243,6 +364,132 @@
 
   .pro-payment__message a:hover {
     text-decoration: underline;
+  }
+
+  .pro-payment__status {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .pro-payment__status-item {
+    display: flex;
+    gap: 16px;
+    padding: 20px;
+    background: var(--bg-surface-elevated);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    align-items: flex-start;
+  }
+
+  .pro-payment__status-item--trial {
+    border-color: var(--accent-gold);
+    background: rgba(201, 165, 90, 0.05);
+  }
+
+  .pro-payment__status-item--active {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.05);
+  }
+
+  .pro-payment__status-item--warning {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.05);
+  }
+
+  .pro-payment__status-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--bg-surface);
+  }
+
+  .pro-payment__status-item--trial .pro-payment__status-icon {
+    background: var(--accent-gold);
+    color: #FFFFFF;
+  }
+
+  .pro-payment__status-item--active .pro-payment__status-icon {
+    background: #10b981;
+    color: #FFFFFF;
+  }
+
+  .pro-payment__status-item--warning .pro-payment__status-icon {
+    background: #f59e0b;
+    color: #FFFFFF;
+  }
+
+  .pro-payment__status-content {
+    flex: 1;
+  }
+
+  .pro-payment__status-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+  }
+
+  .pro-payment__status-description {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0 0 8px 0;
+  }
+
+  .pro-payment__status-note {
+    font-size: 14px;
+    color: var(--text-tertiary);
+    margin: 0;
+  }
+
+  .pro-payment__start {
+    text-align: center;
+  }
+
+  .pro-payment__trial-info {
+    margin-bottom: 24px;
+  }
+
+  .pro-payment__trial-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    background: var(--accent-gold);
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    margin-bottom: 16px;
+  }
+
+  .pro-payment__trial-description {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .pro-payment__security-note {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin: 16px 0 0 0;
+    text-align: center;
+  }
+
+  #start-trial-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 </style>
 

@@ -21,6 +21,7 @@ const pdfRoutes = require('./routes/pdf');
 const uploadRoutes = require('./routes/upload');
 const agencyRoutes = require('./routes/agency');
 const proRoutes = require('./routes/pro');
+const stripeRoutes = require('./routes/stripe');
 
 const app = express();
 
@@ -216,6 +217,13 @@ app.use((req, res, next) => {
 
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.urlencoded({ extended: false }));
+
+// Stripe webhook route must be registered BEFORE express.json() middleware
+// because it needs raw body for signature verification
+// Import the webhook handler directly
+const stripeWebhookHandler = require('./routes/stripe-webhook');
+app.post('/stripe/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
+
 app.use(express.json());
 
 // Configure session store with serverless-friendly settings
@@ -628,6 +636,7 @@ app.use('/', pdfRoutes);
 app.use('/', uploadRoutes);
 app.use('/', agencyRoutes);
 app.use('/', proRoutes);
+app.use('/stripe', stripeRoutes);
 
 // Static file serving - AFTER routes so routes take precedence over static HTML files
 // Disable caching for CSS/JS in development

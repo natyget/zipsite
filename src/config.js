@@ -54,5 +54,13 @@ module.exports = {
     messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
     appId: process.env.FIREBASE_APP_ID,
     measurementId: process.env.FIREBASE_MEASUREMENT_ID
+  },
+  // Stripe configuration
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY,
+    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    priceId: process.env.STRIPE_PRICE_ID,
+    baseUrl: process.env.BASE_URL || process.env.URL || process.env.DEPLOY_PRIME_URL || 'http://localhost:3000'
   }
 };

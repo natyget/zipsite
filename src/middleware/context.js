@@ -1,9 +1,14 @@
 const knex = require('../db/knex');
 const config = require('../config');
+const { getSubscriptionStatus, getTrialDaysRemaining, isInTrial, isCanceling } = require('../lib/subscriptions');
 
 async function attachLocals(req, res, next) {
   res.locals.currentUser = null;
   res.locals.currentProfile = null;
+  res.locals.currentSubscription = null;
+  res.locals.trialDaysRemaining = null;
+  res.locals.isInTrial = false;
+  res.locals.isCanceling = false;
   if (typeof res.locals.isDashboard === 'undefined') {
     res.locals.isDashboard = false;
   }
@@ -15,19 +20,33 @@ async function attachLocals(req, res, next) {
       if (user) {
         req.currentUser = user;
         res.locals.currentUser = { id: user.id, role: user.role, email: user.email };
-        if (user.role === 'TALENT') {
-          try {
-            const profile = await knex('profiles').where({ user_id: user.id }).first();
-            if (profile) {
-              req.currentProfile = profile;
-              res.locals.currentProfile = profile;
+            if (user.role === 'TALENT') {
+              try {
+                const profile = await knex('profiles').where({ user_id: user.id }).first();
+                if (profile) {
+                  req.currentProfile = profile;
+                  res.locals.currentProfile = profile;
+                }
+
+                // Load subscription status for TALENT users
+                try {
+                  const subscription = await getSubscriptionStatus(user.id);
+                  if (subscription) {
+                    res.locals.currentSubscription = subscription;
+                    res.locals.trialDaysRemaining = getTrialDaysRemaining(subscription);
+                    res.locals.isInTrial = isInTrial(subscription);
+                    res.locals.isCanceling = isCanceling(subscription);
+                  }
+                } catch (subscriptionError) {
+                  // Log subscription query error but don't fail the request
+                  console.error('[attachLocals] Error loading subscription:', subscriptionError.message);
+                }
+              } catch (profileError) {
+                // Log profile query error but don't fail the request
+                // This allows the app to continue even if profile query fails
+                console.error('[attachLocals] Error loading profile:', profileError.message);
+              }
             }
-          } catch (profileError) {
-            // Log profile query error but don't fail the request
-            // This allows the app to continue even if profile query fails
-            console.error('[attachLocals] Error loading profile:', profileError.message);
-          }
-        }
       }
     } catch (error) {
       // Check if it's a database connection error
@@ -83,6 +102,19 @@ async function attachLocals(req, res, next) {
                   req.currentProfile = profile;
                   res.locals.currentProfile = profile;
                 }
+
+                // Load subscription status for TALENT users
+                try {
+                  const subscription = await getSubscriptionStatus(user.id);
+                  if (subscription) {
+                    res.locals.currentSubscription = subscription;
+                    res.locals.trialDaysRemaining = getTrialDaysRemaining(subscription);
+                    res.locals.isInTrial = isInTrial(subscription);
+                    res.locals.isCanceling = isCanceling(subscription);
+                  }
+                } catch (subscriptionError) {
+                  console.error('[attachLocals] Error loading subscription:', subscriptionError.message);
+                }
               } catch (profileError) {
                 console.error('[attachLocals] Error loading profile:', profileError.message);
               }
@@ -113,6 +145,9 @@ async function attachLocals(req, res, next) {
     appId: config.firebase.appId || '',
     measurementId: config.firebase.measurementId || ''
   };
+
+  // Add Stripe publishable key to res.locals for client-side use
+  res.locals.stripePublishableKey = config.stripe.publishableKey || '';
 
   // Debug logging for Firebase config (only log if missing critical values)
   if (!res.locals.firebaseConfig.apiKey || !res.locals.firebaseConfig.authDomain || !res.locals.firebaseConfig.projectId) {
