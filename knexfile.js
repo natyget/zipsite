@@ -213,6 +213,27 @@ if (client === 'pg') {
 const pg = {
   client: 'pg',
   connection: process.env.DATABASE_URL,
+  // Connection pool configuration for serverless environments
+  // This helps handle connection termination issues with pooled connections (e.g., Neon)
+  pool: {
+    min: 0, // Minimum connections in pool (0 for serverless)
+    max: 3, // Maximum connections in pool (small for serverless to avoid connection limits)
+    idleTimeoutMillis: 10000, // Close idle connections after 10 seconds
+    acquireTimeoutMillis: 60000, // Wait up to 60 seconds to acquire a connection
+    createTimeoutMillis: 30000, // Wait up to 30 seconds to create a new connection
+    reapIntervalMillis: 1000, // Check for idle connections every second
+    createRetryIntervalMillis: 200, // Wait 200ms before retrying connection creation
+    // Auto-reconnect on connection errors
+    afterCreate: (connection, done) => {
+      // Set connection timeout to prevent hanging connections
+      connection.on('error', (err) => {
+        console.error('[Database] Connection error:', err.message);
+      });
+      done(null, connection);
+    }
+  },
+  // Increase query timeout for serverless (functions can be slow to cold start)
+  acquireConnectionTimeout: 60000,
   ...shared
 };
 

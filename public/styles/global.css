@@ -7839,7 +7839,8 @@ body.filmstrip-hover {
 /* Demo Header - Compact Editorial Style */
 .demo-header {
   position: relative;
-  padding: 6rem 2rem 4rem;
+  padding: 8rem 2rem 4rem;
+  padding-top: calc(8rem + var(--header-height, 80px) + 2rem);
   background: #faf9f7;
   background-image:
     radial-gradient(ellipse at 50% 0%, rgba(201, 165, 90, 0.04) 0%, transparent 50%),
@@ -8403,7 +8404,8 @@ body.filmstrip-hover {
 /* Enhanced Responsive Styles for Preview */
 @media (max-width: 768px) {
   .demo-header {
-    padding: 4rem 1.5rem 3rem;
+    padding: 6rem 1.5rem 3rem;
+    padding-top: calc(6rem + var(--header-height, 80px) + 1.5rem);
   }
 
   .demo-header__pricing {

@@ -24,19 +24,26 @@ const proRoutes = require('./routes/pro');
 
 const app = express();
 
-// Handle unhandled promise rejections gracefully (especially for session cleanup)
-// This prevents crashes from cleanup errors in serverless environments
+// Handle unhandled promise rejections gracefully (especially for session and database errors)
+// This prevents crashes from connection errors in serverless environments
 process.on('unhandledRejection', (reason, promise) => {
-  // Check if it's a session cleanup error (expected in serverless)
+  // Check if it's a session or database connection error (expected in serverless)
   if (reason && typeof reason === 'object' && reason.message) {
-    if (
+    const isConnectionError = (
       reason.message.includes('Connection terminated') ||
+      reason.message.includes('connection') && reason.message.includes('unexpectedly') ||
+      reason.message.includes('select "sess" from "sessions"') ||
       reason.message.includes('delete from "sessions"') ||
       reason.message.includes('expired') ||
-      (reason.message.includes('connection') && reason.message.includes('unexpectedly'))
-    ) {
-      // Log session cleanup errors but don't crash (non-critical)
-      console.error('[Unhandled Rejection] Session cleanup error (expected in serverless):', reason.message);
+      reason.message.includes('timeout') ||
+      reason.code === 'ECONNRESET' ||
+      reason.code === 'EPIPE'
+    );
+
+    if (isConnectionError) {
+      // Log connection errors but don't crash (non-critical in serverless)
+      // These are expected when database connections are terminated
+      console.error('[Unhandled Rejection] Database connection error (expected in serverless):', reason.message.substring(0, 150));
       return; // Don't crash - this is expected behavior in serverless
     }
   }
@@ -237,40 +244,84 @@ sessionStore.on('error', (error) => {
   // Log session store errors but don't crash
   // Connection errors are expected in serverless environments when functions end
   if (error && error.message) {
-    const isCleanupError = (
+    const isConnectionError = (
       error.message.includes('Connection terminated') ||
+      error.message.includes('connection') && error.message.includes('unexpectedly') ||
+      error.message.includes('timeout') ||
+      error.code === 'ECONNRESET' ||
+      error.code === 'EPIPE' ||
+      error.message.includes('select "sess" from "sessions"') ||
       error.message.includes('delete from "sessions"') ||
-      error.message.includes('expired') ||
-      (error.message.includes('connection') && error.message.includes('unexpectedly'))
+      error.message.includes('expired')
     );
 
-    if (isCleanupError) {
-      // These are expected in serverless - connections close when functions end
-      // Log but don't throw - cleanup errors are non-critical
-      console.error('[Session Store] Cleanup error (expected in serverless, ignored):', error.message);
+    if (isConnectionError) {
+      // These are expected in serverless - connections can terminate unexpectedly
+      // Log but don't throw - connection errors are non-critical for session operations
+      console.error('[Session Store] Connection error (expected in serverless, ignored):', error.message.substring(0, 100));
     } else {
       // Other errors should be logged but not cause crashes
-      console.error('[Session Store] Error:', error.message);
+      console.error('[Session Store] Error:', error.message.substring(0, 200));
     }
   } else {
     console.error('[Session Store] Unknown error:', error);
   }
 });
 
-app.use(
-  session({
-    secret: config.sessionSecret,
-    resave: false,
-    saveUninitialized: false,
-    store: sessionStore,
-    cookie: {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: config.nodeEnv === 'production',
-      maxAge: 1000 * 60 * 60 * 24 * 7
+// Apply session middleware with error handling wrapper
+// Wrap the session middleware to catch database connection errors gracefully
+const sessionMiddleware = session({
+  secret: config.sessionSecret,
+  resave: false,
+  saveUninitialized: false,
+  store: sessionStore,
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: config.nodeEnv === 'production',
+    maxAge: 1000 * 60 * 60 * 24 * 7
+  },
+  // Custom error handler for session store operations
+  // This prevents session store errors from crashing the app
+  genid: (req) => {
+    // Use a fallback if database ID generation fails
+    try {
+      return require('uuid').v4();
+    } catch (err) {
+      // Fallback to simple ID if uuid fails
+      return Date.now().toString(36) + Math.random().toString(36).substring(2);
     }
-  })
-);
+  }
+});
+
+// Wrap session middleware with error handling for connection failures
+app.use((req, res, next) => {
+  // Execute session middleware, but catch connection errors
+  sessionMiddleware(req, res, (err) => {
+    // Catch session store errors and handle gracefully
+    if (err) {
+      // Check if it's a connection error
+      if (err.message && (
+        err.message.includes('Connection terminated') ||
+        (err.message.includes('connection') && err.message.includes('unexpectedly')) ||
+        err.message.includes('timeout') ||
+        err.message.includes('select "sess" from "sessions"') ||
+        err.code === 'ECONNRESET' ||
+        err.code === 'EPIPE'
+      )) {
+        // Connection error - log but continue without session
+        console.error('[Session] Connection error (continuing without session):', err.message.substring(0, 150));
+        // Create a minimal session object to prevent errors downstream
+        req.session = req.session || {};
+        req.session.cookie = req.session.cookie || { maxAge: null };
+        return next(); // Continue without crashing
+      }
+      // Other errors - pass through
+      return next(err);
+    }
+    next();
+  });
+});
 
 // Initialize Firebase Admin SDK
 initializeFirebaseAdmin();
