@@ -190,9 +190,24 @@ window.FirebaseAuth = {
         prompt: 'select_account'
       });
       
-      const userCredential = await signInWithPopup(auth, provider);
-      console.log('[Firebase Auth] User signed in with Google:', userCredential.user.uid);
-      return userCredential;
+      // Try popup sign-in
+      try {
+        const userCredential = await signInWithPopup(auth, provider);
+        console.log('[Firebase Auth] User signed in with Google:', userCredential.user.uid);
+        return userCredential;
+      } catch (popupError) {
+        // If popup fails (blocked or closed), check the error code
+        if (popupError.code === 'auth/popup-blocked') {
+          console.warn('[Firebase Auth] Popup blocked, user may need to allow popups');
+          throw popupError;
+        } else if (popupError.code === 'auth/popup-closed-by-user') {
+          console.log('[Firebase Auth] Popup closed by user');
+          throw popupError;
+        } else {
+          // Re-throw other errors
+          throw popupError;
+        }
+      }
     } catch (error) {
       console.error('[Firebase Auth] Google Sign-In error:', error);
       throw error;
