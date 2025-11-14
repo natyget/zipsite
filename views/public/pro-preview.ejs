@@ -1,7 +1,7 @@
 <!-- Editorial Header: Compact and elegant -->
 <section class="demo-header" id="demo-header">
   <div class="demo-header__container">
-    <span class="demo-header__badge">Live Demo</span>
+    <span class="demo-header__badge">Pro Preview</span>
     <h1 class="demo-header__headline">
       <span class="demo-header__headline-fashion">Experience Pro.</span>
       <span class="demo-header__headline-ai">Editorial quality. Zero compromises.</span>
@@ -239,7 +239,7 @@
 
 <script>
   // Pass theme data to JavaScript
-  window.DEMO_THEME_DATA = {
+  window.PRO_PREVIEW_THEME_DATA = {
     allThemes: <%- JSON.stringify(typeof allThemes !== 'undefined' ? allThemes : {}) %>,
     freeThemes: <%- JSON.stringify(typeof freeThemes !== 'undefined' ? freeThemes : []) %>,
     proThemes: <%- JSON.stringify(typeof proThemes !== 'undefined' ? proThemes : []) %>,
@@ -247,4 +247,4 @@
     baseUrl: '<%= typeof baseUrl !== 'undefined' ? baseUrl : '' %>'
   };
 </script>
-<script src="/scripts/demo.js?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>" defer></script>
+<script src="/scripts/pro-preview.js?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>" defer></script>

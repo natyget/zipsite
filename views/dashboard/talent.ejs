@@ -393,14 +393,18 @@
 
               <div class="form-grid">
                 <div class="form-field <%= fieldHasError('weight') || fieldHasError('weight_unit') ? 'has-error' : '' %>">
-                  <label for="weight">Weight</label>
-                  <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
-                    <input id="weight" name="weight" type="number" step="0.1" min="30" max="440"
-                      value="<%= valueFor('weight') || (valueFor('weight_kg') ? valueFor('weight_kg') : valueFor('weight_lbs')) %>" placeholder="143" style="flex: 1;">
-                    <select id="weight_unit" name="weight_unit" style="width: auto; min-width: 80px;">
-                      <option value="lbs" <%= (!valueFor('weight_unit') && valueFor('weight_kg')) ? '' : (valueFor('weight_unit') === 'lbs' ? 'selected' : (!valueFor('weight_lbs') ? 'selected' : '')) %>>lbs</option>
-                      <option value="kg" <%= valueFor('weight_unit') === 'kg' ? 'selected' : '' %>>kg</option>
-                    </select>
+                  <label>Weight</label>
+                  <div style="display: flex; gap: 0.5rem; align-items: stretch;">
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                      <input id="weight" name="weight" type="number" step="0.1" min="30" max="440"
+                        value="<%= valueFor('weight') || (valueFor('weight_kg') ? valueFor('weight_kg') : valueFor('weight_lbs')) %>" placeholder="143">
+                    </div>
+                    <div style="width: auto; min-width: 90px; display: flex; flex-direction: column;">
+                      <select id="weight_unit" name="weight_unit" style="height: 100%;">
+                        <option value="lbs" <%= (!valueFor('weight_unit') && valueFor('weight_kg')) ? '' : (valueFor('weight_unit') === 'lbs' ? 'selected' : (!valueFor('weight_lbs') ? 'selected' : '')) %>>lbs</option>
+                        <option value="kg" <%= valueFor('weight_unit') === 'kg' ? 'selected' : '' %>>kg</option>
+                      </select>
+                    </div>
                   </div>
                   <input type="hidden" id="weight_kg" name="weight_kg" value="<%= valueFor('weight_kg') %>">
                   <input type="hidden" id="weight_lbs" name="weight_lbs" value="<%= valueFor('weight_lbs') %>">
@@ -412,7 +416,7 @@
                 </div>
 
                 <div class="form-field <%= fieldHasError('dress_size') ? 'has-error' : '' %>" id="dress-size-field">
-                  <label for="dress_size">Dress Size</label>
+                  <label for="dress_size">Dress Size <span class="form-label__optional">(optional)</span></label>
                   <input id="dress_size" name="dress_size" type="text" value="<%= valueFor('dress_size') %>"
                     placeholder="6 US">
                   <% if (fieldHasError('dress_size')) { %>
@@ -423,63 +427,73 @@
                 </div>
               </div>
 
-              <div class="form-grid">
-              <div class="form-field <%= fieldHasError('work_eligibility') ? 'has-error' : '' %>">
-                <label for="work_eligibility">Work Eligibility</label>
-                <select id="work_eligibility" name="work_eligibility">
-                  <option value="">Select...</option>
-                  <option value="Yes" <%= valueFor('work_eligibility') === 'Yes' ? 'selected' : '' %>>Yes</option>
-                  <option value="No" <%= valueFor('work_eligibility') === 'No' ? 'selected' : '' %>>No</option>
-                </select>
-                <% if (fieldHasError('work_eligibility')) { %>
-                  <p class="form-field__error">
-                    <%= fieldError('work_eligibility') %>
-                  </p>
-                  <% } %>
-              </div>
+              <!-- Legal & Background Section -->
+              <div class="form-section" style="margin-top: 40px;">
+                <div class="form-section__header">
+                  <h4>Legal & Background</h4>
+                  <p>Work eligibility and legal status</p>
+                </div>
+                
+                <div class="form-grid">
+                  <div class="form-field <%= fieldHasError('work_eligibility') ? 'has-error' : '' %>">
+                    <label for="work_eligibility">Work Eligibility</label>
+                    <select id="work_eligibility" name="work_eligibility">
+                      <option value="">Select...</option>
+                      <option value="Yes" <%= valueFor('work_eligibility') === 'Yes' ? 'selected' : '' %>>Yes</option>
+                      <option value="No" <%= valueFor('work_eligibility') === 'No' ? 'selected' : '' %>>No</option>
+                    </select>
+                    <% if (fieldHasError('work_eligibility')) { %>
+                      <p class="form-field__error">
+                        <%= fieldError('work_eligibility') %>
+                      </p>
+                      <% } %>
+                  </div>
 
-              <div class="form-field <%= fieldHasError('work_status') ? 'has-error' : '' %>">
-                <label for="work_status">Work Status</label>
-                <% 
-                  const workStatusValue = valueFor('work_status', '');
-                  const workStatusOptions = ['Citizen', 'PR', 'Visa', 'Other'];
-                  const isWorkStatusOther = workStatusValue && !workStatusOptions.includes(workStatusValue);
-                %>
-                <select id="work_status" name="work_status">
-                  <option value="">Select...</option>
-                  <% workStatusOptions.filter(opt => opt !== 'Other').forEach(opt => { %>
-                    <option value="<%= opt %>" <%= workStatusValue === opt ? 'selected' : '' %>><%= opt %></option>
-                  <% }); %>
-                  <option value="Other" <%= isWorkStatusOther ? 'selected' : '' %>>Other</option>
-                </select>
-                <input type="text" id="work_status_other" name="work_status_other" value="<%= isWorkStatusOther ? workStatusValue : '' %>" placeholder="Enter work status" style="margin-top: 0.5rem; display: <%= isWorkStatusOther ? 'block' : 'none' %>;">
-                <% if (fieldHasError('work_status')) { %>
-                  <p class="form-field__error">
-                    <%= fieldError('work_status') %>
-                  </p>
-                  <% } %>
-              </div>
-
-                <div class="form-field <%= fieldHasError('ethnicity') ? 'has-error' : '' %>">
-                  <label for="ethnicity">Ethnicity</label>
-                  <input id="ethnicity" name="ethnicity" type="text" value="<%= valueFor('ethnicity') %>"
-                    placeholder="Optional">
-                  <% if (fieldHasError('ethnicity')) { %>
-                    <p class="form-field__error">
-                      <%= fieldError('ethnicity') %>
-                    </p>
-                    <% } %>
+                  <div class="form-field <%= fieldHasError('work_status') ? 'has-error' : '' %>">
+                    <label for="work_status">Work Status</label>
+                    <% 
+                      const workStatusValue = valueFor('work_status', '');
+                      const workStatusOptions = ['Citizen', 'PR', 'Visa', 'Other'];
+                      const isWorkStatusOther = workStatusValue && !workStatusOptions.includes(workStatusValue);
+                    %>
+                    <select id="work_status" name="work_status">
+                      <option value="">Select...</option>
+                      <% workStatusOptions.filter(opt => opt !== 'Other').forEach(opt => { %>
+                        <option value="<%= opt %>" <%= workStatusValue === opt ? 'selected' : '' %>><%= opt %></option>
+                      <% }); %>
+                      <option value="Other" <%= isWorkStatusOther ? 'selected' : '' %>>Other</option>
+                    </select>
+                    <input type="text" id="work_status_other" name="work_status_other" value="<%= isWorkStatusOther ? workStatusValue : '' %>" placeholder="Enter work status" style="margin-top: 0.5rem; display: <%= isWorkStatusOther ? 'block' : 'none' %>;">
+                    <% if (fieldHasError('work_status')) { %>
+                      <p class="form-field__error">
+                        <%= fieldError('work_status') %>
+                      </p>
+                      <% } %>
+                  </div>
                 </div>
 
-                <div class="form-field <%= fieldHasError('union_membership') ? 'has-error' : '' %>">
-                  <label for="union_membership">Union Membership</label>
-                  <input id="union_membership" name="union_membership" type="text" value="<%= valueFor('union_membership') %>"
-                    placeholder="SAG-AFTRA, AEA, etc.">
-                  <% if (fieldHasError('union_membership')) { %>
-                    <p class="form-field__error">
-                      <%= fieldError('union_membership') %>
-                    </p>
-                    <% } %>
+                <div class="form-grid">
+                  <div class="form-field <%= fieldHasError('ethnicity') ? 'has-error' : '' %>">
+                    <label for="ethnicity">Ethnicity <span class="form-label__optional">(optional)</span></label>
+                    <input id="ethnicity" name="ethnicity" type="text" value="<%= valueFor('ethnicity') %>"
+                      placeholder="Optional">
+                    <% if (fieldHasError('ethnicity')) { %>
+                      <p class="form-field__error">
+                        <%= fieldError('ethnicity') %>
+                      </p>
+                      <% } %>
+                  </div>
+
+                  <div class="form-field <%= fieldHasError('union_membership') ? 'has-error' : '' %>">
+                    <label for="union_membership">Union Membership <span class="form-label__optional">(optional)</span></label>
+                    <input id="union_membership" name="union_membership" type="text" value="<%= valueFor('union_membership') %>"
+                      placeholder="SAG-AFTRA, AEA, etc.">
+                    <% if (fieldHasError('union_membership')) { %>
+                      <p class="form-field__error">
+                        <%= fieldError('union_membership') %>
+                      </p>
+                      <% } %>
+                  </div>
                 </div>
               </div>
 

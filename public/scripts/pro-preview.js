@@ -2,7 +2,7 @@
   'use strict';
 
   // Get theme data from server
-  const themeData = window.DEMO_THEME_DATA || {};
+  const themeData = window.PRO_PREVIEW_THEME_DATA || {};
   const allThemes = themeData.allThemes || {};
   const freeThemes = themeData.freeThemes || [];
   const proThemes = themeData.proThemes || [];
