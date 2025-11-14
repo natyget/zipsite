@@ -1,0 +1,10 @@
+{
+  "[ejs]": {
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": null
+  },
+  "files.associations": {
+    "*.ejs": "ejs"
+  }
+}
+

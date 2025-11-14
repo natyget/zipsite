@@ -96,11 +96,13 @@
   }
   floatingTalentsData.forEach(talent => {
   if (talent && talent.slug && talent.slug !== (elara && elara.slug) && featuredTalents.length < 8) {
-    featuredTalents.push({ first_name: talent.first_name || '' , last_name: talent.last_name || '' , city: talent.city
-    || '' , slug: talent.slug, hero_image: normalizeImagePath(talent.hero_image || talent.hero_image_path) }); } }); //
-    Fill with placeholders to reach 8 while (featuredTalents.length < 8) { const
-    placeholder=placeholderTalents[featuredTalents.length % placeholderTalents.length];
-    featuredTalents.push(placeholder); } %>
+    featuredTalents.push({ first_name: talent.first_name || '' , last_name: talent.last_name || '' , city: talent.city || '' , slug: talent.slug, hero_image: normalizeImagePath(talent.hero_image || talent.hero_image_path) });
+  }
+  }); // Fill with placeholders to reach 8
+  while (featuredTalents.length < 8) {
+    const placeholder = placeholderTalents[featuredTalents.length % placeholderTalents.length];
+    featuredTalents.push(placeholder);
+  } %>
 
     <!-- Hero: Split-Screen AI Transformation -->
     <section class="transformation-hero" id="transformation-hero">
