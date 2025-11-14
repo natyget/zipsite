@@ -3,6 +3,7 @@
   const user = typeof currentUser !== 'undefined' && currentUser ? currentUser : null;
   const page = typeof currentPage !== 'undefined' ? currentPage : '';
   const isHomepageFlag = typeof isHomepage !== 'undefined' && isHomepage === true;
+  const userProfile = typeof profile !== 'undefined' && profile ? profile : null;
 %>
 <header class="universal-header <%= isHomepageFlag ? 'universal-header--homepage' : '' %>" role="banner">
   <div class="universal-header__inner">
@@ -26,10 +27,7 @@
 
     <div class="universal-header__actions">
       <% if (user && user.id && user.role) { %>
-        <% 
-          const dashboardHref = user.role === 'AGENCY' ? '/dashboard/agency' : '/dashboard/talent';
-          const userProfile = typeof profile !== 'undefined' ? profile : null;
-        %>
+        <% const dashboardHref = user.role === 'AGENCY' ? '/dashboard/agency' : '/dashboard/talent'; %>
         <div class="universal-header__user-wrapper">
           <div class="universal-header__user-dropdown">
             <button type="button" class="universal-header__user" data-initial="<%= user.email ? user.email.charAt(0).toUpperCase() : 'U' %>" aria-label="User menu" aria-expanded="false" id="universal-user-menu-button">
