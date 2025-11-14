@@ -109,6 +109,21 @@ async function attachLocals(req, res, next) {
     projectId: config.firebase.projectId || ''
   };
 
+  // Debug logging for Firebase config (only log if missing values)
+  if (!res.locals.firebaseConfig.apiKey || !res.locals.firebaseConfig.authDomain || !res.locals.firebaseConfig.projectId) {
+    console.warn('[Firebase Config] Missing client-side Firebase configuration:');
+    console.warn('[Firebase Config]', {
+      apiKey: res.locals.firebaseConfig.apiKey ? 'SET' : 'MISSING',
+      authDomain: res.locals.firebaseConfig.authDomain ? 'SET' : 'MISSING',
+      projectId: res.locals.firebaseConfig.projectId ? 'SET' : 'MISSING',
+      envVars: {
+        FIREBASE_API_KEY: process.env.FIREBASE_API_KEY ? 'SET' : 'MISSING',
+        FIREBASE_AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN ? 'SET' : 'MISSING',
+        FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID ? 'SET' : 'MISSING'
+      }
+    });
+  }
+
   next();
 }
 

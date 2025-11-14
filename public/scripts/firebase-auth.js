@@ -149,6 +149,33 @@
         console.error('[Firebase Auth] Send password reset email error:', error);
         throw error;
       }
+    },
+
+    /**
+     * Sign in with Google using popup
+     * @returns {Promise<firebase.auth.UserCredential>}
+     */
+    signInWithGoogle: async function() {
+      if (!auth) {
+        throw new Error('Firebase Auth not initialized');
+      }
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        // Request additional scopes if needed
+        provider.addScope('profile');
+        provider.addScope('email');
+        // Set custom parameters
+        provider.setCustomParameters({
+          prompt: 'select_account'
+        });
+        
+        const userCredential = await auth.signInWithPopup(provider);
+        console.log('[Firebase Auth] User signed in with Google:', userCredential.user.uid);
+        return userCredential;
+      } catch (error) {
+        console.error('[Firebase Auth] Google Sign-In error:', error);
+        throw error;
+      }
     }
   };
 

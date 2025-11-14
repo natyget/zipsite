@@ -56,6 +56,20 @@ const fieldError = (name) => {
           <button type="submit" class="button button-primary button-block" data-loading-text="Signing in…">Sign in</button>
         </form>
         
+        <div class="auth-divider">
+          <span>or</span>
+        </div>
+        
+        <button type="button" id="google-signin-btn" class="button button-google button-block" data-loading-text="Signing in…">
+          <svg width="18" height="18" viewBox="0 0 18 18" style="margin-right: 8px; vertical-align: middle;">
+            <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+            <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.348 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/>
+            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"/>
+          </svg>
+          Sign in with Google
+        </button>
+        
         <p class="auth-switch">Need an account? <a href="/apply">Start Creating</a>.</p>
       </div>
     </div>
@@ -65,14 +79,35 @@ const fieldError = (name) => {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const loginForm = document.querySelector('form[action="/login"]');
+  const googleSignInBtn = document.getElementById('google-signin-btn');
   if (!loginForm) return;
 
+  // Function to handle login submission (used by both email/password and Google)
+  async function handleLogin(idToken) {
+    const firebaseTokenInput = loginForm.querySelector('#firebase_token');
+    firebaseTokenInput.value = idToken;
+    loginForm.submit();
+  }
+
+  // Function to show error
+  function showError(message) {
+    let errorDisplay = loginForm.querySelector('.auth-error');
+    if (!errorDisplay) {
+      errorDisplay = document.createElement('div');
+      errorDisplay.className = 'auth-error field-error';
+      errorDisplay.style.cssText = 'margin-bottom: 1rem; padding: 0.75rem; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c33;';
+      loginForm.insertBefore(errorDisplay, loginForm.firstChild);
+    }
+    errorDisplay.textContent = message;
+    errorDisplay.style.display = 'block';
+  }
+
+  // Email/Password login
   loginForm.addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const email = loginForm.querySelector('#email').value.trim();
     const password = loginForm.querySelector('#password').value;
-    const firebaseTokenInput = loginForm.querySelector('#firebase_token');
     const submitButton = loginForm.querySelector('button[type="submit"]');
     const originalText = submitButton.textContent;
 
@@ -109,11 +144,8 @@ document.addEventListener('DOMContentLoaded', function() {
       // Get ID token
       const idToken = await userCredential.user.getIdToken();
       
-      // Set token in hidden input
-      firebaseTokenInput.value = idToken;
-
       // Submit form to backend
-      loginForm.submit();
+      handleLogin(idToken);
     } catch (error) {
       console.error('[Login] Authentication error:', error);
       
@@ -123,18 +155,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Show error message
       const errorMessage = window.getFirebaseErrorMessage ? window.getFirebaseErrorMessage(error) : error.message || 'Authentication failed. Please try again.';
-      
-      // Find or create error display
-      let errorDisplay = loginForm.querySelector('.auth-error');
-      if (!errorDisplay) {
-        errorDisplay = document.createElement('div');
-        errorDisplay.className = 'auth-error field-error';
-        errorDisplay.style.cssText = 'margin-bottom: 1rem; padding: 0.75rem; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c33;';
-        loginForm.insertBefore(errorDisplay, loginForm.firstChild);
-      }
-      errorDisplay.textContent = errorMessage;
-      errorDisplay.style.display = 'block';
+      showError(errorMessage);
     }
   });
+
+  // Google Sign-In
+  if (googleSignInBtn) {
+    googleSignInBtn.addEventListener('click', async function() {
+      if (!window.FirebaseAuth || !window.FirebaseAuth.auth) {
+        console.error('[Login] Firebase Auth not initialized');
+        alert('Authentication system not ready. Please refresh the page and try again.');
+        return;
+      }
+
+      try {
+        // Show loading state
+        googleSignInBtn.disabled = true;
+        const originalText = googleSignInBtn.innerHTML;
+        googleSignInBtn.innerHTML = '<span>' + (googleSignInBtn.dataset.loadingText || 'Signing in…') + '</span>';
+
+        // Sign in with Google
+        const userCredential = await window.FirebaseAuth.signInWithGoogle();
+        
+        // Get ID token
+        const idToken = await userCredential.user.getIdToken();
+        
+        // Submit form to backend
+        handleLogin(idToken);
+      } catch (error) {
+        console.error('[Login] Google Sign-In error:', error);
+        
+        // Reset button state
+        googleSignInBtn.disabled = false;
+        googleSignInBtn.innerHTML = originalText || googleSignInBtn.innerHTML;
+
+        // Show error message
+        const errorMessage = window.getFirebaseErrorMessage ? window.getFirebaseErrorMessage(error) : error.message || 'Google Sign-In failed. Please try again.';
+        showError(errorMessage);
+      }
+    });
+  }
 });
 </script>
