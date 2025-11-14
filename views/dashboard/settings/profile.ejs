@@ -1,0 +1,80 @@
+<section class="settings-section">
+  <div class="settings-section__header">
+    <h2 class="settings-section__title">Profile Settings</h2>
+    <p class="settings-section__description">Manage your portfolio settings and preferences</p>
+  </div>
+
+  <div class="settings-section__content">
+    <div class="settings-panel">
+      <div class="settings-panel__header">
+        <h3 class="settings-panel__title">Portfolio Slug</h3>
+        <p class="settings-panel__description">Your portfolio URL: <strong><%= typeof profile !== 'undefined' && profile && profile.slug ? `https://zipsitestudio.com/portfolio/${profile.slug}` : 'Not set' %></strong></p>
+      </div>
+      <div class="settings-panel__body">
+        <form method="post" action="/dashboard/settings/slug" class="form-stacked">
+          <div class="form-field">
+            <label for="slug">Portfolio Slug</label>
+            <input type="text" id="slug" name="slug" value="<%= typeof profile !== 'undefined' && profile && profile.slug ? profile.slug : '' %>" required pattern="[a-z0-9-]+" class="form-input">
+            <p class="form-field__help">Only lowercase letters, numbers, and hyphens are allowed</p>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="button button-primary">Update Slug</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="settings-panel">
+      <div class="settings-panel__header">
+        <h3 class="settings-panel__title">Portfolio Visibility</h3>
+        <p class="settings-panel__description">Control who can view your portfolio</p>
+      </div>
+      <div class="settings-panel__body">
+        <form method="post" action="/dashboard/settings/visibility" class="form-stacked">
+          <div class="form-field">
+            <label class="form-radio">
+              <input type="radio" name="visibility" value="public" <%= typeof profile !== 'undefined' && profile && (profile.is_public === undefined || profile.is_public !== false) ? 'checked' : '' %>>
+              <span>Public</span>
+            </label>
+            <p class="form-field__help">Anyone with the link can view your portfolio</p>
+          </div>
+          <div class="form-field">
+            <label class="form-radio">
+              <input type="radio" name="visibility" value="private" <%= typeof profile !== 'undefined' && profile && profile.is_public === false ? 'checked' : '' %>>
+              <span>Private</span>
+            </label>
+            <p class="form-field__help">Only you can view your portfolio</p>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="button button-primary">Update Visibility</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="settings-panel">
+      <div class="settings-panel__header">
+        <h3 class="settings-panel__title">Profile Name</h3>
+        <p class="settings-panel__description">Update your first and last name</p>
+      </div>
+      <div class="settings-panel__body">
+        <form method="post" action="/dashboard/talent" class="form-stacked">
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="first_name">First Name</label>
+              <input type="text" id="first_name" name="first_name" value="<%= typeof profile !== 'undefined' && profile && profile.first_name ? profile.first_name : '' %>" required class="form-input">
+            </div>
+            <div class="form-field">
+              <label for="last_name">Last Name</label>
+              <input type="text" id="last_name" name="last_name" value="<%= typeof profile !== 'undefined' && profile && profile.last_name ? profile.last_name : '' %>" required class="form-input">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="button button-primary">Update Name</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+

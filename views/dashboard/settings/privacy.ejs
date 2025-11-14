@@ -1,0 +1,39 @@
+<section class="settings-section">
+  <div class="settings-section__header">
+    <h2 class="settings-section__title">Privacy Settings</h2>
+    <p class="settings-section__description">Manage your privacy and data</p>
+  </div>
+
+  <div class="settings-section__content">
+    <div class="settings-panel">
+      <div class="settings-panel__header">
+        <h3 class="settings-panel__title">Data Export</h3>
+        <p class="settings-panel__description">Download a copy of your data</p>
+      </div>
+      <div class="settings-panel__body">
+        <p>You can request a copy of all your data stored in our system.</p>
+        <form method="post" action="/dashboard/settings/export" class="form-stacked">
+          <div class="form-actions">
+            <button type="submit" class="button button-secondary">Export Data</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="settings-panel settings-panel--danger">
+      <div class="settings-panel__header">
+        <h3 class="settings-panel__title">Delete Account</h3>
+        <p class="settings-panel__description">Permanently delete your account and all associated data</p>
+      </div>
+      <div class="settings-panel__body">
+        <p class="settings-panel__warning">This action cannot be undone. All your data will be permanently deleted.</p>
+        <form method="post" action="/dashboard/settings/delete" class="form-stacked" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
+          <div class="form-actions">
+            <button type="submit" class="button button-danger">Delete Account</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+

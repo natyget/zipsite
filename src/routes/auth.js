@@ -42,24 +42,28 @@ router.get('/login', async (req, res) => {
 
 // POST /login - Verify Firebase token and create session
 router.post('/login', async (req, res, next) => {
-  const parsed = loginSchema.safeParse(req.body);
-  if (!parsed.success) {
-    console.log('[Login] Validation failed:', parsed.error.flatten().fieldErrors);
-    res.locals.currentPage = 'login';
-    return res.status(422).render('auth/login', {
-      title: 'Sign in',
-      values: req.body,
-      errors: parsed.error.flatten().fieldErrors,
-      layout: 'layout',
-      currentPage: 'login'
-    });
-  }
-
   const idToken = extractIdToken(req) || req.body.firebase_token;
   const nextPath = safeNext(req.body.next);
 
+  // If Firebase token is provided (Google sign-in), skip email/password validation
+  // Otherwise, validate email/password for traditional login
   if (!idToken) {
-    console.log('[Login] No Firebase token provided');
+    const parsed = loginSchema.safeParse(req.body);
+    if (!parsed.success) {
+      console.log('[Login] Validation failed:', parsed.error.flatten().fieldErrors);
+      res.locals.currentPage = 'login';
+      return res.status(422).render('auth/login', {
+        title: 'Sign in',
+        values: req.body,
+        errors: parsed.error.flatten().fieldErrors,
+        layout: 'layout',
+        currentPage: 'login'
+      });
+    }
+  }
+
+  if (!idToken) {
+    console.log('[Login] No Firebase token provided and no valid email/password');
     res.locals.currentPage = 'login';
     return res.status(401).render('auth/login', {
       title: 'Sign in',

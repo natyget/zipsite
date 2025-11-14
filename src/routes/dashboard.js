@@ -1390,4 +1390,141 @@ router.get('/dashboard/pdf-customizer', requireRole('TALENT'), async (req, res, 
   }
 });
 
+// ==================== SETTINGS ROUTES ====================
+
+// GET /dashboard/settings - Main settings page (defaults to account section)
+router.get('/dashboard/settings', requireRole('TALENT'), async (req, res, next) => {
+  try {
+    const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
+    const currentUser = await knex('users')
+      .where({ id: req.session.userId })
+      .first();
+    
+    if (!profile) {
+      addMessage(req, 'error', 'Profile not found.');
+      return res.redirect('/apply');
+    }
+    
+    return res.render('dashboard/settings/index', {
+      title: 'Settings',
+      profile,
+      user: currentUser,
+      currentUser,
+      currentPage: 'settings',
+      layout: 'layouts/dashboard',
+      section: 'account' // Default section
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+// GET /dashboard/settings/:section - Section-specific settings page
+router.get('/dashboard/settings/:section', requireRole('TALENT'), async (req, res, next) => {
+  try {
+    const { section } = req.params;
+    const validSections = ['account', 'profile', 'notifications', 'privacy', 'billing'];
+    
+    if (!validSections.includes(section)) {
+      addMessage(req, 'error', 'Invalid settings section.');
+      return res.redirect('/dashboard/settings');
+    }
+    
+    const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
+    const currentUser = await knex('users')
+      .where({ id: req.session.userId })
+      .first();
+    
+    if (!profile) {
+      addMessage(req, 'error', 'Profile not found.');
+      return res.redirect('/apply');
+    }
+    
+    return res.render('dashboard/settings/index', {
+      title: `${section.charAt(0).toUpperCase() + section.slice(1)} Settings`,
+      profile,
+      user: currentUser,
+      currentUser,
+      currentPage: 'settings',
+      layout: 'layouts/dashboard',
+      section
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+// POST /dashboard/settings/slug - Update portfolio slug
+router.post('/dashboard/settings/slug', requireRole('TALENT'), async (req, res, next) => {
+  try {
+    const { slug } = req.body;
+    const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
+    
+    if (!profile) {
+      addMessage(req, 'error', 'Profile not found.');
+      return res.redirect('/dashboard/settings');
+    }
+    
+    if (!slug || slug.trim().length === 0) {
+      addMessage(req, 'error', 'Portfolio slug is required.');
+      return res.redirect('/dashboard/settings/profile');
+    }
+    
+    const cleanSlug = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    
+    if (cleanSlug !== profile.slug) {
+      const uniqueSlug = await ensureUniqueSlug(cleanSlug, profile.id);
+      await knex('profiles')
+        .where({ id: profile.id })
+        .update({ slug: uniqueSlug, updated_at: knex.fn.now() });
+      
+      addMessage(req, 'success', 'Portfolio slug updated successfully.');
+    }
+    
+    return res.redirect('/dashboard/settings/profile');
+  } catch (error) {
+    console.error('[Settings] Error updating slug:', error);
+    addMessage(req, 'error', 'Failed to update portfolio slug.');
+    return res.redirect('/dashboard/settings/profile');
+  }
+});
+
+// POST /dashboard/settings/visibility - Update portfolio visibility
+router.post('/dashboard/settings/visibility', requireRole('TALENT'), async (req, res, next) => {
+  try {
+    const { visibility } = req.body;
+    const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
+    
+    if (!profile) {
+      addMessage(req, 'error', 'Profile not found.');
+      return res.redirect('/dashboard/settings');
+    }
+    
+    const isPublic = visibility === 'public';
+    
+    // Check if is_public column exists before updating
+    try {
+      await knex('profiles')
+        .where({ id: profile.id })
+        .update({ is_public: isPublic, updated_at: knex.fn.now() });
+      
+      addMessage(req, 'success', `Portfolio is now ${isPublic ? 'public' : 'private'}.`);
+    } catch (updateError) {
+      // If column doesn't exist, log warning but don't fail
+      if (updateError.code === '42703' || updateError.message?.includes('column "is_public" does not exist')) {
+        console.log('[Settings] is_public column does not exist, skipping visibility update');
+        addMessage(req, 'info', 'Portfolio visibility feature is not yet available. Your portfolio is currently public.');
+      } else {
+        throw updateError;
+      }
+    }
+    
+    return res.redirect('/dashboard/settings/profile');
+  } catch (error) {
+    console.error('[Settings] Error updating visibility:', error);
+    addMessage(req, 'error', 'Failed to update portfolio visibility.');
+    return res.redirect('/dashboard/settings/profile');
+  }
+});
+
 module.exports = router;

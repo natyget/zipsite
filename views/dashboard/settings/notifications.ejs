@@ -1,0 +1,44 @@
+<section class="settings-section">
+  <div class="settings-section__header">
+    <h2 class="settings-section__title">Notification Preferences</h2>
+    <p class="settings-section__description">Manage how you receive notifications</p>
+  </div>
+
+  <div class="settings-section__content">
+    <div class="settings-panel">
+      <div class="settings-panel__header">
+        <h3 class="settings-panel__title">Email Notifications</h3>
+        <p class="settings-panel__description">Control which emails you receive</p>
+      </div>
+      <div class="settings-panel__body">
+        <form method="post" action="/dashboard/settings/notifications" class="form-stacked">
+          <div class="form-field">
+            <label class="form-checkbox">
+              <input type="checkbox" name="email_portfolio_views" value="1" checked>
+              <span>Portfolio views</span>
+            </label>
+            <p class="form-field__help">Get notified when someone views your portfolio</p>
+          </div>
+          <div class="form-field">
+            <label class="form-checkbox">
+              <input type="checkbox" name="email_pdf_downloads" value="1" checked>
+              <span>PDF downloads</span>
+            </label>
+            <p class="form-field__help">Get notified when someone downloads your comp card</p>
+          </div>
+          <div class="form-field">
+            <label class="form-checkbox">
+              <input type="checkbox" name="email_marketing" value="1">
+              <span>Marketing emails</span>
+            </label>
+            <p class="form-field__help">Receive updates about new features and promotions</p>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="button button-primary">Save Preferences</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+

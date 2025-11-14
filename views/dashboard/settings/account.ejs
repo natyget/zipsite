@@ -1,0 +1,65 @@
+<section class="settings-section">
+  <div class="settings-section__header">
+    <h2 class="settings-section__title">Account Settings</h2>
+    <p class="settings-section__description">Manage your account information and authentication</p>
+  </div>
+
+  <div class="settings-section__content">
+    <div class="settings-panel">
+      <div class="settings-panel__header">
+        <h3 class="settings-panel__title">Email Address</h3>
+        <p class="settings-panel__description">Your email is managed by Firebase Authentication and cannot be changed here.</p>
+      </div>
+      <div class="settings-panel__body">
+        <div class="form-field">
+          <label for="email">Email</label>
+          <input type="email" id="email" value="<%= typeof user !== 'undefined' && user ? user.email : '' %>" disabled class="form-input form-input--disabled">
+          <p class="form-field__help">To change your email, please contact support or use Firebase Authentication.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-panel">
+      <div class="settings-panel__header">
+        <h3 class="settings-panel__title">Password</h3>
+        <p class="settings-panel__description">Change your account password</p>
+      </div>
+      <div class="settings-panel__body">
+        <form method="post" action="/dashboard/settings/password" class="form-stacked">
+          <div class="form-field">
+            <label for="current-password">Current Password</label>
+            <input type="password" id="current-password" name="current_password" required class="form-input">
+          </div>
+          <div class="form-field">
+            <label for="new-password">New Password</label>
+            <input type="password" id="new-password" name="new_password" required minlength="8" class="form-input">
+            <p class="form-field__help">Password must be at least 8 characters long</p>
+          </div>
+          <div class="form-field">
+            <label for="confirm-password">Confirm New Password</label>
+            <input type="password" id="confirm-password" name="confirm_password" required minlength="8" class="form-input">
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="button button-primary">Change Password</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="settings-panel settings-panel--danger">
+      <div class="settings-panel__header">
+        <h3 class="settings-panel__title">Delete Account</h3>
+        <p class="settings-panel__description">Permanently delete your account and all associated data</p>
+      </div>
+      <div class="settings-panel__body">
+        <p class="settings-panel__warning">This action cannot be undone. All your data will be permanently deleted.</p>
+        <form method="post" action="/dashboard/settings/delete" class="form-stacked" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
+          <div class="form-actions">
+            <button type="submit" class="button button-danger">Delete Account</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+

@@ -38,7 +38,7 @@ const fieldError = (name) => {
           
           <div class="form-field <%= fieldError('email') ? 'has-error' : '' %>">
             <label for="email">Email</label>
-            <input id="email" name="email" type="email" autocomplete="email" required value="<%= valueFor('email', '') %>">
+            <input id="email" name="email" type="email" autocomplete="email" value="<%= valueFor('email', '') %>">
             <% if (fieldError('email')) { %>
               <p class="field-error" role="alert"><%= fieldError('email') %></p>
             <% } %>
@@ -46,7 +46,7 @@ const fieldError = (name) => {
           
           <div class="form-field <%= fieldError('password') ? 'has-error' : '' %>">
             <label for="password">Password</label>
-            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <input id="password" name="password" type="password" autocomplete="current-password">
             <% if (fieldError('password')) { %>
               <p class="field-error" role="alert"><%= fieldError('password') %></p>
             <% } %>
@@ -83,10 +83,32 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!loginForm) return;
 
   // Function to handle login submission (used by both email/password and Google)
-  async function handleLogin(idToken) {
-    const firebaseTokenInput = loginForm.querySelector('#firebase_token');
-    firebaseTokenInput.value = idToken;
-    loginForm.submit();
+  function handleLogin(idToken) {
+    // Submit form data directly via fetch to avoid event listener interference
+    const formData = new FormData(loginForm);
+    formData.set('firebase_token', idToken);
+    
+    // Submit via POST
+    fetch(loginForm.action, {
+      method: 'POST',
+      body: formData,
+      credentials: 'same-origin' // Include cookies for session
+    })
+    .then(response => {
+      if (response.redirected) {
+        window.location.href = response.url;
+      } else {
+        return response.text().then(html => {
+          document.open();
+          document.write(html);
+          document.close();
+        });
+      }
+    })
+    .catch(error => {
+      console.error('[Login] Error submitting form:', error);
+      showError('An error occurred. Please try again.');
+    });
   }
 
   // Function to show error
@@ -111,6 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitButton = loginForm.querySelector('button[type="submit"]');
     const originalText = submitButton.textContent;
 
+    // Validate email/password for traditional login
     if (!email || !password) {
       alert('Please enter your email and password.');
       return;
@@ -179,8 +202,22 @@ document.addEventListener('DOMContentLoaded', function() {
         // Sign in with Google
         const userCredential = await window.FirebaseAuth.signInWithGoogle();
         
-        // Get ID token
+        // Get ID token and user email
         const idToken = await userCredential.user.getIdToken();
+        const email = userCredential.user.email;
+        
+        // Populate email field (for validation fallback, though it won't be needed)
+        const emailInput = loginForm.querySelector('#email');
+        if (emailInput && email) {
+          emailInput.value = email;
+        }
+        
+        // Populate password field with a dummy value to satisfy HTML5 validation
+        // (backend will ignore it when firebase_token is present)
+        const passwordInput = loginForm.querySelector('#password');
+        if (passwordInput) {
+          passwordInput.value = 'google-sign-in';
+        }
         
         // Submit form to backend
         handleLogin(idToken);

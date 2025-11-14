@@ -1,0 +1,43 @@
+<section class="settings-section">
+  <div class="settings-section__header">
+    <h2 class="settings-section__title">Billing & Subscription</h2>
+    <p class="settings-section__description">Manage your subscription and billing</p>
+  </div>
+
+  <div class="settings-section__content">
+    <div class="settings-panel">
+      <div class="settings-panel__header">
+        <h3 class="settings-panel__title">Upgrade to Pro</h3>
+        <p class="settings-panel__description">Unlock premium features with a Pro subscription</p>
+      </div>
+      <div class="settings-panel__body">
+        <p>Pro features include:</p>
+        <ul>
+          <li>Custom branding and URLs</li>
+          <li>Advanced analytics</li>
+          <li>PDF customization</li>
+          <li>Priority support</li>
+        </ul>
+        <div class="form-actions">
+          <a href="/pro/upgrade" class="button button-primary">Upgrade to Pro</a>
+        </div>
+      </div>
+    </div>
+
+    <% if (typeof profile !== 'undefined' && profile && profile.is_pro) { %>
+      <div class="settings-panel">
+        <div class="settings-panel__header">
+          <h3 class="settings-panel__title">Manage Subscription</h3>
+          <p class="settings-panel__description">Update your subscription or billing information</p>
+        </div>
+        <div class="settings-panel__body">
+          <p>Your Pro subscription is active.</p>
+          <div class="form-actions">
+            <button type="button" class="button button-secondary">Manage Subscription</button>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</section>
+

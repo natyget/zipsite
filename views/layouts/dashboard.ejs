@@ -24,23 +24,66 @@
     <!-- Dashboard Header -->
     <header class="dash-header">
         <div class="dash-header__inner">
-            <% if (typeof user !== 'undefined' && user && user.agency_logo_path) { %>
-                <a href="/dashboard/agency" style="display: flex; align-items: center;">
-                    <img src="<%= user.agency_logo_path %>" alt="<%= user.agency_name || 'Agency' %>" style="max-height: 40px; max-width: 200px; object-fit: contain;">
-                </a>
-            <% } else { %>
-                <a href="/" class="dash-header__logo">ZIPSITE</a>
-            <% } %>
-            <nav class="dash-header__nav">
-                <% if (typeof user !=='undefined' && user) { %>
-                    <span class="dash-header__user" data-initial="<%= user.email ? user.email.charAt(0).toUpperCase() : 'U' %>">
-                        <%= user.email %>
-                    </span>
+            <!-- Logo Section -->
+            <div class="dash-header__logo-wrapper">
+                <% if (typeof user !== 'undefined' && user && user.agency_logo_path) { %>
+                    <a href="/dashboard/agency" class="dash-header__logo-link">
+                        <img src="<%= user.agency_logo_path %>" alt="<%= user.agency_name || 'Agency' %>" class="dash-header__agency-logo">
+                    </a>
+                <% } else { %>
+                    <a href="/" class="dash-header__logo">ZIPSITE</a>
+                <% } %>
+            </div>
+
+            <!-- Navigation Section -->
+            <nav class="dash-header__nav" aria-label="Main navigation">
+                <% if (typeof user !== 'undefined' && user && user.role === 'TALENT') { %>
+                    <a href="/dashboard/talent" class="dash-header__nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'talent' ? 'is-active' : '' %>">Dashboard</a>
+                    <% if (typeof profile !== 'undefined' && profile && profile.slug) { %>
+                        <a href="/portfolio/<%= profile.slug %>" target="_blank" rel="noopener" class="dash-header__nav-link">Portfolio</a>
                     <% } %>
-                        <form method="post" action="/logout" style="display: inline; margin: 0;">
-                            <button type="submit" class="dash-header__link" style="background: none; border: none; cursor: pointer; font-size: 14px; color: var(--text-secondary); padding: 8px 20px; border-radius: 999px; border: 1px solid var(--border-color); transition: var(--transition);">Logout</button>
-                        </form>
+                <% } else if (typeof user !== 'undefined' && user && user.role === 'AGENCY') { %>
+                    <a href="/dashboard/agency" class="dash-header__nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'agency' ? 'is-active' : '' %>">Dashboard</a>
+                <% } %>
             </nav>
+
+            <!-- User Section -->
+            <div class="dash-header__user-wrapper">
+                <% if (typeof user !== 'undefined' && user) { %>
+                    <div class="dash-header__user-dropdown">
+                        <button type="button" class="dash-header__user" data-initial="<%= user.email ? user.email.charAt(0).toUpperCase() : 'U' %>" aria-label="User menu" aria-expanded="false" id="user-menu-button">
+                            <span class="dash-header__user-email"><%= user.email %></span>
+                            <% if (typeof profile !== 'undefined' && profile && profile.is_pro) { %>
+                                <span class="dash-header__badge dash-header__badge--pro">Pro</span>
+                            <% } else if (typeof profile !== 'undefined' && profile && !profile.is_pro) { %>
+                                <span class="dash-header__badge dash-header__badge--free">Free</span>
+                            <% } %>
+                            <svg class="dash-header__user-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <div class="dash-header__user-menu" id="user-menu" role="menu" aria-labelledby="user-menu-button">
+                            <a href="/dashboard/settings" class="dash-header__user-menu-item" role="menuitem">
+                                <svg class="dash-header__user-menu-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M13.6569 10.3431C13.8447 10.5309 13.9492 10.7852 13.9492 11.0503C13.9492 11.3153 13.8447 11.5696 13.6569 11.7574L11.7574 13.6569C11.5696 13.8447 11.3153 13.9492 11.0503 13.9492C10.7852 13.9492 10.5309 13.8447 10.3431 13.6569L2.34315 5.65685C2.15536 5.46906 2.05086 5.21481 2.05086 4.94975C2.05086 4.68469 2.15536 4.43044 2.34315 4.24264L4.24264 2.34315C4.43044 2.15536 4.68469 2.05086 4.94975 2.05086C5.21481 2.05086 5.46906 2.15536 5.65685 2.34315L13.6569 10.3431Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span>Settings</span>
+                            </a>
+                            <form method="post" action="/logout" class="dash-header__user-menu-item-form">
+                                <button type="submit" class="dash-header__user-menu-item dash-header__user-menu-item--logout" role="menuitem">
+                                    <svg class="dash-header__user-menu-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M6 14H3.33333C2.59695 14 2 13.403 2 12.6667V3.33333C2 2.59695 2.59695 2 3.33333 2H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M10 11.3333L14 8L10 4.66667" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M14 8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <span>Logout</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
         </div>
     </header>
 
