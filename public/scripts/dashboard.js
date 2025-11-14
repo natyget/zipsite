@@ -1970,6 +1970,42 @@ async function loadAnalytics() {
     });
 
     if (!response.ok) {
+      // If it's a 404, show empty analytics (shouldn't happen now but handle gracefully)
+      if (response.status === 404) {
+        // Return empty analytics data
+        const emptyData = {
+          success: true,
+          analytics: {
+            views: { total: 0, thisWeek: 0, thisMonth: 0 },
+            downloads: { total: 0, thisWeek: 0, thisMonth: 0, byTheme: [] }
+          }
+        };
+        // Use empty data and continue to display it
+        const data = emptyData;
+        // Update UI with zeros
+        const viewsTotal = document.getElementById('analytics-views-total');
+        const viewsWeek = document.getElementById('analytics-views-week');
+        const downloadsTotal = document.getElementById('analytics-downloads-total');
+        const downloadsWeek = document.getElementById('analytics-downloads-week');
+        const monthlyTotal = document.getElementById('analytics-monthly-total');
+        const monthlyBreakdown = document.getElementById('analytics-monthly-breakdown');
+        const themesList = document.getElementById('analytics-themes-list');
+        
+        if (viewsTotal) viewsTotal.textContent = '0';
+        if (viewsWeek) viewsWeek.textContent = 'This week: 0';
+        if (downloadsTotal) downloadsTotal.textContent = '0';
+        if (downloadsWeek) downloadsWeek.textContent = 'This week: 0';
+        if (monthlyTotal) monthlyTotal.textContent = '0';
+        if (monthlyBreakdown) monthlyBreakdown.textContent = '0 views, 0 downloads';
+        if (themesList) {
+          themesList.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-tertiary); font-size: 13px;">No theme data yet. Create your profile and download your first PDF to see theme statistics.</div>';
+        }
+        
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (errorEl) errorEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'block';
+        return;
+      }
       throw new Error('Failed to load analytics');
     }
 
@@ -2044,9 +2080,37 @@ async function loadAnalytics() {
     }
   } catch (error) {
     console.error('Error loading analytics:', error);
+    // Don't show error if it's just missing profile - show empty state instead
     if (loadingEl) loadingEl.style.display = 'none';
-    if (contentEl) contentEl.style.display = 'none';
-    if (errorEl) errorEl.style.display = 'block';
+    
+    // If it's a 404 or profile not found, show empty state
+    if (error.message && (error.message.includes('404') || error.message.includes('Profile not found'))) {
+      // Show empty analytics with zeros
+      const viewsTotal = document.getElementById('analytics-views-total');
+      const viewsWeek = document.getElementById('analytics-views-week');
+      const downloadsTotal = document.getElementById('analytics-downloads-total');
+      const downloadsWeek = document.getElementById('analytics-downloads-week');
+      const monthlyTotal = document.getElementById('analytics-monthly-total');
+      const monthlyBreakdown = document.getElementById('analytics-monthly-breakdown');
+      const themesList = document.getElementById('analytics-themes-list');
+      
+      if (viewsTotal) viewsTotal.textContent = '0';
+      if (viewsWeek) viewsWeek.textContent = 'This week: 0';
+      if (downloadsTotal) downloadsTotal.textContent = '0';
+      if (downloadsWeek) downloadsWeek.textContent = 'This week: 0';
+      if (monthlyTotal) monthlyTotal.textContent = '0';
+      if (monthlyBreakdown) monthlyBreakdown.textContent = '0 views, 0 downloads';
+      if (themesList) {
+        themesList.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-tertiary); font-size: 13px;">No theme data yet. Create your profile and download your first PDF to see theme statistics.</div>';
+      }
+      
+      if (contentEl) contentEl.style.display = 'block';
+      if (errorEl) errorEl.style.display = 'none';
+    } else {
+      // Real error - show error message
+      if (contentEl) contentEl.style.display = 'none';
+      if (errorEl) errorEl.style.display = 'block';
+    }
   }
 }
 
@@ -2065,6 +2129,34 @@ async function loadSidebarAnalytics() {
     });
 
     if (!response.ok) {
+      // If it's a 404, the backend should return empty analytics now, but handle it gracefully
+      if (response.status === 404) {
+        // Return empty analytics data
+        const emptyData = {
+          success: true,
+          analytics: {
+            views: { total: 0, thisWeek: 0, thisMonth: 0 },
+            downloads: { total: 0, thisWeek: 0, thisMonth: 0, byTheme: [] }
+          }
+        };
+        // Use empty data directly and continue to display it
+        const data = emptyData;
+        // Show empty analytics
+        const viewsTotal = document.getElementById('analytics-sidebar-views-total');
+        const viewsWeek = document.getElementById('analytics-sidebar-views-week');
+        const downloadsTotal = document.getElementById('analytics-sidebar-downloads-total');
+        const downloadsWeek = document.getElementById('analytics-sidebar-downloads-week');
+        
+        if (viewsTotal) viewsTotal.textContent = '0';
+        if (viewsWeek) viewsWeek.textContent = '0 this week';
+        if (downloadsTotal) downloadsTotal.textContent = '0';
+        if (downloadsWeek) downloadsWeek.textContent = '0 this week';
+        
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (errorEl) errorEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'block';
+        return;
+      }
       throw new Error('Failed to load analytics');
     }
 
@@ -2101,8 +2193,27 @@ async function loadSidebarAnalytics() {
   } catch (error) {
     console.error('Error loading sidebar analytics:', error);
     if (loadingEl) loadingEl.style.display = 'none';
-    if (contentEl) contentEl.style.display = 'none';
-    if (errorEl) errorEl.style.display = 'block';
+    
+    // If it's a 404 or profile not found, show empty state
+    if (error.message && (error.message.includes('404') || error.message.includes('Profile not found'))) {
+      // Show empty analytics with zeros
+      const viewsTotal = document.getElementById('analytics-sidebar-views-total');
+      const viewsWeek = document.getElementById('analytics-sidebar-views-week');
+      const downloadsTotal = document.getElementById('analytics-sidebar-downloads-total');
+      const downloadsWeek = document.getElementById('analytics-sidebar-downloads-week');
+      
+      if (viewsTotal) viewsTotal.textContent = '0';
+      if (viewsWeek) viewsWeek.textContent = '0 this week';
+      if (downloadsTotal) downloadsTotal.textContent = '0';
+      if (downloadsWeek) downloadsWeek.textContent = '0 this week';
+      
+      if (contentEl) contentEl.style.display = 'block';
+      if (errorEl) errorEl.style.display = 'none';
+    } else {
+      // Real error - show error message
+      if (contentEl) contentEl.style.display = 'none';
+      if (errorEl) errorEl.style.display = 'block';
+    }
   }
 }
 

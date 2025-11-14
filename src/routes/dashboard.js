@@ -904,7 +904,23 @@ router.get('/dashboard/talent/analytics', requireRole('TALENT'), async (req, res
   try {
     const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
     if (!profile) {
-      return res.status(404).json({ error: 'Profile not found' });
+      // Return empty analytics when no profile exists (instead of 404)
+      return res.json({
+        success: true,
+        analytics: {
+          views: {
+            total: 0,
+            thisWeek: 0,
+            thisMonth: 0
+          },
+          downloads: {
+            total: 0,
+            thisWeek: 0,
+            thisMonth: 0,
+            byTheme: []
+          }
+        }
+      });
     }
 
     // Get analytics for the last 30 days
