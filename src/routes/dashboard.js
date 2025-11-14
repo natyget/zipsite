@@ -234,6 +234,35 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
     delete processedBody[other];
   }
   
+  // Convert empty strings to undefined for optional fields
+  // This is needed because HTML forms send empty strings for empty inputs,
+  // but Zod optional() expects undefined, not empty strings
+  const optionalFields = [
+    'city_secondary', 'phone', 'bust', 'waist', 'hips', 'shoe_size', 'eye_color', 'hair_color',
+    'hair_length', 'skin_tone', 'dress_size', 'ethnicity', 'union_membership', 'training',
+    'portfolio_url', 'instagram_handle', 'twitter_handle', 'tiktok_handle',
+    'reference_name', 'reference_email', 'reference_phone',
+    'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
+    'work_status', 'bio', 'date_of_birth', 'age', 'language_other_input'
+  ];
+  
+  // Enum fields that need special handling - empty strings should be undefined
+  const enumFields = [
+    'availability_schedule', 'experience_level', 'gender', 'work_eligibility'
+  ];
+  
+  for (const field of optionalFields) {
+    if (processedBody[field] === '') {
+      processedBody[field] = undefined;
+    }
+  }
+  
+  for (const field of enumFields) {
+    if (processedBody[field] === '') {
+      processedBody[field] = undefined;
+    }
+  }
+  
   console.log('[Dashboard/Talent POST] Processing profile update request:', {
     userId: req.session.userId,
     bodyKeys: Object.keys(req.body),
@@ -429,24 +458,30 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
       // Use provided values or defaults
       const curatedBio = bio ? curateBio(bio, finalFirstName, finalLastName) : null;
       
+      // Database requires certain fields to be non-null, so use placeholders if not provided
+      const finalCity = city || 'Not specified';
+      const finalHeightCm = height_cm || 0; // Default to 0 if not provided
+      const finalBioRaw = bio || ''; // Empty string if not provided
+      const finalBioCurated = curatedBio || ''; // Empty string if not provided
+      
       await knex('profiles').insert({
         id: profileId,
         user_id: req.session.userId,
         slug,
         first_name: finalFirstName,
         last_name: finalLastName,
-        city: city || null,
+        city: finalCity,
         city_secondary: city_secondary || null,
         phone: phone || null,
-        height_cm: height_cm || null,
+        height_cm: finalHeightCm,
         bust: bust || null,
         waist: waist || null,
         hips: hips || null,
         shoe_size: shoe_size || null,
         eye_color: eye_color || null,
         hair_color: hair_color || null,
-        bio_raw: bio || null,
-        bio_curated: curatedBio,
+        bio_raw: finalBioRaw,
+        bio_curated: finalBioCurated,
         specialties: specialtiesJson,
         experience_details: typeof experience_details === 'string' ? experience_details : (experience_details ? JSON.stringify(experience_details) : null),
         gender: gender || null,
@@ -806,12 +841,22 @@ router.post('/dashboard/talent/media', requireRole('TALENT'), upload.array('medi
         const profileId = uuidv4();
         const slug = await ensureUniqueSlug(knex, 'profiles', `${placeholderFirstName}-${placeholderLastName}`);
         
+        // Database requires certain fields to be non-null, so use placeholders if not provided
+        const placeholderCity = 'Not specified';
+        const placeholderHeightCm = 0;
+        const placeholderBioRaw = '';
+        const placeholderBioCurated = '';
+        
         await knex('profiles').insert({
           id: profileId,
           user_id: req.session.userId,
           slug,
           first_name: placeholderFirstName,
           last_name: placeholderLastName,
+          city: placeholderCity,
+          height_cm: placeholderHeightCm,
+          bio_raw: placeholderBioRaw,
+          bio_curated: placeholderBioCurated,
           is_pro: false,
           pdf_theme: null,
           pdf_customizations: null
