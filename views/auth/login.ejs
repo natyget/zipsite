@@ -84,7 +84,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check if Firebase Auth is available
     if (!window.FirebaseAuth || !window.FirebaseAuth.auth) {
       console.error('[Login] Firebase Auth not initialized');
-      alert('Authentication system not ready. Please refresh the page and try again.');
+      console.error('[Login] Firebase config:', window.FIREBASE_CONFIG);
+      
+      // Provide more helpful error message
+      let errorMsg = 'Authentication system not ready. ';
+      if (!window.FIREBASE_CONFIG || !window.FIREBASE_CONFIG.apiKey) {
+        errorMsg += 'Firebase configuration is missing. Please check that environment variables are set correctly.';
+      } else {
+        errorMsg += 'Please refresh the page and try again.';
+      }
+      
+      alert(errorMsg);
       return;
     }
 

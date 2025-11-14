@@ -13,15 +13,25 @@
   try {
     const config = window.FIREBASE_CONFIG;
     if (!config || !config.apiKey || !config.authDomain || !config.projectId) {
-      console.warn('[Firebase Auth] Firebase configuration not found. Authentication may not work.');
-      console.warn('[Firebase Auth] Make sure firebase-config.js is loaded and contains valid config.');
-    } else {
-      app = firebase.initializeApp(config);
-      auth = app.auth();
-      console.log('[Firebase Auth] Initialized successfully');
+      console.error('[Firebase Auth] Firebase configuration not found or incomplete.');
+      console.error('[Firebase Auth] Missing values:', {
+        apiKey: !config || !config.apiKey,
+        authDomain: !config || !config.authDomain,
+        projectId: !config || !config.projectId,
+        config: config
+      });
+      console.error('[Firebase Auth] Make sure Firebase environment variables are set in your deployment environment.');
+      // Don't set window.FirebaseAuth if config is invalid - this will trigger the error message
+      return;
     }
+    
+    app = firebase.initializeApp(config);
+    auth = app.auth();
+    console.log('[Firebase Auth] Initialized successfully');
   } catch (error) {
     console.error('[Firebase Auth] Initialization error:', error);
+    // Don't set window.FirebaseAuth if initialization fails
+    return;
   }
 
   // Export auth instance
