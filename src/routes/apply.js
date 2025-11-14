@@ -1,5 +1,6 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
+const { z } = require('zod');
 const knex = require('../db/knex');
 const { applyProfileSchema, signupSchema } = require('../lib/validation');
 const { normalizeMeasurements, curateBio } = require('../lib/curate');
@@ -153,53 +154,127 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
   if (!isLoggedIn) {
     console.log('[Apply] User is not logged in, validating signup...');
     
-    // Check password confirmation
-    if (req.body.password !== req.body.password_confirm) {
-      console.log('[Apply] Password confirmation mismatch');
-      return res.status(422).render('apply/index', {
-        title: 'Start your ZipSite profile',
-        values: req.body,
-        errors: { password_confirm: ['Passwords do not match'] },
-        layout: 'layout',
-        isLoggedIn: false
-      });
+    // Check if Firebase token exists (Google Sign-In)
+    const idToken = extractIdToken(req) || req.body.firebase_token;
+    let firebaseEmail = null;
+    let firebaseUid = null;
+    
+    if (idToken) {
+      try {
+        // Verify Firebase ID token and get email from it
+        const decodedToken = await verifyIdToken(idToken);
+        firebaseUid = decodedToken.uid;
+        firebaseEmail = decodedToken.email;
+        console.log('[Apply] Firebase token verified, email from token:', firebaseEmail);
+      } catch (error) {
+        console.error('[Apply] Firebase token verification failed:', error.message);
+        // Continue with email/password validation if token is invalid
+        firebaseEmail = null;
+        firebaseUid = null;
+      }
     }
-
-    console.log('[Apply] Validating signup schema...');
-    signupParsed = signupSchema.safeParse({
-      first_name: req.body.first_name,
-      last_name: req.body.last_name,
-      email: req.body.email,
-      password: req.body.password,
-      role: 'TALENT'
-    });
-
-    if (!signupParsed.success) {
-      const signupErrors = signupParsed.error.flatten().fieldErrors;
-      console.log('[Apply] Signup validation failed:', signupErrors);
+    
+    // If Firebase token exists and is valid, use email from token and skip password validation
+    if (firebaseEmail && firebaseUid) {
+      console.log('[Apply] Using Google Sign-In authentication, skipping password validation');
+      // Validate signup without password (email comes from Firebase token)
+      const emailSchema = z.string().email('Enter a valid email').max(255).transform((val) => val.toLowerCase());
+      const nameSchema = z.string().trim().min(1, 'Required').max(60, 'Too long');
       
-      const applyParsed = applyProfileSchema.safeParse(req.body);
-      const applyErrors = applyParsed.success ? {} : applyParsed.error.flatten().fieldErrors;
+      const googleSignupSchema = z.object({
+        first_name: nameSchema,
+        last_name: nameSchema,
+        email: emailSchema, // Still validate format but will use Firebase email
+        role: z.enum(['TALENT'])
+      });
       
-      if (!applyParsed.success) {
-        console.log('[Apply] Profile validation also failed:', applyParsed.error.flatten().fieldErrors);
+      signupParsed = googleSignupSchema.safeParse({
+        first_name: req.body.first_name,
+        last_name: req.body.last_name,
+        email: firebaseEmail, // Use email from Firebase token
+        role: 'TALENT'
+      });
+      
+      if (!signupParsed.success) {
+        const signupErrors = signupParsed.error.flatten().fieldErrors;
+        console.log('[Apply] Google Sign-In validation failed:', signupErrors);
+        
+        const applyParsed = applyProfileSchema.safeParse(req.body);
+        const applyErrors = applyParsed.success ? {} : applyParsed.error.flatten().fieldErrors;
+        
+        return res.status(422).render('apply/index', {
+          title: 'Start your ZipSite profile',
+          values: req.body,
+          errors: { ...signupErrors, ...applyErrors },
+          layout: 'layout',
+          isLoggedIn: false
+        });
       }
       
-      return res.status(422).render('apply/index', {
-        title: 'Start your ZipSite profile',
-        values: req.body,
-        errors: { ...signupErrors, ...applyErrors },
-        layout: 'layout',
-        isLoggedIn: false
+      // Override email with Firebase email
+      signupParsed.data.email = firebaseEmail;
+      
+      // Store Firebase UID for use later
+      req.firebaseUid = firebaseUid;
+      
+      console.log('[Apply] Google Sign-In validation passed:', {
+        email: signupParsed.data.email,
+        first_name: signupParsed.data.first_name,
+        last_name: signupParsed.data.last_name,
+        firebaseUid: firebaseUid
+      });
+    } else {
+      // No Firebase token or invalid token - use email/password validation
+      console.log('[Apply] No Firebase token, validating email/password signup...');
+      
+      // Check password confirmation
+      if (req.body.password !== req.body.password_confirm) {
+        console.log('[Apply] Password confirmation mismatch');
+        return res.status(422).render('apply/index', {
+          title: 'Start your ZipSite profile',
+          values: req.body,
+          errors: { password_confirm: ['Passwords do not match'] },
+          layout: 'layout',
+          isLoggedIn: false
+        });
+      }
+
+      console.log('[Apply] Validating signup schema...');
+      signupParsed = signupSchema.safeParse({
+        first_name: req.body.first_name,
+        last_name: req.body.last_name,
+        email: req.body.email,
+        password: req.body.password,
+        role: 'TALENT'
+      });
+
+      if (!signupParsed.success) {
+        const signupErrors = signupParsed.error.flatten().fieldErrors;
+        console.log('[Apply] Signup validation failed:', signupErrors);
+        
+        const applyParsed = applyProfileSchema.safeParse(req.body);
+        const applyErrors = applyParsed.success ? {} : applyParsed.error.flatten().fieldErrors;
+        
+        if (!applyParsed.success) {
+          console.log('[Apply] Profile validation also failed:', applyParsed.error.flatten().fieldErrors);
+        }
+        
+        return res.status(422).render('apply/index', {
+          title: 'Start your ZipSite profile',
+          values: req.body,
+          errors: { ...signupErrors, ...applyErrors },
+          layout: 'layout',
+          isLoggedIn: false
+        });
+      }
+
+      console.log('[Apply] Signup validation passed:', {
+        email: signupParsed.data.email,
+        first_name: signupParsed.data.first_name,
+        last_name: signupParsed.data.last_name,
+        role: signupParsed.data.role
       });
     }
-
-    console.log('[Apply] Signup validation passed:', {
-      email: signupParsed.data.email,
-      first_name: signupParsed.data.first_name,
-      last_name: signupParsed.data.last_name,
-      role: signupParsed.data.role
-    });
 
     // Handle specialties - convert to array if it's a single value or array
     // This must happen BEFORE profile validation
@@ -388,38 +463,50 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       
       console.log('[Signup/Apply] Creating account for email:', normalizedEmail);
       
-      // Get Firebase token from request
-      const idToken = extractIdToken(req) || req.body.firebase_token;
+      // Get Firebase token from request (may already be verified above for Google Sign-In)
+      let idToken = extractIdToken(req) || req.body.firebase_token;
+      let decodedToken = null;
+      let firebaseUid = null;
       
-      if (!idToken) {
-        console.log('[Signup/Apply] No Firebase token provided');
-        return res.status(422).render('apply/index', {
-          title: 'Start your ZipSite profile',
-          values: req.body,
-          errors: { email: ['Authentication failed. Please try again.'] },
-          layout: 'layout',
-          isLoggedIn: false
-        });
-      }
+      // If Firebase UID was already set (Google Sign-In), use it
+      if (req.firebaseUid) {
+        firebaseUid = req.firebaseUid;
+        console.log('[Signup/Apply] Using Firebase UID from Google Sign-In:', firebaseUid);
+      } else {
+        // Email/password signup - need to verify token
+        if (!idToken) {
+          console.log('[Signup/Apply] No Firebase token provided');
+          return res.status(422).render('apply/index', {
+            title: 'Start your ZipSite profile',
+            values: req.body,
+            errors: { email: ['Authentication failed. Please try again.'] },
+            layout: 'layout',
+            isLoggedIn: false
+          });
+        }
 
-      // Verify Firebase ID token
-      const decodedToken = await verifyIdToken(idToken);
-      const firebaseUid = decodedToken.uid;
-      const firebaseEmail = decodedToken.email;
+        // Verify Firebase ID token
+        decodedToken = await verifyIdToken(idToken);
+        firebaseUid = decodedToken.uid;
+        const firebaseEmail = decodedToken.email;
 
-      if (firebaseEmail.toLowerCase().trim() !== normalizedEmail) {
-        console.log('[Signup/Apply] Email mismatch:', { firebaseEmail, normalizedEmail });
-        return res.status(422).render('apply/index', {
-          title: 'Start your ZipSite profile',
-          values: req.body,
-          errors: { email: ['Email does not match authenticated account.'] },
-          layout: 'layout',
-          isLoggedIn: false
-        });
+        if (firebaseEmail.toLowerCase().trim() !== normalizedEmail) {
+          console.log('[Signup/Apply] Email mismatch:', { firebaseEmail, normalizedEmail });
+          return res.status(422).render('apply/index', {
+            title: 'Start your ZipSite profile',
+            values: req.body,
+            errors: { email: ['Email does not match authenticated account.'] },
+            layout: 'layout',
+            isLoggedIn: false
+          });
+        }
       }
 
       // Check if user already exists
-      let existing = await knex('users').where({ firebase_uid: firebaseUid }).first();
+      let existing = null;
+      if (firebaseUid) {
+        existing = await knex('users').where({ firebase_uid: firebaseUid }).first();
+      }
       if (!existing) {
         existing = await knex('users').where({ email: normalizedEmail }).first();
       }

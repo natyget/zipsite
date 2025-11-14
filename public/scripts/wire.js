@@ -1401,6 +1401,144 @@
     });
     showStep(0);
 
+    // Google Sign-In handlers
+    function handleGoogleSignIn(buttonId, isStep1) {
+      const googleBtn = document.getElementById(buttonId);
+      if (!googleBtn) return;
+
+      googleBtn.addEventListener('click', async function() {
+        if (!window.FirebaseAuth || typeof window.FirebaseAuth.signInWithGoogle !== 'function') {
+          console.error('[Apply Form] Firebase Auth not initialized');
+          alert('Authentication system not ready. Please refresh the page and try again.');
+          return;
+        }
+
+        // Store original button text
+        const originalText = googleBtn.innerHTML;
+
+        try {
+          // Show loading state
+          googleBtn.disabled = true;
+          googleBtn.innerHTML = '<span>' + (googleBtn.dataset.loadingText || 'Signing in…') + '</span>';
+
+          // Sign in with Google
+          const userCredential = await window.FirebaseAuth.signInWithGoogle();
+          
+          // Get user info from Google
+          const user = userCredential.user;
+          const email = user.email;
+          const displayName = user.displayName || '';
+          
+          // Get ID token
+          const idToken = await user.getIdToken();
+          
+          // Store Firebase token
+          const firebaseTokenInput = applyForm.querySelector('#firebase_token');
+          if (firebaseTokenInput) {
+            firebaseTokenInput.value = idToken;
+          }
+          
+          // Auto-fill name and email from Google profile
+          if (isStep1) {
+            // Parse display name (usually "First Last")
+            const nameParts = displayName.trim().split(/\s+/);
+            const firstNameInput = applyForm.querySelector('#first_name');
+            const lastNameInput = applyForm.querySelector('#last_name');
+            
+            if (nameParts.length >= 1 && firstNameInput && !firstNameInput.value) {
+              firstNameInput.value = nameParts[0];
+            }
+            if (nameParts.length >= 2 && lastNameInput && !lastNameInput.value) {
+              lastNameInput.value = nameParts.slice(1).join(' ');
+            }
+          }
+          
+          // Auto-fill email field if it exists
+          const emailInput = applyForm.querySelector('#email');
+          if (emailInput && email) {
+            emailInput.value = email;
+          }
+          
+          // Update UI to show authenticated state
+          updateAuthenticatedUI(email);
+          
+          // Reset button
+          googleBtn.disabled = false;
+          googleBtn.innerHTML = originalText;
+          
+          console.log('[Apply Form] Google Sign-In successful:', email);
+        } catch (error) {
+          console.error('[Apply Form] Google Sign-In error:', error);
+          
+          // Reset button
+          googleBtn.disabled = false;
+          googleBtn.innerHTML = originalText;
+          
+          // Only show error if not user cancellation
+          if (error.code !== 'auth/popup-closed-by-user') {
+            const errorMessage = window.getFirebaseErrorMessage ? window.getFirebaseErrorMessage(error) : error.message || 'Google Sign-In failed. Please try again.';
+            alert(errorMessage);
+          }
+        }
+      });
+    }
+
+    // Function to update UI when authenticated
+    function updateAuthenticatedUI(email) {
+      // Hide Google Sign-In buttons
+      const googleBtnStep1 = document.getElementById('google-signin-step1');
+      const googleBtnStep4 = document.getElementById('google-signin-step4');
+      const googleContainerStep1 = googleBtnStep1?.closest('div');
+      const googleContainerStep4 = document.getElementById('google-signin-step4-container');
+      
+      if (googleContainerStep1) {
+        googleContainerStep1.style.display = 'none';
+      }
+      if (googleContainerStep4) {
+        googleContainerStep4.style.display = 'none';
+      }
+      
+      // Hide email/password fields
+      const emailPasswordFields = document.getElementById('email-password-fields');
+      if (emailPasswordFields) {
+        emailPasswordFields.style.display = 'none';
+        
+        // Remove required attributes from email/password fields since authenticated
+        const emailInput = emailPasswordFields.querySelector('#email');
+        const passwordInput = emailPasswordFields.querySelector('#password');
+        const passwordConfirmInput = emailPasswordFields.querySelector('#password_confirm');
+        
+        if (emailInput) emailInput.removeAttribute('required');
+        if (passwordInput) passwordInput.removeAttribute('required');
+        if (passwordConfirmInput) passwordConfirmInput.removeAttribute('required');
+      }
+      
+      // Show authenticated message
+      const authenticatedMessage = document.getElementById('authenticated-message');
+      const authenticatedEmail = document.getElementById('authenticated-email');
+      if (authenticatedMessage && authenticatedEmail) {
+        authenticatedMessage.style.display = 'block';
+        authenticatedEmail.textContent = email;
+      }
+      
+      // Update email field value if it exists
+      const emailInput = applyForm.querySelector('#email');
+      if (emailInput && email) {
+        emailInput.value = email;
+      }
+    }
+
+    // Initialize Google Sign-In handlers
+    handleGoogleSignIn('google-signin-step1', true); // Step 1 handler
+    handleGoogleSignIn('google-signin-step4', false); // Step 4 handler
+    
+    // Check if already authenticated on page load
+    const firebaseTokenInput = applyForm.querySelector('#firebase_token');
+    const emailInput = applyForm.querySelector('#email');
+    if (firebaseTokenInput && firebaseTokenInput.value && emailInput && emailInput.value) {
+      updateAuthenticatedUI(emailInput.value);
+    }
+
     // File upload handler for step 3
     const fileInput = document.getElementById('photos');
     const dropzone = document.querySelector('.file-upload-dropzone');
@@ -1503,6 +1641,13 @@
       const nameEl = document.getElementById('review-name');
       const phoneEl = document.getElementById('review-phone');
       const cityEl = document.getElementById('review-city');
+      
+      // Update authenticated UI when showing review step
+      const firebaseTokenInput = applyForm.querySelector('#firebase_token');
+      const emailInput = applyForm.querySelector('#email');
+      if (firebaseTokenInput && firebaseTokenInput.value && emailInput && emailInput.value) {
+        updateAuthenticatedUI(emailInput.value);
+      }
       const genderEl = document.getElementById('review-gender');
       const dateOfBirthEl = document.getElementById('review-date-of-birth');
       const ageEl = document.getElementById('review-age');
@@ -1536,6 +1681,11 @@
         const firstName = form.querySelector('[name="first_name"]')?.value || '';
         const lastName = form.querySelector('[name="last_name"]')?.value || '';
         nameEl.textContent = `${firstName} ${lastName}`.trim() || '—';
+      }
+      const emailEl = document.getElementById('review-email');
+      if (emailEl) {
+        const email = form.querySelector('[name="email"]')?.value || '';
+        emailEl.textContent = email || '—';
       }
       if (phoneEl) phoneEl.textContent = form.querySelector('[name="phone"]')?.value || '—';
       if (cityEl) {
@@ -1817,6 +1967,19 @@
       const emailInput = applyForm.querySelector('#email');
       const passwordInput = applyForm.querySelector('#password');
       const firebaseTokenInput = applyForm.querySelector('#firebase_token');
+      
+      // Check if already authenticated with Google (has Firebase token)
+      if (firebaseTokenInput && firebaseTokenInput.value) {
+        // User is authenticated with Google, proceed with form submission
+        mergeOtherFields();
+        
+        // Remove the submit handler temporarily to allow submission
+        applyForm.removeEventListener('submit', formSubmitHandler);
+        
+        // Submit form
+        applyForm.submit();
+        return;
+      }
       
       // If email/password fields exist and no token, create Firebase user first
       if (emailInput && passwordInput && (!firebaseTokenInput || !firebaseTokenInput.value)) {

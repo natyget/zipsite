@@ -51,10 +51,15 @@
 
         <div class="dash-user">
           <% if (currentUser) { %>
-            <span class="dash-user__email">
+            <span class="dash-user__email" data-initial="<%= currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U' %>">
               <%= currentUser.email %>
+              <% if (currentProfile && currentProfile.is_pro) { %>
+                <span class="dash-header__badge dash-header__badge--pro">Pro</span>
+              <% } else if (currentProfile && !currentProfile.is_pro) { %>
+                <span class="dash-header__badge dash-header__badge--free">Free</span>
+              <% } %>
             </span>
-            <form action="/logout" method="post">
+            <form action="/logout" method="post" style="margin: 0;">
               <button type="submit" class="button-ghost" aria-label="Sign out">Logout</button>
             </form>
             <% } %>

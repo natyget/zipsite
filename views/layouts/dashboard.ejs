@@ -33,11 +33,11 @@
             <% } %>
             <nav class="dash-header__nav">
                 <% if (typeof user !=='undefined' && user) { %>
-                    <span class="dash-header__user">
+                    <span class="dash-header__user" data-initial="<%= user.email ? user.email.charAt(0).toUpperCase() : 'U' %>">
                         <%= user.email %>
                     </span>
                     <% } %>
-                        <form method="post" action="/logout" style="display: inline;">
+                        <form method="post" action="/logout" style="display: inline; margin: 0;">
                             <button type="submit" class="dash-header__link" style="background: none; border: none; cursor: pointer; font-size: 14px; color: var(--text-secondary); padding: 8px 20px; border-radius: 999px; border: 1px solid var(--border-color); transition: var(--transition);">Logout</button>
                         </form>
             </nav>
