@@ -84,29 +84,140 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Function to handle login submission (used by both email/password and Google)
   function handleLogin(idToken) {
-    // Submit form data directly via fetch to avoid event listener interference
-    const formData = new FormData(loginForm);
-    formData.set('firebase_token', idToken);
+    // Validate Firebase token is present
+    if (!idToken || typeof idToken !== 'string' || idToken.trim() === '') {
+      console.error('[Login] ❌ Firebase token is missing or invalid!');
+      showError('Authentication failed. Please try signing in again.');
+      return;
+    }
     
-    // Submit via POST
+    // Submit as JSON to ensure Firebase token is properly sent
+    const emailInput = loginForm.querySelector('#email');
+    const passwordInput = loginForm.querySelector('#password');
+    const nextInput = loginForm.querySelector('input[name="next"]');
+    const firebaseTokenInput = loginForm.querySelector('#firebase_token');
+    
+    // Also store token in hidden input field for redundancy
+    if (firebaseTokenInput) {
+      firebaseTokenInput.value = idToken;
+    }
+    
+    const payload = {
+      firebase_token: idToken,
+      email: emailInput?.value || '',
+      password: passwordInput?.value || '',
+      next: nextInput?.value || ''
+    };
+    
+    console.log('[Login] Submitting login request:', {
+      hasToken: !!idToken,
+      tokenLength: idToken ? idToken.length : 0,
+      tokenPreview: idToken ? `${idToken.substring(0, 30)}...` : 'MISSING',
+      hasEmail: !!payload.email,
+      hasPassword: !!payload.password,
+      hasNext: !!payload.next,
+      action: loginForm.action,
+      contentType: 'application/json'
+    });
+    
+    // Submit via POST as JSON
     fetch(loginForm.action, {
       method: 'POST',
-      body: formData,
-      credentials: 'same-origin' // Include cookies for session
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'same-origin', // Include cookies for session
+      redirect: 'manual' // Handle redirects manually
     })
-    .then(response => {
-      if (response.redirected) {
-        window.location.href = response.url;
-      } else {
-        return response.text().then(html => {
+    .then(async response => {
+      console.log('[Login] Response status:', response.status);
+      console.log('[Login] Response headers:', {
+        location: response.headers.get('location'),
+        contentType: response.headers.get('content-type')
+      });
+      
+      if (response.redirected || (response.status >= 300 && response.status < 400)) {
+        const redirectUrl = response.headers.get('location') || response.url;
+        console.log('[Login] Redirecting to:', redirectUrl);
+        window.location.href = redirectUrl;
+      } else if (response.ok) {
+        // Try to parse JSON response first (if backend returns JSON)
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          if (data.redirect) {
+            window.location.href = data.redirect;
+          } else {
+            console.error('[Login] Unexpected JSON response:', data);
+            showError('An unexpected error occurred. Please try again.');
+          }
+        } else {
+          // If not JSON, render HTML
+          const html = await response.text();
           document.open();
           document.write(html);
           document.close();
-        });
+        }
+      } else {
+        // Error response - try to parse as JSON first, then HTML
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            const errorData = await response.json();
+            console.error('[Login] Error response (JSON):', errorData);
+            
+            // Reset button state if it exists
+            const submitButton = loginForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+              submitButton.disabled = false;
+              submitButton.textContent = submitButton.dataset.originalText || 'Sign in';
+            }
+            if (googleSignInBtn) {
+              googleSignInBtn.disabled = false;
+              googleSignInBtn.innerHTML = googleSignInBtn.dataset.originalText || '<span>Sign in with Google</span>';
+            }
+            
+            if (errorData.errors) {
+              // Show validation errors
+              const errorMessages = Object.values(errorData.errors).flat();
+              showError(errorMessages.join(', '));
+            } else if (errorData.error) {
+              showError(errorData.error);
+            } else {
+              showError('Authentication failed. Please try again.');
+            }
+          } catch (e) {
+            console.error('[Login] Error parsing JSON response:', e);
+            // Not JSON, render HTML
+            const html = await response.text();
+            document.open();
+            document.write(html);
+            document.close();
+          }
+        } else {
+          // HTML error response - render it
+          const html = await response.text();
+          document.open();
+          document.write(html);
+          document.close();
+        }
       }
     })
     .catch(error => {
       console.error('[Login] Error submitting form:', error);
+      
+      // Reset button state if it exists
+      const submitButton = loginForm.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = submitButton.dataset.originalText || 'Sign in';
+      }
+      if (googleSignInBtn) {
+        googleSignInBtn.disabled = false;
+        googleSignInBtn.innerHTML = googleSignInBtn.dataset.originalText || '<span>Sign in with Google</span>';
+      }
+      
       showError('An error occurred. Please try again.');
     });
   }
@@ -157,6 +268,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     try {
+      // Store original button text if not already stored
+      if (!submitButton.dataset.originalText) {
+        submitButton.dataset.originalText = submitButton.textContent;
+      }
+      
       // Show loading state
       submitButton.disabled = true;
       submitButton.textContent = submitButton.dataset.loadingText || 'Signing in…';
@@ -167,6 +283,11 @@ document.addEventListener('DOMContentLoaded', function() {
       // Get ID token
       const idToken = await userCredential.user.getIdToken();
       
+      console.log('[Login] Email/password sign-in successful, got Firebase token:', {
+        hasToken: !!idToken,
+        tokenLength: idToken ? idToken.length : 0
+      });
+      
       // Submit form to backend
       handleLogin(idToken);
     } catch (error) {
@@ -174,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Reset button state
       submitButton.disabled = false;
-      submitButton.textContent = originalText;
+      submitButton.textContent = submitButton.dataset.originalText || originalText;
 
       // Show error message
       const errorMessage = window.getFirebaseErrorMessage ? window.getFirebaseErrorMessage(error) : error.message || 'Authentication failed. Please try again.';
@@ -195,6 +316,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const originalText = googleSignInBtn.innerHTML;
 
       try {
+        // Store original button text if not already stored
+        if (!googleSignInBtn.dataset.originalText) {
+          googleSignInBtn.dataset.originalText = googleSignInBtn.innerHTML;
+        }
+        
         // Show loading state
         googleSignInBtn.disabled = true;
         googleSignInBtn.innerHTML = '<span>' + (googleSignInBtn.dataset.loadingText || 'Signing in…') + '</span>';
@@ -205,6 +331,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get ID token and user email
         const idToken = await userCredential.user.getIdToken();
         const email = userCredential.user.email;
+        
+        console.log('[Login] Google Sign-In successful, got Firebase token:', {
+          hasToken: !!idToken,
+          tokenLength: idToken ? idToken.length : 0,
+          email: email
+        });
         
         // Populate email field (for validation fallback, though it won't be needed)
         const emailInput = loginForm.querySelector('#email');
@@ -226,7 +358,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Reset button state
         googleSignInBtn.disabled = false;
-        googleSignInBtn.innerHTML = originalText;
+        googleSignInBtn.innerHTML = googleSignInBtn.dataset.originalText || originalText;
 
         // Handle different error types
         if (error.code === 'auth/popup-closed-by-user') {

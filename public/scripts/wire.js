@@ -1432,10 +1432,42 @@
           // Get ID token
           const idToken = await user.getIdToken();
           
-          // Store Firebase token
+          // Store Firebase token in hidden input field
           const firebaseTokenInput = applyForm.querySelector('#firebase_token');
-          if (firebaseTokenInput) {
-            firebaseTokenInput.value = idToken;
+          if (!firebaseTokenInput) {
+            console.error('[Apply Form] ❌ Firebase token input field not found!');
+            alert('Error: Firebase token input field not found. Please refresh the page and try again.');
+            return;
+          }
+          
+          // Store token in both value and data attribute for redundancy
+          firebaseTokenInput.value = idToken;
+          firebaseTokenInput.setAttribute('data-token', idToken);
+          firebaseTokenInput.setAttribute('data-stored-at', Date.now().toString());
+          
+          // Verify token was stored
+          if (!firebaseTokenInput.value || firebaseTokenInput.value !== idToken) {
+            console.error('[Apply Form] ❌ Failed to store Firebase token in input field!');
+            alert('Error: Failed to store authentication token. Please refresh the page and try again.');
+            return;
+          }
+          
+          console.log('[Apply Form] ✅ Firebase token stored in form:', {
+            hasToken: !!idToken,
+            tokenLength: idToken.length,
+            tokenPreview: idToken.substring(0, 30) + '...',
+            inputValue: firebaseTokenInput.value ? 'set' : 'not set',
+            inputValueLength: firebaseTokenInput.value ? firebaseTokenInput.value.length : 0,
+            inputName: firebaseTokenInput.name,
+            inputId: firebaseTokenInput.id,
+            formAction: applyForm.action,
+            formMethod: applyForm.method
+          });
+          
+          // Double-check the form action is correct
+          if (applyForm.action !== '/apply' && !applyForm.action.includes('/apply')) {
+            console.warn('[Apply Form] ⚠️ Form action is not /apply:', applyForm.action);
+            applyForm.action = '/apply';
           }
           
           // Auto-fill name and email from Google profile
@@ -1953,10 +1985,32 @@
             // Ensure firebase_token is still in the form before submission
             if (!firebaseTokenInput) {
               console.error('[Apply Form] Firebase token input not found!');
-            } else if (!firebaseTokenInput.value && tokenValue) {
-              console.warn('[Apply Form] Firebase token was cleared, restoring...');
-              firebaseTokenInput.value = tokenValue;
+              alert('Authentication error. Please refresh the page and sign in again with Google.');
+              return;
             }
+            
+            // Restore token from data attribute if value was cleared
+            if (!firebaseTokenInput.value && firebaseTokenInput.getAttribute('data-token')) {
+              console.warn('[Apply Form] Firebase token was cleared, restoring from data attribute...');
+              firebaseTokenInput.value = firebaseTokenInput.getAttribute('data-token');
+            }
+            
+            // Final check before submission
+            if (!firebaseTokenInput.value) {
+              console.error('[Apply Form] Firebase token is missing before form submission!');
+              alert('Authentication error. Please sign in again with Google.');
+              return;
+            }
+            
+            // Log final token state
+            console.log('[Apply Form] Submitting form with Firebase token:', {
+              hasToken: !!firebaseTokenInput.value,
+              tokenLength: firebaseTokenInput.value.length,
+              tokenPreview: firebaseTokenInput.value.substring(0, 30) + '...',
+              formAction: applyForm.action,
+              formMethod: applyForm.method,
+              formEnctype: applyForm.enctype
+            });
             
             applyForm.submit();
           }
@@ -2000,13 +2054,30 @@
         
         mergeOtherFields();
         
-        // Ensure token is still in the form
+        // Ensure token is still in the form (check value and data attribute)
         if (!firebaseTokenInput.value) {
-          console.error('[Apply Form] Firebase token was cleared before submission!');
-          e.preventDefault();
-          alert('Authentication error. Please sign in again with Google.');
-          return false;
+          // Try to restore from data attribute
+          const backupToken = firebaseTokenInput.getAttribute('data-token');
+          if (backupToken) {
+            console.warn('[Apply Form] Firebase token was cleared, restoring from data attribute...');
+            firebaseTokenInput.value = backupToken;
+          } else {
+            console.error('[Apply Form] Firebase token was cleared and no backup found!');
+            e.preventDefault();
+            alert('Authentication error. Please sign in again with Google.');
+            return false;
+          }
         }
+        
+        // Log final token state before submission
+        console.log('[Apply Form] Submitting form via submit handler with Firebase token:', {
+          hasToken: !!firebaseTokenInput.value,
+          tokenLength: firebaseTokenInput.value.length,
+          tokenPreview: firebaseTokenInput.value.substring(0, 30) + '...',
+          formAction: applyForm.action,
+          formMethod: applyForm.method,
+          formEnctype: applyForm.enctype
+        });
         
         // Remove the submit handler temporarily to allow submission
         applyForm.removeEventListener('submit', formSubmitHandler);

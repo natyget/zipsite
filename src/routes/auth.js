@@ -42,37 +42,82 @@ router.get('/login', async (req, res) => {
 
 // POST /login - Verify Firebase token and create session
 router.post('/login', async (req, res, next) => {
-  const idToken = extractIdToken(req) || req.body.firebase_token;
-  const nextPath = safeNext(req.body.next);
+  // Check body first (for form submissions), then headers/cookies
+  // Support both JSON and form-encoded requests
+  let idToken = null;
+  let nextPath = null;
+  
+  // Check if request is JSON
+  if (req.headers['content-type'] && req.headers['content-type'].includes('application/json')) {
+    idToken = (req.body && req.body.firebase_token) 
+      ? req.body.firebase_token.trim() 
+      : extractIdToken(req);
+    nextPath = safeNext(req.body.next);
+  } else {
+    // Form-encoded request
+    idToken = (req.body && req.body.firebase_token) 
+      ? req.body.firebase_token.trim() 
+      : extractIdToken(req);
+    nextPath = safeNext(req.body.next);
+  }
+  
+  console.log('[Login] ===== POST /login route hit =====');
+  console.log('[Login] Checking for Firebase token:', {
+    hasBody: !!req.body,
+    bodyKeys: req.body ? Object.keys(req.body).slice(0, 10) : [],
+    hasBodyToken: !!(req.body && req.body.firebase_token),
+    bodyTokenLength: req.body && req.body.firebase_token ? req.body.firebase_token.length : 0,
+    bodyTokenPreview: req.body && req.body.firebase_token ? `${req.body.firebase_token.substring(0, 30)}...` : 'MISSING',
+    extractedToken: !!extractIdToken(req),
+    idToken: !!idToken,
+    idTokenLength: idToken ? idToken.length : 0,
+    requestUrl: req.url,
+    requestMethod: req.method,
+    hasEmail: !!(req.body && req.body.email),
+    hasPassword: !!(req.body && req.body.password)
+  });
 
-  // If Firebase token is provided (Google sign-in), skip email/password validation
-  // Otherwise, validate email/password for traditional login
+  // If Firebase token is provided, skip email/password validation and proceed with token auth
   if (!idToken) {
-    const parsed = loginSchema.safeParse(req.body);
-    if (!parsed.success) {
-      console.log('[Login] Validation failed:', parsed.error.flatten().fieldErrors);
-      res.locals.currentPage = 'login';
-      return res.status(422).render('auth/login', {
-        title: 'Sign in',
-        values: req.body,
-        errors: parsed.error.flatten().fieldErrors,
-        layout: 'layout',
-        currentPage: 'login'
+    // No Firebase token - this should not happen if client-side auth is working correctly
+    // The client should authenticate with Firebase first (either Google or email/password),
+    // then send the Firebase token to the backend
+    console.log('[Login] ⚠️ No Firebase token provided');
+    console.log('[Login] Request body contents:', {
+      hasEmail: !!(req.body && req.body.email),
+      hasPassword: !!(req.body && req.body.password),
+      hasNext: !!(req.body && req.body.next),
+      bodyKeys: req.body ? Object.keys(req.body) : [],
+      contentType: req.headers['content-type'],
+      fullBody: req.body ? JSON.stringify(req.body, null, 2) : 'no body'
+    });
+    
+    // If request is JSON, return JSON error response
+    const contentType = req.headers['content-type'] || '';
+    if (contentType.includes('application/json')) {
+      return res.status(401).json({
+        success: false,
+        errors: {
+          firebase: ['Authentication failed. Please sign in with Google or enter your email and password to continue.']
+        }
       });
     }
-  }
-
-  if (!idToken) {
-    console.log('[Login] No Firebase token provided and no valid email/password');
+    
+    // Show helpful error message - don't require email/password validation
+    // The client-side should handle authentication and send the token
     res.locals.currentPage = 'login';
     return res.status(401).render('auth/login', {
       title: 'Sign in',
-      values: req.body,
-      errors: { email: ['Authentication failed. Please try again.'] },
+      values: req.body || {},
+      errors: { 
+        firebase: ['Authentication failed. Please sign in with Google or enter your email and password to continue.'] 
+      },
       layout: 'layout',
       currentPage: 'login'
     });
   }
+  
+  console.log('[Login] ✅ Firebase token found, proceeding with token authentication');
 
   try {
     // Verify Firebase ID token
@@ -82,6 +127,16 @@ router.post('/login', async (req, res, next) => {
 
     if (!firebaseUid || !email) {
       console.log('[Login] Invalid token data:', { firebaseUid, email });
+      
+      // If request is JSON, return JSON error response
+      const contentType = req.headers['content-type'] || '';
+      if (contentType.includes('application/json')) {
+        return res.status(401).json({
+          success: false,
+          errors: { email: ['Invalid authentication token.'] }
+        });
+      }
+      
       res.locals.currentPage = 'login';
       return res.status(401).render('auth/login', {
         title: 'Sign in',
@@ -111,6 +166,16 @@ router.post('/login', async (req, res, next) => {
 
     if (!user) {
       console.log('[Login] User not found in database for Firebase UID:', firebaseUid);
+      
+      // If request is JSON, return JSON error response
+      const contentType = req.headers['content-type'] || '';
+      if (contentType.includes('application/json')) {
+        return res.status(401).json({
+          success: false,
+          errors: { email: ['Account not found. Please sign up first.'] }
+        });
+      }
+      
       res.locals.currentPage = 'login';
       return res.status(401).render('auth/login', {
         title: 'Sign in',
@@ -139,7 +204,21 @@ router.post('/login', async (req, res, next) => {
       });
     });
 
-    return res.redirect(nextPath || redirectForRole(user.role));
+    const redirectUrl = nextPath || redirectForRole(user.role);
+    console.log('[Login] Redirecting to:', redirectUrl);
+    
+    // If request is JSON, return JSON response with redirect URL
+    const contentType = req.headers['content-type'] || '';
+    if (contentType.includes('application/json')) {
+      console.log('[Login] Returning JSON response with redirect:', redirectUrl);
+      return res.json({ 
+        success: true,
+        redirect: redirectUrl 
+      });
+    }
+    
+    // Otherwise, redirect normally
+    return res.redirect(redirectUrl);
   } catch (error) {
     console.error('[Login Route] Error:', {
       message: error.message,
@@ -148,7 +227,17 @@ router.post('/login', async (req, res, next) => {
     });
 
     // Handle Firebase-specific errors
+    const contentType = req.headers['content-type'] || '';
+    const isJsonRequest = contentType.includes('application/json');
+    
     if (error.message.includes('Token expired') || error.message.includes('expired')) {
+      if (isJsonRequest) {
+        return res.status(401).json({
+          success: false,
+          errors: { email: ['Your session has expired. Please sign in again.'] }
+        });
+      }
+      
       res.locals.currentPage = 'login';
       return res.status(401).render('auth/login', {
         title: 'Sign in',
@@ -160,6 +249,13 @@ router.post('/login', async (req, res, next) => {
     }
 
     if (error.message.includes('Invalid token') || error.message.includes('verification failed')) {
+      if (isJsonRequest) {
+        return res.status(401).json({
+          success: false,
+          errors: { email: ['Invalid authentication token. Please try again.'] }
+        });
+      }
+      
       res.locals.currentPage = 'login';
       return res.status(401).render('auth/login', {
         title: 'Sign in',

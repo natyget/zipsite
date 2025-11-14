@@ -117,9 +117,12 @@ const handleMulterError = (err, req, res, next) => {
 
 router.post('/apply', upload.array('photos', 12), handleMulterError, async (req, res, next) => {
   try {
-    console.log('[Apply] POST /apply route hit');
+    console.log('[Apply] ===== POST /apply route hit =====');
     console.log('[Apply] Request method:', req.method);
     console.log('[Apply] Request URL:', req.url);
+    console.log('[Apply] Request path:', req.path);
+    console.log('[Apply] Request originalUrl:', req.originalUrl);
+    console.log('[Apply] Content-Type:', req.headers['content-type']);
     console.log('[Apply] Request body keys:', Object.keys(req.body || {}));
     console.log('[Apply] Request body values:', {
       email: req.body?.email ? `${req.body.email.substring(0, 10)}...` : 'missing',
@@ -128,14 +131,17 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       has_password: !!req.body?.password,
       has_password_confirm: !!req.body?.password_confirm,
       has_firebase_token: !!req.body?.firebase_token,
+      firebase_token_value: req.body?.firebase_token ? 'PRESENT' : 'MISSING',
       firebase_token_length: req.body?.firebase_token?.length || 0,
-      firebase_token_preview: req.body?.firebase_token ? `${req.body.firebase_token.substring(0, 20)}...` : 'missing',
+      firebase_token_preview: req.body?.firebase_token ? `${req.body.firebase_token.substring(0, 30)}...` : 'missing',
+      firebase_token_full: req.body?.firebase_token ? req.body.firebase_token : 'NOT IN BODY',
       city: req.body?.city || 'missing',
       height_cm: req.body?.height_cm || 'missing',
       bio: req.body?.bio ? `${req.body.bio.substring(0, 20)}...` : 'missing'
     });
     console.log('[Apply] Is logged in:', Boolean(req.currentUser));
     console.log('[Apply] Files uploaded:', req.files?.length || 0);
+    console.log('[Apply] =================================');
 
     const isLoggedIn = Boolean(req.currentUser);
     let user = null;
@@ -158,17 +164,23 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       console.log('[Apply] User is not logged in, validating signup...');
 
       // Check if Firebase token exists (Google Sign-In)
-      // Check body first (for form submissions), then headers/cookies
-      const idToken = req.body?.firebase_token || extractIdToken(req);
+      // For multipart/form-data, check req.body first (multer parses form fields)
+      // Then check headers/cookies as fallback
+      const idToken = (req.body && req.body.firebase_token) 
+        ? req.body.firebase_token.trim() 
+        : extractIdToken(req);
       let firebaseEmail = null;
       let firebaseUid = null;
 
       console.log('[Apply] Checking for Firebase token:', {
-        hasBodyToken: !!req.body?.firebase_token,
-        bodyTokenLength: req.body?.firebase_token?.length || 0,
+        hasBody: !!req.body,
+        bodyKeys: req.body ? Object.keys(req.body).slice(0, 10) : [],
+        hasBodyToken: !!(req.body && req.body.firebase_token),
+        bodyTokenValue: req.body && req.body.firebase_token ? `${req.body.firebase_token.substring(0, 30)}...` : 'missing',
+        bodyTokenLength: req.body && req.body.firebase_token ? req.body.firebase_token.length : 0,
         extractedToken: !!extractIdToken(req),
         idToken: !!idToken,
-        idTokenLength: idToken?.length || 0
+        idTokenLength: idToken ? idToken.length : 0
       });
 
       if (idToken) {
@@ -185,7 +197,14 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
           firebaseUid = null;
         }
       } else {
-        console.log('[Apply] No Firebase token found in request');
+        console.log('[Apply] ⚠️ No Firebase token found in request');
+        console.log('[Apply] Request body keys:', req.body ? Object.keys(req.body).slice(0, 20) : 'no body');
+        console.log('[Apply] Request headers:', {
+          'content-type': req.headers['content-type'],
+          'authorization': req.headers['authorization'] ? 'present' : 'missing'
+        });
+        console.log('[Apply] Full req.body.firebase_token:', req.body?.firebase_token || 'NOT PRESENT');
+        console.log('[Apply] extractIdToken(req):', extractIdToken(req) || 'NOT FOUND');
       }
 
       // If Firebase token exists and is valid, use email from token and skip password validation
@@ -212,14 +231,26 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         if (!signupParsed.success) {
           const signupErrors = signupParsed.error.flatten().fieldErrors;
           console.log('[Apply] Google Sign-In validation failed:', signupErrors);
+          console.log('[Apply] Validation data:', {
+            first_name: req.body.first_name || 'missing',
+            last_name: req.body.last_name || 'missing',
+            email: firebaseEmail || 'missing',
+            firebaseUid: firebaseUid || 'missing'
+          });
 
           const applyParsed = applyProfileSchema.safeParse(req.body);
           const applyErrors = applyParsed.success ? {} : applyParsed.error.flatten().fieldErrors;
 
+          // Don't show email/password errors if we're using Google Sign-In
+          const filteredErrors = { ...signupErrors, ...applyErrors };
+          delete filteredErrors.email;
+          delete filteredErrors.password;
+          delete filteredErrors.password_confirm;
+
           return res.status(422).render('apply/index', {
             title: 'Start your ZipSite profile',
             values: req.body,
-            errors: { ...signupErrors, ...applyErrors },
+            errors: filteredErrors,
             layout: 'layout',
             isLoggedIn: false
           });
@@ -239,7 +270,29 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         });
       } else {
         // No Firebase token or invalid token - use email/password validation
-        console.log('[Apply] No Firebase token, validating email/password signup...');
+        console.log('[Apply] No Firebase token found or token invalid, checking if email/password signup...');
+        console.log('[Apply] Email/password check:', {
+          has_email: !!req.body.email,
+          has_password: !!req.body.password,
+          has_password_confirm: !!req.body.password_confirm,
+          email_value: req.body.email ? `${req.body.email.substring(0, 10)}...` : 'missing',
+          password_length: req.body.password ? req.body.password.length : 0
+        });
+
+        // If no email/password provided, this might be a Google Sign-In that failed
+        // Show a helpful error message instead of validation errors
+        if (!req.body.email || !req.body.password) {
+          console.log('[Apply] No email/password provided and no valid Firebase token - likely Google Sign-In issue');
+          return res.status(422).render('apply/index', {
+            title: 'Start your ZipSite profile',
+            values: req.body,
+            errors: { 
+              firebase: ['Google Sign-In authentication failed. Please try signing in with Google again, or use email/password to create an account.']
+            },
+            layout: 'layout',
+            isLoggedIn: false
+          });
+        }
 
         // Check password confirmation
         if (req.body.password !== req.body.password_confirm) {
@@ -253,7 +306,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
           });
         }
 
-        console.log('[Apply] Validating signup schema...');
+        console.log('[Apply] Validating signup schema for email/password signup...');
         signupParsed = signupSchema.safeParse({
           first_name: req.body.first_name,
           last_name: req.body.last_name,
@@ -264,7 +317,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
 
         if (!signupParsed.success) {
           const signupErrors = signupParsed.error.flatten().fieldErrors;
-          console.log('[Apply] Signup validation failed:', signupErrors);
+          console.log('[Apply] Email/password signup validation failed:', signupErrors);
 
           const applyParsed = applyProfileSchema.safeParse(req.body);
           const applyErrors = applyParsed.success ? {} : applyParsed.error.flatten().fieldErrors;
@@ -478,7 +531,10 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         console.log('[Signup/Apply] Creating account for email:', normalizedEmail);
 
         // Get Firebase token from request (may already be verified above for Google Sign-In)
-        let idToken = extractIdToken(req) || req.body.firebase_token;
+        // Check req.firebaseUid first (set during Google Sign-In validation above)
+        // Then check req.body.firebase_token (for multipart form data)
+        // Finally check headers/cookies as fallback
+        let idToken = null;
         let decodedToken = null;
         let firebaseUid = null;
 
@@ -486,10 +542,18 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         if (req.firebaseUid) {
           firebaseUid = req.firebaseUid;
           console.log('[Signup/Apply] Using Firebase UID from Google Sign-In:', firebaseUid);
+          // Token was already verified above, so we can skip verification here
+          idToken = req.body?.firebase_token || extractIdToken(req);
         } else {
-          // Email/password signup - need to verify token
+          // Email/password signup - need to get and verify token
+          idToken = (req.body && req.body.firebase_token) 
+            ? req.body.firebase_token.trim() 
+            : extractIdToken(req);
+            
           if (!idToken) {
             console.log('[Signup/Apply] No Firebase token provided');
+            console.log('[Signup/Apply] Request body keys:', req.body ? Object.keys(req.body) : 'no body');
+            console.log('[Signup/Apply] Request body firebase_token:', req.body && req.body.firebase_token ? 'present' : 'missing');
             return res.status(422).render('apply/index', {
               title: 'Start your ZipSite profile',
               values: req.body,
