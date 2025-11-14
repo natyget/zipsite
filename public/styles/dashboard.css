@@ -94,7 +94,6 @@
     0 1px 3px rgba(15, 23, 42, 0.04),
     0 4px 12px rgba(15, 23, 42, 0.03),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  position: relative;
   min-height: var(--header-height);
 }
 
@@ -146,6 +145,11 @@
   position: relative;
   z-index: 1;
   min-height: var(--header-height);
+  /* Ensure header inner creates positioning context for pseudo-elements */
+  isolation: isolate;
+  /* Prevent overflow on small screens */
+  overflow: visible;
+  min-width: 0;
 }
 
 /* Logo Wrapper */
@@ -217,6 +221,9 @@
   gap: 8px;
   justify-content: center;
   flex: 1;
+  min-width: 0;
+  /* Prevent navigation from causing overflow */
+  overflow: hidden;
 }
 
 .dash-header__nav-link {
@@ -272,20 +279,18 @@
   opacity: 1;
 }
 
-/* Section Navigation (below header) */
-.dash-nav {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+/* Section Navigation (below header) - Initial definition removed, full definition at line 1481 */
 
 /* User Section Enhancement */
 .dash-header__user-wrapper {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
   position: relative;
+  /* Prevent user section from causing overflow */
+  overflow: visible;
 }
 
 .dash-header__user-dropdown {
@@ -304,11 +309,15 @@
   gap: 10px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: visible;
+  overflow: hidden;
   cursor: pointer;
   font-family: inherit;
   font-weight: 500;
   line-height: 1;
+  /* Ensure button doesn't overflow on small screens */
+  max-width: 100%;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .dash-header__user::before {
@@ -330,6 +339,11 @@
 
 .dash-header__user-email {
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 200px;
 }
 
 .dash-header__user-chevron {
@@ -532,7 +546,9 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin-left: 8px;
+  margin-left: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .dash-header__badge--pro {
@@ -589,7 +605,11 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 60px 40px;
+  /* Account for sticky header - nav is inside container and sticky */
   padding-top: calc(60px + var(--header-height));
+  position: relative;
+  /* Ensure content doesn't overlap with sticky nav */
+  overflow-x: hidden;
 }
 
 /* Hero Section - Image-Driven Like Agency Sites */
@@ -599,6 +619,8 @@
   gap: 48px;
   margin-bottom: 60px;
   align-items: start;
+  /* Ensure hero doesn't overlap with sticky nav */
+  scroll-margin-top: calc(var(--header-height) + var(--nav-height) + 20px);
 }
 
 .dash-hero__image {
@@ -1485,8 +1507,12 @@
   top: var(--header-height); /* Below header */
   z-index: 90;
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   margin-bottom: 32px;
+  margin-top: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  /* Ensure nav has proper height calculation */
+  min-height: calc(var(--nav-height) - 1px);
 }
 
 .dash-nav__inner {
@@ -2481,6 +2507,7 @@ button[disabled] {
 /* Flash Messages - Elegant Notifications */
 .flash-messages {
   position: fixed;
+  /* Account for header, nav (if exists), and spacing */
   top: calc(var(--header-height) + 20px);
   right: 40px;
   z-index: 200;
@@ -2488,6 +2515,12 @@ button[disabled] {
   flex-direction: column;
   gap: 12px;
   max-width: 420px;
+  pointer-events: none;
+}
+
+/* Allow interaction with flash messages */
+.flash-message {
+  pointer-events: auto;
 }
 
 .flash-message {
@@ -2631,7 +2664,8 @@ button[disabled] {
   .flash-messages {
     right: 20px;
     left: 20px;
-    top: calc(var(--header-height) + var(--nav-height) + 20px);
+    /* Account for header on mobile - nav spacing handled by its own margin */
+    top: calc(var(--header-height) + 20px);
     max-width: none;
   }
 
@@ -2647,13 +2681,17 @@ button[disabled] {
 
   .dash-container {
     padding: 32px 20px;
-    padding-top: calc(32px + var(--header-height) + var(--nav-height));
+    /* Account for header only - nav is inside container and sticky */
+    padding-top: calc(32px + var(--header-height));
   }
 
   .dash-header__inner {
     padding: 16px 20px;
     grid-template-columns: auto 1fr auto;
     gap: 16px;
+    /* Ensure header doesn't overflow on mobile */
+    min-width: 0;
+    overflow: visible;
   }
 
   .dash-header__nav {
@@ -2662,6 +2700,12 @@ button[disabled] {
 
   .dash-header__user-email {
     display: none;
+  }
+  
+  /* Ensure user button doesn't overflow on mobile - more specific rules in smaller breakpoints */
+  .dash-header__user-wrapper {
+    flex-shrink: 1;
+    min-width: 0;
   }
 
   .dash-header__user-menu {
