@@ -1,0 +1,131 @@
+<% const profileName=profile ? `${profile.first_name} ${profile.last_name}` : 'User' ; const hasSlug=profile &&
+    profile.slug; const shareUrlFull=shareUrl || (profile && profile.slug ? `${typeof baseUrl !=='undefined' ? baseUrl
+    : '' }/portfolio/${profile.slug}` : null); %>
+
+    <section class="apply-success">
+        <div class="apply-success__container">
+            <!-- Success Icon Animation -->
+            <div class="apply-success__icon">
+                <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="40" cy="40" r="40" fill="rgba(201, 165, 90, 0.1)" />
+                    <path d="M25 40 L35 50 L55 30" stroke="rgba(201, 165, 90, 1)" stroke-width="4"
+                        stroke-linecap="round" stroke-linejoin="round" class="apply-success__checkmark" />
+                </svg>
+            </div>
+
+            <!-- Success Message -->
+            <div class="apply-success__message">
+                <h1 class="apply-success__title">
+                    Welcome to ZipSite, <span class="apply-success__name">
+                        <%= profileName %>
+                    </span>
+                </h1>
+                <p class="apply-success__subtitle">
+                    Your account has been created and your profile is ready. You're all set to build your comp card.
+                </p>
+            </div>
+
+            <!-- What Was Created -->
+            <div class="apply-success__summary">
+                <h2 class="apply-success__summary-title">What you've set up</h2>
+                <ul class="apply-success__checklist">
+                    <li class="apply-success__checklist-item">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="10" cy="10" r="10" fill="rgba(201, 165, 90, 0.2)" />
+                            <path d="M6 10 L9 13 L14 7" stroke="rgba(201, 165, 90, 1)" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span>Account created and verified</span>
+                    </li>
+                    <li class="apply-success__checklist-item">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="10" cy="10" r="10" fill="rgba(201, 165, 90, 0.2)" />
+                            <path d="M6 10 L9 13 L14 7" stroke="rgba(201, 165, 90, 1)" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span>Profile created with AI-curated bio</span>
+                    </li>
+                    <% if (hasSlug) { %>
+                        <li class="apply-success__checklist-item">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="10" cy="10" r="10" fill="rgba(201, 165, 90, 0.2)" />
+                                <path d="M6 10 L9 13 L14 7" stroke="rgba(201, 165, 90, 1)" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <span>Portfolio URL generated</span>
+                        </li>
+                        <% } %>
+                </ul>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="apply-success__next-steps">
+                <h2 class="apply-success__next-steps-title">Next steps</h2>
+                <ul class="apply-success__steps-list">
+                    <li class="apply-success__step <%= completeness.imagery ? 'is-complete' : '' %>">
+                        <div class="apply-success__step-number">1</div>
+                        <div class="apply-success__step-content">
+                            <h3>Upload Photos</h3>
+                            <p>Add your best digitals and portfolio images to complete your comp card.</p>
+                        </div>
+                        <% if (completeness.imagery) { %>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg" class="apply-success__step-check">
+                                <circle cx="12" cy="12" r="12" fill="rgba(201, 165, 90, 0.2)" />
+                                <path d="M7 12 L10 15 L17 8" stroke="rgba(201, 165, 90, 1)" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <% } %>
+                    </li>
+                    <li class="apply-success__step <%= completeness.basics ? 'is-complete' : '' %>">
+                        <div class="apply-success__step-number">2</div>
+                        <div class="apply-success__step-content">
+                            <h3>Review Your Profile</h3>
+                            <p>Check your AI-curated bio and stats. Edit anything that needs adjustment.</p>
+                        </div>
+                        <% if (completeness.basics) { %>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg" class="apply-success__step-check">
+                                <circle cx="12" cy="12" r="12" fill="rgba(201, 165, 90, 0.2)" />
+                                <path d="M7 12 L10 15 L17 8" stroke="rgba(201, 165, 90, 1)" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <% } %>
+                    </li>
+                    <li class="apply-success__step">
+                        <div class="apply-success__step-number">3</div>
+                        <div class="apply-success__step-content">
+                            <h3>Download Your Comp Card</h3>
+                            <p>Generate your free PDF comp card, watermark-free and ready to share with agencies.</p>
+                        </div>
+                    </li>
+                    <% if (hasSlug) { %>
+                        <li class="apply-success__step">
+                            <div class="apply-success__step-number">4</div>
+                            <div class="apply-success__step-content">
+                                <h3>Share Your Portfolio</h3>
+                                <p>Your portfolio is live at <a href="<%= shareUrlFull %>" target="_blank"
+                                        rel="noopener" class="apply-success__link">
+                                        <%= shareUrlFull %>
+                                    </a></p>
+                            </div>
+                        </li>
+                        <% } %>
+                </ul>
+            </div>
+
+            <!-- CTA Buttons -->
+            <div class="apply-success__actions">
+                <a href="/dashboard/talent" class="button button-primary apply-success__cta">
+                    Go to Dashboard
+                </a>
+                <% if (hasSlug) { %>
+                    <a href="<%= shareUrlFull %>" target="_blank" rel="noopener"
+                        class="button button-secondary apply-success__cta">
+                        View Portfolio
+                    </a>
+                    <% } %>
+            </div>
+        </div>
+    </section>

@@ -5344,6 +5344,308 @@ body.filmstrip-hover {
   cursor: not-allowed;
 }
 
+/* Apply Success Page - Editorial Style */
+.apply-success {
+  min-height: 100vh;
+  background: #faf9f7;
+  padding: clamp(4rem, 8vw, 8rem) 2rem;
+  position: relative;
+}
+
+.apply-success__container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Success Icon */
+.apply-success__icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 3rem;
+  animation: fadeInScale 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.apply-success__checkmark {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: drawCheckmark 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s forwards;
+}
+
+@keyframes drawCheckmark {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Success Message */
+.apply-success__message {
+  text-align: center;
+  margin-bottom: 4rem;
+  animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.apply-success__title {
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 300;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+}
+
+.apply-success__name {
+  color: rgba(201, 165, 90, 1);
+  font-weight: 400;
+}
+
+.apply-success__subtitle {
+  font-family: var(--font-sans);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: #475569;
+  max-width: 650px;
+  margin: 0 auto;
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+/* Summary Section */
+.apply-success__summary {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 3rem;
+  box-shadow: 0 20px 60px -40px rgba(15, 23, 42, 0.2);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  margin-bottom: 3rem;
+  animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s both;
+}
+
+.apply-success__summary-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  margin-bottom: 2rem;
+  color: #0f172a;
+}
+
+.apply-success__checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.apply-success__checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.apply-success__checklist-item svg {
+  flex-shrink: 0;
+}
+
+/* Next Steps Section */
+.apply-success__next-steps {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 3rem;
+  box-shadow: 0 20px 60px -40px rgba(15, 23, 42, 0.2);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  margin-bottom: 3rem;
+  animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.6s both;
+}
+
+.apply-success__next-steps-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  margin-bottom: 2.5rem;
+  color: #0f172a;
+}
+
+.apply-success__steps-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.apply-success__step {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1.5rem;
+  align-items: start;
+  padding: 1.5rem;
+  background: rgba(201, 165, 90, 0.02);
+  border-radius: 16px;
+  border: 1px solid rgba(201, 165, 90, 0.1);
+  transition: all 0.3s ease;
+}
+
+.apply-success__step.is-complete {
+  background: rgba(201, 165, 90, 0.05);
+  border-color: rgba(201, 165, 90, 0.2);
+}
+
+.apply-success__step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(201, 165, 90, 0.15);
+  border: 2px solid rgba(201, 165, 90, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: rgba(201, 165, 90, 1);
+  flex-shrink: 0;
+}
+
+.apply-success__step.is-complete .apply-success__step-number {
+  background: rgba(201, 165, 90, 0.2);
+  border-color: rgba(201, 165, 90, 0.4);
+}
+
+.apply-success__step-content {
+  flex: 1;
+}
+
+.apply-success__step-content h3 {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 400;
+  margin: 0 0 0.5rem 0;
+  color: #0f172a;
+  letter-spacing: 0.01em;
+}
+
+.apply-success__step-content p {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: #475569;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.apply-success__step-check {
+  flex-shrink: 0;
+  animation: fadeInScale 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.apply-success__link {
+  color: rgba(201, 165, 90, 1);
+  text-decoration: underline;
+  text-decoration-color: rgba(201, 165, 90, 0.3);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.3s ease;
+}
+
+.apply-success__link:hover {
+  text-decoration-color: rgba(201, 165, 90, 0.6);
+}
+
+/* CTA Actions */
+.apply-success__actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.8s both;
+}
+
+.apply-success__cta {
+  min-width: 200px;
+  padding: 1.125rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .apply-success {
+    padding: 3rem 1.5rem;
+  }
+
+  .apply-success__container {
+    max-width: 100%;
+  }
+
+  .apply-success__icon {
+    margin-bottom: 2rem;
+  }
+
+  .apply-success__icon svg {
+    width: 60px;
+    height: 60px;
+  }
+
+  .apply-success__message {
+    margin-bottom: 3rem;
+  }
+
+  .apply-success__summary,
+  .apply-success__next-steps {
+    padding: 2rem 1.5rem;
+  }
+
+  .apply-success__step {
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+  }
+
+  .apply-success__step-check {
+    grid-column: 1 / -1;
+    justify-self: flex-end;
+  }
+
+  .apply-success__actions {
+    flex-direction: column;
+  }
+
+  .apply-success__cta {
+    width: 100%;
+  }
+}
+
 .portfolio-hero {
   display: grid;
   gap: 2rem;

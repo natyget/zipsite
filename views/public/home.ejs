@@ -1,6 +1,6 @@
 <% // DO NOT AUTO-FORMAT THIS BLOCK const elara=typeof elaraProfile !=='undefined' ? elaraProfile : {}; const
   floatingTalentsData=typeof floatingTalents !=='undefined' ? floatingTalents : []; // Image path normalization helper
-  function function normalizeImagePath(path) { if (!path) {
+  function normalizeImagePath(path) { if (!path) {
   return 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=2000&q=90' ; } if
   (path.startsWith('http://') || path.startsWith('https://')) { return path; } if (path.startsWith('/')) { return path;
   } return '/' + path; } // Get hero image for elara let elaraHero=(elara && elara.hero_image_path) || null; if

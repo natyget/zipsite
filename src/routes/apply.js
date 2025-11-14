@@ -133,7 +133,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     });
     console.log('[Apply] Is logged in:', Boolean(req.currentUser));
     console.log('[Apply] Files uploaded:', req.files?.length || 0);
-  
+
     const isLoggedIn = Boolean(req.currentUser);
     let user = null;
     let userId = null;
@@ -150,652 +150,652 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     let emergency_contact_name, emergency_contact_phone, emergency_contact_relationship;
     let work_eligibility, work_status, union_membership, ethnicity, tattoos, piercings, comfort_levels, previous_representations;
 
-  // If not logged in, validate account creation fields
-  if (!isLoggedIn) {
-    console.log('[Apply] User is not logged in, validating signup...');
-    
-    // Check if Firebase token exists (Google Sign-In)
-    const idToken = extractIdToken(req) || req.body.firebase_token;
-    let firebaseEmail = null;
-    let firebaseUid = null;
-    
-    if (idToken) {
-      try {
-        // Verify Firebase ID token and get email from it
-        const decodedToken = await verifyIdToken(idToken);
-        firebaseUid = decodedToken.uid;
-        firebaseEmail = decodedToken.email;
-        console.log('[Apply] Firebase token verified, email from token:', firebaseEmail);
-      } catch (error) {
-        console.error('[Apply] Firebase token verification failed:', error.message);
-        // Continue with email/password validation if token is invalid
-        firebaseEmail = null;
-        firebaseUid = null;
-      }
-    }
-    
-    // If Firebase token exists and is valid, use email from token and skip password validation
-    if (firebaseEmail && firebaseUid) {
-      console.log('[Apply] Using Google Sign-In authentication, skipping password validation');
-      // Validate signup without password (email comes from Firebase token)
-      const emailSchema = z.string().email('Enter a valid email').max(255).transform((val) => val.toLowerCase());
-      const nameSchema = z.string().trim().min(1, 'Required').max(60, 'Too long');
-      
-      const googleSignupSchema = z.object({
-        first_name: nameSchema,
-        last_name: nameSchema,
-        email: emailSchema, // Still validate format but will use Firebase email
-        role: z.enum(['TALENT'])
-      });
-      
-      signupParsed = googleSignupSchema.safeParse({
-        first_name: req.body.first_name,
-        last_name: req.body.last_name,
-        email: firebaseEmail, // Use email from Firebase token
-        role: 'TALENT'
-      });
-      
-      if (!signupParsed.success) {
-        const signupErrors = signupParsed.error.flatten().fieldErrors;
-        console.log('[Apply] Google Sign-In validation failed:', signupErrors);
-        
-        const applyParsed = applyProfileSchema.safeParse(req.body);
-        const applyErrors = applyParsed.success ? {} : applyParsed.error.flatten().fieldErrors;
-        
-        return res.status(422).render('apply/index', {
-          title: 'Start your ZipSite profile',
-          values: req.body,
-          errors: { ...signupErrors, ...applyErrors },
-          layout: 'layout',
-          isLoggedIn: false
-        });
-      }
-      
-      // Override email with Firebase email
-      signupParsed.data.email = firebaseEmail;
-      
-      // Store Firebase UID for use later
-      req.firebaseUid = firebaseUid;
-      
-      console.log('[Apply] Google Sign-In validation passed:', {
-        email: signupParsed.data.email,
-        first_name: signupParsed.data.first_name,
-        last_name: signupParsed.data.last_name,
-        firebaseUid: firebaseUid
-      });
-    } else {
-      // No Firebase token or invalid token - use email/password validation
-      console.log('[Apply] No Firebase token, validating email/password signup...');
-      
-      // Check password confirmation
-      if (req.body.password !== req.body.password_confirm) {
-        console.log('[Apply] Password confirmation mismatch');
-        return res.status(422).render('apply/index', {
-          title: 'Start your ZipSite profile',
-          values: req.body,
-          errors: { password_confirm: ['Passwords do not match'] },
-          layout: 'layout',
-          isLoggedIn: false
-        });
-      }
+    // If not logged in, validate account creation fields
+    if (!isLoggedIn) {
+      console.log('[Apply] User is not logged in, validating signup...');
 
-      console.log('[Apply] Validating signup schema...');
-      signupParsed = signupSchema.safeParse({
-        first_name: req.body.first_name,
-        last_name: req.body.last_name,
-        email: req.body.email,
-        password: req.body.password,
-        role: 'TALENT'
-      });
-
-      if (!signupParsed.success) {
-        const signupErrors = signupParsed.error.flatten().fieldErrors;
-        console.log('[Apply] Signup validation failed:', signupErrors);
-        
-        const applyParsed = applyProfileSchema.safeParse(req.body);
-        const applyErrors = applyParsed.success ? {} : applyParsed.error.flatten().fieldErrors;
-        
-        if (!applyParsed.success) {
-          console.log('[Apply] Profile validation also failed:', applyParsed.error.flatten().fieldErrors);
-        }
-        
-        return res.status(422).render('apply/index', {
-          title: 'Start your ZipSite profile',
-          values: req.body,
-          errors: { ...signupErrors, ...applyErrors },
-          layout: 'layout',
-          isLoggedIn: false
-        });
-      }
-
-      console.log('[Apply] Signup validation passed:', {
-        email: signupParsed.data.email,
-        first_name: signupParsed.data.first_name,
-        last_name: signupParsed.data.last_name,
-        role: signupParsed.data.role
-      });
-    }
-
-    // Handle specialties - convert to array if it's a single value or array
-    // This must happen BEFORE profile validation
-    let specialtiesArray = [];
-    if (req.body.specialties) {
-      if (Array.isArray(req.body.specialties)) {
-        specialtiesArray = req.body.specialties;
-      } else {
-        specialtiesArray = [req.body.specialties];
-      }
-    }
-
-    // Handle languages - convert to array if needed
-    let languagesArray = [];
-    if (req.body.languages) {
-      if (Array.isArray(req.body.languages)) {
-        languagesArray = req.body.languages;
-      } else if (typeof req.body.languages === 'string') {
-        try {
-          languagesArray = JSON.parse(req.body.languages);
-        } catch {
-          languagesArray = req.body.languages.split(',').map(l => l.trim()).filter(l => l);
-        }
-      }
-    }
-
-    // Prepare body for validation - only include fields that are in the schema
-    // The schema uses .strict() so we must exclude extra fields like password, email, etc.
-    const bodyForValidation = {
-      first_name: req.body.first_name,
-      last_name: req.body.last_name,
-      city: req.body.city,
-      phone: req.body.phone,
-      height_cm: req.body.height_cm,
-      bust: req.body.bust,
-      waist: req.body.waist,
-      hips: req.body.hips,
-      shoe_size: req.body.shoe_size,
-      eye_color: req.body.eye_color,
-      hair_color: req.body.hair_color,
-      bio: req.body.bio,
-      specialties: specialtiesArray.length > 0 ? specialtiesArray : undefined,
-      partner_agency_email: req.body.partner_agency_email,
-      // New comprehensive fields
-      gender: req.body.gender,
-      date_of_birth: req.body.date_of_birth,
-      weight_kg: req.body.weight_kg,
-      weight_lbs: req.body.weight_lbs,
-      dress_size: req.body.dress_size,
-      hair_length: req.body.hair_length,
-      skin_tone: req.body.skin_tone,
-      languages: languagesArray.length > 0 ? languagesArray : undefined,
-      availability_travel: req.body.availability_travel,
-      availability_schedule: req.body.availability_schedule,
-      experience_level: req.body.experience_level,
-      training: req.body.training,
-      portfolio_url: req.body.portfolio_url,
-      instagram_handle: req.body.instagram_handle,
-      instagram_url: req.body.instagram_url,
-      twitter_handle: req.body.twitter_handle,
-      twitter_url: req.body.twitter_url,
-      tiktok_handle: req.body.tiktok_handle,
-      tiktok_url: req.body.tiktok_url,
-      reference_name: req.body.reference_name,
-      reference_email: req.body.reference_email,
-      reference_phone: req.body.reference_phone,
-      emergency_contact_name: req.body.emergency_contact_name,
-      emergency_contact_phone: req.body.emergency_contact_phone,
-      emergency_contact_relationship: req.body.emergency_contact_relationship,
-      work_eligibility: req.body.work_eligibility,
-      work_status: req.body.work_status,
-      union_membership: req.body.union_membership,
-      ethnicity: req.body.ethnicity,
-      tattoos: req.body.tattoos,
-      piercings: req.body.piercings,
-      comfort_levels: req.body.comfort_levels,
-      previous_representations: req.body.previous_representations
-    };
-
-    // Validate profile fields (with specialties already converted to array)
-    console.log('[Apply] Validating profile schema...');
-    const applyParsed = applyProfileSchema.safeParse(bodyForValidation);
-    if (!applyParsed.success) {
-      const profileErrors = applyParsed.error.flatten().fieldErrors;
-      console.log('[Apply] Profile validation failed:', profileErrors);
-      return res.status(422).render('apply/index', {
-        title: 'Start your ZipSite profile',
-        values: { ...req.body, specialties: specialtiesArray },
-        errors: profileErrors,
-        layout: 'layout',
-        isLoggedIn: false
-      });
-    }
-
-    console.log('[Apply] Profile validation passed');
-
-    // Extract profile data from validated result (specialties is already an array)
-    // Assign to function-scope variables so they're available after this block
-    first_name = applyParsed.data.first_name;
-    last_name = applyParsed.data.last_name;
-    city = applyParsed.data.city;
-    city_secondary = applyParsed.data.city_secondary;
-    phone = applyParsed.data.phone;
-    height_cm = applyParsed.data.height_cm;
-    bust = applyParsed.data.bust;
-    waist = applyParsed.data.waist;
-    hips = applyParsed.data.hips;
-    shoe_size = applyParsed.data.shoe_size;
-    eye_color = applyParsed.data.eye_color;
-    hair_color = applyParsed.data.hair_color;
-    bio = applyParsed.data.bio;
-    specialties = applyParsed.data.specialties;
-    experience_details = applyParsed.data.experience_details;
-    partner_agency_email = applyParsed.data.partner_agency_email;
-    
-    // Extract new comprehensive fields
-    gender = applyParsed.data.gender;
-    date_of_birth = applyParsed.data.date_of_birth;
-    // Handle weight - prefer hidden fields (populated by JS), fallback to weight/weight_unit
-    const weight = applyParsed.data.weight;
-    const weight_unit = applyParsed.data.weight_unit;
-    weight_kg = applyParsed.data.weight_kg;
-    weight_lbs = applyParsed.data.weight_lbs;
-    
-    // If weight/weight_unit provided but kg/lbs not, convert
-    if (weight && weight_unit && (!weight_kg && !weight_lbs)) {
-      if (weight_unit === 'kg') {
-        weight_kg = weight;
-        weight_lbs = convertKgToLbs(weight);
-      } else {
-        weight_lbs = weight;
-        weight_kg = convertLbsToKg(weight);
-      }
-    }
-    dress_size = applyParsed.data.dress_size;
-    hair_length = applyParsed.data.hair_length;
-    skin_tone = applyParsed.data.skin_tone;
-    languages = applyParsed.data.languages;
-    availability_travel = applyParsed.data.availability_travel;
-    availability_schedule = applyParsed.data.availability_schedule;
-    experience_level = applyParsed.data.experience_level;
-    training = applyParsed.data.training;
-    portfolio_url = applyParsed.data.portfolio_url;
-    instagram_handle = applyParsed.data.instagram_handle;
-    instagram_url = applyParsed.data.instagram_url;
-    twitter_handle = applyParsed.data.twitter_handle;
-    twitter_url = applyParsed.data.twitter_url;
-    tiktok_handle = applyParsed.data.tiktok_handle;
-    tiktok_url = applyParsed.data.tiktok_url;
-    reference_name = applyParsed.data.reference_name;
-    reference_email = applyParsed.data.reference_email;
-    reference_phone = applyParsed.data.reference_phone;
-    emergency_contact_name = applyParsed.data.emergency_contact_name;
-    emergency_contact_phone = applyParsed.data.emergency_contact_phone;
-    emergency_contact_relationship = applyParsed.data.emergency_contact_relationship;
-    work_eligibility = applyParsed.data.work_eligibility;
-    work_status = applyParsed.data.work_status;
-    union_membership = applyParsed.data.union_membership;
-    ethnicity = applyParsed.data.ethnicity;
-    tattoos = applyParsed.data.tattoos;
-    piercings = applyParsed.data.piercings;
-    comfort_levels = applyParsed.data.comfort_levels;
-    previous_representations = applyParsed.data.previous_representations;
-    
-    // Calculate age from date of birth
-    if (date_of_birth) {
-      age = calculateAge(date_of_birth);
-    }
-    
-    // Handle weight conversion if only one is provided
-    if (weight_kg && !weight_lbs) {
-      weight_lbs = convertKgToLbs(weight_kg);
-    } else if (weight_lbs && !weight_kg) {
-      weight_kg = convertLbsToKg(weight_lbs);
-    }
-    
-    // Handle languages - convert to JSON string
-    const languagesJson = languages && Array.isArray(languages) && languages.length > 0
-      ? JSON.stringify(languages)
-      : null;
-
-    // Create account (Firebase user should be created client-side first)
-    try {
-      // Normalize email (lowercase, trim) for consistent storage and lookup
-      normalizedEmail = signupParsed.data.email.toLowerCase().trim();
-      
-      console.log('[Signup/Apply] Creating account for email:', normalizedEmail);
-      
-      // Get Firebase token from request (may already be verified above for Google Sign-In)
-      let idToken = extractIdToken(req) || req.body.firebase_token;
-      let decodedToken = null;
+      // Check if Firebase token exists (Google Sign-In)
+      const idToken = extractIdToken(req) || req.body.firebase_token;
+      let firebaseEmail = null;
       let firebaseUid = null;
-      
-      // If Firebase UID was already set (Google Sign-In), use it
-      if (req.firebaseUid) {
-        firebaseUid = req.firebaseUid;
-        console.log('[Signup/Apply] Using Firebase UID from Google Sign-In:', firebaseUid);
-      } else {
-        // Email/password signup - need to verify token
-        if (!idToken) {
-          console.log('[Signup/Apply] No Firebase token provided');
-          return res.status(422).render('apply/index', {
-            title: 'Start your ZipSite profile',
-            values: req.body,
-            errors: { email: ['Authentication failed. Please try again.'] },
-            layout: 'layout',
-            isLoggedIn: false
-          });
-        }
 
-        // Verify Firebase ID token
-        decodedToken = await verifyIdToken(idToken);
-        firebaseUid = decodedToken.uid;
-        const firebaseEmail = decodedToken.email;
-
-        if (firebaseEmail.toLowerCase().trim() !== normalizedEmail) {
-          console.log('[Signup/Apply] Email mismatch:', { firebaseEmail, normalizedEmail });
-          return res.status(422).render('apply/index', {
-            title: 'Start your ZipSite profile',
-            values: req.body,
-            errors: { email: ['Email does not match authenticated account.'] },
-            layout: 'layout',
-            isLoggedIn: false
-          });
-        }
-      }
-
-      // Check if user already exists
-      let existing = null;
-      if (firebaseUid) {
-        existing = await knex('users').where({ firebase_uid: firebaseUid }).first();
-      }
-      if (!existing) {
-        existing = await knex('users').where({ email: normalizedEmail }).first();
-      }
-
-      if (existing) {
-        console.log('[Signup/Apply] User already exists:', { firebaseUid, email: normalizedEmail });
-        return res.status(422).render('apply/index', {
-          title: 'Start your ZipSite profile',
-          values: req.body,
-          errors: { email: ['That email is already registered'] },
-          layout: 'layout',
-          isLoggedIn: false
-        });
-      }
-
-      userId = uuidv4();
-
-      console.log('[Signup/Apply] Preparing user data:', {
-        id: userId,
-        email: normalizedEmail,
-        firebase_uid: firebaseUid,
-        role: 'TALENT'
-      });
-
-      // Store Firebase UID for use in transaction
-      // User will be created in transaction below along with profile
-      // Session is set early so user is logged in even if profile creation fails
-      req.session.userId = userId;
-      req.session.role = 'TALENT';
-      user = { id: userId, role: 'TALENT' };
-      
-      console.log('[Signup/Apply] Setting session:', {
-        userId: req.session.userId,
-        role: req.session.role
-      });
-      
-      // Save session before proceeding with database operations
-      await new Promise((resolve, reject) => {
-        req.session.save((err) => {
-          if (err) {
-            console.error('[Signup/Apply] Error saving session:', err);
-            reject(err);
-          } else {
-            console.log('[Signup/Apply] Session saved successfully');
-            resolve();
-          }
-        });
-      });
-
-      // Store firebaseUid for use in transaction
-      req.firebaseUid = firebaseUid;
-    } catch (error) {
-      console.error('[Signup/Apply] Error preparing account:', {
-        message: error.message,
-        code: error.code,
-        name: error.name
-      });
-
-      // Handle Firebase-specific errors
-      if (error.message.includes('Email already exists')) {
-        return res.status(422).render('apply/index', {
-          title: 'Start your ZipSite profile',
-          values: req.body,
-          errors: { email: ['That email is already registered'] },
-          layout: 'layout',
-          isLoggedIn: false
-        });
-      }
-
-      if (error.message.includes('Token expired') || error.message.includes('expired')) {
-        return res.status(422).render('apply/index', {
-          title: 'Start your ZipSite profile',
-          values: req.body,
-          errors: { email: ['Your session has expired. Please try again.'] },
-          layout: 'layout',
-          isLoggedIn: false
-        });
-      }
-
-      if (error.message.includes('Invalid token') || error.message.includes('verification failed')) {
-        return res.status(422).render('apply/index', {
-          title: 'Start your ZipSite profile',
-          values: req.body,
-          errors: { email: ['Invalid authentication token. Please try again.'] },
-          layout: 'layout',
-          isLoggedIn: false
-        });
-      }
-
-      return next(error);
-    }
-  } else {
-    // User is logged in, get their user record
-    user = await knex('users').where({ id: req.currentUser.id }).first();
-    if (!user || user.role !== 'TALENT') {
-      addMessage(req, 'error', 'Only talent accounts can submit applications.');
-      return res.redirect('/');
-    }
-    userId = user.id;
-
-    // Handle specialties - convert to array if it's a single value or array
-    let specialtiesArray = [];
-    if (req.body.specialties) {
-      if (Array.isArray(req.body.specialties)) {
-        specialtiesArray = req.body.specialties;
-      } else {
-        specialtiesArray = [req.body.specialties];
-      }
-    }
-
-    // Handle languages - convert to array if needed
-    let languagesArray = [];
-    if (req.body.languages) {
-      if (Array.isArray(req.body.languages)) {
-        languagesArray = req.body.languages;
-      } else if (typeof req.body.languages === 'string') {
+      if (idToken) {
         try {
-          languagesArray = JSON.parse(req.body.languages);
-        } catch {
-          languagesArray = req.body.languages.split(',').map(l => l.trim()).filter(l => l);
+          // Verify Firebase ID token and get email from it
+          const decodedToken = await verifyIdToken(idToken);
+          firebaseUid = decodedToken.uid;
+          firebaseEmail = decodedToken.email;
+          console.log('[Apply] Firebase token verified, email from token:', firebaseEmail);
+        } catch (error) {
+          console.error('[Apply] Firebase token verification failed:', error.message);
+          // Continue with email/password validation if token is invalid
+          firebaseEmail = null;
+          firebaseUid = null;
         }
       }
-    }
 
-    // Prepare body for validation - only include fields that are in the schema
-    // The schema uses .strict() so we must exclude extra fields
-    const bodyForValidation = {
-      first_name: req.body.first_name,
-      last_name: req.body.last_name,
-      city: req.body.city,
-      phone: req.body.phone,
-      height_cm: req.body.height_cm,
-      bust: req.body.bust,
-      waist: req.body.waist,
-      hips: req.body.hips,
-      shoe_size: req.body.shoe_size,
-      eye_color: req.body.eye_color,
-      hair_color: req.body.hair_color,
-      bio: req.body.bio,
-      specialties: specialtiesArray.length > 0 ? specialtiesArray : undefined,
-      partner_agency_email: req.body.partner_agency_email,
-      // New comprehensive fields
-      gender: req.body.gender,
-      date_of_birth: req.body.date_of_birth,
-      weight_kg: req.body.weight_kg,
-      weight_lbs: req.body.weight_lbs,
-      dress_size: req.body.dress_size,
-      hair_length: req.body.hair_length,
-      skin_tone: req.body.skin_tone,
-      languages: languagesArray.length > 0 ? languagesArray : undefined,
-      availability_travel: req.body.availability_travel,
-      availability_schedule: req.body.availability_schedule,
-      experience_level: req.body.experience_level,
-      training: req.body.training,
-      portfolio_url: req.body.portfolio_url,
-      instagram_handle: req.body.instagram_handle,
-      instagram_url: req.body.instagram_url,
-      twitter_handle: req.body.twitter_handle,
-      twitter_url: req.body.twitter_url,
-      tiktok_handle: req.body.tiktok_handle,
-      tiktok_url: req.body.tiktok_url,
-      reference_name: req.body.reference_name,
-      reference_email: req.body.reference_email,
-      reference_phone: req.body.reference_phone,
-      emergency_contact_name: req.body.emergency_contact_name,
-      emergency_contact_phone: req.body.emergency_contact_phone,
-      emergency_contact_relationship: req.body.emergency_contact_relationship,
-      work_eligibility: req.body.work_eligibility,
-      work_status: req.body.work_status,
-      union_membership: req.body.union_membership,
-      ethnicity: req.body.ethnicity,
-      tattoos: req.body.tattoos,
-      piercings: req.body.piercings,
-      comfort_levels: req.body.comfort_levels,
-      previous_representations: req.body.previous_representations
-    };
+      // If Firebase token exists and is valid, use email from token and skip password validation
+      if (firebaseEmail && firebaseUid) {
+        console.log('[Apply] Using Google Sign-In authentication, skipping password validation');
+        // Validate signup without password (email comes from Firebase token)
+        const emailSchema = z.string().email('Enter a valid email').max(255).transform((val) => val.toLowerCase());
+        const nameSchema = z.string().trim().min(1, 'Required').max(60, 'Too long');
 
-    // Validate profile data
-    console.log('[Apply] Validating profile schema for logged-in user...');
-    const parsed = applyProfileSchema.safeParse(bodyForValidation);
-    if (!parsed.success) {
-      const profileErrors = parsed.error.flatten().fieldErrors;
-      console.log('[Apply] Profile validation failed for logged-in user:', profileErrors);
-      return res.status(422).render('apply/index', {
-        title: 'Start your ZipSite profile',
-        values: { ...req.body, specialties: specialtiesArray },
-        errors: profileErrors,
-        layout: 'layout',
-        isLoggedIn
+        const googleSignupSchema = z.object({
+          first_name: nameSchema,
+          last_name: nameSchema,
+          email: emailSchema, // Still validate format but will use Firebase email
+          role: z.enum(['TALENT'])
+        });
+
+        signupParsed = googleSignupSchema.safeParse({
+          first_name: req.body.first_name,
+          last_name: req.body.last_name,
+          email: firebaseEmail, // Use email from Firebase token
+          role: 'TALENT'
+        });
+
+        if (!signupParsed.success) {
+          const signupErrors = signupParsed.error.flatten().fieldErrors;
+          console.log('[Apply] Google Sign-In validation failed:', signupErrors);
+
+          const applyParsed = applyProfileSchema.safeParse(req.body);
+          const applyErrors = applyParsed.success ? {} : applyParsed.error.flatten().fieldErrors;
+
+          return res.status(422).render('apply/index', {
+            title: 'Start your ZipSite profile',
+            values: req.body,
+            errors: { ...signupErrors, ...applyErrors },
+            layout: 'layout',
+            isLoggedIn: false
+          });
+        }
+
+        // Override email with Firebase email
+        signupParsed.data.email = firebaseEmail;
+
+        // Store Firebase UID for use later
+        req.firebaseUid = firebaseUid;
+
+        console.log('[Apply] Google Sign-In validation passed:', {
+          email: signupParsed.data.email,
+          first_name: signupParsed.data.first_name,
+          last_name: signupParsed.data.last_name,
+          firebaseUid: firebaseUid
+        });
+      } else {
+        // No Firebase token or invalid token - use email/password validation
+        console.log('[Apply] No Firebase token, validating email/password signup...');
+
+        // Check password confirmation
+        if (req.body.password !== req.body.password_confirm) {
+          console.log('[Apply] Password confirmation mismatch');
+          return res.status(422).render('apply/index', {
+            title: 'Start your ZipSite profile',
+            values: req.body,
+            errors: { password_confirm: ['Passwords do not match'] },
+            layout: 'layout',
+            isLoggedIn: false
+          });
+        }
+
+        console.log('[Apply] Validating signup schema...');
+        signupParsed = signupSchema.safeParse({
+          first_name: req.body.first_name,
+          last_name: req.body.last_name,
+          email: req.body.email,
+          password: req.body.password,
+          role: 'TALENT'
+        });
+
+        if (!signupParsed.success) {
+          const signupErrors = signupParsed.error.flatten().fieldErrors;
+          console.log('[Apply] Signup validation failed:', signupErrors);
+
+          const applyParsed = applyProfileSchema.safeParse(req.body);
+          const applyErrors = applyParsed.success ? {} : applyParsed.error.flatten().fieldErrors;
+
+          if (!applyParsed.success) {
+            console.log('[Apply] Profile validation also failed:', applyParsed.error.flatten().fieldErrors);
+          }
+
+          return res.status(422).render('apply/index', {
+            title: 'Start your ZipSite profile',
+            values: req.body,
+            errors: { ...signupErrors, ...applyErrors },
+            layout: 'layout',
+            isLoggedIn: false
+          });
+        }
+
+        console.log('[Apply] Signup validation passed:', {
+          email: signupParsed.data.email,
+          first_name: signupParsed.data.first_name,
+          last_name: signupParsed.data.last_name,
+          role: signupParsed.data.role
+        });
+      }
+
+      // Handle specialties - convert to array if it's a single value or array
+      // This must happen BEFORE profile validation
+      let specialtiesArray = [];
+      if (req.body.specialties) {
+        if (Array.isArray(req.body.specialties)) {
+          specialtiesArray = req.body.specialties;
+        } else {
+          specialtiesArray = [req.body.specialties];
+        }
+      }
+
+      // Handle languages - convert to array if needed
+      let languagesArray = [];
+      if (req.body.languages) {
+        if (Array.isArray(req.body.languages)) {
+          languagesArray = req.body.languages;
+        } else if (typeof req.body.languages === 'string') {
+          try {
+            languagesArray = JSON.parse(req.body.languages);
+          } catch {
+            languagesArray = req.body.languages.split(',').map(l => l.trim()).filter(l => l);
+          }
+        }
+      }
+
+      // Prepare body for validation - only include fields that are in the schema
+      // The schema uses .strict() so we must exclude extra fields like password, email, etc.
+      const bodyForValidation = {
+        first_name: req.body.first_name,
+        last_name: req.body.last_name,
+        city: req.body.city,
+        phone: req.body.phone,
+        height_cm: req.body.height_cm,
+        bust: req.body.bust,
+        waist: req.body.waist,
+        hips: req.body.hips,
+        shoe_size: req.body.shoe_size,
+        eye_color: req.body.eye_color,
+        hair_color: req.body.hair_color,
+        bio: req.body.bio,
+        specialties: specialtiesArray.length > 0 ? specialtiesArray : undefined,
+        partner_agency_email: req.body.partner_agency_email,
+        // New comprehensive fields
+        gender: req.body.gender,
+        date_of_birth: req.body.date_of_birth,
+        weight_kg: req.body.weight_kg,
+        weight_lbs: req.body.weight_lbs,
+        dress_size: req.body.dress_size,
+        hair_length: req.body.hair_length,
+        skin_tone: req.body.skin_tone,
+        languages: languagesArray.length > 0 ? languagesArray : undefined,
+        availability_travel: req.body.availability_travel,
+        availability_schedule: req.body.availability_schedule,
+        experience_level: req.body.experience_level,
+        training: req.body.training,
+        portfolio_url: req.body.portfolio_url,
+        instagram_handle: req.body.instagram_handle,
+        instagram_url: req.body.instagram_url,
+        twitter_handle: req.body.twitter_handle,
+        twitter_url: req.body.twitter_url,
+        tiktok_handle: req.body.tiktok_handle,
+        tiktok_url: req.body.tiktok_url,
+        reference_name: req.body.reference_name,
+        reference_email: req.body.reference_email,
+        reference_phone: req.body.reference_phone,
+        emergency_contact_name: req.body.emergency_contact_name,
+        emergency_contact_phone: req.body.emergency_contact_phone,
+        emergency_contact_relationship: req.body.emergency_contact_relationship,
+        work_eligibility: req.body.work_eligibility,
+        work_status: req.body.work_status,
+        union_membership: req.body.union_membership,
+        ethnicity: req.body.ethnicity,
+        tattoos: req.body.tattoos,
+        piercings: req.body.piercings,
+        comfort_levels: req.body.comfort_levels,
+        previous_representations: req.body.previous_representations
+      };
+
+      // Validate profile fields (with specialties already converted to array)
+      console.log('[Apply] Validating profile schema...');
+      const applyParsed = applyProfileSchema.safeParse(bodyForValidation);
+      if (!applyParsed.success) {
+        const profileErrors = applyParsed.error.flatten().fieldErrors;
+        console.log('[Apply] Profile validation failed:', profileErrors);
+        return res.status(422).render('apply/index', {
+          title: 'Start your ZipSite profile',
+          values: { ...req.body, specialties: specialtiesArray },
+          errors: profileErrors,
+          layout: 'layout',
+          isLoggedIn: false
+        });
+      }
+
+      console.log('[Apply] Profile validation passed');
+
+      // Extract profile data from validated result (specialties is already an array)
+      // Assign to function-scope variables so they're available after this block
+      first_name = applyParsed.data.first_name;
+      last_name = applyParsed.data.last_name;
+      city = applyParsed.data.city;
+      city_secondary = applyParsed.data.city_secondary;
+      phone = applyParsed.data.phone;
+      height_cm = applyParsed.data.height_cm;
+      bust = applyParsed.data.bust;
+      waist = applyParsed.data.waist;
+      hips = applyParsed.data.hips;
+      shoe_size = applyParsed.data.shoe_size;
+      eye_color = applyParsed.data.eye_color;
+      hair_color = applyParsed.data.hair_color;
+      bio = applyParsed.data.bio;
+      specialties = applyParsed.data.specialties;
+      experience_details = applyParsed.data.experience_details;
+      partner_agency_email = applyParsed.data.partner_agency_email;
+
+      // Extract new comprehensive fields
+      gender = applyParsed.data.gender;
+      date_of_birth = applyParsed.data.date_of_birth;
+      // Handle weight - prefer hidden fields (populated by JS), fallback to weight/weight_unit
+      const weight = applyParsed.data.weight;
+      const weight_unit = applyParsed.data.weight_unit;
+      weight_kg = applyParsed.data.weight_kg;
+      weight_lbs = applyParsed.data.weight_lbs;
+
+      // If weight/weight_unit provided but kg/lbs not, convert
+      if (weight && weight_unit && (!weight_kg && !weight_lbs)) {
+        if (weight_unit === 'kg') {
+          weight_kg = weight;
+          weight_lbs = convertKgToLbs(weight);
+        } else {
+          weight_lbs = weight;
+          weight_kg = convertLbsToKg(weight);
+        }
+      }
+      dress_size = applyParsed.data.dress_size;
+      hair_length = applyParsed.data.hair_length;
+      skin_tone = applyParsed.data.skin_tone;
+      languages = applyParsed.data.languages;
+      availability_travel = applyParsed.data.availability_travel;
+      availability_schedule = applyParsed.data.availability_schedule;
+      experience_level = applyParsed.data.experience_level;
+      training = applyParsed.data.training;
+      portfolio_url = applyParsed.data.portfolio_url;
+      instagram_handle = applyParsed.data.instagram_handle;
+      instagram_url = applyParsed.data.instagram_url;
+      twitter_handle = applyParsed.data.twitter_handle;
+      twitter_url = applyParsed.data.twitter_url;
+      tiktok_handle = applyParsed.data.tiktok_handle;
+      tiktok_url = applyParsed.data.tiktok_url;
+      reference_name = applyParsed.data.reference_name;
+      reference_email = applyParsed.data.reference_email;
+      reference_phone = applyParsed.data.reference_phone;
+      emergency_contact_name = applyParsed.data.emergency_contact_name;
+      emergency_contact_phone = applyParsed.data.emergency_contact_phone;
+      emergency_contact_relationship = applyParsed.data.emergency_contact_relationship;
+      work_eligibility = applyParsed.data.work_eligibility;
+      work_status = applyParsed.data.work_status;
+      union_membership = applyParsed.data.union_membership;
+      ethnicity = applyParsed.data.ethnicity;
+      tattoos = applyParsed.data.tattoos;
+      piercings = applyParsed.data.piercings;
+      comfort_levels = applyParsed.data.comfort_levels;
+      previous_representations = applyParsed.data.previous_representations;
+
+      // Calculate age from date of birth
+      if (date_of_birth) {
+        age = calculateAge(date_of_birth);
+      }
+
+      // Handle weight conversion if only one is provided
+      if (weight_kg && !weight_lbs) {
+        weight_lbs = convertKgToLbs(weight_kg);
+      } else if (weight_lbs && !weight_kg) {
+        weight_kg = convertLbsToKg(weight_lbs);
+      }
+
+      // Handle languages - convert to JSON string
+      const languagesJson = languages && Array.isArray(languages) && languages.length > 0
+        ? JSON.stringify(languages)
+        : null;
+
+      // Create account (Firebase user should be created client-side first)
+      try {
+        // Normalize email (lowercase, trim) for consistent storage and lookup
+        normalizedEmail = signupParsed.data.email.toLowerCase().trim();
+
+        console.log('[Signup/Apply] Creating account for email:', normalizedEmail);
+
+        // Get Firebase token from request (may already be verified above for Google Sign-In)
+        let idToken = extractIdToken(req) || req.body.firebase_token;
+        let decodedToken = null;
+        let firebaseUid = null;
+
+        // If Firebase UID was already set (Google Sign-In), use it
+        if (req.firebaseUid) {
+          firebaseUid = req.firebaseUid;
+          console.log('[Signup/Apply] Using Firebase UID from Google Sign-In:', firebaseUid);
+        } else {
+          // Email/password signup - need to verify token
+          if (!idToken) {
+            console.log('[Signup/Apply] No Firebase token provided');
+            return res.status(422).render('apply/index', {
+              title: 'Start your ZipSite profile',
+              values: req.body,
+              errors: { email: ['Authentication failed. Please try again.'] },
+              layout: 'layout',
+              isLoggedIn: false
+            });
+          }
+
+          // Verify Firebase ID token
+          decodedToken = await verifyIdToken(idToken);
+          firebaseUid = decodedToken.uid;
+          const firebaseEmail = decodedToken.email;
+
+          if (firebaseEmail.toLowerCase().trim() !== normalizedEmail) {
+            console.log('[Signup/Apply] Email mismatch:', { firebaseEmail, normalizedEmail });
+            return res.status(422).render('apply/index', {
+              title: 'Start your ZipSite profile',
+              values: req.body,
+              errors: { email: ['Email does not match authenticated account.'] },
+              layout: 'layout',
+              isLoggedIn: false
+            });
+          }
+        }
+
+        // Check if user already exists
+        let existing = null;
+        if (firebaseUid) {
+          existing = await knex('users').where({ firebase_uid: firebaseUid }).first();
+        }
+        if (!existing) {
+          existing = await knex('users').where({ email: normalizedEmail }).first();
+        }
+
+        if (existing) {
+          console.log('[Signup/Apply] User already exists:', { firebaseUid, email: normalizedEmail });
+          return res.status(422).render('apply/index', {
+            title: 'Start your ZipSite profile',
+            values: req.body,
+            errors: { email: ['That email is already registered'] },
+            layout: 'layout',
+            isLoggedIn: false
+          });
+        }
+
+        userId = uuidv4();
+
+        console.log('[Signup/Apply] Preparing user data:', {
+          id: userId,
+          email: normalizedEmail,
+          firebase_uid: firebaseUid,
+          role: 'TALENT'
+        });
+
+        // Store Firebase UID for use in transaction
+        // User will be created in transaction below along with profile
+        // Session is set early so user is logged in even if profile creation fails
+        req.session.userId = userId;
+        req.session.role = 'TALENT';
+        user = { id: userId, role: 'TALENT' };
+
+        console.log('[Signup/Apply] Setting session:', {
+          userId: req.session.userId,
+          role: req.session.role
+        });
+
+        // Save session before proceeding with database operations
+        await new Promise((resolve, reject) => {
+          req.session.save((err) => {
+            if (err) {
+              console.error('[Signup/Apply] Error saving session:', err);
+              reject(err);
+            } else {
+              console.log('[Signup/Apply] Session saved successfully');
+              resolve();
+            }
+          });
+        });
+
+        // Store firebaseUid for use in transaction
+        req.firebaseUid = firebaseUid;
+      } catch (error) {
+        console.error('[Signup/Apply] Error preparing account:', {
+          message: error.message,
+          code: error.code,
+          name: error.name
+        });
+
+        // Handle Firebase-specific errors
+        if (error.message.includes('Email already exists')) {
+          return res.status(422).render('apply/index', {
+            title: 'Start your ZipSite profile',
+            values: req.body,
+            errors: { email: ['That email is already registered'] },
+            layout: 'layout',
+            isLoggedIn: false
+          });
+        }
+
+        if (error.message.includes('Token expired') || error.message.includes('expired')) {
+          return res.status(422).render('apply/index', {
+            title: 'Start your ZipSite profile',
+            values: req.body,
+            errors: { email: ['Your session has expired. Please try again.'] },
+            layout: 'layout',
+            isLoggedIn: false
+          });
+        }
+
+        if (error.message.includes('Invalid token') || error.message.includes('verification failed')) {
+          return res.status(422).render('apply/index', {
+            title: 'Start your ZipSite profile',
+            values: req.body,
+            errors: { email: ['Invalid authentication token. Please try again.'] },
+            layout: 'layout',
+            isLoggedIn: false
+          });
+        }
+
+        return next(error);
+      }
+    } else {
+      // User is logged in, get their user record
+      user = await knex('users').where({ id: req.currentUser.id }).first();
+      if (!user || user.role !== 'TALENT') {
+        addMessage(req, 'error', 'Only talent accounts can submit applications.');
+        return res.redirect('/');
+      }
+      userId = user.id;
+
+      // Handle specialties - convert to array if it's a single value or array
+      let specialtiesArray = [];
+      if (req.body.specialties) {
+        if (Array.isArray(req.body.specialties)) {
+          specialtiesArray = req.body.specialties;
+        } else {
+          specialtiesArray = [req.body.specialties];
+        }
+      }
+
+      // Handle languages - convert to array if needed
+      let languagesArray = [];
+      if (req.body.languages) {
+        if (Array.isArray(req.body.languages)) {
+          languagesArray = req.body.languages;
+        } else if (typeof req.body.languages === 'string') {
+          try {
+            languagesArray = JSON.parse(req.body.languages);
+          } catch {
+            languagesArray = req.body.languages.split(',').map(l => l.trim()).filter(l => l);
+          }
+        }
+      }
+
+      // Prepare body for validation - only include fields that are in the schema
+      // The schema uses .strict() so we must exclude extra fields
+      const bodyForValidation = {
+        first_name: req.body.first_name,
+        last_name: req.body.last_name,
+        city: req.body.city,
+        phone: req.body.phone,
+        height_cm: req.body.height_cm,
+        bust: req.body.bust,
+        waist: req.body.waist,
+        hips: req.body.hips,
+        shoe_size: req.body.shoe_size,
+        eye_color: req.body.eye_color,
+        hair_color: req.body.hair_color,
+        bio: req.body.bio,
+        specialties: specialtiesArray.length > 0 ? specialtiesArray : undefined,
+        partner_agency_email: req.body.partner_agency_email,
+        // New comprehensive fields
+        gender: req.body.gender,
+        date_of_birth: req.body.date_of_birth,
+        weight_kg: req.body.weight_kg,
+        weight_lbs: req.body.weight_lbs,
+        dress_size: req.body.dress_size,
+        hair_length: req.body.hair_length,
+        skin_tone: req.body.skin_tone,
+        languages: languagesArray.length > 0 ? languagesArray : undefined,
+        availability_travel: req.body.availability_travel,
+        availability_schedule: req.body.availability_schedule,
+        experience_level: req.body.experience_level,
+        training: req.body.training,
+        portfolio_url: req.body.portfolio_url,
+        instagram_handle: req.body.instagram_handle,
+        instagram_url: req.body.instagram_url,
+        twitter_handle: req.body.twitter_handle,
+        twitter_url: req.body.twitter_url,
+        tiktok_handle: req.body.tiktok_handle,
+        tiktok_url: req.body.tiktok_url,
+        reference_name: req.body.reference_name,
+        reference_email: req.body.reference_email,
+        reference_phone: req.body.reference_phone,
+        emergency_contact_name: req.body.emergency_contact_name,
+        emergency_contact_phone: req.body.emergency_contact_phone,
+        emergency_contact_relationship: req.body.emergency_contact_relationship,
+        work_eligibility: req.body.work_eligibility,
+        work_status: req.body.work_status,
+        union_membership: req.body.union_membership,
+        ethnicity: req.body.ethnicity,
+        tattoos: req.body.tattoos,
+        piercings: req.body.piercings,
+        comfort_levels: req.body.comfort_levels,
+        previous_representations: req.body.previous_representations
+      };
+
+      // Validate profile data
+      console.log('[Apply] Validating profile schema for logged-in user...');
+      const parsed = applyProfileSchema.safeParse(bodyForValidation);
+      if (!parsed.success) {
+        const profileErrors = parsed.error.flatten().fieldErrors;
+        console.log('[Apply] Profile validation failed for logged-in user:', profileErrors);
+        return res.status(422).render('apply/index', {
+          title: 'Start your ZipSite profile',
+          values: { ...req.body, specialties: specialtiesArray },
+          errors: profileErrors,
+          layout: 'layout',
+          isLoggedIn
+        });
+      }
+
+      console.log('[Apply] Profile validation passed for logged-in user');
+
+      // Extract profile data from validated result
+      // Assign to function-scope variables (already declared above)
+      first_name = parsed.data.first_name;
+      last_name = parsed.data.last_name;
+      city = parsed.data.city;
+      city_secondary = parsed.data.city_secondary;
+      phone = parsed.data.phone;
+      height_cm = parsed.data.height_cm;
+      bust = parsed.data.bust;
+      waist = parsed.data.waist;
+      hips = parsed.data.hips;
+      shoe_size = parsed.data.shoe_size;
+      eye_color = parsed.data.eye_color;
+      hair_color = parsed.data.hair_color;
+      bio = parsed.data.bio;
+      specialties = parsed.data.specialties;
+      experience_details = parsed.data.experience_details;
+      partner_agency_email = parsed.data.partner_agency_email;
+
+      // Extract new comprehensive fields
+      gender = parsed.data.gender;
+      date_of_birth = parsed.data.date_of_birth;
+      // Handle weight - prefer hidden fields (populated by JS), fallback to weight/weight_unit
+      const weight = parsed.data.weight;
+      const weight_unit = parsed.data.weight_unit;
+      weight_kg = parsed.data.weight_kg;
+      weight_lbs = parsed.data.weight_lbs;
+
+      // If weight/weight_unit provided but kg/lbs not, convert
+      if (weight && weight_unit && (!weight_kg && !weight_lbs)) {
+        if (weight_unit === 'kg') {
+          weight_kg = weight;
+          weight_lbs = convertKgToLbs(weight);
+        } else {
+          weight_lbs = weight;
+          weight_kg = convertLbsToKg(weight);
+        }
+      }
+      dress_size = parsed.data.dress_size;
+      hair_length = parsed.data.hair_length;
+      skin_tone = parsed.data.skin_tone;
+      languages = parsed.data.languages;
+      availability_travel = parsed.data.availability_travel;
+      availability_schedule = parsed.data.availability_schedule;
+      experience_level = parsed.data.experience_level;
+      training = parsed.data.training;
+      portfolio_url = parsed.data.portfolio_url;
+      instagram_handle = parsed.data.instagram_handle;
+      instagram_url = parsed.data.instagram_url;
+      twitter_handle = parsed.data.twitter_handle;
+      twitter_url = parsed.data.twitter_url;
+      tiktok_handle = parsed.data.tiktok_handle;
+      tiktok_url = parsed.data.tiktok_url;
+      reference_name = parsed.data.reference_name;
+      reference_email = parsed.data.reference_email;
+      reference_phone = parsed.data.reference_phone;
+      emergency_contact_name = parsed.data.emergency_contact_name;
+      emergency_contact_phone = parsed.data.emergency_contact_phone;
+      emergency_contact_relationship = parsed.data.emergency_contact_relationship;
+      work_eligibility = parsed.data.work_eligibility;
+      work_status = parsed.data.work_status;
+      union_membership = parsed.data.union_membership;
+      ethnicity = parsed.data.ethnicity;
+      tattoos = parsed.data.tattoos;
+      piercings = parsed.data.piercings;
+      comfort_levels = parsed.data.comfort_levels;
+      previous_representations = parsed.data.previous_representations;
+
+      // Calculate age from date of birth
+      if (date_of_birth) {
+        age = calculateAge(date_of_birth);
+      }
+
+      // Handle weight conversion if only one is provided
+      if (weight_kg && !weight_lbs) {
+        weight_lbs = convertKgToLbs(weight_kg);
+      } else if (weight_lbs && !weight_kg) {
+        weight_kg = convertLbsToKg(weight_lbs);
+      }
+
+      // Handle languages - convert to JSON string
+      const languagesJson = languages && Array.isArray(languages) && languages.length > 0
+        ? JSON.stringify(languages)
+        : null;
+
+      console.log('[Apply] Extracted profile data for logged-in user:', {
+        name: `${first_name} ${last_name}`,
+        city: city,
+        hasBio: !!bio,
+        hasSpecialties: !!specialties,
+        hasLanguages: !!languagesJson
       });
     }
 
-    console.log('[Apply] Profile validation passed for logged-in user');
-
-    // Extract profile data from validated result
-    // Assign to function-scope variables (already declared above)
-    first_name = parsed.data.first_name;
-    last_name = parsed.data.last_name;
-    city = parsed.data.city;
-    city_secondary = parsed.data.city_secondary;
-    phone = parsed.data.phone;
-    height_cm = parsed.data.height_cm;
-    bust = parsed.data.bust;
-    waist = parsed.data.waist;
-    hips = parsed.data.hips;
-    shoe_size = parsed.data.shoe_size;
-    eye_color = parsed.data.eye_color;
-    hair_color = parsed.data.hair_color;
-    bio = parsed.data.bio;
-    specialties = parsed.data.specialties;
-    experience_details = parsed.data.experience_details;
-    partner_agency_email = parsed.data.partner_agency_email;
-    
-    // Extract new comprehensive fields
-    gender = parsed.data.gender;
-    date_of_birth = parsed.data.date_of_birth;
-    // Handle weight - prefer hidden fields (populated by JS), fallback to weight/weight_unit
-    const weight = parsed.data.weight;
-    const weight_unit = parsed.data.weight_unit;
-    weight_kg = parsed.data.weight_kg;
-    weight_lbs = parsed.data.weight_lbs;
-    
-    // If weight/weight_unit provided but kg/lbs not, convert
-    if (weight && weight_unit && (!weight_kg && !weight_lbs)) {
-      if (weight_unit === 'kg') {
-        weight_kg = weight;
-        weight_lbs = convertKgToLbs(weight);
-      } else {
-        weight_lbs = weight;
-        weight_kg = convertLbsToKg(weight);
-      }
-    }
-    dress_size = parsed.data.dress_size;
-    hair_length = parsed.data.hair_length;
-    skin_tone = parsed.data.skin_tone;
-    languages = parsed.data.languages;
-    availability_travel = parsed.data.availability_travel;
-    availability_schedule = parsed.data.availability_schedule;
-    experience_level = parsed.data.experience_level;
-    training = parsed.data.training;
-    portfolio_url = parsed.data.portfolio_url;
-    instagram_handle = parsed.data.instagram_handle;
-    instagram_url = parsed.data.instagram_url;
-    twitter_handle = parsed.data.twitter_handle;
-    twitter_url = parsed.data.twitter_url;
-    tiktok_handle = parsed.data.tiktok_handle;
-    tiktok_url = parsed.data.tiktok_url;
-    reference_name = parsed.data.reference_name;
-    reference_email = parsed.data.reference_email;
-    reference_phone = parsed.data.reference_phone;
-    emergency_contact_name = parsed.data.emergency_contact_name;
-    emergency_contact_phone = parsed.data.emergency_contact_phone;
-    emergency_contact_relationship = parsed.data.emergency_contact_relationship;
-    work_eligibility = parsed.data.work_eligibility;
-    work_status = parsed.data.work_status;
-    union_membership = parsed.data.union_membership;
-    ethnicity = parsed.data.ethnicity;
-    tattoos = parsed.data.tattoos;
-    piercings = parsed.data.piercings;
-    comfort_levels = parsed.data.comfort_levels;
-    previous_representations = parsed.data.previous_representations;
-    
-    // Calculate age from date of birth
-    if (date_of_birth) {
-      age = calculateAge(date_of_birth);
-    }
-    
-    // Handle weight conversion if only one is provided
-    if (weight_kg && !weight_lbs) {
-      weight_lbs = convertKgToLbs(weight_kg);
-    } else if (weight_lbs && !weight_kg) {
-      weight_kg = convertLbsToKg(weight_lbs);
-    }
-    
-    // Handle languages - convert to JSON string
-    const languagesJson = languages && Array.isArray(languages) && languages.length > 0
-      ? JSON.stringify(languages)
-      : null;
-    
-    console.log('[Apply] Extracted profile data for logged-in user:', {
-      name: `${first_name} ${last_name}`,
-      city: city,
-      hasBio: !!bio,
-      hasSpecialties: !!specialties,
-      hasLanguages: !!languagesJson
-    });
-  }
-
-  let partnerAgencyId = null;
+    let partnerAgencyId = null;
     if (partner_agency_email) {
       const agency = await knex('users').where({ email: partner_agency_email, role: 'AGENCY' }).first();
       if (!agency) {
@@ -812,27 +812,27 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     // Check for existing profile using userId (for both logged-in and new users)
     console.log('[Apply] Checking for existing profile for user:', userId);
     const existingProfile = await knex('profiles').where({ user_id: userId }).first();
-    
+
     console.log('[Apply] Profile lookup result:', {
       userId: userId,
       existingProfileFound: !!existingProfile,
       existingProfileId: existingProfile?.id || null,
       existingProfileSlug: existingProfile?.slug || null
     });
-    
+
     const curatedBio = curateBio(bio, first_name, last_name);
-    const specialtiesJson = specialties && Array.isArray(specialties) && specialties.length > 0 
-      ? JSON.stringify(specialties) 
+    const specialtiesJson = specialties && Array.isArray(specialties) && specialties.length > 0
+      ? JSON.stringify(specialties)
       : null;
-    const experienceDetailsJson = experience_details 
+    const experienceDetailsJson = experience_details
       ? (typeof experience_details === 'string' ? experience_details : JSON.stringify(experience_details))
       : null;
-    const previousRepsJson = previous_representations 
+    const previousRepsJson = previous_representations
       ? (typeof previous_representations === 'string' ? previous_representations : JSON.stringify(previous_representations))
       : null;
 
     let profileId;
-    
+
     // Use transaction for new signups to ensure atomicity of user + profile creation
     if (!isLoggedIn && !existingProfile) {
       console.log('[Apply] Creating user and profile in transaction:', {
@@ -840,7 +840,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         name: `${first_name} ${last_name}`,
         email: normalizedEmail
       });
-      
+
       // Wrap user and profile creation in a transaction
       // Use the Firebase UID that was extracted from the token above
       await knex.transaction(async (trx) => {
@@ -852,19 +852,19 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
             firebase_uid: req.firebaseUid,
             role: 'TALENT'
           });
-          
+
           console.log('[Apply] User inserted in transaction:', userId);
-          
+
           // Create profile
           const slug = await ensureUniqueSlug(trx, 'profiles', `${first_name}-${last_name}`);
           profileId = uuidv4();
-          
+
           // For new signups, always Free - just store handles, no URLs
           // Clean social media handles
           const cleanInstagramHandle = instagram_handle ? parseSocialMediaHandle(instagram_handle) : null;
           const cleanTwitterHandle = twitter_handle ? parseSocialMediaHandle(twitter_handle) : null;
           const cleanTiktokHandle = tiktok_handle ? parseSocialMediaHandle(tiktok_handle) : null;
-          
+
           const profileData = {
             id: profileId,
             user_id: userId,
@@ -923,9 +923,9 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
             previous_representations: previousRepsJson,
             is_pro: false // New signups are always Free
           };
-          
+
           await trx('profiles').insert(profileData);
-          
+
           console.log('[Apply] User and profile created atomically:', {
             userId: userId,
             profileId: profileId,
@@ -948,20 +948,20 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         slug = await ensureUniqueSlug(knex, 'profiles', `${first_name}-${last_name}`);
       }
       profileId = existingProfile.id;
-      
+
       // Check if user is Pro to determine if we should generate social media URLs
       const isPro = existingProfile.is_pro || false;
-      
+
       // Clean social media handles
       const cleanInstagramHandle = instagram_handle ? parseSocialMediaHandle(instagram_handle) : null;
       const cleanTwitterHandle = twitter_handle ? parseSocialMediaHandle(twitter_handle) : null;
       const cleanTiktokHandle = tiktok_handle ? parseSocialMediaHandle(tiktok_handle) : null;
-      
+
       // Generate URLs for Pro users if handles are provided but URLs are not
       let finalInstagramUrl = instagram_url || null;
       let finalTwitterUrl = twitter_url || null;
       let finalTiktokUrl = tiktok_url || null;
-      
+
       if (isPro) {
         // Pro users get URLs - generate from handles if URL not provided
         if (cleanInstagramHandle && !finalInstagramUrl) {
@@ -979,7 +979,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         finalTwitterUrl = null;
         finalTiktokUrl = null;
       }
-      
+
       await knex('profiles')
         .where({ id: existingProfile.id })
         .update({
@@ -994,10 +994,10 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
           shoe_size: shoe_size || null,
           eye_color: eye_color || null,
           hair_color: hair_color || null,
-          measurements: cleanedMeasurements,
           bio_raw: bio,
           bio_curated: curatedBio,
           specialties: specialtiesJson,
+          experience_details: experienceDetailsJson,
           partner_agency_id: partnerAgencyId,
           slug,
           // New comprehensive fields
@@ -1024,15 +1024,17 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
           reference_name: reference_name || null,
           reference_email: reference_email || null,
           reference_phone: reference_phone || null,
-          reference_relationship: reference_relationship || null,
           emergency_contact_name: emergency_contact_name || null,
           emergency_contact_phone: emergency_contact_phone || null,
           emergency_contact_relationship: emergency_contact_relationship || null,
-          nationality: nationality || null,
+          work_eligibility: work_eligibility || null,
+          work_status: (work_status === 'Other' && req.body.work_status_other) ? req.body.work_status_other : (work_status || null),
           union_membership: union_membership || null,
           ethnicity: ethnicity || null,
           tattoos: tattoos || null,
           piercings: piercings || null,
+          comfort_levels: comfort_levels && Array.isArray(comfort_levels) && comfort_levels.length > 0 ? JSON.stringify(comfort_levels) : null,
+          previous_representations: previousRepsJson,
           updated_at: knex.fn.now()
         });
       console.log('[Apply] Profile updated successfully:', {
@@ -1049,14 +1051,14 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       });
       const slug = await ensureUniqueSlug(knex, 'profiles', `${first_name}-${last_name}`);
       profileId = uuidv4();
-      
+
       // For logged-in users creating profile, check if they're Pro (unlikely but possible)
       // For now, assume Free unless they already have a Pro profile elsewhere
       // Clean social media handles
       const cleanInstagramHandle = instagram_handle ? parseSocialMediaHandle(instagram_handle) : null;
       const cleanTwitterHandle = twitter_handle ? parseSocialMediaHandle(twitter_handle) : null;
       const cleanTiktokHandle = tiktok_handle ? parseSocialMediaHandle(tiktok_handle) : null;
-      
+
       const profileData = {
         id: profileId,
         user_id: userId,
@@ -1072,10 +1074,10 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         shoe_size: shoe_size || null,
         eye_color: eye_color || null,
         hair_color: hair_color || null,
-        measurements: cleanedMeasurements,
         bio_raw: bio,
         bio_curated: curatedBio,
         specialties: specialtiesJson,
+        experience_details: experienceDetailsJson,
         partner_agency_id: partnerAgencyId,
         // New comprehensive fields
         gender: gender || null,
@@ -1101,18 +1103,20 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         reference_name: reference_name || null,
         reference_email: reference_email || null,
         reference_phone: reference_phone || null,
-        reference_relationship: reference_relationship || null,
         emergency_contact_name: emergency_contact_name || null,
         emergency_contact_phone: emergency_contact_phone || null,
         emergency_contact_relationship: emergency_contact_relationship || null,
-        nationality: nationality || null,
+        work_eligibility: work_eligibility || null,
+        work_status: (work_status === 'Other' && req.body.work_status_other) ? req.body.work_status_other : (work_status || null),
         union_membership: union_membership || null,
         ethnicity: ethnicity || null,
         tattoos: tattoos || null,
         piercings: piercings || null,
+        comfort_levels: comfort_levels && Array.isArray(comfort_levels) && comfort_levels.length > 0 ? JSON.stringify(comfort_levels) : null,
+        previous_representations: previousRepsJson,
         is_pro: false // Assume Free for new profiles
       };
-      
+
       console.log('[Apply] Inserting profile into database:', {
         profileId: profileId,
         userId: userId,
@@ -1120,9 +1124,9 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         name: `${first_name} ${last_name}`,
         user_id: profileData.user_id
       });
-      
+
       await knex('profiles').insert(profileData);
-      
+
       console.log('[Apply] Profile created successfully:', {
         profileId: profileId,
         userId: userId,
@@ -1205,7 +1209,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         message: successMessage
       });
     }
-    
+
     // Save session once with all data (userId, role, profileId) before redirect
     // For new signups, session was already saved earlier, but we need to save again with profileId
     // For logged-in users, this is the first save
@@ -1225,7 +1229,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         }
       });
     });
-    
+
     // Verify profile was created/updated and is linked to the user before redirecting
     const verifyProfile = await knex('profiles').where({ id: profileId }).first();
     if (!verifyProfile) {
@@ -1239,7 +1243,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         isLoggedIn
       });
     }
-    
+
     // Verify the profile is linked to the correct user
     if (verifyProfile.user_id !== userId) {
       console.error('[Apply] ERROR: Profile user_id mismatch!', {
@@ -1257,7 +1261,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         isLoggedIn
       });
     }
-    
+
     console.log('[Apply] Profile verified and linked to user, redirecting to dashboard:', {
       profileId: verifyProfile.id,
       userId: verifyProfile.user_id,
@@ -1266,10 +1270,10 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       name: `${verifyProfile.first_name} ${verifyProfile.last_name}`,
       linkedCorrectly: verifyProfile.user_id === userId
     });
-    
+
     // Use 303 See Other for POST redirect (best practice)
-    // This ensures the message is displayed on the dashboard
-    return res.redirect(303, '/dashboard/talent');
+    // Redirect to success page instead of directly to dashboard
+    return res.redirect(303, '/apply/success');
   } catch (error) {
     console.error('[Apply] Error in POST /apply:', {
       message: error.message,
