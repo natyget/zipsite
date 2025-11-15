@@ -12,7 +12,6 @@
     selectedProfiles: new Set(),
     isBatchMode: false,
     dragState: null,
-    commandPaletteOpen: false,
     shortcutsOpen: false
   };
 
@@ -25,7 +24,6 @@
     initPreviewModal();
     initBatchOperations();
     initKeyboardShortcuts();
-    initCommandPalette();
     initSearch();
     initFilters();
     initQuickActions();
@@ -400,15 +398,9 @@
         return;
       }
 
-      // Command palette
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        toggleCommandPalette();
-        return;
-      }
 
       // Quick actions (only when not in input)
-      if (!state.isBatchMode && !state.commandPaletteOpen) {
+      if (!state.isBatchMode) {
         if (e.key === 'a' && !e.metaKey && !e.ctrlKey) {
           e.preventDefault();
           // Accept first selected or focused card
@@ -456,160 +448,6 @@
     }
   }
 
-  /**
-   * Command Palette
-   */
-  function initCommandPalette() {
-    const palette = document.getElementById('command-palette');
-    const input = document.getElementById('command-input');
-    const results = document.getElementById('command-results');
-
-    if (!palette || !input || !results) return;
-
-    input.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      const filteredCommands = getCommands().filter(cmd => 
-        cmd.label.toLowerCase().includes(query) || 
-        cmd.keywords.some(k => k.toLowerCase().includes(query))
-      );
-      renderCommands(filteredCommands);
-    });
-
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        toggleCommandPalette();
-      }
-      if (e.key === 'Enter') {
-        const selected = results.querySelector('.agency-dashboard__command-item--selected');
-        if (selected) {
-          selected.click();
-        }
-      }
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        const items = Array.from(results.querySelectorAll('.agency-dashboard__command-item'));
-        const current = results.querySelector('.agency-dashboard__command-item--selected');
-        const currentIndex = current ? items.indexOf(current) : -1;
-        const nextIndex = (currentIndex + 1) % items.length;
-        items.forEach(i => i.classList.remove('agency-dashboard__command-item--selected'));
-        items[nextIndex].classList.add('agency-dashboard__command-item--selected');
-      }
-      if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        const items = Array.from(results.querySelectorAll('.agency-dashboard__command-item'));
-        const current = results.querySelector('.agency-dashboard__command-item--selected');
-        const currentIndex = current ? items.indexOf(current) : -1;
-        const nextIndex = (currentIndex - 1 + items.length) % items.length;
-        items.forEach(i => i.classList.remove('agency-dashboard__command-item--selected'));
-        items[nextIndex].classList.add('agency-dashboard__command-item--selected');
-      }
-    });
-  }
-
-  function toggleCommandPalette() {
-    const palette = document.getElementById('command-palette');
-    const input = document.getElementById('command-input');
-    if (!palette || !input) return;
-
-    state.commandPaletteOpen = !state.commandPaletteOpen;
-    palette.hidden = !state.commandPaletteOpen;
-
-    if (state.commandPaletteOpen) {
-      input.focus();
-      input.value = '';
-      renderCommands(getCommands());
-    }
-  }
-
-  function getCommands() {
-    return [
-      { 
-        label: 'Switch to Pipeline View', 
-        action: () => {
-          const btn = document.querySelector('[data-view="pipeline"]');
-          if (btn) btn.click();
-        }, 
-        keywords: ['pipeline', 'kanban', 'board'] 
-      },
-      { 
-        label: 'Switch to Gallery View', 
-        action: () => {
-          const btn = document.querySelector('[data-view="gallery"]');
-          if (btn) btn.click();
-        }, 
-        keywords: ['gallery', 'grid', 'images'] 
-      },
-      { 
-        label: 'Switch to List View', 
-        action: () => {
-          const btn = document.querySelector('[data-view="list"]');
-          if (btn) btn.click();
-        }, 
-        keywords: ['list', 'table'] 
-      },
-      { 
-        label: 'Switch to Table View', 
-        action: () => {
-          const btn = document.querySelector('[data-view="table"]');
-          if (btn) btn.click();
-        }, 
-        keywords: ['table', 'spreadsheet'] 
-      },
-      { 
-        label: 'Clear All Filters', 
-        action: () => {
-          window.location.href = '/dashboard/agency';
-        }, 
-        keywords: ['clear', 'reset', 'filters'] 
-      },
-      { 
-        label: 'Show Keyboard Shortcuts', 
-        action: () => {
-          toggleShortcuts();
-        }, 
-        keywords: ['shortcuts', 'help', 'keys'] 
-      }
-    ];
-  }
-
-  function renderCommands(commands) {
-    const results = document.getElementById('command-results');
-    if (!results) return;
-
-    // Clear existing content
-    results.innerHTML = '';
-
-    if (commands.length === 0) {
-      const noResults = document.createElement('div');
-      noResults.className = 'agency-dashboard__command-item';
-      noResults.innerHTML = '<span>No commands found</span>';
-      results.appendChild(noResults);
-      return;
-    }
-
-    // Create command items with proper event listeners
-    commands.forEach((cmd, index) => {
-      const item = document.createElement('div');
-      item.className = 'agency-dashboard__command-item';
-      if (index === 0) {
-        item.classList.add('agency-dashboard__command-item--selected');
-      }
-      item.innerHTML = `<span>${cmd.label}</span>`;
-      item.addEventListener('click', () => {
-        cmd.action();
-        toggleCommandPalette();
-      });
-      item.addEventListener('mouseenter', () => {
-        // Remove selection from all items
-        results.querySelectorAll('.agency-dashboard__command-item').forEach(i => {
-          i.classList.remove('agency-dashboard__command-item--selected');
-        });
-        // Add selection to hovered item
-        item.classList.add('agency-dashboard__command-item--selected');
-      });
-      results.appendChild(item);
-    });
-  }
 
 
   /**
