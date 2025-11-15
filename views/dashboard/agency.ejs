@@ -79,6 +79,36 @@
                 Agency Dashboard
               <% } %>
             </p>
+            <div class="agency-hero__meta">
+              <% if (currentUser && currentUser.agency_location) { %>
+                <div class="agency-hero__meta-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  <span><%= currentUser.agency_location %></span>
+                </div>
+              <% } %>
+              <% if (currentUser && currentUser.agency_website) { %>
+                <div class="agency-hero__meta-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    <polyline points="15 3 21 3 21 9"/>
+                    <line x1="10" y1="14" x2="21" y2="3"/>
+                  </svg>
+                  <a href="<%= currentUser.agency_website.startsWith('http') ? currentUser.agency_website : 'https://' + currentUser.agency_website %>" target="_blank" rel="noopener"><%= currentUser.agency_website %></a>
+                </div>
+              <% } %>
+              <div class="agency-hero__meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>Partner Since <%= currentUser && currentUser.created_at ? new Date(currentUser.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '2024' %></span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -162,7 +192,7 @@
   </section>
   
   <!-- Dashboard Header -->
-  <section class="agency-dashboard__header">
+  <section class="agency-dashboard__header" id="applications">
     <div class="agency-dashboard__header-content">
       <div class="agency-dashboard__header-main">
         <span class="agency-dashboard__eyebrow">Talent Management</span>
