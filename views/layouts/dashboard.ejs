@@ -17,6 +17,9 @@
     <!-- Styles -->
     <link rel="stylesheet" href="/styles/global.css?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>">
     <link rel="stylesheet" href="/styles/dashboard.css?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>">
+    <% if (typeof user !== 'undefined' && user && user.role === 'AGENCY') { %>
+        <link rel="stylesheet" href="/styles/agency-dashboard.css?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>">
+    <% } %>
 </head>
 
 <body class="dashboard-body <%= typeof user !== 'undefined' && user && user.role === 'AGENCY' ? 'dashboard-body--agency' : 'dashboard-body--talent' %>">

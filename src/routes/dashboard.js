@@ -1440,6 +1440,52 @@ router.get('/dashboard/agency', requireRole('AGENCY'), async (req, res, next) =>
 
     const profiles = await query;
 
+    // Fetch images for each profile
+    const profileIds = profiles.map(p => p.id);
+    const allImages = profileIds.length > 0 
+      ? await knex('images')
+          .whereIn('profile_id', profileIds)
+          .orderBy(['profile_id', 'sort', 'created_at'])
+      : [];
+    
+    // Group images by profile_id
+    const imagesByProfile = {};
+    allImages.forEach(img => {
+      if (!imagesByProfile[img.profile_id]) {
+        imagesByProfile[img.profile_id] = [];
+      }
+      imagesByProfile[img.profile_id].push(img);
+    });
+
+    // Attach images to profiles
+    profiles.forEach(profile => {
+      profile.images = imagesByProfile[profile.id] || [];
+    });
+
+    // Calculate dashboard statistics
+    const allApplications = await knex('applications')
+      .where({ agency_id: req.session.userId })
+      .select('status', 'created_at');
+    
+    const stats = {
+      total: profiles.length,
+      pending: allApplications.filter(a => !a.status || a.status === 'pending').length,
+      accepted: allApplications.filter(a => a.status === 'accepted').length,
+      declined: allApplications.filter(a => a.status === 'declined').length,
+      archived: allApplications.filter(a => a.status === 'archived').length,
+      newToday: allApplications.filter(a => {
+        const created = new Date(a.created_at);
+        const today = new Date();
+        return created.toDateString() === today.toDateString();
+      }).length,
+      newThisWeek: allApplications.filter(a => {
+        const created = new Date(a.created_at);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return created >= weekAgo;
+      }).length
+    };
+
     const commissions = await knex('commissions')
       .where({ agency_id: req.session.userId })
       .sum({ total: 'amount_cents' })
@@ -1463,6 +1509,7 @@ router.get('/dashboard/agency', requireRole('AGENCY'), async (req, res, next) =>
       filters: { sort, city, letter, search, min_height, max_height, status },
       commissionsTotal: ((commissions?.total || 0) / 100).toFixed(2),
       latestCommissions,
+      stats,
       user: currentUser,
       currentUser,
       isDashboard: true,
@@ -1571,6 +1618,141 @@ router.post('/dashboard/agency/application/:action', requireRole('AGENCY'), asyn
     return res.redirect('/dashboard/agency');
   } catch (error) {
     console.error('[Application] Error:', error);
+    return next(error);
+  }
+});
+
+// GET /api/agency/applications - Get filtered applications as JSON
+router.get('/api/agency/applications', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const {
+      sort = 'az',
+      city = '',
+      letter = '',
+      search = '',
+      min_height = '',
+      max_height = '',
+      status = ''
+    } = req.query;
+
+    let query = knex('profiles')
+      .select(
+        'profiles.*',
+        'users.email as owner_email',
+        'applications.status as application_status',
+        'applications.id as application_id',
+        'applications.created_at as application_created_at'
+      )
+      .leftJoin('users', 'profiles.user_id', 'users.id')
+      .leftJoin('applications', (join) => {
+        join.on('applications.profile_id', '=', 'profiles.id')
+          .andOn('applications.agency_id', '=', knex.raw('?', [req.session.userId]));
+      })
+      .whereNotNull('profiles.bio_curated');
+
+    // Apply filters (same logic as main route)
+    if (city) {
+      query = query.whereILike('profiles.city', `%${city}%`);
+    }
+    if (letter) {
+      query = query.whereILike('profiles.last_name', `${letter}%`);
+    }
+    if (search) {
+      query = query.andWhere((qb) => {
+        qb.whereILike('profiles.first_name', `%${search}%`)
+          .orWhereILike('profiles.last_name', `%${search}%`);
+      });
+    }
+    if (status && status !== 'all') {
+      if (status === 'pending') {
+        query = query.where(function() {
+          this.where('applications.status', 'pending')
+            .orWhereNull('applications.status');
+        });
+      } else {
+        query = query.where('applications.status', status);
+      }
+    }
+    const minHeightNumber = parseInt(min_height, 10);
+    const maxHeightNumber = parseInt(max_height, 10);
+    if (!Number.isNaN(minHeightNumber)) {
+      query = query.where('profiles.height_cm', '>=', minHeightNumber);
+    }
+    if (!Number.isNaN(maxHeightNumber)) {
+      query = query.where('profiles.height_cm', '<=', maxHeightNumber);
+    }
+    if (sort === 'city') {
+      query = query.orderBy(['profiles.city', 'profiles.last_name']);
+    } else {
+      query = query.orderBy(['profiles.last_name', 'profiles.first_name']);
+    }
+
+    const profiles = await query;
+
+    // Fetch images
+    const profileIds = profiles.map(p => p.id);
+    const allImages = profileIds.length > 0 
+      ? await knex('images')
+          .whereIn('profile_id', profileIds)
+          .orderBy(['profile_id', 'sort', 'created_at'])
+      : [];
+    
+    const imagesByProfile = {};
+    allImages.forEach(img => {
+      if (!imagesByProfile[img.profile_id]) {
+        imagesByProfile[img.profile_id] = [];
+      }
+      imagesByProfile[img.profile_id].push(img);
+    });
+
+    profiles.forEach(profile => {
+      profile.images = imagesByProfile[profile.id] || [];
+    });
+
+    return res.json({ profiles, count: profiles.length });
+  } catch (error) {
+    console.error('[API/Agency/Applications] Error:', error);
+    return next(error);
+  }
+});
+
+// GET /api/agency/stats - Get dashboard statistics
+router.get('/api/agency/stats', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const allApplications = await knex('applications')
+      .where({ agency_id: req.session.userId })
+      .select('status', 'created_at');
+    
+    const stats = {
+      total: allApplications.length,
+      pending: allApplications.filter(a => !a.status || a.status === 'pending').length,
+      accepted: allApplications.filter(a => a.status === 'accepted').length,
+      declined: allApplications.filter(a => a.status === 'declined').length,
+      archived: allApplications.filter(a => a.status === 'archived').length,
+      newToday: allApplications.filter(a => {
+        const created = new Date(a.created_at);
+        const today = new Date();
+        return created.toDateString() === today.toDateString();
+      }).length,
+      newThisWeek: allApplications.filter(a => {
+        const created = new Date(a.created_at);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return created >= weekAgo;
+      }).length
+    };
+
+    const commissions = await knex('commissions')
+      .where({ agency_id: req.session.userId })
+      .sum({ total: 'amount_cents' })
+      .first();
+
+    return res.json({
+      stats,
+      commissionsTotal: ((commissions?.total || 0) / 100).toFixed(2)
+    });
+  } catch (error) {
+    console.error('[API/Agency/Stats] Error:', error);
     return next(error);
   }
 });
