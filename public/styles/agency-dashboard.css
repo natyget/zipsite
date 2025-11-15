@@ -1440,6 +1440,10 @@
   background: var(--bg-surface-elevated);
 }
 
+.agency-dashboard__command-item--selected {
+  background: var(--bg-surface-elevated);
+}
+
 .agency-dashboard__command-item:first-child {
   background: var(--bg-surface-elevated);
 }

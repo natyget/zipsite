@@ -480,10 +480,28 @@
         toggleCommandPalette();
       }
       if (e.key === 'Enter') {
-        const firstCommand = results.querySelector('.agency-dashboard__command-item');
-        if (firstCommand) {
-          firstCommand.click();
+        const selected = results.querySelector('.agency-dashboard__command-item--selected');
+        if (selected) {
+          selected.click();
         }
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const items = Array.from(results.querySelectorAll('.agency-dashboard__command-item'));
+        const current = results.querySelector('.agency-dashboard__command-item--selected');
+        const currentIndex = current ? items.indexOf(current) : -1;
+        const nextIndex = (currentIndex + 1) % items.length;
+        items.forEach(i => i.classList.remove('agency-dashboard__command-item--selected'));
+        items[nextIndex].classList.add('agency-dashboard__command-item--selected');
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const items = Array.from(results.querySelectorAll('.agency-dashboard__command-item'));
+        const current = results.querySelector('.agency-dashboard__command-item--selected');
+        const currentIndex = current ? items.indexOf(current) : -1;
+        const nextIndex = (currentIndex - 1 + items.length) % items.length;
+        items.forEach(i => i.classList.remove('agency-dashboard__command-item--selected'));
+        items[nextIndex].classList.add('agency-dashboard__command-item--selected');
       }
     });
   }
@@ -505,12 +523,52 @@
 
   function getCommands() {
     return [
-      { label: 'Switch to Pipeline View', action: () => switchView('pipeline'), keywords: ['pipeline', 'kanban', 'board'] },
-      { label: 'Switch to Gallery View', action: () => switchView('gallery'), keywords: ['gallery', 'grid', 'images'] },
-      { label: 'Switch to List View', action: () => switchView('list'), keywords: ['list', 'table'] },
-      { label: 'Switch to Table View', action: () => switchView('table'), keywords: ['table', 'spreadsheet'] },
-      { label: 'Clear All Filters', action: () => window.location.href = '/dashboard/agency', keywords: ['clear', 'reset', 'filters'] },
-      { label: 'Show Keyboard Shortcuts', action: () => toggleShortcuts(), keywords: ['shortcuts', 'help', 'keys'] }
+      { 
+        label: 'Switch to Pipeline View', 
+        action: () => {
+          const btn = document.querySelector('[data-view="pipeline"]');
+          if (btn) btn.click();
+        }, 
+        keywords: ['pipeline', 'kanban', 'board'] 
+      },
+      { 
+        label: 'Switch to Gallery View', 
+        action: () => {
+          const btn = document.querySelector('[data-view="gallery"]');
+          if (btn) btn.click();
+        }, 
+        keywords: ['gallery', 'grid', 'images'] 
+      },
+      { 
+        label: 'Switch to List View', 
+        action: () => {
+          const btn = document.querySelector('[data-view="list"]');
+          if (btn) btn.click();
+        }, 
+        keywords: ['list', 'table'] 
+      },
+      { 
+        label: 'Switch to Table View', 
+        action: () => {
+          const btn = document.querySelector('[data-view="table"]');
+          if (btn) btn.click();
+        }, 
+        keywords: ['table', 'spreadsheet'] 
+      },
+      { 
+        label: 'Clear All Filters', 
+        action: () => {
+          window.location.href = '/dashboard/agency';
+        }, 
+        keywords: ['clear', 'reset', 'filters'] 
+      },
+      { 
+        label: 'Show Keyboard Shortcuts', 
+        action: () => {
+          toggleShortcuts();
+        }, 
+        keywords: ['shortcuts', 'help', 'keys'] 
+      }
     ];
   }
 
@@ -518,22 +576,41 @@
     const results = document.getElementById('command-results');
     if (!results) return;
 
-    results.innerHTML = commands.map((cmd, index) => {
+    // Clear existing content
+    results.innerHTML = '';
+
+    if (commands.length === 0) {
+      const noResults = document.createElement('div');
+      noResults.className = 'agency-dashboard__command-item';
+      noResults.innerHTML = '<span>No commands found</span>';
+      results.appendChild(noResults);
+      return;
+    }
+
+    // Create command items with proper event listeners
+    commands.forEach((cmd, index) => {
       const item = document.createElement('div');
       item.className = 'agency-dashboard__command-item';
+      if (index === 0) {
+        item.classList.add('agency-dashboard__command-item--selected');
+      }
       item.innerHTML = `<span>${cmd.label}</span>`;
       item.addEventListener('click', () => {
         cmd.action();
         toggleCommandPalette();
       });
-      return item.outerHTML;
-    }).join('') || '<div class="agency-dashboard__command-item"><span>No commands found</span></div>';
+      item.addEventListener('mouseenter', () => {
+        // Remove selection from all items
+        results.querySelectorAll('.agency-dashboard__command-item').forEach(i => {
+          i.classList.remove('agency-dashboard__command-item--selected');
+        });
+        // Add selection to hovered item
+        item.classList.add('agency-dashboard__command-item--selected');
+      });
+      results.appendChild(item);
+    });
   }
 
-  function switchView(view) {
-    const btn = document.querySelector(`[data-view="${view}"]`);
-    if (btn) btn.click();
-  }
 
   /**
    * Search Functionality
