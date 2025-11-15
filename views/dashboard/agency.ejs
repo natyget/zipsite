@@ -270,7 +270,7 @@
                 aiTags.push({ label: 'Runway Fit', color: 'green' });
               }
             %>
-              <%- include('dashboard/partials/application-card', { profile, index, currentUser, appStatus, aiScore, aiTags }) %>
+              <%- include('partials/application-card', { profile, index, currentUser, appStatus, aiScore, aiTags }) %>
             <% }); %>
             <% if (profilesByStatus.pending.length === 0) { %>
               <div class="agency-dashboard__empty-column">
@@ -301,7 +301,7 @@
                 aiTags.push({ label: 'Runway Fit', color: 'green' });
               }
             %>
-              <%- include('dashboard/partials/application-card', { profile, index, currentUser, appStatus, aiScore, aiTags }) %>
+              <%- include('partials/application-card', { profile, index, currentUser, appStatus, aiScore, aiTags }) %>
             <% }); %>
             <% if (profilesByStatus['under-review'].length === 0) { %>
               <div class="agency-dashboard__empty-column">
@@ -332,7 +332,7 @@
                 aiTags.push({ label: 'Runway Fit', color: 'green' });
               }
             %>
-              <%- include('dashboard/partials/application-card', { profile, index, currentUser, appStatus, aiScore, aiTags }) %>
+              <%- include('partials/application-card', { profile, index, currentUser, appStatus, aiScore, aiTags }) %>
             <% }); %>
             <% if (profilesByStatus.accepted.length === 0) { %>
               <div class="agency-dashboard__empty-column">
@@ -363,7 +363,7 @@
                 aiTags.push({ label: 'Runway Fit', color: 'green' });
               }
             %>
-              <%- include('dashboard/partials/application-card', { profile, index, currentUser, appStatus, aiScore, aiTags }) %>
+              <%- include('partials/application-card', { profile, index, currentUser, appStatus, aiScore, aiTags }) %>
             <% }); %>
             <% if (profilesByStatus.archived.length === 0) { %>
               <div class="agency-dashboard__empty-column">
