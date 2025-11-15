@@ -100,20 +100,20 @@
       </div>
     </div>
 
-    <!-- Smart Dashboard Stats -->
+    <!-- Editorial Dashboard Stats -->
     <div class="agency-dashboard__stats">
-      <div class="agency-dashboard__stat-card">
+      <div class="agency-dashboard__stat-card agency-dashboard__stat-card--new-today">
         <div class="agency-dashboard__stat-icon">📥</div>
         <div class="agency-dashboard__stat-content">
           <div class="agency-dashboard__stat-value"><%= safeStats.newToday %></div>
-          <div class="agency-dashboard__stat-label">New Today</div>
+          <div class="agency-dashboard__stat-label">New Applications Today</div>
         </div>
       </div>
       <div class="agency-dashboard__stat-card agency-dashboard__stat-card--highlight">
         <div class="agency-dashboard__stat-icon">⏳</div>
         <div class="agency-dashboard__stat-content">
           <div class="agency-dashboard__stat-value"><%= safeStats.pending %></div>
-          <div class="agency-dashboard__stat-label">Pending Review</div>
+          <div class="agency-dashboard__stat-label">Awaiting Review</div>
         </div>
       </div>
       <div class="agency-dashboard__stat-card">
@@ -127,7 +127,7 @@
         <div class="agency-dashboard__stat-icon">💰</div>
         <div class="agency-dashboard__stat-content">
           <div class="agency-dashboard__stat-value">$<%= safeCommissionsTotal %></div>
-          <div class="agency-dashboard__stat-label">Lifetime Commissions</div>
+          <div class="agency-dashboard__stat-label">Total Commissions</div>
         </div>
       </div>
     </div>
@@ -146,7 +146,7 @@
           type="search" 
           class="agency-dashboard__search-input" 
           id="agency-search"
-          placeholder="Search by name, city, or use natural language..."
+          placeholder="Search by name, city, or describe what you're looking for..."
           value="<%= safeFilters.search || '' %>"
           autocomplete="off">
         <button class="agency-dashboard__search-clear" id="clear-search" style="display: none;">×</button>
