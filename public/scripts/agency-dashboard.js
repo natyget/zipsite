@@ -11,8 +11,7 @@
     currentView: 'pipeline',
     selectedProfiles: new Set(),
     isBatchMode: false,
-    dragState: null,
-    shortcutsOpen: false
+    dragState: null
   };
 
   // Initialize when DOM is ready
@@ -23,7 +22,6 @@
     initKanbanDragDrop();
     initPreviewModal();
     initBatchOperations();
-    initKeyboardShortcuts();
     initSearch();
     initFilters();
     initQuickActions();
@@ -205,16 +203,13 @@
     closeBtn?.addEventListener('click', closePreview);
     backdrop?.addEventListener('click', closePreview);
 
-    // Keyboard navigation
+    // Only Escape key to close modal (standard UX)
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !modal.hidden) {
-        closePreview();
-      }
-      if (e.key === 'ArrowLeft' && !modal.hidden) {
-        navigatePreview('prev');
-      }
-      if (e.key === 'ArrowRight' && !modal.hidden) {
-        navigatePreview('next');
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('preview-modal');
+        if (modal && !modal.hidden) {
+          closePreview();
+        }
       }
     });
   }
@@ -381,107 +376,6 @@
     }
   }
 
-  /**
-   * Keyboard Shortcuts
-   */
-  function initKeyboardShortcuts() {
-    document.addEventListener('keydown', (e) => {
-      // Don't trigger shortcuts when typing in inputs
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-        if (e.key !== 'Escape' && e.key !== '?') return;
-      }
-
-      // Show/hide shortcuts overlay
-      if (e.key === '?' && !e.shiftKey) {
-        e.preventDefault();
-        toggleShortcuts();
-        return;
-      }
-
-
-      // Close shortcuts modal on Escape
-      if (e.key === 'Escape' && state.shortcutsOpen) {
-        e.preventDefault();
-        toggleShortcuts();
-        return;
-      }
-
-      // Quick actions (only when not in input and shortcuts not open)
-      if (!state.isBatchMode && !state.shortcutsOpen) {
-        if (e.key === 'a' || e.key === 'A') {
-          if (!e.metaKey && !e.ctrlKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-            e.preventDefault();
-            // Accept first selected card or first card in current view
-            const selectedCard = document.querySelector('.agency-dashboard__select-checkbox:checked')?.closest('.agency-dashboard__card, .agency-dashboard__list-item, .agency-dashboard__table-row');
-            const firstCard = selectedCard || document.querySelector('.agency-dashboard__card, .agency-dashboard__gallery-card, .agency-dashboard__list-item, .agency-dashboard__table-row');
-            if (firstCard) {
-              const profileId = firstCard.dataset.profileId;
-              if (profileId) {
-                updateApplicationStatus(profileId, 'accept').then(() => window.location.reload());
-              }
-            }
-          }
-        }
-        if (e.key === 'd' || e.key === 'D') {
-          if (!e.metaKey && !e.ctrlKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-            e.preventDefault();
-            // Decline first selected card or first card in current view
-            const selectedCard = document.querySelector('.agency-dashboard__select-checkbox:checked')?.closest('.agency-dashboard__card, .agency-dashboard__list-item, .agency-dashboard__table-row');
-            const firstCard = selectedCard || document.querySelector('.agency-dashboard__card, .agency-dashboard__gallery-card, .agency-dashboard__list-item, .agency-dashboard__table-row');
-            if (firstCard) {
-              const profileId = firstCard.dataset.profileId;
-              if (profileId) {
-                updateApplicationStatus(profileId, 'decline').then(() => window.location.reload());
-              }
-            }
-          }
-        }
-        if (e.key === ' ') {
-          if (!e.metaKey && !e.ctrlKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-            e.preventDefault();
-            // Preview first selected card or first card in current view
-            const selectedCard = document.querySelector('.agency-dashboard__select-checkbox:checked')?.closest('.agency-dashboard__card, .agency-dashboard__gallery-card, .agency-dashboard__list-item, .agency-dashboard__table-row');
-            const firstCard = selectedCard || document.querySelector('.agency-dashboard__card, .agency-dashboard__gallery-card, .agency-dashboard__list-item, .agency-dashboard__table-row');
-            if (firstCard) {
-              const profileId = firstCard.dataset.profileId;
-              if (profileId) {
-                openPreview(profileId);
-              }
-            }
-          }
-        }
-      }
-    });
-  }
-
-  function toggleShortcuts() {
-    const overlay = document.getElementById('shortcuts-overlay');
-    if (!overlay) return;
-    
-    state.shortcutsOpen = !state.shortcutsOpen;
-    overlay.hidden = !state.shortcutsOpen;
-    
-    if (state.shortcutsOpen) {
-      document.body.style.overflow = 'hidden';
-      // Close on backdrop click
-      overlay.addEventListener('click', function closeOnBackdrop(e) {
-        if (e.target === overlay) {
-          toggleShortcuts();
-          overlay.removeEventListener('click', closeOnBackdrop);
-        }
-      });
-      // Close on Escape
-      const escapeHandler = (e) => {
-        if (e.key === 'Escape') {
-          toggleShortcuts();
-          document.removeEventListener('keydown', escapeHandler);
-        }
-      };
-      document.addEventListener('keydown', escapeHandler);
-    } else {
-      document.body.style.overflow = '';
-    }
-  }
 
 
 
