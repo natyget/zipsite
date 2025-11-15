@@ -178,15 +178,10 @@
   }
 
   /**
-   * Preview Modal (Lightbox)
+   * Preview Modal - Simplified to just open portfolio in new tab
    */
   function initPreviewModal() {
-    const modal = document.getElementById('preview-modal');
-    const closeBtn = document.getElementById('preview-close');
-    const backdrop = modal?.querySelector('.agency-dashboard__preview-backdrop');
     const previewButtons = document.querySelectorAll('[data-profile-id]');
-
-    if (!modal) return;
 
     previewButtons.forEach(btn => {
       if (btn.classList.contains('agency-dashboard__card-preview') || 
@@ -195,102 +190,13 @@
           btn.classList.contains('agency-dashboard__table-preview')) {
         btn.addEventListener('click', () => {
           const profileId = btn.dataset.profileId;
-          openPreview(profileId);
+          const profile = state.profiles?.find(p => p.id === profileId);
+          if (profile && profile.slug) {
+            window.open(`/portfolio/${profile.slug}`, '_blank');
+          }
         });
       }
     });
-
-    closeBtn?.addEventListener('click', closePreview);
-    backdrop?.addEventListener('click', closePreview);
-
-    // Only Escape key to close modal (standard UX)
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        const modal = document.getElementById('preview-modal');
-        if (modal && !modal.hidden) {
-          closePreview();
-        }
-      }
-    });
-  }
-
-  function openPreview(profileId) {
-    const modal = document.getElementById('preview-modal');
-    const body = document.getElementById('preview-body');
-    if (!modal || !body) return;
-
-    const profile = state.profiles?.find(p => p.id === profileId);
-    if (!profile) {
-      // Fallback: redirect to portfolio
-      window.open(`/portfolio/${profileId}`, '_blank');
-      return;
-    }
-
-    // Build preview HTML
-    body.innerHTML = buildPreviewHTML(profile);
-    modal.hidden = false;
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closePreview() {
-    const modal = document.getElementById('preview-modal');
-    if (!modal) return;
-    modal.hidden = true;
-    document.body.style.overflow = '';
-  }
-
-  function navigatePreview(direction) {
-    const currentProfileId = document.querySelector('.agency-dashboard__preview-body')?.dataset.profileId;
-    if (!currentProfileId || !state.profiles) return;
-
-    const currentIndex = state.profiles.findIndex(p => p.id === currentProfileId);
-    if (currentIndex === -1) return;
-
-    const nextIndex = direction === 'next' 
-      ? (currentIndex + 1) % state.profiles.length
-      : (currentIndex - 1 + state.profiles.length) % state.profiles.length;
-
-    openPreview(state.profiles[nextIndex].id);
-  }
-
-  function buildPreviewHTML(profile) {
-    const images = profile.images || [];
-    const mainImage = profile.hero_image_path || (images[0]?.path || '');
-    
-    return `
-      <div class="agency-dashboard__preview-header" data-profile-id="${profile.id}">
-        <div class="agency-dashboard__preview-image-section">
-          ${mainImage ? `<img src="${mainImage}" alt="${profile.first_name} ${profile.last_name}" class="agency-dashboard__preview-main-image">` : ''}
-          ${images.length > 1 ? `
-            <div class="agency-dashboard__preview-thumbnails">
-              ${images.slice(1, 5).map(img => `
-                <img src="${img.path}" alt="${img.label || ''}" class="agency-dashboard__preview-thumbnail">
-              `).join('')}
-            </div>
-          ` : ''}
-        </div>
-        <div class="agency-dashboard__preview-info">
-          <h2 class="agency-dashboard__preview-name">${profile.first_name} ${profile.last_name}</h2>
-          <div class="agency-dashboard__preview-meta">
-            <span>${profile.city || 'Location TBD'}</span>
-            ${profile.height_cm ? `<span>${profile.height_cm} cm</span>` : ''}
-            ${profile.measurements ? `<span>${profile.measurements}</span>` : ''}
-          </div>
-          ${profile.bio_curated ? `<p class="agency-dashboard__preview-bio">${profile.bio_curated}</p>` : ''}
-          <div class="agency-dashboard__preview-actions">
-            <a href="/portfolio/${profile.slug}" target="_blank" class="button-primary">View Full Portfolio</a>
-            <form method="post" action="/dashboard/agency/application/accept" class="agency-dashboard__quick-form">
-              <input type="hidden" name="profile_id" value="${profile.id}">
-              <button type="submit" class="button-accent">Accept</button>
-            </form>
-            <form method="post" action="/dashboard/agency/application/decline" class="agency-dashboard__quick-form">
-              <input type="hidden" name="profile_id" value="${profile.id}">
-              <button type="submit" class="button-secondary">Decline</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    `;
   }
 
   /**
