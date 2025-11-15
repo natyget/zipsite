@@ -399,33 +399,55 @@
       }
 
 
-      // Quick actions (only when not in input)
-      if (!state.isBatchMode) {
-        if (e.key === 'a' && !e.metaKey && !e.ctrlKey) {
-          e.preventDefault();
-          // Accept first selected or focused card
-          const focusedCard = document.querySelector('.agency-dashboard__card:focus-within');
-          if (focusedCard) {
-            const profileId = focusedCard.dataset.profileId;
-            updateApplicationStatus(profileId, 'accept').then(() => window.location.reload());
+      // Close shortcuts modal on Escape
+      if (e.key === 'Escape' && state.shortcutsOpen) {
+        e.preventDefault();
+        toggleShortcuts();
+        return;
+      }
+
+      // Quick actions (only when not in input and shortcuts not open)
+      if (!state.isBatchMode && !state.shortcutsOpen) {
+        if (e.key === 'a' || e.key === 'A') {
+          if (!e.metaKey && !e.ctrlKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            // Accept first selected card or first card in current view
+            const selectedCard = document.querySelector('.agency-dashboard__select-checkbox:checked')?.closest('.agency-dashboard__card, .agency-dashboard__list-item, .agency-dashboard__table-row');
+            const firstCard = selectedCard || document.querySelector('.agency-dashboard__card, .agency-dashboard__gallery-card, .agency-dashboard__list-item, .agency-dashboard__table-row');
+            if (firstCard) {
+              const profileId = firstCard.dataset.profileId;
+              if (profileId) {
+                updateApplicationStatus(profileId, 'accept').then(() => window.location.reload());
+              }
+            }
           }
         }
-        if (e.key === 'd' && !e.metaKey && !e.ctrlKey) {
-          e.preventDefault();
-          // Decline first selected or focused card
-          const focusedCard = document.querySelector('.agency-dashboard__card:focus-within');
-          if (focusedCard) {
-            const profileId = focusedCard.dataset.profileId;
-            updateApplicationStatus(profileId, 'decline').then(() => window.location.reload());
+        if (e.key === 'd' || e.key === 'D') {
+          if (!e.metaKey && !e.ctrlKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            // Decline first selected card or first card in current view
+            const selectedCard = document.querySelector('.agency-dashboard__select-checkbox:checked')?.closest('.agency-dashboard__card, .agency-dashboard__list-item, .agency-dashboard__table-row');
+            const firstCard = selectedCard || document.querySelector('.agency-dashboard__card, .agency-dashboard__gallery-card, .agency-dashboard__list-item, .agency-dashboard__table-row');
+            if (firstCard) {
+              const profileId = firstCard.dataset.profileId;
+              if (profileId) {
+                updateApplicationStatus(profileId, 'decline').then(() => window.location.reload());
+              }
+            }
           }
         }
-        if (e.key === ' ' && !e.metaKey && !e.ctrlKey) {
-          e.preventDefault();
-          // Preview focused card
-          const focusedCard = document.querySelector('.agency-dashboard__card:focus-within');
-          if (focusedCard) {
-            const profileId = focusedCard.dataset.profileId;
-            openPreview(profileId);
+        if (e.key === ' ') {
+          if (!e.metaKey && !e.ctrlKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            // Preview first selected card or first card in current view
+            const selectedCard = document.querySelector('.agency-dashboard__select-checkbox:checked')?.closest('.agency-dashboard__card, .agency-dashboard__gallery-card, .agency-dashboard__list-item, .agency-dashboard__table-row');
+            const firstCard = selectedCard || document.querySelector('.agency-dashboard__card, .agency-dashboard__gallery-card, .agency-dashboard__list-item, .agency-dashboard__table-row');
+            if (firstCard) {
+              const profileId = firstCard.dataset.profileId;
+              if (profileId) {
+                openPreview(profileId);
+              }
+            }
           }
         }
       }
@@ -440,11 +462,24 @@
     overlay.hidden = !state.shortcutsOpen;
     
     if (state.shortcutsOpen) {
-      overlay.addEventListener('click', (e) => {
+      document.body.style.overflow = 'hidden';
+      // Close on backdrop click
+      overlay.addEventListener('click', function closeOnBackdrop(e) {
         if (e.target === overlay) {
           toggleShortcuts();
+          overlay.removeEventListener('click', closeOnBackdrop);
         }
       });
+      // Close on Escape
+      const escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+          toggleShortcuts();
+          document.removeEventListener('keydown', escapeHandler);
+        }
+      };
+      document.addEventListener('keydown', escapeHandler);
+    } else {
+      document.body.style.overflow = '';
     }
   }
 
