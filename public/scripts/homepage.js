@@ -600,6 +600,136 @@
     });
   }
 
+  // Dashboard Showcase Interactive Features
+  function initDashboardShowcase() {
+    const showcase = document.getElementById('dashboard-showcase');
+    if (!showcase) return;
+
+    // Intersection Observer for scroll-triggered animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          
+          // Animate progress bar
+          const progressFill = entry.target.querySelector('.dashboard-showcase__progress-fill');
+          if (progressFill) {
+            const width = progressFill.style.width || '0%';
+            progressFill.style.width = '0%';
+            setTimeout(() => {
+              progressFill.style.width = width;
+            }, 200);
+          }
+        }
+      });
+    }, observerOptions);
+
+    observer.observe(showcase);
+
+    // Enhanced hover effects for panels
+    const panels = showcase.querySelectorAll('.dashboard-showcase__panel');
+    panels.forEach(panel => {
+      panel.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-8px)';
+      });
+      
+      panel.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+      });
+    });
+
+    // Interactive media grid items
+    const mediaItems = showcase.querySelectorAll('.dashboard-showcase__media-item');
+    mediaItems.forEach((item, index) => {
+      item.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-4px) scale(1.02)';
+        this.style.zIndex = '10';
+      });
+      
+      item.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0) scale(1)';
+        this.style.zIndex = '1';
+      });
+    });
+
+    // Interactive talent cards
+    const talentCards = showcase.querySelectorAll('.dashboard-showcase__talent-card');
+    talentCards.forEach(card => {
+      card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-4px)';
+      });
+      
+      card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+      });
+    });
+
+    // Analytics cards pulse effect
+    const analyticsCards = showcase.querySelectorAll('.dashboard-showcase__analytics-card');
+    analyticsCards.forEach((card, index) => {
+      card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-2px)';
+      });
+      
+      card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+      });
+    });
+
+    // Button interactions
+    const buttons = showcase.querySelectorAll('.dashboard-showcase__button');
+    buttons.forEach(button => {
+      button.addEventListener('mouseenter', function() {
+        if (this.classList.contains('dashboard-showcase__button--primary')) {
+          this.style.transform = 'translateY(-2px)';
+        } else if (this.classList.contains('dashboard-showcase__button--accent')) {
+          this.style.transform = 'translateY(-2px)';
+        }
+      });
+      
+      button.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+      });
+    });
+
+    // CTA link interactions
+    const ctaLinks = showcase.querySelectorAll('.dashboard-showcase__cta-link');
+    ctaLinks.forEach(link => {
+      link.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-2px)';
+        const svg = this.querySelector('svg');
+        if (svg) {
+          svg.style.transform = 'translateX(4px)';
+        }
+      });
+      
+      link.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+        const svg = this.querySelector('svg');
+        if (svg) {
+          svg.style.transform = 'translateX(0)';
+        }
+      });
+    });
+
+    // Filter inputs focus effects
+    const filterInputs = showcase.querySelectorAll('.dashboard-showcase__filter-input, .dashboard-showcase__filter-select');
+    filterInputs.forEach(input => {
+      input.addEventListener('focus', function() {
+        this.parentElement.style.transform = 'scale(1.02)';
+      });
+      
+      input.addEventListener('blur', function() {
+        this.parentElement.style.transform = 'scale(1)';
+      });
+    });
+  }
+
   // Initialize everything when DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
     initUniversalHeaderMenu();
@@ -608,6 +738,7 @@
     initTransformationHero();
     initPortfolioShowcaseAnimations();
     initScrollAnimations();
+    initDashboardShowcase();
     respectReducedMotion();
   });
 })();
