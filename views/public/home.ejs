@@ -288,21 +288,67 @@
       <div class="transformation-hero__side transformation-hero__side--curated">
         <div class="transformation-hero__label">After</div>
         <div class="portfolio-card">
-          <!-- Portfolio header with elegant typography -->
-          <div class="portfolio-card__header">
-            <div class="portfolio-card__name-wrapper">
-              <h2 class="portfolio-card__name" id="curated-name">
-                <span class="portfolio-card__name-first"><%= heroTalent.first_name %></span>
-                <span class="portfolio-card__name-last"><%= heroTalent.last_name %></span>
-              </h2>
-              <div class="portfolio-card__location" id="curated-location">
-                <%= heroTalent.city.split(',')[0] %>
+          <!-- Split-Panel Layout: Image Left, Info Right -->
+          <div class="portfolio-card__split">
+            <!-- Left Panel: Hero Image -->
+            <div class="portfolio-card__image-panel">
+              <div class="portfolio-card__hero-image">
+                <img src="<%= heroTalent.hero_image %>" alt="<%= heroTalent.first_name %> <%= heroTalent.last_name %>" id="curated-hero-image">
+                <div class="portfolio-card__image-overlay"></div>
               </div>
             </div>
-            <div class="portfolio-card__header-right">
+            
+            <!-- Gold Vertical Divider -->
+            <div class="portfolio-card__divider"></div>
+            
+            <!-- Right Panel: Information -->
+            <div class="portfolio-card__info-panel">
+              <!-- Name and Location -->
+              <div class="portfolio-card__header">
+                <h2 class="portfolio-card__name" id="curated-name">
+                  <span class="portfolio-card__name-first"><%= heroTalent.first_name %></span>
+                  <span class="portfolio-card__name-last"><%= heroTalent.last_name %></span>
+                </h2>
+                <div class="portfolio-card__location" id="curated-location">
+                  <%= heroTalent.city.split(',')[0] %>
+                </div>
+              </div>
+              
+              <!-- Stats Section -->
+              <div class="portfolio-card__stats">
+                <div class="portfolio-card__stat">
+                  <span class="portfolio-card__stat-label">HEIGHT</span>
+                  <span class="portfolio-card__stat-value" id="curated-height"><%= formatHeight(heroTalent.height_cm || 180) %> / <%= heroTalent.height_cm || 180 %>cm</span>
+                </div>
+                <div class="portfolio-card__stat">
+                  <span class="portfolio-card__stat-label">MEASUREMENTS</span>
+                  <span class="portfolio-card__stat-value" id="curated-measurements"><%= heroTalent.measurements || '32-25-35' %></span>
+                </div>
+                <div class="portfolio-card__stat">
+                  <span class="portfolio-card__stat-label">SHOE</span>
+                  <span class="portfolio-card__stat-value" id="curated-shoe">9 US</span>
+                </div>
+                <div class="portfolio-card__stat">
+                  <span class="portfolio-card__stat-label">EYES</span>
+                  <span class="portfolio-card__stat-value" id="curated-eyes">Green</span>
+                </div>
+                <div class="portfolio-card__stat">
+                  <span class="portfolio-card__stat-label">HAIR</span>
+                  <span class="portfolio-card__stat-value" id="curated-hair">Brown</span>
+                </div>
+              </div>
+              
+              <!-- Specializations -->
+              <div class="portfolio-card__specializations">
+                <div class="portfolio-card__specialization-badge portfolio-card__specialization-badge--editorial">Editorial</div>
+                <div class="portfolio-card__specialization-badge portfolio-card__specialization-badge--runway">Runway</div>
+                <div class="portfolio-card__specialization-badge portfolio-card__specialization-badge--commercial">Commercial</div>
+              </div>
+              
+              <!-- Bio Preview -->
               <div class="portfolio-card__bio-preview" id="curated-bio-preview">
                 <% 
-                  // Extract first 1-2 sentences or ~120 characters from curated bio
+                  // Extract first 1-2 sentences or ~100 characters from curated bio
                   var bioText = heroTalent.bio_curated || '';
                   var bioPreview = '';
                   if (bioText.length > 0) {
@@ -310,61 +356,34 @@
                     var sentences = bioText.match(/[^.!?]+[.!?]+/g);
                     if (sentences && sentences.length > 0) {
                       bioPreview = sentences[0];
-                      if (sentences.length > 1 && bioPreview.length < 80) {
+                      if (sentences.length > 1 && bioPreview.length < 70) {
                         bioPreview += ' ' + sentences[1];
                       }
-                      // Limit to ~120 characters
-                      if (bioPreview.length > 120) {
-                        bioPreview = bioPreview.substring(0, 117) + '...';
+                      // Limit to ~100 characters
+                      if (bioPreview.length > 100) {
+                        bioPreview = bioPreview.substring(0, 97) + '...';
                       }
                     } else {
-                      // Fallback: just truncate to 120 chars
-                      bioPreview = bioText.length > 120 ? bioText.substring(0, 117) + '...' : bioText;
+                      // Fallback: just truncate to 100 chars
+                      bioPreview = bioText.length > 100 ? bioText.substring(0, 97) + '...' : bioText;
                     }
                   }
                 %>
                 <%= bioPreview %>
               </div>
-            </div>
-          </div>
-          
-          <!-- Hero image -->
-          <div class="portfolio-card__hero-image">
-            <img src="<%= heroTalent.hero_image %>" alt="<%= heroTalent.first_name %> <%= heroTalent.last_name %>" id="curated-hero-image">
-            <div class="portfolio-card__image-overlay"></div>
-          </div>
-          
-          <!-- Portfolio content -->
-          <div class="portfolio-card__content">
-            <!-- Compact Stats section -->
-            <div class="portfolio-card__stats">
-              <div class="portfolio-card__stat">
-                <span class="portfolio-card__stat-label">HEIGHT</span>
-                <span class="portfolio-card__stat-value" id="curated-height"><%= formatHeight(heroTalent.height_cm || 180) %> / <%= heroTalent.height_cm || 180 %>cm</span>
-              </div>
-              <div class="portfolio-card__stat">
-                <span class="portfolio-card__stat-label">MEASUREMENTS</span>
-                <span class="portfolio-card__stat-value" id="curated-measurements"><%= heroTalent.measurements || '32-25-35' %></span>
-              </div>
-              <div class="portfolio-card__stat">
-                <span class="portfolio-card__stat-label">SHOE</span>
-                <span class="portfolio-card__stat-value" id="curated-shoe">9 US</span>
-              </div>
-            </div>
-            
-            <!-- Compact Gallery (2 images instead of 4) -->
-            <div class="portfolio-card__gallery">
-              <% heroTalent.gallery_images.slice(0, 2).forEach((img, i) => { %>
-                <div class="portfolio-card__gallery-item">
-                  <img src="<%= normalizeImagePath(img.path) %>" alt="Portfolio image <%= i + 1 %>">
-                  <div class="portfolio-card__gallery-overlay"></div>
+              
+              <!-- Portfolio Access -->
+              <div class="portfolio-card__portfolio-access">
+                <div class="portfolio-card__portfolio-url">
+                  <span class="portfolio-card__portfolio-label">Portfolio</span>
+                  <a href="/portfolio/<%= heroTalent.slug %>" class="portfolio-card__portfolio-link" id="curated-portfolio-url">
+                    <%= heroTalent.slug %>.pholio.studio
+                  </a>
                 </div>
-              <% }); %>
-            </div>
-            
-            <!-- Compact Contact section -->
-            <div class="portfolio-card__contact">
-              <div class="portfolio-card__contact-grid">
+              </div>
+              
+              <!-- Contact Section -->
+              <div class="portfolio-card__contact">
                 <a href="#" class="portfolio-card__contact-card portfolio-card__contact-card--instagram" aria-label="Instagram">
                   <div class="portfolio-card__contact-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
