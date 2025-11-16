@@ -6,6 +6,7 @@ const { addMessage } = require('../middleware/context');
 const { ensureUniqueSlug } = require('../lib/slugify');
 const { verifyIdToken, createUser: createFirebaseUser, getUserByEmail } = require('../lib/firebase-admin');
 const { extractIdToken } = require('../middleware/firebase-auth');
+const { createUser: createUserHelper, determineRole } = require('../lib/user-helpers');
 
 const router = express.Router();
 
@@ -95,12 +96,12 @@ router.post('/login', async (req, res, next) => {
     // If request is JSON, return JSON error response
     const contentType = req.headers['content-type'] || '';
     if (contentType.includes('application/json')) {
-      return res.status(401).json({
-        success: false,
-        errors: {
-          firebase: ['Authentication failed. Please sign in with Google or enter your email and password to continue.']
-        }
-      });
+        return res.status(401).json({
+          success: false,
+          errors: {
+            firebase: ['Authentication failed. Please sign in with Google or enter your email and password.']
+          }
+        });
     }
     
     // Show helpful error message - don't require email/password validation
@@ -109,8 +110,8 @@ router.post('/login', async (req, res, next) => {
     return res.status(401).render('auth/login', {
       title: 'Sign in',
       values: req.body || {},
-      errors: { 
-        firebase: ['Authentication failed. Please sign in with Google or enter your email and password to continue.'] 
+        errors: { 
+        firebase: ['Authentication failed. Please sign in with Google or enter your email and password.'] 
       },
       layout: 'layout',
       currentPage: 'login'
@@ -164,26 +165,52 @@ router.post('/login', async (req, res, next) => {
       }
     }
 
+    // Auto-create user if they don't exist but have valid Firebase token
     if (!user) {
-      console.log('[Login] User not found in database for Firebase UID:', firebaseUid);
+      console.log('[Login] User not found in database, auto-creating user for Firebase UID:', firebaseUid);
       
-      // If request is JSON, return JSON error response
-      const contentType = req.headers['content-type'] || '';
-      if (contentType.includes('application/json')) {
-        return res.status(401).json({
-          success: false,
-          errors: { email: ['Account not found. Please sign up first.'] }
+      try {
+        // Determine role from context (default to TALENT)
+        const role = determineRole(null, req.path || req.url);
+        
+        console.log('[Login] Creating new user with role:', role);
+        
+        // Create minimal user (no profile for now - they can complete it later)
+        user = await createUserHelper({
+          firebaseUid: firebaseUid,
+          email: email,
+          role: role
+        });
+        
+        console.log('[Login] User auto-created successfully:', {
+          id: user.id,
+          email: user.email,
+          role: user.role
+        });
+        
+        // Add success message for new users
+        addMessage(req, 'success', 'Welcome to Pholio! Your account has been created. Complete your profile to get started.');
+      } catch (createError) {
+        console.error('[Login] Error auto-creating user:', createError);
+        
+        // If request is JSON, return JSON error response
+        const contentType = req.headers['content-type'] || '';
+        if (contentType.includes('application/json')) {
+          return res.status(500).json({
+            success: false,
+            errors: { email: ['Failed to create account. Please try again or contact support.'] }
+          });
+        }
+        
+        res.locals.currentPage = 'login';
+        return res.status(500).render('auth/login', {
+          title: 'Sign in',
+          values: req.body,
+          errors: { email: ['Failed to create account. Please try again or contact support.'] },
+          layout: 'layout',
+          currentPage: 'login'
         });
       }
-      
-      res.locals.currentPage = 'login';
-      return res.status(401).render('auth/login', {
-        title: 'Sign in',
-        values: req.body,
-        errors: { email: ['Account not found. Please sign up first.'] },
-        layout: 'layout',
-        currentPage: 'login'
-      });
     }
 
     console.log('[Login] Login successful for user:', { id: user.id, email: user.email, role: user.role });
@@ -372,39 +399,28 @@ router.post('/partners', async (req, res, next) => {
       });
     }
 
-    const userId = uuidv4();
-
-    console.log('[Signup/Partners] Inserting agency user into database...', {
-      id: userId,
+    console.log('[Signup/Partners] Creating agency user...', {
       email: normalizedEmail,
       firebase_uid: firebaseUid,
       role: 'AGENCY',
       agency_name: agency_name || null
     });
 
-    // Insert agency user with Firebase UID
-    await knex('users').insert({
-      id: userId,
+    // Use helper function to create user
+    const createdUser = await createUserHelper({
+      firebaseUid: firebaseUid,
       email: normalizedEmail,
-      firebase_uid: firebaseUid,
       role: 'AGENCY',
-      agency_name: agency_name || null
+      agencyName: agency_name || null
     });
 
     console.log('[Signup/Partners] Agency user created successfully:', {
-      id: userId,
-      email: normalizedEmail,
-      role: 'AGENCY'
+      id: createdUser.id,
+      email: createdUser.email,
+      role: createdUser.role
     });
 
-    // Verify user was created
-    const createdUser = await knex('users').where({ id: userId }).first();
-    if (!createdUser) {
-      console.error('[Signup/Partners] ERROR: User was not created!', { userId, email: normalizedEmail });
-      throw new Error('Failed to create agency account');
-    }
-
-    req.session.userId = userId;
+    req.session.userId = createdUser.id;
     req.session.role = 'AGENCY';
     
     console.log('[Signup/Partners] Setting session:', {

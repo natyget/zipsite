@@ -127,8 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
-      credentials: 'same-origin', // Include cookies for session
-      redirect: 'manual' // Handle redirects manually
+      credentials: 'same-origin' // Include cookies for session
     })
     .then(async response => {
       console.log('[Login] Response status:', response.status);
@@ -137,46 +136,48 @@ document.addEventListener('DOMContentLoaded', function() {
         contentType: response.headers.get('content-type')
       });
       
-      if (response.redirected || (response.status >= 300 && response.status < 400)) {
-        const redirectUrl = response.headers.get('location') || response.url;
-        console.log('[Login] Redirecting to:', redirectUrl);
-        window.location.href = redirectUrl;
-      } else if (response.ok) {
-        // Try to parse JSON response first (if backend returns JSON)
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const data = await response.json();
-          if (data.redirect) {
-            window.location.href = data.redirect;
-          } else {
-            console.error('[Login] Unexpected JSON response:', data);
-            showError('An unexpected error occurred. Please try again.');
+      // Always expect JSON response from backend
+      const contentType = response.headers.get('content-type') || '';
+      
+      if (response.ok) {
+        // Success response - should be JSON with redirect URL
+        if (contentType.includes('application/json')) {
+          try {
+            const data = await response.json();
+            console.log('[Login] Success response:', data);
+            
+            if (data.success && data.redirect) {
+              console.log('[Login] Redirecting to:', data.redirect);
+              // Small delay to ensure session is set
+              setTimeout(() => {
+                window.location.href = data.redirect;
+              }, 100);
+            } else {
+              console.error('[Login] Unexpected JSON response format:', data);
+              showError('An unexpected error occurred. Please try again.');
+              resetButtons();
+            }
+          } catch (e) {
+            console.error('[Login] Error parsing JSON response:', e);
+            showError('An error occurred while processing your request. Please try again.');
+            resetButtons();
           }
         } else {
-          // If not JSON, render HTML
-          const html = await response.text();
-          document.open();
-          document.write(html);
-          document.close();
+          // Not JSON - unexpected, but try to redirect anyway
+          console.warn('[Login] Non-JSON response received, attempting redirect');
+          const redirectUrl = response.headers.get('location') || '/dashboard/talent';
+          setTimeout(() => {
+            window.location.href = redirectUrl;
+          }, 100);
         }
       } else {
-        // Error response - try to parse as JSON first, then HTML
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
+        // Error response - parse JSON error
+        if (contentType.includes('application/json')) {
           try {
             const errorData = await response.json();
             console.error('[Login] Error response (JSON):', errorData);
             
-            // Reset button state if it exists
-            const submitButton = loginForm.querySelector('button[type="submit"]');
-            if (submitButton) {
-              submitButton.disabled = false;
-              submitButton.textContent = submitButton.dataset.originalText || 'Sign in';
-            }
-            if (googleSignInBtn) {
-              googleSignInBtn.disabled = false;
-              googleSignInBtn.innerHTML = googleSignInBtn.dataset.originalText || '<span>Sign in with Google</span>';
-            }
+            resetButtons();
             
             if (errorData.errors) {
               // Show validation errors
@@ -188,37 +189,23 @@ document.addEventListener('DOMContentLoaded', function() {
               showError('Authentication failed. Please try again.');
             }
           } catch (e) {
-            console.error('[Login] Error parsing JSON response:', e);
-            // Not JSON, render HTML
-            const html = await response.text();
-            document.open();
-            document.write(html);
-            document.close();
+            console.error('[Login] Error parsing JSON error response:', e);
+            showError('An error occurred. Please try again.');
+            resetButtons();
           }
         } else {
-          // HTML error response - render it
-          const html = await response.text();
-          document.open();
-          document.write(html);
-          document.close();
+          // HTML error response - show generic error
+          console.error('[Login] HTML error response received');
+          showError('Authentication failed. Please check your credentials and try again.');
+          resetButtons();
         }
       }
     })
     .catch(error => {
       console.error('[Login] Error submitting form:', error);
       
-      // Reset button state if it exists
-      const submitButton = loginForm.querySelector('button[type="submit"]');
-      if (submitButton) {
-        submitButton.disabled = false;
-        submitButton.textContent = submitButton.dataset.originalText || 'Sign in';
-      }
-      if (googleSignInBtn) {
-        googleSignInBtn.disabled = false;
-        googleSignInBtn.innerHTML = googleSignInBtn.dataset.originalText || '<span>Sign in with Google</span>';
-      }
-      
-      showError('An error occurred. Please try again.');
+      resetButtons();
+      showError('An error occurred. Please check your connection and try again.');
     });
   }
 
@@ -233,6 +220,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     errorDisplay.textContent = message;
     errorDisplay.style.display = 'block';
+  }
+
+  // Function to reset button states
+  function resetButtons() {
+    const submitButton = loginForm.querySelector('button[type="submit"]');
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = submitButton.dataset.originalText || 'Sign in';
+    }
+    if (googleSignInBtn) {
+      googleSignInBtn.disabled = false;
+      const originalText = googleSignInBtn.dataset.originalText || googleSignInBtn.innerHTML;
+      googleSignInBtn.innerHTML = originalText.includes('<svg') ? originalText : '<svg width="18" height="18" viewBox="0 0 18 18" style="margin-right: 8px; vertical-align: middle;"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.348 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"/></svg>Sign in with Google';
+    }
   }
 
   // Email/Password login

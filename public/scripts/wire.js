@@ -2412,63 +2412,6 @@
     });
   }
 
-  function initFooterTestimonials() {
-    const carousel = document.getElementById('footerTestimonials');
-    if (!carousel) return;
-
-    const testimonials = carousel.querySelectorAll('.footer-testimonial');
-    const dots = document.querySelectorAll('.footer-testimonials__dot');
-    let currentIndex = 0;
-    let autoPlayInterval;
-
-    function showTestimonial(index) {
-      // Remove active class from all testimonials and dots
-      testimonials.forEach((testimonial, i) => {
-        testimonial.classList.toggle('footer-testimonial--active', i === index);
-      });
-      
-      dots.forEach((dot, i) => {
-        dot.classList.toggle('footer-testimonials__dot--active', i === index);
-      });
-
-      currentIndex = index;
-    }
-
-    function nextTestimonial() {
-      const nextIndex = (currentIndex + 1) % testimonials.length;
-      showTestimonial(nextIndex);
-    }
-
-    // Auto-play testimonials every 5 seconds
-    function startAutoPlay() {
-      autoPlayInterval = setInterval(nextTestimonial, 5000);
-    }
-
-    function stopAutoPlay() {
-      if (autoPlayInterval) {
-        clearInterval(autoPlayInterval);
-      }
-    }
-
-    // Dot click handlers
-    dots.forEach((dot, index) => {
-      dot.addEventListener('click', () => {
-        stopAutoPlay();
-        showTestimonial(index);
-        startAutoPlay();
-      });
-    });
-
-    // Pause on hover
-    const testimonialsContainer = carousel.closest('.footer-testimonials');
-    if (testimonialsContainer) {
-      testimonialsContainer.addEventListener('mouseenter', stopAutoPlay);
-      testimonialsContainer.addEventListener('mouseleave', startAutoPlay);
-    }
-
-    // Start auto-play
-    startAutoPlay();
-  }
 
   document.addEventListener('DOMContentLoaded', () => {
     hydrateFlash();
@@ -2480,6 +2423,5 @@
     initUniversalHeaderMenu();
     initUniversalHeaderUserMenu();
     initFooterAnimations();
-    initFooterTestimonials();
   });
 })();
