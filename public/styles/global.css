@@ -13248,10 +13248,50 @@ body.filmstrip-hover {
   padding: 3rem 2.5rem 2.5rem;
   position: relative;
   border-bottom: 1px solid rgba(201, 165, 90, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
 }
 
 .portfolio-card__name-wrapper {
   position: relative;
+  flex: 1;
+}
+
+.portfolio-card__header-right {
+  flex: 0 0 auto;
+  max-width: 280px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.portfolio-card__bio-preview {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  font-style: italic;
+  letter-spacing: 0.01em;
+  text-align: left;
+  font-weight: 400;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  background: rgba(201, 165, 90, 0.08);
+  border: 1px solid rgba(201, 165, 90, 0.2);
+  border-radius: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.3s ease;
+}
+
+.portfolio-card__bio-preview:hover {
+  background: rgba(201, 165, 90, 0.12);
+  border-color: rgba(201, 165, 90, 0.3);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .portfolio-card__name {
@@ -13448,6 +13488,74 @@ body.filmstrip-hover {
   border-top: 1px solid rgba(201, 165, 90, 0.1);
 }
 
+.portfolio-card__contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.portfolio-card__contact-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, rgba(201, 165, 90, 0.06) 0%, rgba(201, 165, 90, 0.03) 100%);
+  border: 1px solid rgba(201, 165, 90, 0.2);
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.portfolio-card__contact-card:hover {
+  background: linear-gradient(135deg, rgba(201, 165, 90, 0.12) 0%, rgba(201, 165, 90, 0.06) 100%);
+  border-color: rgba(201, 165, 90, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(201, 165, 90, 0.15);
+}
+
+.portfolio-card__contact-card:active {
+  transform: translateY(0);
+}
+
+.portfolio-card__contact-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: rgba(201, 165, 90, 0.9);
+  transition: all 0.3s ease;
+}
+
+.portfolio-card__contact-card:hover .portfolio-card__contact-icon {
+  color: rgba(201, 165, 90, 1);
+  transform: scale(1.1);
+}
+
+.portfolio-card__contact-card--instagram .portfolio-card__contact-icon {
+  color: rgba(201, 165, 90, 0.9);
+}
+
+.portfolio-card__contact-card--twitter .portfolio-card__contact-icon {
+  color: rgba(201, 165, 90, 0.9);
+}
+
+.portfolio-card__contact-handle {
+  font-family: 'Helvetica Neue', 'Arial', sans-serif;
+  font-size: 0.8125rem;
+  color: #1e293b;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: color 0.3s ease;
+}
+
+.portfolio-card__contact-card:hover .portfolio-card__contact-handle {
+  color: #0f172a;
+}
+
+/* Legacy styles for backward compatibility */
 .portfolio-card__contact-item {
   display: flex;
   align-items: center;
@@ -17791,6 +17899,23 @@ body.filmstrip-hover {
 
   .portfolio-card__header {
     padding: 2rem 1.5rem 2rem;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .portfolio-card__name-wrapper {
+    width: 100%;
+  }
+
+  .portfolio-card__header-right {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .portfolio-card__bio-preview {
+    font-size: 0.75rem;
+    padding: 0.875rem 1rem;
+    -webkit-line-clamp: 2;
   }
 
   .portfolio-card__name {
@@ -17814,6 +17939,30 @@ body.filmstrip-hover {
   .portfolio-card__contact {
     margin-top: 1.5rem;
     padding-top: 1.5rem;
+  }
+
+  .portfolio-card__contact-grid {
+    grid-template-columns: 1fr;
+    gap: 0.625rem;
+  }
+
+  .portfolio-card__contact-card {
+    padding: 0.625rem 0.875rem;
+    gap: 0.625rem;
+  }
+
+  .portfolio-card__contact-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .portfolio-card__contact-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .portfolio-card__contact-handle {
+    font-size: 0.75rem;
   }
 
   .portfolio-card__bio-text::first-letter {
