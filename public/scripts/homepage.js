@@ -796,6 +796,168 @@
     });
   }
 
+  // How It Works Section Animations
+  function initHowItWorks() {
+    const howItWorks = document.getElementById('homepage-how-it-works');
+    if (!howItWorks) return;
+
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          
+          // Animate steps with stagger
+          const steps = entry.target.querySelectorAll('.homepage-how-it-works__step');
+          steps.forEach((step, index) => {
+            const stepNumber = step.querySelector('.homepage-how-it-works__step-number');
+            const stepIcon = step.querySelector('.homepage-how-it-works__step-icon');
+            const stepTitle = step.querySelector('.homepage-how-it-works__step-title');
+            const stepDescription = step.querySelector('.homepage-how-it-works__step-description');
+            
+            // Start hidden
+            if (stepNumber) {
+              stepNumber.style.opacity = '0';
+              stepNumber.style.transform = 'translateX(-50%) scale(0.5)';
+            }
+            if (stepIcon) {
+              stepIcon.style.opacity = '0';
+              stepIcon.style.transform = 'scale(0.8)';
+            }
+            if (stepTitle) {
+              stepTitle.style.opacity = '0';
+              stepTitle.style.transform = 'translateY(10px)';
+            }
+            if (stepDescription) {
+              stepDescription.style.opacity = '0';
+              stepDescription.style.transform = 'translateY(10px)';
+            }
+            
+            // Animate in with stagger
+            setTimeout(() => {
+              if (stepNumber) {
+                stepNumber.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                stepNumber.style.opacity = '1';
+                stepNumber.style.transform = 'translateX(-50%) scale(1)';
+              }
+              
+              setTimeout(() => {
+                if (stepIcon) {
+                  stepIcon.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                  stepIcon.style.opacity = '1';
+                  stepIcon.style.transform = 'scale(1)';
+                }
+                
+                setTimeout(() => {
+                  if (stepTitle) {
+                    stepTitle.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    stepTitle.style.opacity = '1';
+                    stepTitle.style.transform = 'translateY(0)';
+                  }
+                  
+                  setTimeout(() => {
+                    if (stepDescription) {
+                      stepDescription.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                      stepDescription.style.opacity = '1';
+                      stepDescription.style.transform = 'translateY(0)';
+                    }
+                  }, 150);
+                }, 100);
+              }, 100);
+            }, index * 200);
+          });
+          
+          // Animate connectors
+          const connectors = entry.target.querySelectorAll('.homepage-how-it-works__connector');
+          connectors.forEach((connector, index) => {
+            const svg = connector.querySelector('svg path');
+            if (svg) {
+              svg.style.strokeDasharray = '4 4';
+              svg.style.strokeDashoffset = '100';
+              svg.style.transition = 'stroke-dashoffset 1s ease';
+              
+              setTimeout(() => {
+                svg.style.strokeDashoffset = '0';
+              }, 400 + (index * 200));
+            }
+          });
+        }
+      });
+    }, observerOptions);
+
+    observer.observe(howItWorks);
+  }
+
+  // Enhanced scroll animations for all sections
+  function initEnhancedScrollAnimations() {
+    const sections = document.querySelectorAll(
+      '.homepage-value-prop, .homepage-portfolio-showcase, .homepage-agency, .homepage-testimonials'
+    );
+    
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          
+          // Animate value prop benefits
+          if (entry.target.classList.contains('homepage-value-prop')) {
+            const benefits = entry.target.querySelectorAll('.homepage-value-prop__benefit');
+            benefits.forEach((benefit, index) => {
+              benefit.style.opacity = '0';
+              benefit.style.transform = 'translateY(10px)';
+              setTimeout(() => {
+                benefit.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                benefit.style.opacity = '1';
+                benefit.style.transform = 'translateY(0)';
+              }, index * 100);
+            });
+          }
+          
+          // Animate portfolio showcase intro
+          if (entry.target.classList.contains('homepage-portfolio-showcase')) {
+            const intro = entry.target.querySelector('.homepage-portfolio-showcase__intro');
+            if (intro) {
+              intro.style.opacity = '0';
+              intro.style.transform = 'translateY(20px)';
+              setTimeout(() => {
+                intro.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+                intro.style.opacity = '1';
+                intro.style.transform = 'translateY(0)';
+              }, 100);
+            }
+          }
+          
+          // Animate testimonials header
+          if (entry.target.classList.contains('homepage-testimonials')) {
+            const header = entry.target.querySelector('.homepage-testimonials__header');
+            if (header) {
+              header.style.opacity = '0';
+              header.style.transform = 'translateY(20px)';
+              setTimeout(() => {
+                header.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+                header.style.opacity = '1';
+                header.style.transform = 'translateY(0)';
+              }, 100);
+            }
+          }
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+  }
+
   // Initialize everything when DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
     initUniversalHeaderMenu();
@@ -805,6 +967,8 @@
     initPortfolioShowcaseAnimations();
     initScrollAnimations();
     initDashboardShowcase();
+    initHowItWorks();
+    initEnhancedScrollAnimations();
     respectReducedMotion();
   });
 })();
