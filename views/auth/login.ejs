@@ -91,31 +91,48 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (redirectResult && redirectResult.user) {
         console.log('[Login] ✅ Redirect sign-in successful, processing...');
         
-        // Get ID token
-        const idToken = await redirectResult.user.getIdToken();
-        const email = redirectResult.user.email;
-        
-        console.log('[Login] Got Firebase token from redirect:', {
-          hasToken: !!idToken,
-          tokenLength: idToken ? idToken.length : 0,
-          email: email
-        });
-        
-        // Populate email field
-        const emailInput = loginForm.querySelector('#email');
-        if (emailInput && email) {
-          emailInput.value = email;
+        // Show loading state
+        if (googleSignInBtn) {
+          googleSignInBtn.disabled = true;
+          googleSignInBtn.innerHTML = '<span>Signing in…</span>';
         }
         
-        // Populate password field with dummy value
-        const passwordInput = loginForm.querySelector('#password');
-        if (passwordInput) {
-          passwordInput.value = 'google-sign-in';
+        try {
+          // Get ID token
+          const idToken = await redirectResult.user.getIdToken();
+          const email = redirectResult.user.email;
+          
+          console.log('[Login] Got Firebase token from redirect:', {
+            hasToken: !!idToken,
+            tokenLength: idToken ? idToken.length : 0,
+            email: email
+          });
+          
+          if (!idToken) {
+            throw new Error('Failed to get authentication token');
+          }
+          
+          // Populate email field
+          const emailInput = loginForm.querySelector('#email');
+          if (emailInput && email) {
+            emailInput.value = email;
+          }
+          
+          // Populate password field with dummy value (not used for Google Sign-In)
+          const passwordInput = loginForm.querySelector('#password');
+          if (passwordInput) {
+            passwordInput.value = 'google-sign-in';
+          }
+          
+          // Submit to backend - handleLogin will handle the response and redirect
+          console.log('[Login] 🔵 Calling handleLogin with redirect token...');
+          handleLogin(idToken);
+          // Note: handleLogin is async but we don't await it here because it handles redirect internally
+        } catch (tokenError) {
+          console.error('[Login] ❌ Error getting token from redirect result:', tokenError);
+          resetButtons();
+          showError('Failed to complete sign-in. Please try again.');
         }
-        
-        // Submit to backend
-        handleLogin(idToken);
-        return; // Exit early, handleLogin will handle redirect
       } else {
         console.log('[Login] No redirect result found, continuing with normal flow');
       }
@@ -168,13 +185,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Submit via POST as JSON
     console.log('[Login] 🔵 Sending fetch request to:', loginForm.action);
+    
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
     fetch(loginForm.action, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
-      credentials: 'same-origin' // Include cookies for session
+      credentials: 'same-origin', // Include cookies for session
+      signal: controller.signal
     })
     .then(async response => {
       console.log('[Login] 📥 Response received:', {
@@ -189,6 +212,9 @@ document.addEventListener('DOMContentLoaded', async function() {
       
       // Always expect JSON response from backend
       const contentType = response.headers.get('content-type') || '';
+      
+      // Clear timeout on successful response
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         // Success response - should be JSON with redirect URL
@@ -284,10 +310,26 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
     })
     .catch(error => {
-      console.error('[Login] Error submitting form:', error);
+      // Clear timeout if error occurs
+      clearTimeout(timeoutId);
+      
+      console.error('[Login] ❌ Network or submission error:', error);
+      console.error('[Login] Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
       
       resetButtons();
-      showError('An error occurred. Please check your connection and try again.');
+      
+      // Provide more specific error messages
+      if (error.name === 'AbortError') {
+        showError('Request timed out. Please check your connection and try again.');
+      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        showError('Network error. Please check your internet connection and try again.');
+      } else {
+        showError('An error occurred during sign-in. Please try again. If the problem persists, contact support.');
+      }
     });
   }
 
@@ -313,8 +355,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     if (googleSignInBtn) {
       googleSignInBtn.disabled = false;
-      const originalText = googleSignInBtn.dataset.originalText || googleSignInBtn.innerHTML;
-      googleSignInBtn.innerHTML = originalText.includes('<svg') ? originalText : '<svg width="18" height="18" viewBox="0 0 18 18" style="margin-right: 8px; vertical-align: middle;"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.348 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"/></svg>Sign in with Google';
+      // Restore original button HTML with SVG icon
+      const originalHTML = googleSignInBtn.dataset.originalText || 
+        '<svg width="18" height="18" viewBox="0 0 18 18" style="margin-right: 8px; vertical-align: middle;"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.348 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"/></svg>Sign in with Google';
+      googleSignInBtn.innerHTML = originalHTML;
     }
   }
 
@@ -432,14 +476,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.warn('[Login] Could not test popup availability');
       }
 
-      // Store original button text outside try-catch so it's available in error handler
-      const originalText = googleSignInBtn.innerHTML;
+      // Store original button HTML at the start (before any modifications)
+      if (!googleSignInBtn.dataset.originalText) {
+        googleSignInBtn.dataset.originalText = googleSignInBtn.innerHTML;
+      }
+      const originalText = googleSignInBtn.dataset.originalText;
 
       try {
-        // Store original button text if not already stored
-        if (!googleSignInBtn.dataset.originalText) {
-          googleSignInBtn.dataset.originalText = googleSignInBtn.innerHTML;
-        }
         
         // Show loading state
         googleSignInBtn.disabled = true;
@@ -480,22 +523,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.log('[Login] 🔵 Calling handleLogin with token...');
         handleLogin(idToken);
       } catch (error) {
-        console.error('[Login] Google Sign-In error:', error);
-        console.error('[Login] Error details:', {
-          code: error.code,
-          message: error.message,
-          name: error.name
-        });
-        
-        // Reset button state
-        googleSignInBtn.disabled = false;
-        googleSignInBtn.innerHTML = googleSignInBtn.dataset.originalText || originalText;
+        // Reset button state first
+        resetButtons();
 
         // Handle different error types
         if (error.code === 'auth/popup-closed-by-user') {
-          // User closed the popup - don't show error, just reset button silently
-          console.log('[Login] User closed Google Sign-In popup - no action needed');
-          // Don't show error message for user-initiated cancellation
+          // User closed the popup - this is expected behavior, no error needed
+          // Silently reset button and return
+          return; // Exit early, button already reset
         } else if (error.code === 'auth/popup-blocked') {
           // Popup was blocked by browser - try redirect flow
           console.error('[Login] Popup blocked by browser, attempting redirect flow');
