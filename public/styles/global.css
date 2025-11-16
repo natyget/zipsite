@@ -414,14 +414,33 @@ body.nav-open {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.universal-header__mobile-user-name {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .universal-header__mobile-user-email {
   font-family: var(--font-sans);
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--color-text);
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #64748b;
   word-break: break-all;
+}
+
+.universal-header__mobile-user-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
 }
 
 .universal-header__mobile-nav ul {
@@ -524,8 +543,8 @@ body.nav-open {
 
 .universal-header__user::before {
   content: attr(data-initial);
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(201, 165, 90, 1) 0%, #B8954F 100%);
   color: #FFFFFF;
@@ -533,10 +552,22 @@ body.nav-open {
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   letter-spacing: 0;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(201, 165, 90, 0.3);
+  box-shadow: 0 2px 8px rgba(201, 165, 90, 0.35);
+}
+
+.universal-header__user-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 160px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--color-text);
 }
 
 .universal-header__user-email {
@@ -568,6 +599,14 @@ body.nav-open {
   background: rgba(148, 163, 184, 0.1);
   color: #64748b;
   border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.universal-header__badge--role {
+  background: rgba(15, 23, 42, 0.06);
+  color: #475569;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  font-size: 0.6rem;
+  padding: 0.125rem 0.5rem;
 }
 
 .universal-header__user-chevron {
@@ -617,18 +656,96 @@ body.nav-open {
   position: absolute;
   top: calc(100% + 0.5rem);
   right: 0;
-  min-width: 200px;
+  min-width: 240px;
   background: #ffffff;
   border: 1px solid rgba(226, 232, 240, 0.8);
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(15, 23, 42, 0.05);
-  padding: 0.5rem;
+  padding: 0;
   opacity: 0;
   visibility: hidden;
   transform: translateY(-8px);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
   margin-top: 0.25rem;
+  overflow: hidden;
+}
+
+.universal-header__user-menu-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(248, 248, 247, 0.5);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.universal-header__user-menu-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(201, 165, 90, 1) 0%, #B8954F 100%);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(201, 165, 90, 0.3);
+}
+
+.universal-header__user-menu-avatar::before {
+  content: attr(data-initial);
+}
+
+.universal-header__user-menu-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.universal-header__user-menu-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.universal-header__user-menu-email {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.universal-header__user-menu-role {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.universal-header__user-menu-divider {
+  height: 1px;
+  background: rgba(226, 232, 240, 0.6);
+  margin: 0.5rem 0;
+}
+
+.universal-header__user-menu-item,
+.universal-header__user-menu-item-form {
+  display: block;
+  width: 100%;
+  padding: 0.5rem;
+}
+
+.universal-header__user-menu-item {
+  padding: 0.75rem 1rem;
 }
 
 .universal-header__user-dropdown[aria-expanded="true"] .universal-header__user-menu {
@@ -1121,14 +1238,19 @@ body.nav-open {
     max-width: 200px;
   }
 
+  .universal-header__user-name {
+    max-width: 100px;
+    font-size: 0.8125rem;
+  }
+
   .universal-header__user-email {
     max-width: 120px;
   }
 
   .universal-header__user::before {
-    width: 22px;
-    height: 22px;
-    font-size: 0.6875rem;
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
   }
 
   .universal-header__badge {
