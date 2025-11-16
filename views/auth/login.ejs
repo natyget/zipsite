@@ -121,6 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Submit via POST as JSON
+    console.log('[Login] 🔵 Sending fetch request to:', loginForm.action);
     fetch(loginForm.action, {
       method: 'POST',
       headers: {
@@ -130,8 +131,12 @@ document.addEventListener('DOMContentLoaded', function() {
       credentials: 'same-origin' // Include cookies for session
     })
     .then(async response => {
-      console.log('[Login] Response status:', response.status);
-      console.log('[Login] Response headers:', {
+      console.log('[Login] 📥 Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        redirected: response.redirected,
+        url: response.url,
         location: response.headers.get('location'),
         contentType: response.headers.get('content-type')
       });
@@ -146,29 +151,60 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             console.log('[Login] Success response:', data);
             
+            // Handle different response formats
+            let redirectUrl = null;
+            
             if (data.success && data.redirect) {
-              console.log('[Login] Redirecting to:', data.redirect);
-              // Small delay to ensure session is set
-              setTimeout(() => {
-                window.location.href = data.redirect;
-              }, 100);
-            } else {
-              console.error('[Login] Unexpected JSON response format:', data);
-              showError('An unexpected error occurred. Please try again.');
+              redirectUrl = data.redirect;
+            } else if (data.redirect) {
+              // Some responses might just have redirect without success flag
+              redirectUrl = data.redirect;
+            } else if (data.url) {
+              // Fallback to url field
+              redirectUrl = data.url;
+            }
+            
+            if (redirectUrl) {
+              console.log('[Login] ✅ Redirecting to:', redirectUrl);
+              // Reset button state before redirect
               resetButtons();
+              // Small delay to ensure session is set, then redirect
+              setTimeout(() => {
+                console.log('[Login] 🚀 Executing redirect to:', redirectUrl);
+                window.location.href = redirectUrl;
+              }, 150);
+            } else {
+              console.error('[Login] ❌ No redirect URL in response:', data);
+              // Try to determine redirect based on user role if available
+              const defaultRedirect = '/dashboard/talent';
+              console.warn('[Login] Using default redirect:', defaultRedirect);
+              resetButtons();
+              setTimeout(() => {
+                console.log('[Login] 🚀 Executing default redirect to:', defaultRedirect);
+                window.location.href = defaultRedirect;
+              }, 150);
             }
           } catch (e) {
-            console.error('[Login] Error parsing JSON response:', e);
-            showError('An error occurred while processing your request. Please try again.');
+            console.error('[Login] ❌ Error parsing JSON response:', e);
+            // Even if JSON parsing fails, try to redirect to default dashboard
+            console.warn('[Login] Attempting default redirect after JSON parse error');
             resetButtons();
+            setTimeout(() => {
+              console.log('[Login] 🚀 Executing fallback redirect');
+              window.location.href = '/dashboard/talent';
+            }, 150);
           }
         } else {
-          // Not JSON - unexpected, but try to redirect anyway
-          console.warn('[Login] Non-JSON response received, attempting redirect');
-          const redirectUrl = response.headers.get('location') || '/dashboard/talent';
+          // Not JSON - might be HTML redirect or other format
+          console.warn('[Login] Non-JSON response received');
+          const locationHeader = response.headers.get('location');
+          const redirectUrl = locationHeader || '/dashboard/talent';
+          console.log('[Login] Attempting redirect to:', redirectUrl);
+          resetButtons();
           setTimeout(() => {
+            console.log('[Login] 🚀 Executing non-JSON redirect');
             window.location.href = redirectUrl;
-          }, 100);
+          }, 150);
         }
       } else {
         // Error response - parse JSON error
@@ -307,10 +343,47 @@ document.addEventListener('DOMContentLoaded', function() {
   // Google Sign-In
   if (googleSignInBtn) {
     googleSignInBtn.addEventListener('click', async function() {
-      if (!window.FirebaseAuth || typeof window.FirebaseAuth.signInWithGoogle !== 'function') {
-        console.error('[Login] Firebase Auth not initialized');
-        alert('Authentication system not ready. Please refresh the page and try again.');
+      // Check if Firebase Auth is available
+      if (!window.FirebaseAuth) {
+        console.error('[Login] ❌ window.FirebaseAuth is not defined');
+        showError('Authentication system not ready. Please refresh the page and try again.');
         return;
+      }
+      
+      if (typeof window.FirebaseAuth.signInWithGoogle !== 'function') {
+        console.error('[Login] ❌ signInWithGoogle function not available');
+        console.error('[Login] Available methods:', Object.keys(window.FirebaseAuth));
+        showError('Authentication system not ready. Please refresh the page and try again.');
+        return;
+      }
+      
+      // Check if Firebase auth instance is ready
+      try {
+        const auth = await window.FirebaseAuth.getAuth();
+        if (!auth) {
+          console.error('[Login] ❌ Firebase auth instance not available');
+          showError('Firebase authentication is not initialized. Please refresh the page.');
+          return;
+        }
+        console.log('[Login] ✅ Firebase auth instance ready');
+      } catch (authError) {
+        console.error('[Login] ❌ Error getting Firebase auth instance:', authError);
+        showError('Firebase authentication is not ready. Please refresh the page and try again.');
+        return;
+      }
+
+      // Check if popups might be blocked (heuristic check)
+      try {
+        const testPopup = window.open('', '_blank', 'width=1,height=1');
+        if (!testPopup || testPopup.closed || typeof testPopup.closed === 'undefined') {
+          console.warn('[Login] ⚠️ Popups may be blocked by browser');
+          // Don't show error yet - let Firebase handle it and show better error
+        } else {
+          testPopup.close();
+        }
+      } catch (e) {
+        // Popup check failed - continue anyway
+        console.warn('[Login] Could not test popup availability');
       }
 
       // Store original button text outside try-catch so it's available in error handler
@@ -327,16 +400,21 @@ document.addEventListener('DOMContentLoaded', function() {
         googleSignInBtn.innerHTML = '<span>' + (googleSignInBtn.dataset.loadingText || 'Signing in…') + '</span>';
 
         // Sign in with Google
+        console.log('[Login] 🔵 Starting Google Sign-In...');
         const userCredential = await window.FirebaseAuth.signInWithGoogle();
+        console.log('[Login] ✅ Google popup completed, got user credential');
         
         // Get ID token and user email
+        console.log('[Login] 🔵 Getting ID token...');
         const idToken = await userCredential.user.getIdToken();
         const email = userCredential.user.email;
         
-        console.log('[Login] Google Sign-In successful, got Firebase token:', {
+        console.log('[Login] ✅ Google Sign-In successful, got Firebase token:', {
           hasToken: !!idToken,
           tokenLength: idToken ? idToken.length : 0,
-          email: email
+          tokenPreview: idToken ? `${idToken.substring(0, 20)}...` : 'MISSING',
+          email: email,
+          userId: userCredential.user.uid
         });
         
         // Populate email field (for validation fallback, though it won't be needed)
@@ -353,9 +431,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Submit form to backend
+        console.log('[Login] 🔵 Calling handleLogin with token...');
         handleLogin(idToken);
       } catch (error) {
         console.error('[Login] Google Sign-In error:', error);
+        console.error('[Login] Error details:', {
+          code: error.code,
+          message: error.message,
+          name: error.name
+        });
         
         // Reset button state
         googleSignInBtn.disabled = false;
@@ -363,14 +447,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Handle different error types
         if (error.code === 'auth/popup-closed-by-user') {
-          // User closed the popup - don't show error, just reset button
-          console.log('[Login] User closed Google Sign-In popup');
+          // User closed the popup - don't show error, just reset button silently
+          console.log('[Login] User closed Google Sign-In popup - no action needed');
+          // Don't show error message for user-initiated cancellation
         } else if (error.code === 'auth/popup-blocked') {
           // Popup was blocked by browser
-          showError('Popup was blocked. Please allow popups for this site and try again.');
+          console.error('[Login] Popup blocked by browser');
+          showError('Popup was blocked by your browser. Please allow popups for this site and try again. You can also check your browser\'s popup blocker settings.');
+        } else if (error.code === 'auth/unauthorized-domain') {
+          // Domain not authorized in Firebase
+          console.error('[Login] Unauthorized domain error');
+          showError('This domain is not authorized for Google Sign-In. Please contact support.');
+        } else if (error.code === 'auth/network-request-failed') {
+          // Network error
+          console.error('[Login] Network error during Google Sign-In');
+          showError('Network error. Please check your internet connection and try again.');
         } else {
           // Other errors - show error message
           const errorMessage = window.getFirebaseErrorMessage ? window.getFirebaseErrorMessage(error) : error.message || 'Google Sign-In failed. Please try again.';
+          console.error('[Login] Unexpected Google Sign-In error:', errorMessage);
           showError(errorMessage);
         }
       }
