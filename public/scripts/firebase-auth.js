@@ -5,6 +5,8 @@ import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   sendPasswordResetEmail as sendPasswordReset,
   onAuthStateChanged as onAuthStateChangedFn
@@ -173,10 +175,11 @@ window.FirebaseAuth = {
   },
 
   /**
-   * Sign in with Google using popup
+   * Sign in with Google using popup (with redirect fallback)
+   * @param {boolean} useRedirect - If true, use redirect instead of popup
    * @returns {Promise<UserCredential>}
    */
-  signInWithGoogle: async function() {
+  signInWithGoogle: async function(useRedirect = false) {
     try {
       const auth = await getAuthInstance();
       const provider = new GoogleAuthProvider();
@@ -190,16 +193,27 @@ window.FirebaseAuth = {
         prompt: 'select_account'
       });
       
-      // Try popup sign-in
+      // Use redirect if requested or if popup is likely blocked
+      if (useRedirect) {
+        console.log('[Firebase Auth] Using redirect flow for Google Sign-In');
+        await signInWithRedirect(auth, provider);
+        // Redirect will happen, so we won't return here
+        // The result will be handled by getRedirectResult on page load
+        return null;
+      }
+      
+      // Try popup sign-in first
       try {
         const userCredential = await signInWithPopup(auth, provider);
-        console.log('[Firebase Auth] User signed in with Google:', userCredential.user.uid);
+        console.log('[Firebase Auth] User signed in with Google (popup):', userCredential.user.uid);
         return userCredential;
       } catch (popupError) {
         // If popup fails (blocked or closed), check the error code
         if (popupError.code === 'auth/popup-blocked') {
-          console.warn('[Firebase Auth] Popup blocked, user may need to allow popups');
-          throw popupError;
+          console.warn('[Firebase Auth] Popup blocked, falling back to redirect flow');
+          // Automatically fall back to redirect
+          await signInWithRedirect(auth, provider);
+          return null; // Redirect will happen
         } else if (popupError.code === 'auth/popup-closed-by-user') {
           console.log('[Firebase Auth] Popup closed by user');
           throw popupError;
@@ -210,6 +224,26 @@ window.FirebaseAuth = {
       }
     } catch (error) {
       console.error('[Firebase Auth] Google Sign-In error:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get the result of a redirect-based sign-in
+   * Should be called on page load to handle redirect results
+   * @returns {Promise<UserCredential|null>}
+   */
+  getRedirectResult: async function() {
+    try {
+      const auth = await getAuthInstance();
+      const result = await getRedirectResult(auth);
+      if (result) {
+        console.log('[Firebase Auth] Redirect sign-in successful:', result.user.uid);
+        return result;
+      }
+      return null;
+    } catch (error) {
+      console.error('[Firebase Auth] Error getting redirect result:', error);
       throw error;
     }
   }

@@ -2423,5 +2423,105 @@
     initUniversalHeaderMenu();
     initUniversalHeaderUserMenu();
     initFooterAnimations();
+    initFooterNewsletter();
   });
 })();
+
+// Footer Newsletter Form Handler
+function initFooterNewsletter() {
+  const form = document.getElementById('footer-newsletter-form');
+  if (!form) return;
+
+  const emailInput = document.getElementById('footer-newsletter-email');
+  const submitButton = document.getElementById('footer-newsletter-submit');
+  const messageDiv = document.getElementById('footer-newsletter-message');
+  const inputWrapper = form.querySelector('.footer-newsletter__input-wrapper');
+
+  if (!emailInput || !submitButton || !messageDiv || !inputWrapper) return;
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = emailInput.value.trim();
+    
+    // Validate email
+    if (!email) {
+      showNewsletterMessage('Please enter your email address.', 'error');
+      emailInput.focus();
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showNewsletterMessage('Please enter a valid email address.', 'error');
+      emailInput.focus();
+      return;
+    }
+
+    // Set loading state
+    setNewsletterLoading(true);
+    showNewsletterMessage('', ''); // Clear previous messages
+    inputWrapper.classList.remove('footer-newsletter__input-wrapper--error', 'footer-newsletter__input-wrapper--success');
+
+    try {
+      // For now, we'll use a simple success message
+      // In the future, this can be connected to an actual newsletter API
+      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API call
+      
+      // Success
+      showNewsletterMessage('Thank you! You\'ve been subscribed.', 'success');
+      inputWrapper.classList.add('footer-newsletter__input-wrapper--success');
+      emailInput.value = '';
+      
+      // Reset after 3 seconds
+      setTimeout(() => {
+        inputWrapper.classList.remove('footer-newsletter__input-wrapper--success');
+        showNewsletterMessage('', '');
+      }, 3000);
+      
+    } catch (error) {
+      console.error('[Newsletter] Subscription error:', error);
+      showNewsletterMessage('Something went wrong. Please try again later.', 'error');
+      inputWrapper.classList.add('footer-newsletter__input-wrapper--error');
+    } finally {
+      setNewsletterLoading(false);
+    }
+  });
+
+  function setNewsletterLoading(loading) {
+    if (loading) {
+      submitButton.disabled = true;
+      submitButton.classList.add('footer-newsletter__button--loading');
+      inputWrapper.style.pointerEvents = 'none';
+    } else {
+      submitButton.disabled = false;
+      submitButton.classList.remove('footer-newsletter__button--loading');
+      inputWrapper.style.pointerEvents = '';
+    }
+  }
+
+  function showNewsletterMessage(message, type) {
+    messageDiv.textContent = message;
+    messageDiv.className = 'footer-newsletter__message';
+    if (type) {
+      messageDiv.classList.add(`footer-newsletter__message--${type}`);
+    }
+    
+    if (message) {
+      messageDiv.style.opacity = '1';
+      messageDiv.style.transform = 'translateY(0)';
+    } else {
+      messageDiv.style.opacity = '0';
+      messageDiv.style.transform = 'translateY(-4px)';
+    }
+  }
+
+  // Clear error state on input
+  emailInput.addEventListener('input', function() {
+    if (inputWrapper.classList.contains('footer-newsletter__input-wrapper--error')) {
+      inputWrapper.classList.remove('footer-newsletter__input-wrapper--error');
+      showNewsletterMessage('', '');
+    }
+  });
+}

@@ -77,10 +77,56 @@ const fieldError = (name) => {
 </section>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   const loginForm = document.querySelector('form[action="/login"]');
   const googleSignInBtn = document.getElementById('google-signin-btn');
   if (!loginForm) return;
+
+  // Check for redirect result (when user returns from Google Sign-In redirect)
+  try {
+    if (window.FirebaseAuth && typeof window.FirebaseAuth.getRedirectResult === 'function') {
+      console.log('[Login] Checking for redirect result...');
+      const redirectResult = await window.FirebaseAuth.getRedirectResult();
+      
+      if (redirectResult && redirectResult.user) {
+        console.log('[Login] ✅ Redirect sign-in successful, processing...');
+        
+        // Get ID token
+        const idToken = await redirectResult.user.getIdToken();
+        const email = redirectResult.user.email;
+        
+        console.log('[Login] Got Firebase token from redirect:', {
+          hasToken: !!idToken,
+          tokenLength: idToken ? idToken.length : 0,
+          email: email
+        });
+        
+        // Populate email field
+        const emailInput = loginForm.querySelector('#email');
+        if (emailInput && email) {
+          emailInput.value = email;
+        }
+        
+        // Populate password field with dummy value
+        const passwordInput = loginForm.querySelector('#password');
+        if (passwordInput) {
+          passwordInput.value = 'google-sign-in';
+        }
+        
+        // Submit to backend
+        handleLogin(idToken);
+        return; // Exit early, handleLogin will handle redirect
+      } else {
+        console.log('[Login] No redirect result found, continuing with normal flow');
+      }
+    }
+  } catch (redirectError) {
+    console.error('[Login] Error checking redirect result:', redirectError);
+    // Don't show error - user might just be visiting the page normally
+    if (redirectError.code && redirectError.code !== 'auth/no-auth-event') {
+      showError('Error processing Google Sign-In. Please try again.');
+    }
+  }
 
   // Function to handle login submission (used by both email/password and Google)
   function handleLogin(idToken) {
@@ -451,9 +497,18 @@ document.addEventListener('DOMContentLoaded', function() {
           console.log('[Login] User closed Google Sign-In popup - no action needed');
           // Don't show error message for user-initiated cancellation
         } else if (error.code === 'auth/popup-blocked') {
-          // Popup was blocked by browser
-          console.error('[Login] Popup blocked by browser');
-          showError('Popup was blocked by your browser. Please allow popups for this site and try again. You can also check your browser\'s popup blocker settings.');
+          // Popup was blocked by browser - try redirect flow
+          console.error('[Login] Popup blocked by browser, attempting redirect flow');
+          try {
+            // Try redirect flow as fallback
+            await window.FirebaseAuth.signInWithGoogle(true); // true = use redirect
+            // If redirect succeeds, we'll be redirected away, so no need to show error
+            console.log('[Login] Redirect flow initiated, user will be redirected');
+            return; // Exit early, redirect will happen
+          } catch (redirectError) {
+            console.error('[Login] Redirect flow also failed:', redirectError);
+            showError('Popup was blocked and redirect failed. Please allow popups for this site or check your browser settings. You can also try refreshing the page.');
+          }
         } else if (error.code === 'auth/unauthorized-domain') {
           // Domain not authorized in Firebase
           console.error('[Login] Unauthorized domain error');

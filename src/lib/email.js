@@ -28,7 +28,7 @@ With ZipSite Pro, you get:
 - Video embeds in your portfolio
 - Enhanced presentation
 - No watermarks
-- Priority AI curation
+- Advanced AI curation
 
 Upgrade now: ${upgradeUrl}
 

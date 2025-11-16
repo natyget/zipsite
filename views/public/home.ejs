@@ -20,12 +20,14 @@
   }
 
   // Get hero image for elara
+  // Use the same image as the dashboard showcase talent section
   var elaraHero = (elara && elara.hero_image_path) || null;
   if (!elaraHero && typeof elaraImages !== 'undefined' && Array.isArray(elaraImages) && elaraImages.length > 0) {
     elaraHero = elaraImages[0].path;
   }
   if (!elaraHero) {
-    elaraHero = 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=2000&q=90';
+    // Use the exact same image URL as dashboard showcase talent section
+    elaraHero = 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=400&q=80';
   }
 
   // Get gallery images for elara
@@ -542,10 +544,6 @@
                   <span class="dashboard-showcase__agency-stat-value">5</span>
                   <span class="dashboard-showcase__agency-stat-label">Pending</span>
                 </div>
-                <div class="dashboard-showcase__agency-stat">
-                  <span class="dashboard-showcase__agency-stat-value">$2,450</span>
-                  <span class="dashboard-showcase__agency-stat-label">Commissions</span>
-                </div>
               </div>
             </div>
           </div>
@@ -904,7 +902,7 @@
       <div class="homepage-cta__icon homepage-cta__icon--pro">✨</div>
       <h3 class="homepage-cta__title homepage-cta__title--pro">The Live Portfolio</h3>
       <p class="homepage-cta__description homepage-cta__description--pro">
-        Your own public portfolio URL with multiple editorial themes, no watermarks, booking analytics, and priority AI curation.
+        Your own public portfolio URL with multiple editorial themes, no watermarks, booking analytics, and advanced AI curation.
       </p>
       <div class="homepage-cta__price homepage-cta__price--pro">
         <span class="homepage-cta__price-amount homepage-cta__price-amount--pro">$9.99</span>
@@ -914,7 +912,7 @@
         <li>✓ Live portfolio URL</li>
         <li>✓ Multiple editorial themes</li>
         <li>✓ Booking analytics</li>
-        <li>✓ Priority AI curation</li>
+        <li>✓ Advanced AI curation</li>
         <li>✓ No watermarks</li>
         <li>✓ Custom domain option</li>
       </ul>
