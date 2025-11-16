@@ -415,14 +415,29 @@
             </div>
           </div>
 
-          <!-- Profile Progress -->
-          <div class="dashboard-showcase__progress">
+          <!-- Profile Progress with Animation -->
+          <div class="dashboard-showcase__progress" id="talent-profile-progress">
             <div class="dashboard-showcase__progress-header">
               <span class="dashboard-showcase__progress-label">Profile Complete</span>
-              <span class="dashboard-showcase__progress-percentage">95%</span>
+              <span class="dashboard-showcase__progress-percentage" id="progress-percentage">0%</span>
             </div>
             <div class="dashboard-showcase__progress-bar">
-              <div class="dashboard-showcase__progress-fill" style="width: 95%"></div>
+              <div class="dashboard-showcase__progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+            <!-- Completion Checklist -->
+            <div class="dashboard-showcase__completion-checklist">
+              <div class="dashboard-showcase__completion-item dashboard-showcase__completion-item--complete">
+                <span class="dashboard-showcase__completion-icon">✓</span>
+                <span class="dashboard-showcase__completion-label">Profile Details</span>
+              </div>
+              <div class="dashboard-showcase__completion-item dashboard-showcase__completion-item--complete">
+                <span class="dashboard-showcase__completion-icon">✓</span>
+                <span class="dashboard-showcase__completion-label">2+ Images</span>
+              </div>
+              <div class="dashboard-showcase__completion-item dashboard-showcase__completion-item--complete">
+                <span class="dashboard-showcase__completion-icon">✓</span>
+                <span class="dashboard-showcase__completion-label">Hero Image</span>
+              </div>
             </div>
           </div>
 
@@ -466,75 +481,135 @@
         </div>
         
         <div class="dashboard-showcase__mockup">
-          <!-- Filter Toolbar -->
-          <div class="dashboard-showcase__filters">
-            <div class="dashboard-showcase__filter-group">
-              <input type="search" class="dashboard-showcase__filter-input" placeholder="Search by name..." value="">
-            </div>
-            <div class="dashboard-showcase__filter-group">
-              <select class="dashboard-showcase__filter-select">
-                <option>All Cities</option>
-                <option>Los Angeles</option>
-                <option>New York</option>
-                <option>Paris</option>
-              </select>
-            </div>
-            <div class="dashboard-showcase__filter-group">
-              <select class="dashboard-showcase__filter-select">
-                <option>All Status</option>
-                <option>Pending</option>
-                <option>Accepted</option>
-                <option>Archived</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Talent Cards Grid -->
-          <div class="dashboard-showcase__talent-grid">
-            <div class="dashboard-showcase__talent-card">
-              <div class="dashboard-showcase__talent-card-image">
-                <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=300&q=80" alt="Elara Keats" loading="lazy">
-                <div class="dashboard-showcase__talent-card-badges">
-                  <span class="dashboard-showcase__badge dashboard-showcase__badge--pro">STUDIO+</span>
-                  <span class="dashboard-showcase__badge dashboard-showcase__badge--pending">Pending</span>
+          <!-- Agency Hero Section -->
+          <div class="dashboard-showcase__agency-hero">
+            <div class="dashboard-showcase__agency-hero-main">
+              <div class="dashboard-showcase__agency-hero-header">
+                <div class="dashboard-showcase__agency-logo">T</div>
+                <div class="dashboard-showcase__agency-info">
+                  <div class="dashboard-showcase__agency-title-wrapper">
+                    <h4 class="dashboard-showcase__agency-title">True Modeling Agency</h4>
+                    <span class="dashboard-showcase__badge dashboard-showcase__badge--verified">Verified Partner</span>
+                  </div>
+                  <p class="dashboard-showcase__agency-subtitle">Los Angeles, CA</p>
                 </div>
               </div>
-              <div class="dashboard-showcase__talent-card-content">
-                <h4 class="dashboard-showcase__talent-card-name">Elara Keats</h4>
-                <p class="dashboard-showcase__talent-card-stats">Los Angeles • 180 cm • 32-25-35</p>
-                <p class="dashboard-showcase__talent-card-bio">Editorial model with experience in high-fashion campaigns and runway shows.</p>
-                <div class="dashboard-showcase__talent-card-actions">
-                  <button class="dashboard-showcase__button dashboard-showcase__button--accent">Accept</button>
-                  <button class="dashboard-showcase__button dashboard-showcase__button--secondary">View</button>
+              <div class="dashboard-showcase__agency-stats">
+                <div class="dashboard-showcase__agency-stat">
+                  <span class="dashboard-showcase__agency-stat-value">24</span>
+                  <span class="dashboard-showcase__agency-stat-label">Total</span>
                 </div>
-              </div>
-            </div>
-
-            <div class="dashboard-showcase__talent-card">
-              <div class="dashboard-showcase__talent-card-image">
-                <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=300&q=80" alt="Aiko Ren" loading="lazy">
-                <div class="dashboard-showcase__talent-card-badges">
-                  <span class="dashboard-showcase__badge dashboard-showcase__badge--accepted">Accepted</span>
+                <div class="dashboard-showcase__agency-stat">
+                  <span class="dashboard-showcase__agency-stat-value">8</span>
+                  <span class="dashboard-showcase__agency-stat-label">Accepted</span>
                 </div>
-              </div>
-              <div class="dashboard-showcase__talent-card-content">
-                <h4 class="dashboard-showcase__talent-card-name">Aiko Ren</h4>
-                <p class="dashboard-showcase__talent-card-stats">Tokyo / New York • 175 cm • 34-24-35</p>
-                <p class="dashboard-showcase__talent-card-bio">Versatile commercial and editorial talent with international experience.</p>
-                <div class="dashboard-showcase__talent-card-actions">
-                  <button class="dashboard-showcase__button dashboard-showcase__button--secondary">View Portfolio</button>
+                <div class="dashboard-showcase__agency-stat">
+                  <span class="dashboard-showcase__agency-stat-value">5</span>
+                  <span class="dashboard-showcase__agency-stat-label">Pending</span>
+                </div>
+                <div class="dashboard-showcase__agency-stat">
+                  <span class="dashboard-showcase__agency-stat-value">$2,450</span>
+                  <span class="dashboard-showcase__agency-stat-label">Commissions</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Commission Summary -->
-          <div class="dashboard-showcase__commission">
-            <div class="dashboard-showcase__commission-header">
-              <h4 class="dashboard-showcase__commission-title">Lifetime Commissions</h4>
-              <div class="dashboard-showcase__commission-value">$2,450.00</div>
+          <!-- Agency Info Panel -->
+          <div class="dashboard-showcase__agency-info">
+            <div class="dashboard-showcase__agency-info-card">
+              <div class="dashboard-showcase__agency-info-icon">📊</div>
+              <div class="dashboard-showcase__agency-info-content">
+                <h5 class="dashboard-showcase__agency-info-title">Application Activity</h5>
+                <p class="dashboard-showcase__agency-info-text">3 new today, 12 this week</p>
+              </div>
             </div>
-            <p class="dashboard-showcase__commission-subtitle">Automatic earnings from talent upgrades</p>
+            <div class="dashboard-showcase__agency-info-card">
+              <div class="dashboard-showcase__agency-info-icon">⭐</div>
+              <div class="dashboard-showcase__agency-info-content">
+                <h5 class="dashboard-showcase__agency-info-title">Accepted Talent</h5>
+                <p class="dashboard-showcase__agency-info-text">8 talent profiles in roster</p>
+              </div>
+            </div>
+            <div class="dashboard-showcase__agency-info-card">
+              <div class="dashboard-showcase__agency-info-icon">💼</div>
+              <div class="dashboard-showcase__agency-info-content">
+                <h5 class="dashboard-showcase__agency-info-title">Partnership Status</h5>
+                <p class="dashboard-showcase__agency-info-text">Verified partner agency</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="dashboard-showcase__agency-dashboard-stats">
+            <div class="dashboard-showcase__agency-stat-card dashboard-showcase__agency-stat-card--highlight">
+              <div class="dashboard-showcase__agency-stat-card-icon">📥</div>
+              <div class="dashboard-showcase__agency-stat-card-content">
+                <div class="dashboard-showcase__agency-stat-card-value">3</div>
+                <div class="dashboard-showcase__agency-stat-card-label">New Today</div>
+              </div>
+            </div>
+            <div class="dashboard-showcase__agency-stat-card">
+              <div class="dashboard-showcase__agency-stat-card-icon">⏳</div>
+              <div class="dashboard-showcase__agency-stat-card-content">
+                <div class="dashboard-showcase__agency-stat-card-value">5</div>
+                <div class="dashboard-showcase__agency-stat-card-label">Awaiting Review</div>
+              </div>
+            </div>
+            <div class="dashboard-showcase__agency-stat-card">
+              <div class="dashboard-showcase__agency-stat-card-icon">✅</div>
+              <div class="dashboard-showcase__agency-stat-card-content">
+                <div class="dashboard-showcase__agency-stat-card-value">8</div>
+                <div class="dashboard-showcase__agency-stat-card-label">Accepted</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kanban Board Preview -->
+          <div class="dashboard-showcase__kanban">
+            <div class="dashboard-showcase__kanban-column">
+              <div class="dashboard-showcase__kanban-header">
+                <h5 class="dashboard-showcase__kanban-title">New Applications</h5>
+                <span class="dashboard-showcase__kanban-count">3</span>
+              </div>
+              <div class="dashboard-showcase__kanban-cards">
+                <div class="dashboard-showcase__kanban-card">
+                  <div class="dashboard-showcase__kanban-card-image">
+                    <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=200&q=80" alt="Elara Keats" loading="lazy">
+                    <div class="dashboard-showcase__kanban-card-score">92</div>
+                  </div>
+                  <div class="dashboard-showcase__kanban-card-content">
+                    <h6 class="dashboard-showcase__kanban-card-name">Elara Keats</h6>
+                    <p class="dashboard-showcase__kanban-card-meta">Los Angeles • 180 cm</p>
+                    <div class="dashboard-showcase__kanban-card-tags">
+                      <span class="dashboard-showcase__tag dashboard-showcase__tag--purple">Editorial</span>
+                      <span class="dashboard-showcase__tag dashboard-showcase__tag--green">Runway</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="dashboard-showcase__kanban-column">
+              <div class="dashboard-showcase__kanban-header">
+                <h5 class="dashboard-showcase__kanban-title">Accepted</h5>
+                <span class="dashboard-showcase__kanban-count">8</span>
+              </div>
+              <div class="dashboard-showcase__kanban-cards">
+                <div class="dashboard-showcase__kanban-card">
+                  <div class="dashboard-showcase__kanban-card-image">
+                    <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80" alt="Aiko Ren" loading="lazy">
+                    <div class="dashboard-showcase__kanban-card-score">88</div>
+                  </div>
+                  <div class="dashboard-showcase__kanban-card-content">
+                    <h6 class="dashboard-showcase__kanban-card-name">Aiko Ren</h6>
+                    <p class="dashboard-showcase__kanban-card-meta">Tokyo / New York • 175 cm</p>
+                    <div class="dashboard-showcase__kanban-card-tags">
+                      <span class="dashboard-showcase__tag dashboard-showcase__tag--blue">Commercial</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

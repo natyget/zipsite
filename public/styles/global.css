@@ -15395,6 +15395,401 @@ body.filmstrip-hover {
   margin: 0;
 }
 
+/* Agency Hero Showcase */
+.dashboard-showcase__agency-hero {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(201, 165, 90, 0.05) 0%, rgba(201, 165, 90, 0.02) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(201, 165, 90, 0.15);
+  margin-bottom: 1rem;
+}
+
+.dashboard-showcase__agency-hero-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dashboard-showcase__agency-hero-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dashboard-showcase__agency-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--color-accent) 0%, #B8954F 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: var(--font-serif);
+  box-shadow: 0 4px 12px rgba(201, 165, 90, 0.3);
+}
+
+.dashboard-showcase__agency-info {
+  flex: 1;
+}
+
+.dashboard-showcase__agency-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.25rem;
+}
+
+.dashboard-showcase__agency-title {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 300;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.dashboard-showcase__badge--verified {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  font-size: 0.625rem;
+  padding: 0.25rem 0.625rem;
+}
+
+.dashboard-showcase__agency-subtitle {
+  font-size: 0.875rem;
+  color: #475569;
+  margin: 0;
+}
+
+.dashboard-showcase__agency-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.dashboard-showcase__agency-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dashboard-showcase__agency-stat-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+  font-family: var(--font-serif);
+}
+
+.dashboard-showcase__agency-stat-label {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* Agency Info Panel */
+.dashboard-showcase__agency-info {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.dashboard-showcase__agency-info-card {
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-showcase__agency-info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+
+.dashboard-showcase__agency-info-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.dashboard-showcase__agency-info-content {
+  flex: 1;
+}
+
+.dashboard-showcase__agency-info-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dashboard-showcase__agency-info-text {
+  font-size: 0.75rem;
+  color: #475569;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Agency Dashboard Stats */
+.dashboard-showcase__agency-dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.dashboard-showcase__agency-stat-card {
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-showcase__agency-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+
+.dashboard-showcase__agency-stat-card--highlight {
+  background: linear-gradient(135deg, rgba(201, 165, 90, 0.08) 0%, rgba(201, 165, 90, 0.02) 100%);
+  border-color: rgba(201, 165, 90, 0.2);
+}
+
+.dashboard-showcase__agency-stat-card-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.dashboard-showcase__agency-stat-card-content {
+  flex: 1;
+}
+
+.dashboard-showcase__agency-stat-card-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  font-family: var(--font-serif);
+  margin-bottom: 0.125rem;
+}
+
+.dashboard-showcase__agency-stat-card-label {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* Kanban Board Preview */
+.dashboard-showcase__kanban {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.dashboard-showcase__kanban-column {
+  background: rgba(15, 23, 42, 0.02);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.dashboard-showcase__kanban-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.dashboard-showcase__kanban-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+.dashboard-showcase__kanban-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 0.5rem;
+  background: var(--color-accent);
+  color: #ffffff;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(201, 165, 90, 0.3);
+}
+
+.dashboard-showcase__kanban-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dashboard-showcase__kanban-card {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-showcase__kanban-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+
+.dashboard-showcase__kanban-card-image {
+  position: relative;
+  aspect-ratio: 3/4;
+  background: #f5f5f5;
+  overflow: hidden;
+}
+
+.dashboard-showcase__kanban-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dashboard-showcase__kanban-card-score {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--color-accent) 0%, #B8954F 100%);
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(201, 165, 90, 0.4);
+  line-height: 1;
+}
+
+.dashboard-showcase__kanban-card-content {
+  padding: 0.75rem;
+}
+
+.dashboard-showcase__kanban-card-name {
+  font-family: var(--font-serif);
+  font-size: 0.875rem;
+  font-weight: 300;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+  letter-spacing: 0.02em;
+}
+
+.dashboard-showcase__kanban-card-meta {
+  font-size: 0.625rem;
+  color: #475569;
+  margin: 0 0 0.5rem 0;
+}
+
+.dashboard-showcase__kanban-card-tags {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.dashboard-showcase__tag {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.dashboard-showcase__tag--purple {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8B5CF6;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.dashboard-showcase__tag--blue {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3B82F6;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.dashboard-showcase__tag--green {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Completion Checklist */
+.dashboard-showcase__completion-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.dashboard-showcase__completion-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.dashboard-showcase__completion-item--complete {
+  color: #10B981;
+}
+
+.dashboard-showcase__completion-icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+  font-size: 0.625rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.dashboard-showcase__completion-label {
+  font-weight: 500;
+}
+
 .dashboard-showcase__commission-value {
   font-family: var(--font-serif);
   font-size: 2rem;

@@ -616,15 +616,81 @@
         if (entry.isIntersecting) {
           entry.target.classList.add('is-visible');
           
-          // Animate progress bar
-          const progressFill = entry.target.querySelector('.dashboard-showcase__progress-fill');
-          if (progressFill) {
+          // Animate profile completion progress bar
+          const progressSection = entry.target.querySelector('#talent-profile-progress');
+          if (progressSection) {
+            const progressFill = progressSection.querySelector('#progress-fill');
+            const progressPercentage = progressSection.querySelector('#progress-percentage');
+            const completionItems = progressSection.querySelectorAll('.dashboard-showcase__completion-item');
+            
+            if (progressFill && progressPercentage) {
+              // Reset to 0
+              progressFill.style.width = '0%';
+              progressPercentage.textContent = '0%';
+              
+              // Animate to 95%
+              let currentProgress = 0;
+              const targetProgress = 95;
+              const duration = 2000; // 2 seconds
+              const increment = targetProgress / (duration / 16); // 60fps
+              
+              const animateProgress = () => {
+                currentProgress += increment;
+                if (currentProgress < targetProgress) {
+                  progressFill.style.width = currentProgress + '%';
+                  progressPercentage.textContent = Math.round(currentProgress) + '%';
+                  requestAnimationFrame(animateProgress);
+                } else {
+                  progressFill.style.width = targetProgress + '%';
+                  progressPercentage.textContent = targetProgress + '%';
+                }
+              };
+              
+              setTimeout(() => {
+                animateProgress();
+              }, 300);
+            }
+            
+            // Animate completion checklist items
+            if (completionItems.length > 0) {
+              completionItems.forEach((item, index) => {
+                const icon = item.querySelector('.dashboard-showcase__completion-icon');
+                const label = item.querySelector('.dashboard-showcase__completion-label');
+                
+                // Start hidden
+                if (icon) icon.style.opacity = '0';
+                if (label) label.style.opacity = '0';
+                if (label) label.style.transform = 'translateX(-10px)';
+                
+                // Animate in with stagger
+                setTimeout(() => {
+                  if (icon) {
+                    icon.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                    icon.style.opacity = '1';
+                    icon.style.transform = 'scale(1.2)';
+                    setTimeout(() => {
+                      icon.style.transform = 'scale(1)';
+                    }, 200);
+                  }
+                  if (label) {
+                    label.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    label.style.opacity = '1';
+                    label.style.transform = 'translateX(0)';
+                  }
+                }, 800 + (index * 200));
+              });
+            }
+          }
+          
+          // Animate other progress bars (if any)
+          const otherProgressFills = entry.target.querySelectorAll('.dashboard-showcase__progress-fill:not(#progress-fill)');
+          otherProgressFills.forEach(progressFill => {
             const width = progressFill.style.width || '0%';
             progressFill.style.width = '0%';
             setTimeout(() => {
               progressFill.style.width = width;
             }, 200);
-          }
+          });
         }
       });
     }, observerOptions);
