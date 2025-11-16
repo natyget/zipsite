@@ -2372,6 +2372,9 @@
           if (newsletterSection) {
             setTimeout(() => newsletterSection.classList.add('is-visible'), 300);
           }
+
+          // Initialize animated counters when footer is visible
+          initFooterCounters();
         }
       });
     }, {
@@ -2380,6 +2383,91 @@
     });
 
     observer.observe(footer);
+  }
+
+  function initFooterCounters() {
+    const counters = document.querySelectorAll('.footer-metrics__value[data-target]');
+    
+    counters.forEach(counter => {
+      const target = parseInt(counter.getAttribute('data-target'));
+      if (isNaN(target) || counter.classList.contains('animated')) return;
+      
+      counter.classList.add('animated');
+      let current = 0;
+      const increment = target / 60; // 60 frames for smooth animation
+      const duration = 2000; // 2 seconds
+      const stepTime = duration / 60;
+
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+          current = target;
+          clearInterval(timer);
+        }
+        
+        // Format number with commas
+        const formatted = Math.floor(current).toLocaleString('en-US');
+        counter.textContent = formatted;
+      }, stepTime);
+    });
+  }
+
+  function initFooterTestimonials() {
+    const carousel = document.getElementById('footerTestimonials');
+    if (!carousel) return;
+
+    const testimonials = carousel.querySelectorAll('.footer-testimonial');
+    const dots = document.querySelectorAll('.footer-testimonials__dot');
+    let currentIndex = 0;
+    let autoPlayInterval;
+
+    function showTestimonial(index) {
+      // Remove active class from all testimonials and dots
+      testimonials.forEach((testimonial, i) => {
+        testimonial.classList.toggle('footer-testimonial--active', i === index);
+      });
+      
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('footer-testimonials__dot--active', i === index);
+      });
+
+      currentIndex = index;
+    }
+
+    function nextTestimonial() {
+      const nextIndex = (currentIndex + 1) % testimonials.length;
+      showTestimonial(nextIndex);
+    }
+
+    // Auto-play testimonials every 5 seconds
+    function startAutoPlay() {
+      autoPlayInterval = setInterval(nextTestimonial, 5000);
+    }
+
+    function stopAutoPlay() {
+      if (autoPlayInterval) {
+        clearInterval(autoPlayInterval);
+      }
+    }
+
+    // Dot click handlers
+    dots.forEach((dot, index) => {
+      dot.addEventListener('click', () => {
+        stopAutoPlay();
+        showTestimonial(index);
+        startAutoPlay();
+      });
+    });
+
+    // Pause on hover
+    const testimonialsContainer = carousel.closest('.footer-testimonials');
+    if (testimonialsContainer) {
+      testimonialsContainer.addEventListener('mouseenter', stopAutoPlay);
+      testimonialsContainer.addEventListener('mouseleave', startAutoPlay);
+    }
+
+    // Start auto-play
+    startAutoPlay();
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -2392,5 +2480,6 @@
     initUniversalHeaderMenu();
     initUniversalHeaderUserMenu();
     initFooterAnimations();
+    initFooterTestimonials();
   });
 })();

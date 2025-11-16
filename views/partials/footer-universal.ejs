@@ -6,6 +6,83 @@
 %>
 <footer class="universal-footer" role="contentinfo">
   <div class="universal-footer__container">
+    <!-- Hero Section: Metrics & Featured Content -->
+    <div class="universal-footer__hero">
+      <!-- Metrics Bar -->
+      <div class="footer-metrics">
+        <div class="footer-metrics__item">
+          <div class="footer-metrics__value" data-target="10000">0</div>
+          <div class="footer-metrics__label">Portfolios Created</div>
+        </div>
+        <div class="footer-metrics__divider"></div>
+        <div class="footer-metrics__item">
+          <div class="footer-metrics__value" data-target="500">0</div>
+          <div class="footer-metrics__label">Agencies</div>
+        </div>
+        <div class="footer-metrics__divider"></div>
+        <div class="footer-metrics__item">
+          <div class="footer-metrics__value">2 min</div>
+          <div class="footer-metrics__label">AI-Curated</div>
+        </div>
+      </div>
+
+      <!-- Featured Content & Testimonials -->
+      <div class="footer-featured">
+        <!-- Featured Portfolio -->
+        <div class="footer-featured__portfolio">
+          <div class="footer-featured__label">Featured Portfolio</div>
+          <a href="/portfolio/elara-k" class="footer-featured__link">
+            <div class="footer-featured__image">
+              <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=200&q=80" alt="Featured portfolio" loading="lazy">
+              <div class="footer-featured__overlay"></div>
+            </div>
+            <div class="footer-featured__info">
+              <div class="footer-featured__name">Elara K.</div>
+              <div class="footer-featured__meta">Editorial • Runway</div>
+            </div>
+          </a>
+        </div>
+
+        <!-- Testimonials Carousel -->
+        <div class="footer-testimonials">
+          <div class="footer-testimonials__carousel" id="footerTestimonials">
+            <div class="footer-testimonial footer-testimonial--active">
+              <blockquote class="footer-testimonial__quote">
+                "Pholio transformed my portfolio into something I'm proud to share. The AI curation is incredible."
+              </blockquote>
+              <div class="footer-testimonial__author">
+                <div class="footer-testimonial__name">Sarah Chen</div>
+                <div class="footer-testimonial__role">Model, New York</div>
+              </div>
+            </div>
+            <div class="footer-testimonial">
+              <blockquote class="footer-testimonial__quote">
+                "Managing talent applications has never been easier. Pholio's dashboard is a game-changer."
+              </blockquote>
+              <div class="footer-testimonial__author">
+                <div class="footer-testimonial__name">True Modeling Agency</div>
+                <div class="footer-testimonial__role">Agency Partner</div>
+              </div>
+            </div>
+            <div class="footer-testimonial">
+              <blockquote class="footer-testimonial__quote">
+                "The editorial quality of my comp card impressed every casting director I've shown it to."
+              </blockquote>
+              <div class="footer-testimonial__author">
+                <div class="footer-testimonial__name">Marcus Williams</div>
+                <div class="footer-testimonial__role">Actor, Los Angeles</div>
+              </div>
+            </div>
+          </div>
+          <div class="footer-testimonials__controls">
+            <button class="footer-testimonials__dot footer-testimonials__dot--active" data-index="0" aria-label="View testimonial 1"></button>
+            <button class="footer-testimonials__dot" data-index="1" aria-label="View testimonial 2"></button>
+            <button class="footer-testimonials__dot" data-index="2" aria-label="View testimonial 3"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Main Footer Content -->
     <div class="universal-footer__main">
       <!-- Brand Section -->
@@ -47,38 +124,30 @@
         </div>
       </div>
 
-      <!-- Navigation Sections -->
+      <!-- Navigation Sections (2 Columns) -->
       <div class="universal-footer__nav-sections">
-        <!-- Product Navigation -->
-        <nav class="universal-footer__nav-group" aria-label="Product navigation">
-          <h3 class="footer-nav__heading">Product</h3>
+        <!-- Product & Resources -->
+        <nav class="universal-footer__nav-group" aria-label="Product and resources navigation">
+          <h3 class="footer-nav__heading">Product & Resources</h3>
           <ul class="footer-nav__list">
             <li><a href="/features" class="footer-nav__link">Features</a></li>
             <li><a href="/pricing" class="footer-nav__link">Pricing</a></li>
             <li><a href="/pro" class="footer-nav__link">Studio+</a></li>
-            <li><a href="/apply" class="footer-nav__link">Get Started</a></li>
+            <li><a href="/apply" class="footer-nav__link">For Talent</a></li>
+            <li><a href="/partners" class="footer-nav__link">For Agencies</a></li>
+            <li><a href="/press" class="footer-nav__link">Blog</a></li>
           </ul>
         </nav>
 
-        <!-- Company Navigation -->
-        <nav class="universal-footer__nav-group" aria-label="Company navigation">
-          <h3 class="footer-nav__heading">Company</h3>
+        <!-- Company & Support -->
+        <nav class="universal-footer__nav-group" aria-label="Company and support navigation">
+          <h3 class="footer-nav__heading">Company & Support</h3>
           <ul class="footer-nav__list">
             <li><a href="/press" class="footer-nav__link">Press</a></li>
             <li><a href="/partners" class="footer-nav__link">Partners</a></li>
             <li><a href="/legal" class="footer-nav__link">Legal</a></li>
             <li><a href="mailto:press@pholio.com" class="footer-nav__link">Contact</a></li>
-          </ul>
-        </nav>
-
-        <!-- Resources Navigation -->
-        <nav class="universal-footer__nav-group" aria-label="Resources navigation">
-          <h3 class="footer-nav__heading">Resources</h3>
-          <ul class="footer-nav__list">
-            <li><a href="/apply" class="footer-nav__link">For Talent</a></li>
-            <li><a href="/partners" class="footer-nav__link">For Agencies</a></li>
-            <li><a href="/pro" class="footer-nav__link">Studio+</a></li>
-            <li><a href="/press" class="footer-nav__link">Blog</a></li>
+            <li><a href="/apply" class="footer-nav__link">Get Started</a></li>
           </ul>
         </nav>
       </div>
@@ -88,7 +157,7 @@
         <div class="footer-newsletter">
           <h3 class="footer-newsletter__heading">Stay Curated</h3>
           <p class="footer-newsletter__text">
-            Get editorial insights, new features, and talent stories delivered to your inbox.
+            Join 5,000+ talent professionals getting curated insights, new features, and success stories delivered weekly.
           </p>
           <form class="footer-newsletter__form" action="/newsletter" method="post">
             <div class="footer-newsletter__input-wrapper">
@@ -107,13 +176,31 @@
               </button>
             </div>
           </form>
+          <div class="footer-newsletter__benefits">
+            <span class="footer-newsletter__benefit">Weekly editorial insights</span>
+            <span class="footer-newsletter__benefit">New feature announcements</span>
+            <span class="footer-newsletter__benefit">Talent success stories</span>
+          </div>
         </div>
 
         <!-- Contact Info -->
         <div class="footer-contact">
           <p class="footer-contact__label">Press & Inquiries</p>
           <a href="mailto:press@pholio.com" class="footer-contact__email">press@pholio.com</a>
+          <p class="footer-contact__label" style="margin-top: 1.5rem;">Partners</p>
+          <a href="mailto:partners@pholio.com" class="footer-contact__email">partners@pholio.com</a>
         </div>
+      </div>
+    </div>
+
+    <!-- Trust Signals Section -->
+    <div class="universal-footer__trust">
+      <div class="footer-trust__label">Trusted by leading agencies</div>
+      <div class="footer-trust__logos">
+        <div class="footer-trust__logo">True Modeling</div>
+        <div class="footer-trust__logo">Elite Talent</div>
+        <div class="footer-trust__logo">Next Models</div>
+        <div class="footer-trust__logo">Ford Models</div>
       </div>
     </div>
 
