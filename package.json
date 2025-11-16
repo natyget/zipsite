@@ -1,7 +1,7 @@
 {
-  "name": "zipsite",
+  "name": "pholio",
   "version": "1.0.0",
-  "description": "ZipSite full-stack application",
+  "description": "Pholio full-stack application",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {

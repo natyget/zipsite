@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  console.log('[ZipSite Homepage] Script loaded at', new Date().toISOString());
+  console.log('[Pholio Homepage] Script loaded at', new Date().toISOString());
 
   function initUniversalHeaderMenu() {
     const menuToggle = document.querySelector('.universal-header__menu-toggle');

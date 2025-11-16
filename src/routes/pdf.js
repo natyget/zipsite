@@ -286,9 +286,9 @@ function renderPdfView(req, res, data, isDemo) {
     theme = getTheme(themeKey);
   }
 
-  // Check if Pro theme is selected but user is not Pro
+  // Check if Studio+ theme is selected but user is not Studio+
   if (isProTheme(themeKey) && !profile.is_pro) {
-    console.warn('[renderPdfView] Pro theme selected for non-Pro user, using default:', themeKey);
+    console.warn('[renderPdfView] Studio+ theme selected for non-Studio+ user, using default:', themeKey);
     themeKey = getDefaultTheme();
     theme = getTheme(themeKey);
   }
@@ -299,7 +299,7 @@ function renderPdfView(req, res, data, isDemo) {
     isPro: theme.isPro
   });
 
-  // Load customizations from database (Pro users only) - skip for demo
+  // Load customizations from database (Studio+ users only) - skip for demo
   let customizations = null;
   if (!isDemo && profile.is_pro && profile.pdf_customizations) {
     try {
@@ -365,7 +365,7 @@ function renderPdfView(req, res, data, isDemo) {
   // Build base URL for images
   const baseUrl = `${req.protocol}://${req.get('host')}`;
 
-  // Generate QR code for Pro users linking to portfolio - skip for demo (not pro)
+  // Generate QR code for Studio+ users linking to portfolio - skip for demo (not studio+)
   // Note: QR code generation is async, but we'll handle it synchronously for now
   // If it fails, we'll just skip it
   let qrCodeDataUrl = null;
@@ -395,7 +395,7 @@ function renderPdfView(req, res, data, isDemo) {
   const layoutClasses = generateLayoutClasses(mergedTheme.layout);
   const imageGridCSS = getImageGridCSS(mergedTheme.layout);
 
-  // Get agency logo (Pro users only) - skip for demo
+  // Get agency logo (Studio+ users only) - skip for demo
   let agencyLogo = null;
   if (!isDemo && profile.is_pro && customizations && customizations.agencyLogo) {
     agencyLogo = customizations.agencyLogo;
@@ -695,7 +695,7 @@ router.get('/pdf/:slug', async (req, res, next) => {
       theme = getTheme(themeKey);
     }
 
-    // Check if Pro theme is selected but user is not Pro
+    // Check if Studio+ theme is selected but user is not Studio+
     if (isProTheme(themeKey) && !profile.is_pro) {
       themeKey = getDefaultTheme();
       theme = getTheme(themeKey);
@@ -858,7 +858,7 @@ router.get('/pdf/:slug', async (req, res, next) => {
   }
 });
 
-// API Endpoints for PDF Customization (Pro users only)
+// API Endpoints for PDF Customization (Studio+ users only)
 
 // GET /api/pdf/customize/:slug - Get current customizations
 router.get('/api/pdf/customize/:slug', requireRole('TALENT'), async (req, res, next) => {
@@ -871,7 +871,7 @@ router.get('/api/pdf/customize/:slug', requireRole('TALENT'), async (req, res, n
     }
 
     if (!profile.is_pro) {
-      return res.status(403).json({ error: 'Pro account required' });
+      return res.status(403).json({ error: 'Studio+ account required' });
     }
 
     let customizations = null;
@@ -935,18 +935,18 @@ router.post('/api/pdf/customize/:slug', requireRole('TALENT'), async (req, res, 
         return res.status(400).json({ error: 'Invalid theme' });
       }
 
-      // Check if Pro theme is selected for non-Pro users
+      // Check if Studio+ theme is selected for non-Studio+ users
       if (isProTheme(theme) && !profile.is_pro) {
-        return res.status(403).json({ error: 'Pro theme requires Pro account' });
+        return res.status(403).json({ error: 'Studio+ theme requires Studio+ account' });
       }
     }
 
-    // Customizations require Pro account
+    // Customizations require Studio+ account
     if (customizations && !profile.is_pro) {
-      return res.status(403).json({ error: 'Pro account required for customizations' });
+      return res.status(403).json({ error: 'Studio+ account required for customizations' });
     }
 
-    // Validate customizations if provided (Pro users only)
+    // Validate customizations if provided (Studio+ users only)
     if (customizations) {
       const themeKey = theme || profile.pdf_theme || getDefaultTheme();
       const themeObj = getTheme(themeKey);
@@ -966,12 +966,12 @@ router.post('/api/pdf/customize/:slug', requireRole('TALENT'), async (req, res, 
     }
 
     // Prepare update object
-    // Theme can be saved for all users (Free themes for Free users, Pro themes for Pro users)
+    // Theme can be saved for all users (Free themes for Free users, Studio+ themes for Studio+ users)
     const updates = {};
     if (theme) {
       updates.pdf_theme = theme;
     }
-    // Customizations only for Pro users
+    // Customizations only for Studio+ users
     if (customizations && profile.is_pro) {
       updates.pdf_customizations = JSON.stringify(customizations);
     }
@@ -1021,7 +1021,7 @@ router.post('/api/pdf/agency-logo/:slug', requireRole('TALENT'), agencyLogoUploa
     }
 
     if (!profile.is_pro) {
-      return res.status(403).json({ error: 'Pro account required' });
+      return res.status(403).json({ error: 'Studio+ account required' });
     }
 
     if (!req.file) {
@@ -1136,7 +1136,7 @@ router.post('/api/pdf/agency-logo-url/:slug', requireRole('TALENT'), async (req,
     }
 
     if (!profile.is_pro) {
-      return res.status(403).json({ error: 'Pro account required' });
+      return res.status(403).json({ error: 'Studio+ account required' });
     }
 
     const { url, position, size } = req.body;
@@ -1217,7 +1217,7 @@ router.delete('/api/pdf/agency-logo/:slug', requireRole('TALENT'), async (req, r
     }
 
     if (!profile.is_pro) {
-      return res.status(403).json({ error: 'Pro account required' });
+      return res.status(403).json({ error: 'Studio+ account required' });
     }
 
     // Load customizations

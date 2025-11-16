@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>
-    <%= title ? (title + ' — ZipSite' ) : 'ZipSite' %>
+    <%= title ? (title + ' — Pholio' ) : 'Pholio' %>
   </title>
 
   <!-- Fonts -->
@@ -33,7 +33,7 @@
     <!-- DASHBOARD HEADER -->
     <header class="dash-header" role="banner">
       <div class="dash-header-inner">
-        <a class="dash-logo" href="/">ZipSite</a>
+        <a class="dash-logo" href="/">Pholio</a>
 
         <nav class="dash-nav" aria-label="Dashboard">
           <a href="/dashboard/talent" class="<%= currentUser && currentUser.role === 'TALENT' ? 'is-active' : '' %>">
@@ -54,7 +54,7 @@
             <span class="dash-user__email" data-initial="<%= currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U' %>">
               <%= currentUser.email %>
               <% if (currentProfile && currentProfile.is_pro) { %>
-                <span class="dash-header__badge dash-header__badge--pro">Pro</span>
+                <span class="dash-header__badge dash-header__badge--pro">Studio+</span>
               <% } else if (currentProfile && !currentProfile.is_pro) { %>
                 <span class="dash-header__badge dash-header__badge--free">Free</span>
               <% } %>

@@ -135,8 +135,8 @@
         const isPro = card.dataset.pro === 'true';
         
         if (isPro) {
-          // Show upgrade prompt for Pro themes
-          const upgradeMsg = 'This theme is available for Pro members. Upgrade to unlock all themes.';
+          // Show upgrade prompt for Studio+ themes
+          const upgradeMsg = 'This theme is available for Studio+ members. Upgrade to unlock all themes.';
           if (confirm(upgradeMsg)) {
             window.location.href = '/pro/upgrade';
           }
@@ -154,7 +154,7 @@
             <h2 style="font-family: var(--font-serif); font-size: 2rem; margin-bottom: 1rem;">${themeName} Theme</h2>
             <p style="font-family: var(--font-sans); color: #475569; line-height: 1.7;">
               The ${themeName} theme features an elegant, editorial layout perfect for professional comp cards.
-              ${isPro ? 'Upgrade to Pro to unlock this theme.' : 'This theme is available for free users.'}
+              ${isPro ? 'Upgrade to Studio+ to unlock this theme.' : 'This theme is available for free users.'}
             </p>
           `;
           previewFull.hidden = false;
@@ -180,7 +180,7 @@
   function initPortfolioToggle() {
     const toggleButtons = document.querySelectorAll('.feature-demo__toggle-btn');
     const portfolioFrame = document.getElementById('portfolio-frame');
-    const brandZipsite = document.getElementById('portfolio-brand-zipsite');
+    const brandPholio = document.getElementById('portfolio-brand-zipsite');
     const portfolioUrl = document.getElementById('portfolio-url');
     const portfolioBadge = document.getElementById('portfolio-badge');
     const portfolioFeatures = document.getElementById('portfolio-features');
@@ -222,7 +222,7 @@
         // Morph portfolio frame state
         portfolioFrame.dataset.state = view;
 
-        // Animate Pro features reveal
+        // Animate Studio+ features reveal
         if (proFeatures && proFeatures.length > 0) {
           proFeatures.forEach((feature, index) => {
             if (isPro) {

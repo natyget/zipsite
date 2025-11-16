@@ -1,7 +1,7 @@
 <% const safeProfile=(typeof profile !=='undefined' && profile) ? profile : {}; const rawMedia=(typeof images
   !=='undefined' && images) ? images : []; const safeMedia=Array.isArray(rawMedia) ? rawMedia : []; const
   slug=safeProfile.slug || 'yourname' ; const effectiveShareUrl=(typeof shareUrl !=='undefined' ) ? shareUrl :
-  `https://zipsite.me/${slug}`; const safeCompleteness=(typeof completeness !=='undefined' ) ? completeness : {}; const
+  `https://pholio.me/${slug}`; const safeCompleteness=(typeof completeness !=='undefined' ) ? completeness : {}; const
   editDefaults={ city: safeProfile.city || '' , height_cm: safeProfile.height_cm || '' , bio: safeProfile.bio_raw || '' }; const formValues=(typeof values !=='undefined' ) ?
   { ...editDefaults, ...values } : editDefaults; const _formErrors=(typeof formErrors !=='undefined' ) ? formErrors :
   {}; const valueFor=(key)=> formValues[key] || '';
@@ -66,7 +66,7 @@
           <%= (safeProfile.first_name || 'Your' ) + ' ' + (safeProfile.last_name || 'Name' ) %>
         </h1>
         <% if (safeProfile.is_pro) { %>
-          <span class="badge badge-pro">PRO</span>
+          <span class="badge badge-pro">STUDIO+</span>
           <% } else { %>
             <span class="badge badge-free">Free</span>
             <% } %>
@@ -127,7 +127,7 @@
           </a>
           <% if (!safeProfile.is_pro) { %>
             <a href="/pro/upgrade" class="button button-gold dash-hero__action dash-hero__action--upgrade">
-              <span>Upgrade to Pro</span>
+              <span>Upgrade to Studio+</span>
             </a>
           <% } %>
         <% } else { %>
@@ -747,7 +747,7 @@
             <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
               <h4 style="margin-bottom: 1rem; font-size: 1.1rem; font-weight: 600;">Social Media</h4>
               <p class="form-field__help" style="margin-bottom: 1rem; font-size: 0.9rem;">
-                Free users: Handles display as text only. Pro users: Handles are clickable links.
+                Free users: Handles display as text only. Studio+ users: Handles are clickable links.
               </p>
               
               <div class="form-grid">
@@ -1146,7 +1146,7 @@
       <% if (!safeProfile.is_pro) { %>
         <div class="dash-panel dash-panel--compact dash-sidebar__upgrade">
           <header class="dash-panel__header">
-            <h3>Upgrade to Pro</h3>
+            <h3>Upgrade to Studio+</h3>
           </header>
           <div class="dash-panel__body">
             <p class="form-field__help" style="margin-bottom: 16px;">
@@ -1160,7 +1160,7 @@
       <% } else { %>
         <div class="dash-panel dash-panel--compact">
           <header class="dash-panel__header">
-            <h3>Pro Account</h3>
+            <h3>Studio+ Account</h3>
           </header>
           <div class="dash-panel__body">
             <p class="form-field__help">
@@ -1189,7 +1189,7 @@
         <div class="pdf-theme-modal__tabs">
           <button type="button" class="pdf-theme-modal__tab pdf-theme-modal__tab--active" data-theme-filter="all">All Themes</button>
           <button type="button" class="pdf-theme-modal__tab" data-theme-filter="free">Free</button>
-          <button type="button" class="pdf-theme-modal__tab" data-theme-filter="pro">Pro</button>
+          <button type="button" class="pdf-theme-modal__tab" data-theme-filter="pro">Studio+</button>
         </div>
         <div class="pdf-theme-grid" id="pdf-theme-grid">
           <!-- Themes will be populated by JavaScript -->

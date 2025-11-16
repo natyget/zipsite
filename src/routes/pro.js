@@ -20,7 +20,7 @@ router.get('/pro/upgrade', requireRole('TALENT'), async (req, res, next) => {
     const isCancelingSubscription = subscription ? isCanceling(subscription) : false;
 
     return res.render('pro/upgrade', {
-      title: 'Upgrade to Pro',
+      title: 'Upgrade to Studio+',
       profile: profile || null,
       subscription: subscription || null,
       trialDaysRemaining,

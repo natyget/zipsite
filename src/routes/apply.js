@@ -82,7 +82,7 @@ router.get('/apply', (req, res) => {
   };
 
   return res.render('apply/index', {
-    title: 'Start your ZipSite profile',
+    title: 'Start your Pholio profile',
     values: defaults,
     errors: {},
     layout: 'layout',
@@ -248,7 +248,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
           delete filteredErrors.password_confirm;
 
           return res.status(422).render('apply/index', {
-            title: 'Start your ZipSite profile',
+            title: 'Start your Pholio profile',
             values: req.body,
             errors: filteredErrors,
             layout: 'layout',
@@ -284,7 +284,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         if (!req.body.email || !req.body.password) {
           console.log('[Apply] No email/password provided and no valid Firebase token - likely Google Sign-In issue');
           return res.status(422).render('apply/index', {
-            title: 'Start your ZipSite profile',
+            title: 'Start your Pholio profile',
             values: req.body,
             errors: { 
               firebase: ['Google Sign-In authentication failed. Please try signing in with Google again, or use email/password to create an account.']
@@ -298,7 +298,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         if (req.body.password !== req.body.password_confirm) {
           console.log('[Apply] Password confirmation mismatch');
           return res.status(422).render('apply/index', {
-            title: 'Start your ZipSite profile',
+            title: 'Start your Pholio profile',
             values: req.body,
             errors: { password_confirm: ['Passwords do not match'] },
             layout: 'layout',
@@ -327,7 +327,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
           }
 
           return res.status(422).render('apply/index', {
-            title: 'Start your ZipSite profile',
+            title: 'Start your Pholio profile',
             values: req.body,
             errors: { ...signupErrors, ...applyErrors },
             layout: 'layout',
@@ -428,7 +428,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         const profileErrors = applyParsed.error.flatten().fieldErrors;
         console.log('[Apply] Profile validation failed:', profileErrors);
         return res.status(422).render('apply/index', {
-          title: 'Start your ZipSite profile',
+          title: 'Start your Pholio profile',
           values: { ...req.body, specialties: specialtiesArray },
           errors: profileErrors,
           layout: 'layout',
@@ -555,7 +555,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
             console.log('[Signup/Apply] Request body keys:', req.body ? Object.keys(req.body) : 'no body');
             console.log('[Signup/Apply] Request body firebase_token:', req.body && req.body.firebase_token ? 'present' : 'missing');
             return res.status(422).render('apply/index', {
-              title: 'Start your ZipSite profile',
+              title: 'Start your Pholio profile',
               values: req.body,
               errors: { email: ['Authentication failed. Please try again.'] },
               layout: 'layout',
@@ -571,7 +571,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
           if (firebaseEmail.toLowerCase().trim() !== normalizedEmail) {
             console.log('[Signup/Apply] Email mismatch:', { firebaseEmail, normalizedEmail });
             return res.status(422).render('apply/index', {
-              title: 'Start your ZipSite profile',
+              title: 'Start your Pholio profile',
               values: req.body,
               errors: { email: ['Email does not match authenticated account.'] },
               layout: 'layout',
@@ -592,7 +592,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         if (existing) {
           console.log('[Signup/Apply] User already exists:', { firebaseUid, email: normalizedEmail });
           return res.status(422).render('apply/index', {
-            title: 'Start your ZipSite profile',
+            title: 'Start your Pholio profile',
             values: req.body,
             errors: { email: ['That email is already registered'] },
             layout: 'layout',
@@ -646,7 +646,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         // Handle Firebase-specific errors
         if (error.message.includes('Email already exists')) {
           return res.status(422).render('apply/index', {
-            title: 'Start your ZipSite profile',
+            title: 'Start your Pholio profile',
             values: req.body,
             errors: { email: ['That email is already registered'] },
             layout: 'layout',
@@ -656,7 +656,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
 
         if (error.message.includes('Token expired') || error.message.includes('expired')) {
           return res.status(422).render('apply/index', {
-            title: 'Start your ZipSite profile',
+            title: 'Start your Pholio profile',
             values: req.body,
             errors: { email: ['Your session has expired. Please try again.'] },
             layout: 'layout',
@@ -666,7 +666,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
 
         if (error.message.includes('Invalid token') || error.message.includes('verification failed')) {
           return res.status(422).render('apply/index', {
-            title: 'Start your ZipSite profile',
+            title: 'Start your Pholio profile',
             values: req.body,
             errors: { email: ['Invalid authentication token. Please try again.'] },
             layout: 'layout',
@@ -769,7 +769,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         const profileErrors = parsed.error.flatten().fieldErrors;
         console.log('[Apply] Profile validation failed for logged-in user:', profileErrors);
         return res.status(422).render('apply/index', {
-          title: 'Start your ZipSite profile',
+          title: 'Start your Pholio profile',
           values: { ...req.body, specialties: specialtiesArray },
           errors: profileErrors,
           layout: 'layout',
@@ -878,7 +878,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       const agency = await knex('users').where({ email: partner_agency_email, role: 'AGENCY' }).first();
       if (!agency) {
         return res.status(422).render('apply/index', {
-          title: 'Start your ZipSite profile',
+          title: 'Start your Pholio profile',
           values: req.body,
           errors: { partner_agency_email: ['We could not find that agency account.'] },
           layout: 'layout'
@@ -1027,7 +1027,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       }
       profileId = existingProfile.id;
 
-      // Check if user is Pro to determine if we should generate social media URLs
+      // Check if user is Studio+ to determine if we should generate social media URLs
       const isPro = existingProfile.is_pro || false;
 
       // Clean social media handles
@@ -1035,13 +1035,13 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       const cleanTwitterHandle = twitter_handle ? parseSocialMediaHandle(twitter_handle) : null;
       const cleanTiktokHandle = tiktok_handle ? parseSocialMediaHandle(tiktok_handle) : null;
 
-      // Generate URLs for Pro users if handles are provided but URLs are not
+      // Generate URLs for Studio+ users if handles are provided but URLs are not
       let finalInstagramUrl = instagram_url || null;
       let finalTwitterUrl = twitter_url || null;
       let finalTiktokUrl = tiktok_url || null;
 
       if (isPro) {
-        // Pro users get URLs - generate from handles if URL not provided
+        // Studio+ users get URLs - generate from handles if URL not provided
         if (cleanInstagramHandle && !finalInstagramUrl) {
           finalInstagramUrl = generateSocialMediaUrl('instagram', cleanInstagramHandle);
         }
@@ -1130,8 +1130,8 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       const slug = await ensureUniqueSlug(knex, 'profiles', `${first_name}-${last_name}`);
       profileId = uuidv4();
 
-      // For logged-in users creating profile, check if they're Pro (unlikely but possible)
-      // For now, assume Free unless they already have a Pro profile elsewhere
+      // For logged-in users creating profile, check if they're Studio+ (unlikely but possible)
+      // For now, assume Free unless they already have a Studio+ profile elsewhere
       // Clean social media handles
       const cleanInstagramHandle = instagram_handle ? parseSocialMediaHandle(instagram_handle) : null;
       const cleanTwitterHandle = twitter_handle ? parseSocialMediaHandle(twitter_handle) : null;
@@ -1252,7 +1252,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       console.error('[Apply] Profile not found after creation, profileId:', profileId);
       addMessage(req, 'error', 'Profile creation failed. Please try again.');
       return res.status(500).render('apply/index', {
-        title: 'Start your ZipSite profile',
+        title: 'Start your Pholio profile',
         values: req.body,
         errors: {},
         layout: 'layout',
@@ -1267,7 +1267,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     // Use a more prominent success message for new signups
     if (!isLoggedIn) {
       // New user signup - show prominent welcome message with user's name
-      const welcomeMessage = `🎉 Welcome to ZipSite, ${first_name}! Your account has been created and your profile is ready. Upload photos to complete your comp card.`;
+      const welcomeMessage = `🎉 Welcome to Pholio, ${first_name}! Your account has been created and your profile is ready. Upload photos to complete your comp card.`;
       addMessage(req, 'success', welcomeMessage);
       console.log('[Apply] New user signup completed:', {
         userId: userId,
@@ -1314,7 +1314,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       console.error('[Apply] ERROR: Profile not found after creation!', { profileId, userId });
       addMessage(req, 'error', 'Profile creation failed. Please try again.');
       return res.status(500).render('apply/index', {
-        title: 'Start your ZipSite profile',
+        title: 'Start your Pholio profile',
         values: req.body,
         errors: {},
         layout: 'layout',
@@ -1332,7 +1332,7 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
       });
       addMessage(req, 'error', 'Profile linking error. Please contact support.');
       return res.status(500).render('apply/index', {
-        title: 'Start your ZipSite profile',
+        title: 'Start your Pholio profile',
         values: req.body,
         errors: {},
         layout: 'layout',

@@ -1,4 +1,4 @@
-// Dashboard JavaScript for ZipSite
+// Dashboard JavaScript for Pholio
 // Handles copy-to-clipboard, delete actions, and flash message animations
 
 (function () {
@@ -1705,7 +1705,7 @@
           <div class="pdf-theme-card__info">
           <div class="pdf-theme-card__name">
             ${theme.name}
-              ${theme.isPro ? '<span class="pdf-theme-card__badge pdf-theme-card__badge--pro">Pro</span>' : '<span class="pdf-theme-card__badge pdf-theme-card__badge--free">Free</span>'}
+              ${theme.isPro ? '<span class="pdf-theme-card__badge pdf-theme-card__badge--pro">Studio+</span>' : '<span class="pdf-theme-card__badge pdf-theme-card__badge--free">Free</span>'}
             </div>
             <div class="pdf-theme-card__description">${theme.personality || theme.description || ''}</div>
           </div>
@@ -1738,7 +1738,7 @@
         } else {
           // Show upgrade prompt for locked themes
           themeCard.addEventListener('click', () => {
-            const upgradeMsg = 'This theme is available for Pro members. Upgrade to unlock all themes and customization options.';
+            const upgradeMsg = 'This theme is available for Studio+ members. Upgrade to unlock all themes and customization options.';
             if (confirm(upgradeMsg)) {
               window.location.href = '/pro/upgrade';
             }

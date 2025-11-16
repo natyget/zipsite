@@ -291,7 +291,7 @@ router.get('/partners', (req, res, next) => {
     }
     res.locals.currentPage = 'partners';
     return res.render('auth/partners', {
-      title: 'Partner with ZipSite',
+      title: 'Partner with Pholio',
       values: {},
       errors: {},
       layout: 'layout',
@@ -308,7 +308,7 @@ router.post('/partners', async (req, res, next) => {
   if (!parsed.success) {
     res.locals.currentPage = 'partners';
     return res.status(422).render('auth/partners', {
-      title: 'Partner with ZipSite',
+      title: 'Partner with Pholio',
       values: req.body,
       errors: parsed.error.flatten().fieldErrors,
       layout: 'layout',
@@ -328,7 +328,7 @@ router.post('/partners', async (req, res, next) => {
     console.log('[Signup/Partners] No Firebase token provided');
     res.locals.currentPage = 'partners';
     return res.status(422).render('auth/partners', {
-      title: 'Partner with ZipSite',
+      title: 'Partner with Pholio',
       values: req.body,
       errors: { email: ['Authentication failed. Please try again.'] },
       layout: 'layout',
@@ -346,7 +346,7 @@ router.post('/partners', async (req, res, next) => {
       console.log('[Signup/Partners] Email mismatch:', { firebaseEmail, normalizedEmail });
       res.locals.currentPage = 'partners';
       return res.status(422).render('auth/partners', {
-        title: 'Partner with ZipSite',
+        title: 'Partner with Pholio',
         values: req.body,
         errors: { email: ['Email does not match authenticated account.'] },
         layout: 'layout',
@@ -364,7 +364,7 @@ router.post('/partners', async (req, res, next) => {
       console.log('[Signup/Partners] User already exists:', { firebaseUid, email: normalizedEmail });
       res.locals.currentPage = 'partners';
       return res.status(422).render('auth/partners', {
-        title: 'Partner with ZipSite',
+        title: 'Partner with Pholio',
         values: req.body,
         errors: { email: ['That email is already registered'] },
         layout: 'layout',
@@ -425,7 +425,7 @@ router.post('/partners', async (req, res, next) => {
       });
     });
     
-    addMessage(req, 'success', 'Welcome to ZipSite! Your agency account has been created.');
+    addMessage(req, 'success', 'Welcome to Pholio! Your agency account has been created.');
 
     return res.redirect('/dashboard/agency');
   } catch (error) {
@@ -439,7 +439,7 @@ router.post('/partners', async (req, res, next) => {
     if (error.message.includes('Email already exists')) {
       res.locals.currentPage = 'partners';
       return res.status(422).render('auth/partners', {
-        title: 'Partner with ZipSite',
+        title: 'Partner with Pholio',
         values: req.body,
         errors: { email: ['That email is already registered'] },
         layout: 'layout',

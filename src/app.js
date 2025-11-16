@@ -450,7 +450,7 @@ app.get('/', async (req, res, next) => {
     };
 
     res.render('public/home', {
-      title: 'ZipSite — AI-Curated Portfolios for Talent & Agencies',
+      title: 'Pholio — AI-Curated Portfolios for Talent & Agencies',
       layout: 'layout',
       currentPage: 'home',
       elaraProfile: elaraProfileForHero,
@@ -499,7 +499,7 @@ app.get('/', async (req, res, next) => {
     res.locals.currentPage = page;
     const pageTitle = page.charAt(0).toUpperCase() + page.slice(1);
     res.render(`public/${page}`, {
-      title: pageTitle + ' — ZipSite',
+      title: pageTitle + ' — Pholio',
       layout: 'layout',
       currentPage: page
     });
@@ -517,7 +517,7 @@ app.get('/pro', async (req, res) => {
 
     res.locals.currentPage = 'pro';
     res.render('public/pro-preview', {
-      title: 'Pro — ZipSite',
+      title: 'Studio+ — Pholio',
       layout: 'layout',
       currentPage: 'pro',
       allThemes,
@@ -531,7 +531,7 @@ app.get('/pro', async (req, res) => {
     // Fallback to basic pro page if theme loading fails
     res.locals.currentPage = 'pro';
     res.render('public/pro-preview', {
-      title: 'Pro — ZipSite',
+      title: 'Studio+ — Pholio',
       layout: 'layout',
       currentPage: 'pro',
       allThemes: {},

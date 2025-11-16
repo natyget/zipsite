@@ -1,5 +1,5 @@
 (function () {
-  const ZipSite = (window.ZipSite = window.ZipSite || {});
+  const Pholio = (window.Pholio = window.Pholio || {});
 
   function toast(message, type = 'info') {
     let container = document.querySelector('.toast-container');
@@ -30,7 +30,7 @@
     }, 3600);
   }
 
-  ZipSite.toast = toast;
+  Pholio.toast = toast;
 
   function setLoading(button, loadingText) {
     if (!button) return () => {};
@@ -48,7 +48,7 @@
     };
   }
 
-  ZipSite.setLoading = setLoading;
+  Pholio.setLoading = setLoading;
 
   function hydrateFlash() {
     const flashes = document.querySelectorAll('[data-flash]');
@@ -2190,7 +2190,7 @@
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = `ZipSite-${slug}-compcard.pdf`;
+          link.download = `Pholio-${slug}-compcard.pdf`;
           link.click();
           window.URL.revokeObjectURL(url);
           toast('PDF downloaded', 'success');

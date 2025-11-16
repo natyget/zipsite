@@ -620,7 +620,7 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
       finalWeightLbs = profile.weight_lbs;
     }
     
-    // Check if user is Pro to determine if we should generate social media URLs
+    // Check if user is Studio+ to determine if we should generate social media URLs
     const isPro = profile.is_pro || false;
     
     // Clean social media handles (only if provided in form)
@@ -644,7 +644,7 @@ router.post('/dashboard/talent', requireRole('TALENT'), async (req, res, next) =
     let finalTiktokUrl = profile.tiktok_url || null;
     
     if (isPro) {
-      // Pro users get URLs - generate from handles if URL not provided and handle exists
+      // Studio+ users get URLs - generate from handles if URL not provided and handle exists
       if (cleanInstagramHandle && !finalInstagramUrl) {
         finalInstagramUrl = generateSocialMediaUrl('instagram', cleanInstagramHandle);
       }
@@ -1757,7 +1757,7 @@ router.get('/api/agency/stats', requireRole('AGENCY'), async (req, res, next) =>
   }
 });
 
-// GET /dashboard/pdf-customizer - PDF Customizer Page (Pro users only)
+// GET /dashboard/pdf-customizer - PDF Customizer Page (Studio+ users only)
 router.get('/dashboard/pdf-customizer', requireRole('TALENT'), async (req, res, next) => {
   try {
     const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
@@ -1767,7 +1767,7 @@ router.get('/dashboard/pdf-customizer', requireRole('TALENT'), async (req, res, 
     }
     
     if (!profile.is_pro) {
-      addMessage(req, 'error', 'Pro account required to customize PDF comp cards.');
+      addMessage(req, 'error', 'Studio+ account required to customize PDF comp cards.');
       return res.redirect('/dashboard/talent');
     }
     

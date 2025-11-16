@@ -7,7 +7,7 @@
 %>
 <header class="universal-header <%= isHomepageFlag ? 'universal-header--homepage' : '' %>" role="banner">
   <div class="universal-header__inner">
-    <a class="universal-header__logo" href="/">ZIPSITE</a>
+    <a class="universal-header__logo" href="/">PHOLIO</a>
     
     <button class="universal-header__menu-toggle" aria-expanded="false" aria-controls="universalNav" aria-label="Toggle navigation">
       <span></span>
@@ -20,7 +20,7 @@
         <li><a href="/" <%= page === '/' || page === 'home' ? 'aria-current="page"' : '' %>>Home</a></li>
         <li><a href="/features" <%= page === 'features' ? 'aria-current="page"' : '' %>>Features</a></li>
         <li><a href="/pricing" <%= page === 'pricing' ? 'aria-current="page"' : '' %>>Pricing</a></li>
-        <li><a href="/pro" <%= page === 'pro' ? 'aria-current="page"' : '' %>>Pro</a></li>
+        <li><a href="/pro" <%= page === 'pro' ? 'aria-current="page"' : '' %>>Studio+</a></li>
         <li><a href="/press" <%= page === 'press' ? 'aria-current="page"' : '' %>>Press</a></li>
       </ul>
     </nav>
@@ -33,7 +33,7 @@
             <button type="button" class="universal-header__user" data-initial="<%= user.email ? user.email.charAt(0).toUpperCase() : 'U' %>" aria-label="User menu" aria-expanded="false" id="universal-user-menu-button">
               <span class="universal-header__user-email"><%= user.email %></span>
               <% if (userProfile && userProfile.is_pro) { %>
-                <span class="universal-header__badge universal-header__badge--pro">Pro</span>
+                <span class="universal-header__badge universal-header__badge--pro">Studio+</span>
               <% } else if (userProfile && !userProfile.is_pro) { %>
                 <span class="universal-header__badge universal-header__badge--free">Free</span>
               <% } %>
@@ -79,7 +79,7 @@
   <div class="universal-header__nav-panel" id="universalNav" aria-hidden="true" hidden>
     <div class="universal-header__nav-panel-inner">
       <div class="universal-header__nav-panel-top">
-        <span class="universal-header__nav-panel-logo">ZIPSITE</span>
+        <span class="universal-header__nav-panel-logo">PHOLIO</span>
         <button class="universal-header__close" type="button" aria-label="Close menu">
           <span></span>
           <span></span>
@@ -105,7 +105,7 @@
           <li><a href="/" <%= page === '/' || page === 'home' ? 'aria-current="page"' : '' %>>Home</a></li>
           <li><a href="/features" <%= page === 'features' ? 'aria-current="page"' : '' %>>Features</a></li>
           <li><a href="/pricing" <%= page === 'pricing' ? 'aria-current="page"' : '' %>>Pricing</a></li>
-          <li><a href="/pro" <%= page === 'pro' ? 'aria-current="page"' : '' %>>Pro</a></li>
+          <li><a href="/pro" <%= page === 'pro' ? 'aria-current="page"' : '' %>>Studio+</a></li>
           <li><a href="/press" <%= page === 'press' ? 'aria-current="page"' : '' %>>Press</a></li>
         </ul>
       </nav>

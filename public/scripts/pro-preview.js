@@ -250,7 +250,7 @@
         themesToRender = Object.values(allThemes);
       }
 
-      // Sort: Free themes first, then Pro themes
+      // Sort: Free themes first, then Studio+ themes
       themesToRender.sort((a, b) => {
         if (a.isPro === b.isPro) return 0;
         return a.isPro ? 1 : -1;
@@ -294,17 +294,17 @@
               <div class="demo-pdf-theme-card__swatch" style="background: ${previewAccent};"></div>
             </div>
           </div>
-          ${theme.isPro ? '<div class="demo-pdf-theme-card__pro-badge">Pro</div>' : ''}
+          ${theme.isPro ? '<div class="demo-pdf-theme-card__pro-badge">Studio+</div>' : ''}
         </div>
         <div class="demo-pdf-theme-card__info">
           <div class="demo-pdf-theme-card__name">
             ${theme.name}
             <span class="demo-pdf-theme-card__badge ${theme.isPro ? 'demo-pdf-theme-card__badge--pro' : 'demo-pdf-theme-card__badge--free'}">
-              ${theme.isPro ? 'Pro' : 'Free'}
+              ${theme.isPro ? 'Studio+' : 'Free'}
             </span>
           </div>
           <div class="demo-pdf-theme-card__personality">${theme.personality || theme.description || ''}</div>
-          ${theme.isPro ? '<div class="demo-pdf-theme-card__features">Full customization</div>' : '<div class="demo-pdf-theme-card__features">ZipSite watermark</div>'}
+          ${theme.isPro ? '<div class="demo-pdf-theme-card__features">Full customization</div>' : '<div class="demo-pdf-theme-card__features">Pholio watermark</div>'}
         </div>
       `;
 
@@ -327,7 +327,7 @@
 
       // Update badge (support both old and new class names)
       if (previewBadge) {
-        previewBadge.textContent = theme.isPro ? 'Pro Theme' : 'Free Theme';
+        previewBadge.textContent = theme.isPro ? 'Studio+ Theme' : 'Free Theme';
         const isNewSection = previewBadge.closest('.demo-pdf-themes-section__preview');
         const badgeClass = isNewSection ? 
           `demo-pdf-themes-section__preview-badge ${theme.isPro ? 'demo-pdf-themes-section__preview-badge--pro' : 'demo-pdf-themes-section__preview-badge--free'}` :

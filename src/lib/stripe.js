@@ -36,7 +36,7 @@ async function getOrCreateCustomer(userId, email, name = null) {
     name: name || undefined,
     metadata: {
       userId: userId,
-      source: 'zipsite'
+      source: 'pholio'
     }
   });
 

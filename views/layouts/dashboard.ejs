@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-        <%= title || 'Dashboard' %> • ZipSite
+        <%= title || 'Dashboard' %> • Pholio
     </title>
 
     <!-- Fonts -->
@@ -34,7 +34,7 @@
                         <img src="<%= user.agency_logo_path %>" alt="<%= user.agency_name || 'Agency' %>" class="dash-header__agency-logo">
                     </a>
                 <% } else { %>
-                    <a href="/" class="dash-header__logo">ZIPSITE</a>
+                    <a href="/" class="dash-header__logo">PHOLIO</a>
                 <% } %>
             </div>
 
@@ -128,7 +128,7 @@
                         <button type="button" class="dash-header__user" data-initial="<%= user.email ? user.email.charAt(0).toUpperCase() : 'U' %>" aria-label="User menu" aria-expanded="false" id="user-menu-button">
                             <span class="dash-header__user-email"><%= user.email %></span>
                             <% if (typeof profile !== 'undefined' && profile && profile.is_pro) { %>
-                                <span class="dash-header__badge dash-header__badge--pro">Pro</span>
+                                <span class="dash-header__badge dash-header__badge--pro">Studio+</span>
                             <% } else if (typeof profile !== 'undefined' && profile && !profile.is_pro) { %>
                                 <span class="dash-header__badge dash-header__badge--free">Free</span>
                             <% } %>
