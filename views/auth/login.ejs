@@ -489,40 +489,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         googleSignInBtn.innerHTML = '<span>' + (googleSignInBtn.dataset.loadingText || 'Signing in…') + '</span>';
 
         // Sign in with Google
-        // Try popup first, but if it fails, we'll handle it gracefully
-        console.log('[Login] 🔵 Starting Google Sign-In (popup)...');
-        const userCredential = await window.FirebaseAuth.signInWithGoogle(false); // false = use popup
-        console.log('[Login] ✅ Google popup completed, got user credential');
-        
-        // Get ID token and user email
-        console.log('[Login] 🔵 Getting ID token...');
-        const idToken = await userCredential.user.getIdToken();
-        const email = userCredential.user.email;
-        
-        console.log('[Login] ✅ Google Sign-In successful, got Firebase token:', {
-          hasToken: !!idToken,
-          tokenLength: idToken ? idToken.length : 0,
-          tokenPreview: idToken ? `${idToken.substring(0, 20)}...` : 'MISSING',
-          email: email,
-          userId: userCredential.user.uid
-        });
-        
-        // Populate email field (for validation fallback, though it won't be needed)
-        const emailInput = loginForm.querySelector('#email');
-        if (emailInput && email) {
-          emailInput.value = email;
-        }
-        
-        // Populate password field with a dummy value to satisfy HTML5 validation
-        // (backend will ignore it when firebase_token is present)
-        const passwordInput = loginForm.querySelector('#password');
-        if (passwordInput) {
-          passwordInput.value = 'google-sign-in';
-        }
-        
-        // Submit form to backend
-        console.log('[Login] 🔵 Calling handleLogin with token...');
-        handleLogin(idToken);
+        // Use redirect flow by default for better reliability (popups are often blocked/closed)
+        console.log('[Login] 🔵 Starting Google Sign-In (redirect flow for reliability)...');
+        await window.FirebaseAuth.signInWithGoogle(true); // true = use redirect
+        // Redirect will happen, so we won't return here
+        // The result will be handled by getRedirectResult on page load (see DOMContentLoaded handler above)
+        return;
       } catch (error) {
         // Reset button state first
         resetButtons();
@@ -591,35 +563,49 @@ document.addEventListener('DOMContentLoaded', async function() {
           
           // Also set up onAuthStateChanged listener as backup
           let listenerTriggered = false;
-          const unsubscribe = window.FirebaseAuth.onAuthStateChanged(async (user) => {
-            if (user && !listenerTriggered && !authDetected) {
-              listenerTriggered = true;
-              authDetected = true;
-              unsubscribe();
-              
-              console.log('[Login] ✅ User authenticated via onAuthStateChanged, proceeding...');
-              
-              const idToken = await user.getIdToken();
-              const email = user.email;
-              
-              // Populate form fields
-              const emailInput = loginForm.querySelector('#email');
-              if (emailInput && email) {
-                emailInput.value = email;
+          let unsubscribeFn = null;
+          
+          try {
+            // onAuthStateChanged might return a promise, so await it
+            const unsubscribeResult = await window.FirebaseAuth.onAuthStateChanged(async (user) => {
+              if (user && !listenerTriggered && !authDetected) {
+                listenerTriggered = true;
+                authDetected = true;
+                
+                // Unsubscribe if function exists
+                if (unsubscribeFn && typeof unsubscribeFn === 'function') {
+                  unsubscribeFn();
+                }
+                
+                console.log('[Login] ✅ User authenticated via onAuthStateChanged, proceeding...');
+                
+                const idToken = await user.getIdToken();
+                const email = user.email;
+                
+                // Populate form fields
+                const emailInput = loginForm.querySelector('#email');
+                if (emailInput && email) {
+                  emailInput.value = email;
+                }
+                const passwordInput = loginForm.querySelector('#password');
+                if (passwordInput) {
+                  passwordInput.value = 'google-sign-in';
+                }
+                
+                // Show loading state
+                googleSignInBtn.disabled = true;
+                googleSignInBtn.innerHTML = '<span>Signing in…</span>';
+                
+                // Submit to backend
+                handleLogin(idToken);
               }
-              const passwordInput = loginForm.querySelector('#password');
-              if (passwordInput) {
-                passwordInput.value = 'google-sign-in';
-              }
-              
-              // Show loading state
-              googleSignInBtn.disabled = true;
-              googleSignInBtn.innerHTML = '<span>Signing in…</span>';
-              
-              // Submit to backend
-              handleLogin(idToken);
-            }
-          });
+            });
+            
+            // Store unsubscribe function (might be returned directly or as promise result)
+            unsubscribeFn = unsubscribeResult;
+          } catch (listenerError) {
+            console.warn('[Login] Could not set up onAuthStateChanged listener:', listenerError);
+          }
           
           // Start checking auth state
           const authFound = await checkAuthState();
@@ -628,7 +614,9 @@ document.addEventListener('DOMContentLoaded', async function() {
           if (!authFound && !authDetected) {
             setTimeout(() => {
               if (!authDetected) {
-                unsubscribe();
+                if (unsubscribeFn && typeof unsubscribeFn === 'function') {
+                  unsubscribeFn();
+                }
                 resetButtons();
                 console.log('[Login] No authentication detected after popup closure - user likely closed popup before completing sign-in');
               }
