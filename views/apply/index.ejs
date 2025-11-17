@@ -111,9 +111,10 @@
 
               <!-- Agency Selection Field -->
               <% 
-                const lockedAgency = typeof lockedAgency !== 'undefined' ? lockedAgency : null;
+                // lockedAgency is passed from the route, check if it exists
+                const hasLockedAgency = typeof lockedAgency !== 'undefined' && lockedAgency !== null;
               %>
-              <% if (lockedAgency) { %>
+              <% if (hasLockedAgency) { %>
                 <!-- Partner-led funnel: Agency is locked -->
                 <div class="form-field" style="margin-bottom: 1.5rem;">
                   <label>APPLYING TO</label>
