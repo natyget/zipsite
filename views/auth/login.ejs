@@ -489,8 +489,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         googleSignInBtn.innerHTML = '<span>' + (googleSignInBtn.dataset.loadingText || 'Signing in…') + '</span>';
 
         // Sign in with Google
-        console.log('[Login] 🔵 Starting Google Sign-In...');
-        const userCredential = await window.FirebaseAuth.signInWithGoogle();
+        // Try popup first, but if it fails, we'll handle it gracefully
+        console.log('[Login] 🔵 Starting Google Sign-In (popup)...');
+        const userCredential = await window.FirebaseAuth.signInWithGoogle(false); // false = use popup
         console.log('[Login] ✅ Google popup completed, got user credential');
         
         // Get ID token and user email
@@ -532,52 +533,23 @@ document.addEventListener('DOMContentLoaded', async function() {
           // Firebase sometimes closes the popup automatically after successful auth
           console.log('[Login] Popup closed, checking if user is authenticated...');
           
-          // Wait a bit for Firebase to update auth state (popup might have closed after success)
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Show loading state while checking
+          googleSignInBtn.disabled = true;
+          googleSignInBtn.innerHTML = '<span>Checking authentication...</span>';
           
-          // Check if user is actually authenticated (popup might have closed after success)
-          try {
-            // First, do an immediate check
-            let currentUser = await window.FirebaseAuth.getCurrentUser();
-            
-            if (currentUser) {
-              // User is already authenticated - proceed immediately
-              console.log('[Login] ✅ User is authenticated (immediate check), proceeding with login...');
+          // Check multiple times with increasing delays (Firebase auth state can take time to update)
+          let authDetected = false;
+          const checkAuthState = async (attempt = 1, maxAttempts = 6) => {
+            try {
+              const currentUser = await window.FirebaseAuth.getCurrentUser();
+              console.log(`[Login] Auth check attempt ${attempt}/${maxAttempts}:`, currentUser ? 'User found' : 'No user');
               
-              const idToken = await currentUser.getIdToken();
-              const email = currentUser.email;
-              
-              // Populate form fields
-              const emailInput = loginForm.querySelector('#email');
-              if (emailInput && email) {
-                emailInput.value = email;
-              }
-              const passwordInput = loginForm.querySelector('#password');
-              if (passwordInput) {
-                passwordInput.value = 'google-sign-in';
-              }
-              
-              // Show loading state
-              googleSignInBtn.disabled = true;
-              googleSignInBtn.innerHTML = '<span>Signing in…</span>';
-              
-              // Submit to backend
-              handleLogin(idToken);
-              return; // Exit early, login is proceeding
-            }
-            
-            // If no immediate auth, use onAuthStateChanged to wait for auth state update
-            let authDetected = false;
-            const unsubscribe = window.FirebaseAuth.onAuthStateChanged(async (user) => {
-              if (user && !authDetected) {
+              if (currentUser) {
                 authDetected = true;
-                unsubscribe(); // Stop listening
+                console.log('[Login] ✅ User is authenticated, proceeding with login...');
                 
-                console.log('[Login] ✅ User is authenticated (auth state changed), proceeding with login...');
-                
-                // User is authenticated - get token and proceed
-                const idToken = await user.getIdToken();
-                const email = user.email;
+                const idToken = await currentUser.getIdToken();
+                const email = currentUser.email;
                 
                 // Populate form fields
                 const emailInput = loginForm.querySelector('#email');
@@ -595,21 +567,72 @@ document.addEventListener('DOMContentLoaded', async function() {
                 
                 // Submit to backend
                 handleLogin(idToken);
+                return true; // Auth detected
               }
-            });
-            
-            // Set a timeout to stop waiting after 3 seconds
+              
+              // If not found and more attempts left, wait and try again
+              if (attempt < maxAttempts) {
+                const delay = attempt * 300; // Increasing delay: 300ms, 600ms, 900ms, etc.
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return await checkAuthState(attempt + 1, maxAttempts);
+              }
+              
+              return false; // No auth detected after all attempts
+            } catch (checkError) {
+              console.error(`[Login] Error checking auth state (attempt ${attempt}):`, checkError);
+              if (attempt < maxAttempts) {
+                const delay = attempt * 300;
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return await checkAuthState(attempt + 1, maxAttempts);
+              }
+              return false;
+            }
+          };
+          
+          // Also set up onAuthStateChanged listener as backup
+          let listenerTriggered = false;
+          const unsubscribe = window.FirebaseAuth.onAuthStateChanged(async (user) => {
+            if (user && !listenerTriggered && !authDetected) {
+              listenerTriggered = true;
+              authDetected = true;
+              unsubscribe();
+              
+              console.log('[Login] ✅ User authenticated via onAuthStateChanged, proceeding...');
+              
+              const idToken = await user.getIdToken();
+              const email = user.email;
+              
+              // Populate form fields
+              const emailInput = loginForm.querySelector('#email');
+              if (emailInput && email) {
+                emailInput.value = email;
+              }
+              const passwordInput = loginForm.querySelector('#password');
+              if (passwordInput) {
+                passwordInput.value = 'google-sign-in';
+              }
+              
+              // Show loading state
+              googleSignInBtn.disabled = true;
+              googleSignInBtn.innerHTML = '<span>Signing in…</span>';
+              
+              // Submit to backend
+              handleLogin(idToken);
+            }
+          });
+          
+          // Start checking auth state
+          const authFound = await checkAuthState();
+          
+          // Clean up listener if auth not found
+          if (!authFound && !authDetected) {
             setTimeout(() => {
               if (!authDetected) {
                 unsubscribe();
-                console.log('[Login] No authentication detected after popup closure - user likely closed popup');
+                resetButtons();
+                console.log('[Login] No authentication detected after popup closure - user likely closed popup before completing sign-in');
               }
-            }, 3000);
-            
-          } catch (checkError) {
-            console.error('[Login] Error checking authentication state:', checkError);
-            // If we can't check, assume popup was closed by user
-            return;
+            }, 2000);
           }
         } else if (error.code === 'auth/popup-blocked') {
           // Popup was blocked by browser - try redirect flow
