@@ -215,7 +215,10 @@ app.use((req, res, next) => {
 */
 // --- END OF COMMENTED-OUT BLOCK ---
 
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({ 
+  contentSecurityPolicy: false,
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }
+}));
 app.use(express.urlencoded({ extended: false }));
 
 // Stripe webhook route must be registered BEFORE express.json() middleware
