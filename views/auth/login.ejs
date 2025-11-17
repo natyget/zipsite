@@ -528,9 +528,89 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // Handle different error types
         if (error.code === 'auth/popup-closed-by-user') {
-          // User closed the popup - this is expected behavior, no error needed
-          // Silently reset button and return
-          return; // Exit early, button already reset
+          // Popup closed - but user might have successfully authenticated
+          // Firebase sometimes closes the popup automatically after successful auth
+          console.log('[Login] Popup closed, checking if user is authenticated...');
+          
+          // Wait a bit for Firebase to update auth state (popup might have closed after success)
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Check if user is actually authenticated (popup might have closed after success)
+          try {
+            // First, do an immediate check
+            let currentUser = await window.FirebaseAuth.getCurrentUser();
+            
+            if (currentUser) {
+              // User is already authenticated - proceed immediately
+              console.log('[Login] ✅ User is authenticated (immediate check), proceeding with login...');
+              
+              const idToken = await currentUser.getIdToken();
+              const email = currentUser.email;
+              
+              // Populate form fields
+              const emailInput = loginForm.querySelector('#email');
+              if (emailInput && email) {
+                emailInput.value = email;
+              }
+              const passwordInput = loginForm.querySelector('#password');
+              if (passwordInput) {
+                passwordInput.value = 'google-sign-in';
+              }
+              
+              // Show loading state
+              googleSignInBtn.disabled = true;
+              googleSignInBtn.innerHTML = '<span>Signing in…</span>';
+              
+              // Submit to backend
+              handleLogin(idToken);
+              return; // Exit early, login is proceeding
+            }
+            
+            // If no immediate auth, use onAuthStateChanged to wait for auth state update
+            let authDetected = false;
+            const unsubscribe = window.FirebaseAuth.onAuthStateChanged(async (user) => {
+              if (user && !authDetected) {
+                authDetected = true;
+                unsubscribe(); // Stop listening
+                
+                console.log('[Login] ✅ User is authenticated (auth state changed), proceeding with login...');
+                
+                // User is authenticated - get token and proceed
+                const idToken = await user.getIdToken();
+                const email = user.email;
+                
+                // Populate form fields
+                const emailInput = loginForm.querySelector('#email');
+                if (emailInput && email) {
+                  emailInput.value = email;
+                }
+                const passwordInput = loginForm.querySelector('#password');
+                if (passwordInput) {
+                  passwordInput.value = 'google-sign-in';
+                }
+                
+                // Show loading state
+                googleSignInBtn.disabled = true;
+                googleSignInBtn.innerHTML = '<span>Signing in…</span>';
+                
+                // Submit to backend
+                handleLogin(idToken);
+              }
+            });
+            
+            // Set a timeout to stop waiting after 3 seconds
+            setTimeout(() => {
+              if (!authDetected) {
+                unsubscribe();
+                console.log('[Login] No authentication detected after popup closure - user likely closed popup');
+              }
+            }, 3000);
+            
+          } catch (checkError) {
+            console.error('[Login] Error checking authentication state:', checkError);
+            // If we can't check, assume popup was closed by user
+            return;
+          }
         } else if (error.code === 'auth/popup-blocked') {
           // Popup was blocked by browser - try redirect flow
           console.error('[Login] Popup blocked by browser, attempting redirect flow');
