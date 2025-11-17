@@ -109,6 +109,45 @@
               </div>
               <% } %>
 
+              <!-- Agency Selection Field -->
+              <% 
+                const lockedAgency = typeof lockedAgency !== 'undefined' ? lockedAgency : null;
+              %>
+              <% if (lockedAgency) { %>
+                <!-- Partner-led funnel: Agency is locked -->
+                <div class="form-field" style="margin-bottom: 1.5rem;">
+                  <label>APPLYING TO</label>
+                  <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; background: #f8f9fa; border: 1.5px solid rgba(201, 165, 90, 0.3); border-radius: 8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(201, 165, 90, 1); flex-shrink: 0;">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    <span style="font-weight: 600; color: #0f172a;"><%= lockedAgency.name %></span>
+                  </div>
+                  <input type="hidden" name="partner_agency_id" value="<%= lockedAgency.id %>">
+                  <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #64748b;">You're applying directly to this agency through their partner link.</p>
+                </div>
+              <% } else { %>
+                <!-- Organic funnel: Optional agency selection -->
+                <div class="form-field" id="agency-selection-field" style="margin-bottom: 1.5rem;">
+                  <label for="partner_agency_id">APPLY TO A SPECIFIC AGENCY <span class="muted">(optional)</span></label>
+                  <div style="position: relative;">
+                    <input 
+                      type="text" 
+                      id="agency-search-input" 
+                      name="agency_search" 
+                      placeholder="Search for an agency..." 
+                      autocomplete="off"
+                      style="width: 100%;">
+                    <input type="hidden" id="partner_agency_id" name="partner_agency_id" value="">
+                    <div id="agency-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; max-height: 300px; overflow-y: auto; margin-top: 0.25rem;"></div>
+                  </div>
+                  <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #64748b;">
+                    <span id="no-agency-message">Make your profile discoverable to all partner agencies with <a href="/pro/upgrade" style="color: rgba(201, 165, 90, 1); font-weight: 600;">Studio+</a>.</span>
+                    <span id="agency-selected-message" style="display: none;">You're applying directly to <strong id="selected-agency-name"></strong>.</span>
+                  </p>
+                </div>
+              <% } %>
+
               <div class="form-grid">
                 <div class="form-field <%= fieldError('phone') ? 'has-error' : '' %>">
                   <label for="phone">PHONE</label>
@@ -909,3 +948,107 @@
       </div>
     </div>
 </section>
+
+<script>
+(function() {
+  // Agency search functionality (only for organic funnel)
+  const agencySearchInput = document.getElementById('agency-search-input');
+  const agencyDropdown = document.getElementById('agency-dropdown');
+  const partnerAgencyIdInput = document.getElementById('partner_agency_id');
+  const noAgencyMessage = document.getElementById('no-agency-message');
+  const agencySelectedMessage = document.getElementById('agency-selected-message');
+  const selectedAgencyName = document.getElementById('selected-agency-name');
+
+  if (!agencySearchInput) return; // Skip if locked agency (partner funnel)
+
+  let searchTimeout = null;
+  let selectedAgency = null;
+
+  // Debounced search
+  agencySearchInput.addEventListener('input', function(e) {
+    const query = e.target.value.trim();
+
+    clearTimeout(searchTimeout);
+
+    if (query.length < 2) {
+      agencyDropdown.style.display = 'none';
+      return;
+    }
+
+    searchTimeout = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/agencies/search?q=${encodeURIComponent(query)}`);
+        const agencies = await response.json();
+
+        if (agencies.length === 0) {
+          agencyDropdown.innerHTML = '<div style="padding: 1rem; text-align: center; color: #64748b;">No agencies found</div>';
+          agencyDropdown.style.display = 'block';
+          return;
+        }
+
+        agencyDropdown.innerHTML = agencies.map(agency => `
+          <div 
+            class="agency-option" 
+            data-agency-id="${agency.id}" 
+            data-agency-name="${agency.name}"
+            style="padding: 0.75rem 1rem; cursor: pointer; border-bottom: 1px solid #f1f5f9; transition: background 0.2s;"
+            onmouseover="this.style.background='#f8f9fa'"
+            onmouseout="this.style.background='white'"
+          >
+            <div style="font-weight: 600; color: #0f172a;">${agency.name}</div>
+            ${agency.email ? `<div style="font-size: 0.875rem; color: #64748b; margin-top: 0.25rem;">${agency.email}</div>` : ''}
+          </div>
+        `).join('');
+
+        // Add click handlers
+        agencyDropdown.querySelectorAll('.agency-option').forEach(option => {
+          option.addEventListener('click', function() {
+            const agencyId = this.dataset.agencyId;
+            const agencyName = this.dataset.agencyName;
+
+            selectedAgency = { id: agencyId, name: agencyName };
+            partnerAgencyIdInput.value = agencyId;
+            agencySearchInput.value = agencyName;
+            agencyDropdown.style.display = 'none';
+
+            // Update UI
+            noAgencyMessage.style.display = 'none';
+            agencySelectedMessage.style.display = 'inline';
+            selectedAgencyName.textContent = agencyName;
+          });
+        });
+
+        agencyDropdown.style.display = 'block';
+      } catch (error) {
+        console.error('Error searching agencies:', error);
+        agencyDropdown.innerHTML = '<div style="padding: 1rem; text-align: center; color: #ef4444;">Error searching agencies</div>';
+        agencyDropdown.style.display = 'block';
+      }
+    }, 300);
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!agencySearchInput.contains(e.target) && !agencyDropdown.contains(e.target)) {
+      agencyDropdown.style.display = 'none';
+    }
+  });
+
+  // Clear selection
+  agencySearchInput.addEventListener('focus', function() {
+    if (selectedAgency && this.value === selectedAgency.name) {
+      // Allow editing
+    }
+  });
+
+  // Handle clearing
+  agencySearchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Backspace' && this.value === '') {
+      selectedAgency = null;
+      partnerAgencyIdInput.value = '';
+      noAgencyMessage.style.display = 'inline';
+      agencySelectedMessage.style.display = 'none';
+    }
+  });
+})();
+</script>

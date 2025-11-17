@@ -25,6 +25,7 @@
     initSearch();
     initFilters();
     initQuickActions();
+    initScoutInvite();
     
     // Load data from window if available
     if (window.AGENCY_DASHBOARD_DATA) {
@@ -265,13 +266,25 @@
   async function performBatchAction(action) {
     if (state.selectedProfiles.size === 0) return;
 
-    const profileIds = Array.from(state.selectedProfiles);
-    const confirmed = confirm(`Are you sure you want to ${action} ${profileIds.length} application(s)?`);
+    // Get application IDs from selected profile cards
+    const selectedCards = Array.from(document.querySelectorAll('.agency-dashboard__select-checkbox:checked'))
+      .map(cb => {
+        const card = cb.closest('.agency-dashboard__card');
+        return card ? card.dataset.applicationId : null;
+      })
+      .filter(id => id);
+
+    if (selectedCards.length === 0) {
+      alert('No applications selected');
+      return;
+    }
+
+    const confirmed = confirm(`Are you sure you want to ${action} ${selectedCards.length} application(s)?`);
 
     if (!confirmed) return;
 
     try {
-      const promises = profileIds.map(id => updateApplicationStatus(id, action));
+      const promises = selectedCards.map(id => updateApplicationStatus(id, action));
       await Promise.all(promises);
       
       // Reload page to reflect changes
@@ -362,22 +375,31 @@
    * Quick Actions
    */
   function initQuickActions() {
-    // Make quick action forms submit via AJAX
-    document.querySelectorAll('.agency-dashboard__quick-form').forEach(form => {
-      form.addEventListener('submit', async (e) => {
+    // Handle Accept/Decline/Archive buttons (using application_id)
+    document.querySelectorAll('.agency-dashboard__quick-btn[data-action]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
         e.preventDefault();
-        const formData = new FormData(form);
-        const action = form.action;
-        const profileId = formData.get('profile_id');
+        const action = btn.dataset.action;
+        const applicationId = btn.dataset.applicationId;
+
+        if (!applicationId) {
+          console.error('No application ID found');
+          return;
+        }
+
+        const confirmed = confirm(`Are you sure you want to ${action} this application?`);
+        if (!confirmed) return;
+
+        btn.disabled = true;
+        btn.textContent = 'Processing...';
 
         try {
-          const response = await fetch(action, {
+          const response = await fetch(`/dashboard/agency/applications/${applicationId}/${action}`, {
             method: 'POST',
             headers: {
               'Accept': 'application/json',
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams(formData)
+              'Content-Type': 'application/json'
+            }
           });
 
           if (response.ok) {
@@ -385,12 +407,71 @@
             if (data.success) {
               // Reload to show updated status
               window.location.reload();
+            } else {
+              throw new Error(data.error || 'Action failed');
             }
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP ${response.status}`);
           }
         } catch (error) {
           console.error('Quick action failed:', error);
-          // Fallback to normal form submission
-          form.submit();
+          alert(`Failed to ${action} application: ${error.message}`);
+          btn.disabled = false;
+          btn.textContent = action.charAt(0).toUpperCase() + action.slice(1);
+        }
+      });
+    });
+  }
+
+  /**
+   * Scout Talent Invite Handler
+   */
+  function initScoutInvite() {
+    document.querySelectorAll('.agency-dashboard__scout-invite-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const profileId = btn.dataset.profileId;
+        const profileName = btn.dataset.profileName;
+
+        if (!profileId) {
+          console.error('No profile ID found');
+          return;
+        }
+
+        const confirmed = confirm(`Invite ${profileName} to apply to your agency?`);
+        if (!confirmed) return;
+
+        btn.disabled = true;
+        btn.textContent = 'Inviting...';
+
+        try {
+          const response = await fetch(`/dashboard/agency/scout/${profileId}/invite`, {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+              alert(`Invitation sent to ${profileName}! They've been added to your applicants queue.`);
+              // Redirect to My Applicants view
+              window.location.href = '/dashboard/agency?view=applicants';
+            } else {
+              throw new Error(data.error || 'Invite failed');
+            }
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP ${response.status}`);
+          }
+        } catch (error) {
+          console.error('Scout invite failed:', error);
+          alert(`Failed to send invitation: ${error.message}`);
+          btn.disabled = false;
+          btn.textContent = 'Invite to Apply';
         }
       });
     });
@@ -399,25 +480,13 @@
   /**
    * API Helpers
    */
-  async function updateApplicationStatus(profileId, status) {
-    const statusMap = {
-      'pending': 'pending',
-      'under-review': 'pending',
-      'accepted': 'accept',
-      'declined': 'decline',
-      'archived': 'archive'
-    };
-
-    const action = statusMap[status] || status;
-    const formData = new URLSearchParams({ profile_id: profileId });
-
-    const response = await fetch(`/dashboard/agency/application/${action}`, {
+  async function updateApplicationStatus(applicationId, action) {
+    const response = await fetch(`/dashboard/agency/applications/${applicationId}/${action}`, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: formData
+        'Content-Type': 'application/json'
+      }
     });
 
     if (!response.ok) {

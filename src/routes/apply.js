@@ -13,6 +13,141 @@ const { extractIdToken } = require('../middleware/firebase-auth');
 
 const router = express.Router();
 
+// API: Search agencies for apply form dropdown
+router.get('/api/agencies/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    const searchQuery = (q || '').trim().toLowerCase();
+
+    if (!searchQuery || searchQuery.length < 2) {
+      return res.json([]);
+    }
+
+    // Search for verified agencies
+    const agencies = await knex('users')
+      .where({ role: 'AGENCY' })
+      .where(function() {
+        this.whereILike('agency_name', `%${searchQuery}%`)
+          .orWhereILike('email', `%${searchQuery}%`);
+      })
+      .select('id', 'agency_name', 'email')
+      .limit(10)
+      .orderBy('agency_name', 'asc');
+
+    return res.json(agencies.map(agency => ({
+      id: agency.id,
+      name: agency.agency_name || agency.email,
+      email: agency.email
+    })));
+  } catch (error) {
+    console.error('[Apply] Error searching agencies:', error);
+    return res.status(500).json({ error: 'Failed to search agencies' });
+  }
+});
+
+// Partner-led funnel: /apply/:agencySlug
+router.get('/apply/:agencySlug', async (req, res) => {
+  // /apply is only for logged-out users (new signups)
+  // If user is logged in, redirect them to their dashboard
+  if (req.session && req.session.userId && req.currentUser) {
+    if (req.session.role === 'TALENT') {
+      return res.redirect('/dashboard/talent');
+    } else if (req.session.role === 'AGENCY') {
+      return res.redirect('/dashboard/agency');
+    } else {
+      return res.redirect('/dashboard');
+    }
+  }
+
+  const { agencySlug } = req.params;
+
+  try {
+    // Look up agency by slug
+    const agency = await knex('users')
+      .where({ 
+        agency_slug: agencySlug,
+        role: 'AGENCY'
+      })
+      .first();
+
+    if (!agency) {
+      addMessage(req, 'error', 'Agency not found. Redirecting to general application form.');
+      return res.redirect('/apply');
+    }
+
+    // Agency found - pre-populate and lock
+    const defaults = {
+    first_name: '',
+    last_name: '',
+    city: '',
+    phone: '',
+    height_cm: '',
+    bust: '',
+    waist: '',
+    hips: '',
+    shoe_size: '',
+    eye_color: '',
+    hair_color: '',
+    bio: '',
+    specialties: [],
+    partner_agency_email: '',
+    email: '',
+    password: '',
+    password_confirm: '',
+    // New comprehensive fields
+    gender: '',
+    date_of_birth: '',
+    weight: '',
+    weight_unit: '',
+    weight_kg: '',
+    weight_lbs: '',
+    dress_size: '',
+    hair_length: '',
+    skin_tone: '',
+    languages: [],
+    availability_travel: false,
+    availability_schedule: '',
+    experience_level: '',
+    training: '',
+    portfolio_url: '',
+    instagram_handle: '',
+    twitter_handle: '',
+    tiktok_handle: '',
+    reference_name: '',
+    reference_email: '',
+    reference_phone: '',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
+    emergency_contact_relationship: '',
+    work_eligibility: '',
+    work_status: '',
+    union_membership: '',
+    ethnicity: '',
+    tattoos: false,
+    piercings: false,
+    comfort_levels: [],
+    previous_representations: []
+  };
+
+    return res.render('apply/index', {
+      title: `Apply to ${agency.agency_name || 'Agency'}`,
+      values: defaults,
+      errors: {},
+      layout: 'layout',
+      isLoggedIn: false,
+      lockedAgency: {
+        id: agency.id,
+        name: agency.agency_name || 'Agency',
+        slug: agency.agency_slug
+      }
+    });
+  } catch (error) {
+    console.error('[Apply] Error loading agency:', error);
+    addMessage(req, 'error', 'Error loading agency information. Redirecting to general application form.');
+    return res.redirect('/apply');
+  }
+});
+
 router.get('/apply', (req, res) => {
   // /apply is only for logged-out users (new signups)
   // If user is logged in, redirect them to their dashboard
@@ -86,7 +221,8 @@ router.get('/apply', (req, res) => {
     values: defaults,
     errors: {},
     layout: 'layout',
-    isLoggedIn: false // Always false for /apply since logged-in users are redirected
+    isLoggedIn: false,
+    lockedAgency: null
   });
 });
 
@@ -874,17 +1010,27 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
     }
 
     let partnerAgencyId = null;
-    if (partner_agency_email) {
+    
+    // Check for locked agency from partner route (highest priority)
+    if (req.body.partner_agency_id) {
+      // Agency was pre-selected and locked from partner route
+      partnerAgencyId = req.body.partner_agency_id;
+      console.log('[Apply] Using locked agency ID from partner route:', partnerAgencyId);
+    } else if (partner_agency_email) {
+      // Legacy: Look up agency by email
       const agency = await knex('users').where({ email: partner_agency_email, role: 'AGENCY' }).first();
       if (!agency) {
         return res.status(422).render('apply/index', {
           title: 'Start your Pholio profile',
           values: req.body,
           errors: { partner_agency_email: ['We could not find that agency account.'] },
-          layout: 'layout'
+          layout: 'layout',
+          isLoggedIn,
+          lockedAgency: null
         });
       }
       partnerAgencyId = agency.id;
+      console.log('[Apply] Found agency by email:', partnerAgencyId);
     }
 
     // Check for existing profile using userId (for both logged-in and new users)
@@ -1258,6 +1404,55 @@ router.post('/apply', upload.array('photos', 12), handleMulterError, async (req,
         layout: 'layout',
         isLoggedIn
       });
+    }
+
+    // Create application if partner_agency_id was provided
+    if (partnerAgencyId) {
+      try {
+        // Check if application already exists (for updates)
+        const existingApplication = await knex('applications')
+          .where({
+            profile_id: profileId,
+            agency_id: partnerAgencyId
+          })
+          .first();
+
+        if (!existingApplication) {
+          // Create new application
+          const applicationId = uuidv4();
+          await knex('applications').insert({
+            id: applicationId,
+            profile_id: profileId,
+            agency_id: partnerAgencyId,
+            status: 'pending',
+            invited_by_agency_id: null, // Will be set if this was a scout invite
+            created_at: knex.fn.now(),
+            updated_at: knex.fn.now()
+          });
+          console.log('[Apply] Application created:', {
+            applicationId,
+            profileId,
+            agencyId: partnerAgencyId
+          });
+        } else {
+          // Application exists, update status to pending if it was declined/archived
+          if (existingApplication.status !== 'pending') {
+            await knex('applications')
+              .where({ id: existingApplication.id })
+              .update({
+                status: 'pending',
+                declined_at: null,
+                accepted_at: null,
+                updated_at: knex.fn.now()
+              });
+            console.log('[Apply] Application status reset to pending:', existingApplication.id);
+          }
+        }
+      } catch (appError) {
+        console.error('[Apply] Error creating application:', appError);
+        // Don't fail the whole request if application creation fails
+        // Profile is already created, so we continue
+      }
     }
 
     // Set profileId in session for easier access (for both new and existing users)

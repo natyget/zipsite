@@ -108,21 +108,35 @@
         Preview
       </button>
       <div class="agency-dashboard__card-quick-actions">
-        <% if (appStatus !== 'accepted') { %>
-          <form method="post" action="/dashboard/agency/application/accept" class="agency-dashboard__quick-form">
-            <input type="hidden" name="profile_id" value="<%= profile.id %>">
-            <button type="submit" class="agency-dashboard__quick-btn agency-dashboard__quick-btn--accept" title="Accept (A)">
-              Accept
-            </button>
-          </form>
+        <% if (appStatus !== 'accepted' && profile.application_id) { %>
+          <button 
+            type="button" 
+            class="agency-dashboard__quick-btn agency-dashboard__quick-btn--accept" 
+            data-action="accept"
+            data-application-id="<%= profile.application_id %>"
+            title="Accept">
+            Accept
+          </button>
         <% } %>
-        <% if (appStatus !== 'declined') { %>
-          <form method="post" action="/dashboard/agency/application/decline" class="agency-dashboard__quick-form">
-            <input type="hidden" name="profile_id" value="<%= profile.id %>">
-            <button type="submit" class="agency-dashboard__quick-btn agency-dashboard__quick-btn--decline" title="Decline (D)">
-              Decline
-            </button>
-          </form>
+        <% if (appStatus !== 'declined' && profile.application_id) { %>
+          <button 
+            type="button" 
+            class="agency-dashboard__quick-btn agency-dashboard__quick-btn--decline" 
+            data-action="decline"
+            data-application-id="<%= profile.application_id %>"
+            title="Decline">
+            Decline
+          </button>
+        <% } %>
+        <% if (appStatus !== 'archived' && profile.application_id) { %>
+          <button 
+            type="button" 
+            class="agency-dashboard__quick-btn agency-dashboard__quick-btn--archive" 
+            data-action="archive"
+            data-application-id="<%= profile.application_id %>"
+            title="Archive">
+            Archive
+          </button>
         <% } %>
       </div>
     </div>

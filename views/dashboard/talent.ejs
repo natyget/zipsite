@@ -129,6 +129,23 @@
             <a href="/pro/upgrade" class="button button-gold dash-hero__action dash-hero__action--upgrade">
               <span>Upgrade to Studio+</span>
             </a>
+          <% } else { %>
+            <!-- Discoverability Toggle (Studio+ only) -->
+            <div class="dash-hero__discoverability" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+              <label class="discoverability-toggle" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                <input 
+                  type="checkbox" 
+                  id="discoverability-toggle" 
+                  <%= safeProfile.is_discoverable ? 'checked' : '' %>
+                  style="width: 20px; height: 20px; cursor: pointer;">
+                <span style="color: #e2e8f0; font-size: 0.875rem;">
+                  Make my profile discoverable to all partner agencies
+                </span>
+              </label>
+              <p style="margin-top: 0.5rem; color: #94a3b8; font-size: 0.75rem;">
+                When enabled, agencies can discover and invite you through Scout Talent
+              </p>
+            </div>
           <% } %>
         <% } else { %>
           <!-- Show message when no profile exists -->
@@ -869,6 +886,21 @@
         </div>
       </section>
 
+      <!-- My Applications Section -->
+      <section class="dash-panel" id="my-applications" data-section="my-applications">
+        <header class="dash-panel__header">
+          <h2 class="dash-panel__title">My Applications</h2>
+          <p class="dash-panel__subtitle">Track the status of your agency applications</p>
+        </header>
+        <div class="dash-panel__content">
+          <div id="applications-container" class="applications-container">
+            <div class="applications-loading" style="text-align: center; padding: 2rem;">
+              <p>Loading applications...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Portfolio Imagery -->
       <section class="dash-panel" id="portfolio-imagery" data-section="portfolio-imagery">
         <header class="dash-panel__header">
@@ -1282,5 +1314,109 @@
           updateAge();
         }
       }
+    })();
+
+    // Load and display applications
+    (function() {
+      const applicationsContainer = document.getElementById('applications-container');
+      if (!applicationsContainer) return;
+
+      async function loadApplications() {
+        try {
+          const response = await fetch('/api/talent/applications');
+          if (!response.ok) throw new Error('Failed to load applications');
+          
+          const applications = await response.json();
+          renderApplications(applications);
+        } catch (error) {
+          console.error('Error loading applications:', error);
+          applicationsContainer.innerHTML = '<div class="applications-error" style="text-align: center; padding: 2rem; color: #ef4444;"><p>Failed to load applications. Please refresh the page.</p></div>';
+        }
+      }
+
+      function renderApplications(applications) {
+        if (applications.length === 0) {
+          applicationsContainer.innerHTML = '<div class="applications-empty" style="text-align: center; padding: 2rem;"><p>You haven\'t applied to any agencies yet.</p><p style="margin-top: 0.5rem; color: #64748b;">Use the <a href="/apply">application form</a> to get started.</p></div>';
+          return;
+        }
+
+        const statusColors = {
+          pending: '#f59e0b',
+          accepted: '#10b981',
+          declined: '#ef4444',
+          archived: '#6b7280'
+        };
+
+        applicationsContainer.innerHTML = `
+          <div class="applications-list">
+            ${applications.map(app => `
+              <div class="application-card" data-application-id="${app.id}">
+                <div class="application-card__header">
+                  <h3 class="application-card__agency">${app.agencyName || app.agencyEmail}</h3>
+                  <span class="application-card__status application-card__status--${app.status}" style="background: ${statusColors[app.status] || '#6b7280'}; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem; font-weight: 600;">
+                    ${app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                  </span>
+                </div>
+                <div class="application-card__meta">
+                  <span>Applied: ${new Date(app.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  ${app.invitedByAgency ? '<span style="color: #f59e0b;">• Invited by agency</span>' : ''}
+                </div>
+                ${app.status === 'declined' ? '<p style="margin-top: 0.75rem; color: #64748b; font-size: 0.875rem;">Upgrade to Studio+ to get discovered by our entire network of partner agencies.</p>' : ''}
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      // Load applications on page load
+      loadApplications();
+
+      // Poll for updates every 30 seconds
+      setInterval(loadApplications, 30000);
+    })();
+
+    // Discoverability toggle handler
+    (function() {
+      const toggle = document.getElementById('discoverability-toggle');
+      if (!toggle) return;
+
+      toggle.addEventListener('change', async function() {
+        const isDiscoverable = this.checked;
+        const originalChecked = this.checked;
+
+        // Optimistically update UI
+        this.disabled = true;
+
+        try {
+          const response = await fetch('/api/talent/discoverability', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ isDiscoverable })
+          });
+
+          if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.error || 'Failed to update discoverability');
+          }
+
+          const data = await response.json();
+          if (data.success) {
+            // Success - keep the toggle state
+            console.log('Discoverability updated:', isDiscoverable);
+          } else {
+            throw new Error('Update failed');
+          }
+        } catch (error) {
+          console.error('Error updating discoverability:', error);
+          alert(`Failed to update discoverability: ${error.message}`);
+          // Revert toggle
+          this.checked = !originalChecked;
+        } finally {
+          this.disabled = false;
+        }
+      });
     })();
   </script>
