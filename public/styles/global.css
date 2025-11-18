@@ -13664,6 +13664,25 @@ body.filmstrip-hover {
   border: 1px solid rgba(201, 165, 90, 0.15);
 }
 
+/* Free Badge */
+.portfolio-card__free-badge {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 10;
+  background: rgba(201, 165, 90, 0.95);
+  color: #ffffff;
+  font-family: 'Helvetica Neue', 'Arial', sans-serif;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.375rem 0.875rem;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
+}
+
 /* Split-Panel Layout */
 .portfolio-card__split {
   display: flex;
@@ -13792,9 +13811,27 @@ body.filmstrip-hover {
   font-weight: 600;
   display: inline-block;
   padding: 0.5rem 1.25rem;
-  background: rgba(201, 165, 90, 0.08);
-  border: 1px solid rgba(201, 165, 90, 0.25);
-  border-radius: 2px;
+}
+
+/* Free Version Description */
+.portfolio-card__free-description {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.75rem;
+  border-bottom: 1px solid rgba(201, 165, 90, 0.1);
+}
+
+.portfolio-card__free-description p {
+  font-family: 'Helvetica Neue', 'Arial', sans-serif;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: #475569;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.portfolio-card__free-description strong {
+  color: #0f172a;
+  font-weight: 600;
 }
 
 /* Stats Section */
@@ -18353,6 +18390,23 @@ body.filmstrip-hover {
     font-size: 0.625rem;
     padding: 0.4rem 1rem;
     margin-top: 0.75rem;
+  }
+
+  .portfolio-card__free-badge {
+    top: 0.875rem;
+    right: 0.875rem;
+    font-size: 0.5625rem;
+    padding: 0.3rem 0.75rem;
+  }
+
+  .portfolio-card__free-description {
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.25rem;
+  }
+
+  .portfolio-card__free-description p {
+    font-size: 0.75rem;
+    line-height: 1.5;
   }
 
   .portfolio-card__stats {

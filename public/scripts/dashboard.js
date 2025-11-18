@@ -48,6 +48,45 @@
     }
   }
 
+  // Talent Dashboard Accordion
+  function initTalentAccordion() {
+    const accordionItems = document.querySelectorAll('.talent-accordion__item');
+    
+    accordionItems.forEach(item => {
+      const header = item.querySelector('.talent-accordion__header');
+      const content = item.querySelector('.talent-accordion__content');
+      
+      if (!header || !content) return;
+      
+      // Set initial state (collapsed)
+      header.setAttribute('aria-expanded', 'false');
+      content.style.display = 'none';
+      
+      header.addEventListener('click', () => {
+        const isExpanded = header.getAttribute('aria-expanded') === 'true';
+        
+        // Toggle this item
+        header.setAttribute('aria-expanded', !isExpanded);
+        content.style.display = isExpanded ? 'none' : 'block';
+        
+        // Optional: Close other items (accordion behavior)
+        // Uncomment if you want only one section open at a time
+        // if (!isExpanded) {
+        //   accordionItems.forEach(otherItem => {
+        //     if (otherItem !== item) {
+        //       const otherHeader = otherItem.querySelector('.talent-accordion__header');
+        //       const otherContent = otherItem.querySelector('.talent-accordion__content');
+        //       if (otherHeader && otherContent) {
+        //         otherHeader.setAttribute('aria-expanded', 'false');
+        //         otherContent.style.display = 'none';
+        //       }
+        //     }
+        //   });
+        // }
+      });
+    });
+  }
+
   // Handle weight conversion between units
   function setupWeightConversion() {
     const weightInput = document.getElementById('weight');
@@ -607,6 +646,7 @@
       initImagePlaceholders();
       setupDressSizeConditional();
       setupWeightConversion();
+      initTalentAccordion();
       setupOtherOptionConditionals();
       setupExperienceDetails();
       setupLanguageDropdown();

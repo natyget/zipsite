@@ -40,6 +40,77 @@
 
   // Get hero image
   const heroImage = safeProfile.hero_image_path || (safeMedia.length > 0 ? safeMedia[0].path : null);
+
+  // Helper functions to determine section status
+  function getPersonalInfoStatus() {
+    const required = ['first_name', 'last_name', 'email', 'phone', 'city'];
+    const missing = required.filter(field => !safeProfile[field]);
+    if (missing.length === 0) return { status: 'complete', message: 'Complete' };
+    if (missing.includes('first_name') || missing.includes('last_name')) return { status: 'incomplete', message: 'Missing name' };
+    if (missing.includes('email')) return { status: 'incomplete', message: 'Missing email' };
+    if (missing.includes('phone')) return { status: 'incomplete', message: 'Missing phone' };
+    return { status: 'incomplete', message: 'Missing ' + missing[0] };
+  }
+
+  function getPhysicalProfileStatus() {
+    const required = ['height_cm', 'bust', 'waist', 'hips'];
+    const missing = required.filter(field => !safeProfile[field]);
+    if (missing.length === 0) return { status: 'complete', message: 'Complete' };
+    if (missing.includes('height_cm')) return { status: 'incomplete', message: 'Missing height' };
+    if (missing.includes('bust') || missing.includes('waist') || missing.includes('hips')) return { status: 'incomplete', message: 'Missing measurements' };
+    return { status: 'incomplete', message: 'Incomplete' };
+  }
+
+  function getExperienceTrainingStatus() {
+    const hasExperience = safeProfile.experience_level || safeProfile.experience_details || safeProfile.training;
+    if (hasExperience) return { status: 'complete', message: 'Complete' };
+    return { status: 'incomplete', message: 'Add experience' };
+  }
+
+  function getSkillsLifestyleStatus() {
+    const hasSkills = safeProfile.specialties || safeProfile.skills;
+    if (hasSkills) return { status: 'complete', message: 'Complete' };
+    return { status: 'incomplete', message: 'Add skills' };
+  }
+
+  function getComfortBoundariesStatus() {
+    const hasComfort = safeProfile.comfort_levels;
+    if (hasComfort) return { status: 'complete', message: 'Complete' };
+    return { status: 'incomplete', message: 'Set comfort levels' };
+  }
+
+  function getAvailabilityLocationsStatus() {
+    const hasAvailability = safeProfile.availability_schedule || safeProfile.availability_travel !== undefined;
+    const hasLocation = safeProfile.city || safeProfile.city_secondary;
+    if (hasAvailability && hasLocation) return { status: 'complete', message: 'Complete' };
+    if (!hasLocation) return { status: 'incomplete', message: 'Add location' };
+    return { status: 'incomplete', message: 'Set availability' };
+  }
+
+  function getSocialPortfolioStatus() {
+    const hasSocial = safeProfile.instagram_handle || safeProfile.twitter_handle || safeProfile.tiktok_handle;
+    const hasPortfolio = safeMedia.length > 0 || safeProfile.portfolio_url;
+    if (hasSocial && hasPortfolio) return { status: 'complete', message: 'Complete' };
+    if (!hasPortfolio) return { status: 'incomplete', message: 'Add portfolio images' };
+    if (!hasSocial) return { status: 'incomplete', message: 'Add social links' };
+    return { status: 'incomplete', message: 'Incomplete' };
+  }
+
+  function getApplicationsMatchesStatus() {
+    // This will be populated by JavaScript
+    return { status: 'complete', message: 'View applications' };
+  }
+
+  const sectionStatuses = {
+    personalInfo: getPersonalInfoStatus(),
+    physicalProfile: getPhysicalProfileStatus(),
+    experienceTraining: getExperienceTrainingStatus(),
+    skillsLifestyle: getSkillsLifestyleStatus(),
+    comfortBoundaries: getComfortBoundariesStatus(),
+    availabilityLocations: getAvailabilityLocationsStatus(),
+    socialPortfolio: getSocialPortfolioStatus(),
+    applicationsMatches: getApplicationsMatchesStatus()
+  };
   %>
 
   <!-- Hero Section with Talent Image -->
@@ -161,13 +232,24 @@
     <!-- Left Column: Main Content -->
     <div class="dash-grid__column">
 
-      <!-- Profile Details Form -->
-      <section class="dash-panel" id="profile-details" data-section="profile-details">
-        <header class="dash-panel__header">
-          <h3>Profile Details</h3>
-          <p>Your essential stats for agency rosters and comp cards</p>
-        </header>
-        <div class="dash-panel__body">
+      <!-- Profile Sections Accordion -->
+      <div class="talent-accordion">
+        
+        <!-- Personal Info Section -->
+        <div class="talent-accordion__item" data-section="personal-info">
+          <button class="talent-accordion__header" type="button" aria-expanded="false">
+            <div class="talent-accordion__header-content">
+              <h3 class="talent-accordion__title">Personal Info</h3>
+              <span class="talent-accordion__status talent-accordion__status--<%= sectionStatuses.personalInfo.status %>">
+                <%= sectionStatuses.personalInfo.message %>
+              </span>
+            </div>
+            <svg class="talent-accordion__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="talent-accordion__content">
+            <div class="talent-accordion__body">
           <form method="post" action="/dashboard/talent" class="form-stacked">
             <div class="form-grid">
               <div class="form-field <%= fieldHasError('city') ? 'has-error' : '' %>">
@@ -883,9 +965,151 @@
                   <button class="button-primary" type="submit">Save Changes</button>
                 </div>
           </form>
+            </div>
+          </div>
         </div>
-      </section>
 
+        <!-- Physical Profile Section -->
+        <div class="talent-accordion__item" data-section="physical-profile">
+          <button class="talent-accordion__header" type="button" aria-expanded="false">
+            <div class="talent-accordion__header-content">
+              <h3 class="talent-accordion__title">Physical Profile</h3>
+              <span class="talent-accordion__status talent-accordion__status--<%= sectionStatuses.physicalProfile.status %>">
+                <%= sectionStatuses.physicalProfile.message %>
+              </span>
+            </div>
+            <svg class="talent-accordion__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="talent-accordion__content">
+            <div class="talent-accordion__body">
+              <!-- Physical Profile fields will be moved here -->
+              <p style="padding: 2rem; color: #64748b; text-align: center;">Physical profile fields will be displayed here when expanded.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Experience & Training Section -->
+        <div class="talent-accordion__item" data-section="experience-training">
+          <button class="talent-accordion__header" type="button" aria-expanded="false">
+            <div class="talent-accordion__header-content">
+              <h3 class="talent-accordion__title">Experience & Training</h3>
+              <span class="talent-accordion__status talent-accordion__status--<%= sectionStatuses.experienceTraining.status %>">
+                <%= sectionStatuses.experienceTraining.message %>
+              </span>
+            </div>
+            <svg class="talent-accordion__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="talent-accordion__content">
+            <div class="talent-accordion__body">
+              <!-- Experience & Training fields will be moved here -->
+              <p style="padding: 2rem; color: #64748b; text-align: center;">Experience & Training fields will be displayed here when expanded.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skills & Lifestyle Section -->
+        <div class="talent-accordion__item" data-section="skills-lifestyle">
+          <button class="talent-accordion__header" type="button" aria-expanded="false">
+            <div class="talent-accordion__header-content">
+              <h3 class="talent-accordion__title">Skills & Lifestyle</h3>
+              <span class="talent-accordion__status talent-accordion__status--<%= sectionStatuses.skillsLifestyle.status %>">
+                <%= sectionStatuses.skillsLifestyle.message %>
+              </span>
+            </div>
+            <svg class="talent-accordion__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="talent-accordion__content">
+            <div class="talent-accordion__body">
+              <!-- Skills & Lifestyle fields will be moved here -->
+              <p style="padding: 2rem; color: #64748b; text-align: center;">Skills & Lifestyle fields will be displayed here when expanded.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comfort & Boundaries Section -->
+        <div class="talent-accordion__item" data-section="comfort-boundaries">
+          <button class="talent-accordion__header" type="button" aria-expanded="false">
+            <div class="talent-accordion__header-content">
+              <h3 class="talent-accordion__title">Comfort & Boundaries</h3>
+              <span class="talent-accordion__status talent-accordion__status--<%= sectionStatuses.comfortBoundaries.status %>">
+                <%= sectionStatuses.comfortBoundaries.message %>
+              </span>
+            </div>
+            <svg class="talent-accordion__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="talent-accordion__content">
+            <div class="talent-accordion__body">
+              <!-- Comfort & Boundaries fields will be moved here -->
+              <p style="padding: 2rem; color: #64748b; text-align: center;">Comfort & Boundaries fields will be displayed here when expanded.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Availability & Locations Section -->
+        <div class="talent-accordion__item" data-section="availability-locations">
+          <button class="talent-accordion__header" type="button" aria-expanded="false">
+            <div class="talent-accordion__header-content">
+              <h3 class="talent-accordion__title">Availability & Locations</h3>
+              <span class="talent-accordion__status talent-accordion__status--<%= sectionStatuses.availabilityLocations.status %>">
+                <%= sectionStatuses.availabilityLocations.message %>
+              </span>
+            </div>
+            <svg class="talent-accordion__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="talent-accordion__content">
+            <div class="talent-accordion__body">
+              <!-- Availability & Locations fields will be moved here -->
+              <p style="padding: 2rem; color: #64748b; text-align: center;">Availability & Locations fields will be displayed here when expanded.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Social & Portfolio Section -->
+        <div class="talent-accordion__item" data-section="social-portfolio">
+          <button class="talent-accordion__header" type="button" aria-expanded="false">
+            <div class="talent-accordion__header-content">
+              <h3 class="talent-accordion__title">Social & Portfolio</h3>
+              <span class="talent-accordion__status talent-accordion__status--<%= sectionStatuses.socialPortfolio.status %>">
+                <%= sectionStatuses.socialPortfolio.message %>
+              </span>
+            </div>
+            <svg class="talent-accordion__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="talent-accordion__content">
+            <div class="talent-accordion__body">
+              <!-- Social & Portfolio fields will be moved here -->
+              <p style="padding: 2rem; color: #64748b; text-align: center;">Social & Portfolio fields will be displayed here when expanded.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Applications & Matches Section -->
+        <div class="talent-accordion__item" data-section="applications-matches">
+          <button class="talent-accordion__header" type="button" aria-expanded="false">
+            <div class="talent-accordion__header-content">
+              <h3 class="talent-accordion__title">Applications & Matches</h3>
+              <span class="talent-accordion__status talent-accordion__status--<%= sectionStatuses.applicationsMatches.status %>">
+                <%= sectionStatuses.applicationsMatches.message %>
+              </span>
+            </div>
+            <svg class="talent-accordion__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="talent-accordion__content">
+            <div class="talent-accordion__body">
       <!-- My Applications Section -->
       <section class="dash-panel" id="my-applications" data-section="my-applications">
         <header class="dash-panel__header">
@@ -900,6 +1124,12 @@
           </div>
         </div>
       </section>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- End of Talent Accordion -->
 
       <!-- Portfolio Imagery -->
       <section class="dash-panel" id="portfolio-imagery" data-section="portfolio-imagery">
