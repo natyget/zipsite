@@ -1300,7 +1300,7 @@ router.get('/dashboard/agency/analytics', requireRole('AGENCY'), async (req, res
       .join('applications', 'board_applications.application_id', 'applications.id')
       .where('applications.agency_id', agencyId)
       .whereNotNull('board_applications.match_score')
-      .pluck('match_score');
+      .pluck('board_applications.match_score');
 
     const scoreDistribution = {
       excellent: matchScores.filter(s => s >= 80).length,
@@ -2426,9 +2426,10 @@ router.get('/api/agency/export', requireRole('AGENCY'), async (req, res, next) =
         'profiles.first_name',
         'profiles.last_name',
         'profiles.city',
-        'profiles.country',
         'profiles.height_cm',
-        'profiles.measurements',
+        'profiles.bust',
+        'profiles.waist',
+        'profiles.hips',
         'profiles.age',
         'profiles.bio_curated',
         'applications.id as application_id',
@@ -2501,22 +2502,30 @@ router.get('/api/agency/export', requireRole('AGENCY'), async (req, res, next) =
     }
 
     // Format data for export
-    const exportData = applications.map(app => ({
-      name: `${app.first_name} ${app.last_name}`,
-      email: app.owner_email || '',
-      city: app.city || '',
-      country: app.country || '',
-      height_cm: app.height_cm || '',
-      measurements: app.measurements || '',
-      age: app.age || '',
-      bio: app.bio_curated || '',
-      notes: notesMap[app.application_id] || '',
-      tags: tagsMap[app.application_id] || '',
-      application_status: app.application_status || 'pending',
-      applied_date: app.application_created_at ? new Date(app.application_created_at).toISOString() : '',
-      accepted_date: app.accepted_at ? new Date(app.accepted_at).toISOString() : '',
-      declined_date: app.declined_at ? new Date(app.declined_at).toISOString() : ''
-    }));
+    const exportData = applications.map(app => {
+      // Format measurements from individual fields
+      const measurements = [];
+      if (app.bust) measurements.push(`Bust: ${app.bust}`);
+      if (app.waist) measurements.push(`Waist: ${app.waist}`);
+      if (app.hips) measurements.push(`Hips: ${app.hips}`);
+      const measurementsStr = measurements.length > 0 ? measurements.join(', ') : '';
+      
+      return {
+        name: `${app.first_name} ${app.last_name}`,
+        email: app.owner_email || '',
+        city: app.city || '',
+        height_cm: app.height_cm || '',
+        measurements: measurementsStr,
+        age: app.age || '',
+        bio: app.bio_curated || '',
+        notes: notesMap[app.application_id] || '',
+        tags: tagsMap[app.application_id] || '',
+        application_status: app.application_status || 'pending',
+        applied_date: app.application_created_at ? new Date(app.application_created_at).toISOString() : '',
+        accepted_date: app.accepted_at ? new Date(app.accepted_at).toISOString() : '',
+        declined_date: app.declined_at ? new Date(app.declined_at).toISOString() : ''
+      };
+    });
 
     if (format === 'json') {
       return res.json({
@@ -2530,7 +2539,6 @@ router.get('/api/agency/export', requireRole('AGENCY'), async (req, res, next) =
         'Name',
         'Email',
         'City',
-        'Country',
         'Height (cm)',
         'Measurements',
         'Age',
@@ -2557,7 +2565,6 @@ router.get('/api/agency/export', requireRole('AGENCY'), async (req, res, next) =
           escapeCSV(app.name),
           escapeCSV(app.email),
           escapeCSV(app.city),
-          escapeCSV(app.country),
           escapeCSV(app.height_cm),
           escapeCSV(app.measurements),
           escapeCSV(app.age),
