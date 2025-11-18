@@ -293,13 +293,15 @@ body.nav-open {
 /* Duplicate styles removed - see line 1189 for overlay and nav-panel styles */
 
 .universal-header__nav-panel-inner {
-  display: flex;
+  display: flex !important;
   flex-direction: column;
   height: 100%;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  padding: 0;
+  gap: 0;
 }
 
 .universal-header__nav-panel-top {
@@ -1264,12 +1266,16 @@ body.nav-open {
   opacity: 0;
 }
 
+/* Override hidden attribute to ensure panel displays when opened */
 .universal-header__nav-panel:not([hidden]) {
+  display: flex !important;
   visibility: visible;
   opacity: 1;
 }
 
+/* Ensure panel is visible when is-open class is added */
 .universal-header__nav-panel.is-open {
+  display: flex !important;
   transform: translateX(0);
   visibility: visible;
   opacity: 1;
@@ -1289,15 +1295,18 @@ body.nav-open {
   min-height: 0;
   overflow-y: visible;
   overflow-x: hidden;
+  display: block !important;
+  visibility: visible !important;
 }
 
 .universal-header__mobile-nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
-  display: flex;
+  display: flex !important;
   flex-direction: column;
   gap: 0.5rem;
+  visibility: visible !important;
 }
 
 .universal-header__mobile-nav li {
@@ -1306,7 +1315,7 @@ body.nav-open {
 }
 
 .universal-header__mobile-nav a {
-  display: flex;
+  display: flex !important;
   align-items: center;
   gap: 0.75rem;
   font-family: var(--font-sans);
@@ -1322,6 +1331,7 @@ body.nav-open {
   border-radius: 12px;
   position: relative;
   -webkit-tap-highlight-color: transparent;
+  visibility: visible !important;
 }
 
 .universal-header__mobile-nav a[aria-current="page"] {

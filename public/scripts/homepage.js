@@ -50,11 +50,9 @@
       // Force reflow to ensure panel is visible
       navPanel.offsetHeight;
       
-      // Add classes to trigger animations
-      requestAnimationFrame(() => {
-        navPanel.classList.add('is-open');
-        navOverlay.classList.add('is-visible');
-      });
+      // Add classes immediately to trigger animations
+      navPanel.classList.add('is-open');
+      navOverlay.classList.add('is-visible');
       
       document.body.classList.add('nav-open');
       menuToggle.setAttribute('aria-expanded', 'true');
