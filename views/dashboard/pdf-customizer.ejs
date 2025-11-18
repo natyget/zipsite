@@ -5,7 +5,8 @@
   const safeCurrentTheme = typeof currentTheme !== 'undefined' ? currentTheme : 'classic-serif';
   // Use profile.slug directly (route passes profileSlug: profile.slug, but this avoids reference error)
   const effectiveProfileSlug = safeProfile.slug || '';
-  const baseUrl = typeof baseUrl !== 'undefined' ? baseUrl : '';
+  // baseUrl is always passed from route, use it directly in template output
+  // Don't redeclare it to avoid reference errors - use template variable directly
 %>
 
 <section class="pdf-customizer">
