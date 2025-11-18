@@ -149,11 +149,49 @@
 
       <nav class="universal-header__mobile-nav" aria-label="Primary">
         <ul>
-          <li><a href="/" <%= page === '/' || page === 'home' ? 'aria-current="page"' : '' %>>Home</a></li>
-          <li><a href="/features" <%= page === 'features' ? 'aria-current="page"' : '' %>>Features</a></li>
-          <li><a href="/pricing" <%= page === 'pricing' ? 'aria-current="page"' : '' %>>Pricing</a></li>
-          <li><a href="/pro" <%= page === 'pro' ? 'aria-current="page"' : '' %>>Studio+</a></li>
-          <li><a href="/press" <%= page === 'press' ? 'aria-current="page"' : '' %>>Press</a></li>
+          <li>
+            <a href="/" <%= page === '/' || page === 'home' ? 'aria-current="page"' : '' %>>
+              <svg class="universal-header__mobile-nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+              <span>Home</span>
+            </a>
+          </li>
+          <li>
+            <a href="/features" <%= page === 'features' ? 'aria-current="page"' : '' %>>
+              <svg class="universal-header__mobile-nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              <span>Features</span>
+            </a>
+          </li>
+          <li>
+            <a href="/pricing" <%= page === 'pricing' ? 'aria-current="page"' : '' %>>
+              <svg class="universal-header__mobile-nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+              <span>Pricing</span>
+            </a>
+          </li>
+          <li>
+            <a href="/pro" <%= page === 'pro' ? 'aria-current="page"' : '' %>>
+              <svg class="universal-header__mobile-nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <span>Studio+</span>
+            </a>
+          </li>
+          <li>
+            <a href="/press" <%= page === 'press' ? 'aria-current="page"' : '' %>>
+              <svg class="universal-header__mobile-nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+              <span>Press</span>
+            </a>
+          </li>
         </ul>
       </nav>
 

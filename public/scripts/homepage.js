@@ -44,15 +44,20 @@
 
       navPanel.removeAttribute('hidden');
       navPanel.setAttribute('aria-hidden', 'false');
-      navPanel.classList.add('is-open');
-      navOverlay.hidden = false;
-      navOverlay.classList.add('is-visible');
+      // Use requestAnimationFrame to ensure the panel is visible before animating
+      requestAnimationFrame(() => {
+        navPanel.classList.add('is-open');
+        navOverlay.hidden = false;
+        requestAnimationFrame(() => {
+          navOverlay.classList.add('is-visible');
+        });
+      });
       document.body.classList.add('nav-open');
       menuToggle.setAttribute('aria-expanded', 'true');
 
       const focusable = navPanel.querySelectorAll(focusableSelectors);
       if (focusable.length) {
-        focusable[0].focus();
+        setTimeout(() => focusable[0].focus(), 100);
       }
     };
 
@@ -67,10 +72,10 @@
       setTimeout(() => {
         navPanel.setAttribute('hidden', '');
         navOverlay.hidden = true;
-      }, 250);
+      }, 300);
 
       if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
-        lastFocusedElement.focus();
+        setTimeout(() => lastFocusedElement.focus(), 100);
       }
     };
 
@@ -110,6 +115,70 @@
         closeNav();
       }
     });
+
+    // Swipe gesture support
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+    let isSwiping = false;
+
+    navPanel.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+      isSwiping = false;
+    }, { passive: true });
+
+    navPanel.addEventListener('touchmove', (e) => {
+      if (!isOpen()) return;
+      touchEndX = e.changedTouches[0].screenX;
+      touchEndY = e.changedTouches[0].screenY;
+      
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = Math.abs(touchEndY - touchStartY);
+      
+      // Only consider horizontal swipes
+      if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > deltaY) {
+        isSwiping = true;
+        // Only allow swiping left (to close)
+        if (deltaX < 0) {
+          const panelWidth = navPanel.offsetWidth;
+          const swipePercent = Math.abs(deltaX) / panelWidth;
+          const translateX = Math.max(0, Math.min(100, swipePercent * 100));
+          
+          // Apply transform during swipe
+          navPanel.style.transform = `translateX(${translateX}%)`;
+          navOverlay.style.opacity = String(1 - swipePercent * 0.5);
+        }
+      }
+    }, { passive: true });
+
+    navPanel.addEventListener('touchend', (e) => {
+      if (!isOpen() || !isSwiping) {
+        navPanel.style.transform = '';
+        navOverlay.style.opacity = '';
+        return;
+      }
+
+      touchEndX = e.changedTouches[0].screenX;
+      const deltaX = touchEndX - touchStartX;
+      const panelWidth = navPanel.offsetWidth;
+      const swipePercent = Math.abs(deltaX) / panelWidth;
+
+      // Reset transform
+      navPanel.style.transform = '';
+      navOverlay.style.opacity = '';
+
+      // Close if swiped more than 30% of panel width
+      if (deltaX < 0 && swipePercent > 0.3) {
+        closeNav();
+      } else {
+        // Snap back if not enough swipe
+        navPanel.classList.add('is-open');
+      }
+
+      isSwiping = false;
+    }, { passive: true });
   }
 
   function initHeaderScroll() {
