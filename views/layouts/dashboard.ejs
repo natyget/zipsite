@@ -30,7 +30,7 @@
             <!-- Logo Section -->
             <div class="dash-header__logo-wrapper">
                 <% if (typeof user !== 'undefined' && user && user.agency_logo_path) { %>
-                    <a href="/dashboard/agency" class="dash-header__logo-link">
+                    <a href="/" class="dash-header__logo-link">
                         <img src="<%= user.agency_logo_path %>" alt="<%= user.agency_name || 'Agency' %>" class="dash-header__agency-logo">
                     </a>
                 <% } else { %>
@@ -89,6 +89,13 @@
                         </a>
                     <% } %>
                 <% } else if (typeof user !== 'undefined' && user && user.role === 'AGENCY') { %>
+                    <a href="/" class="dash-header__nav-link">
+                        <svg class="dash-header__nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 9l5-4 5 4v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M7 13V9h2v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Home</span>
+                    </a>
                     <a href="/dashboard/agency#agency-overview" class="dash-header__nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'agency' ? 'is-active' : '' %>">
                         <svg class="dash-header__nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M2 8C2 10.2091 3.79086 12 6 12C7.86384 12 9.42994 10.7252 9.87398 9H14V7H9.87398C9.42994 5.27477 7.86384 4 6 4C3.79086 4 2 5.79086 2 8Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>

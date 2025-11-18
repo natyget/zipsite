@@ -1247,6 +1247,128 @@ router.get('/dashboard/talent/analytics', requireRole('TALENT'), async (req, res
   }
 });
 
+// GET route for agency analytics
+router.get('/dashboard/agency/analytics', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const agencyId = req.session.userId;
+
+    // Get all applications for this agency
+    const allApplications = await knex('applications')
+      .where({ agency_id: agencyId })
+      .select('status', 'created_at', 'accepted_at', 'declined_at');
+
+    // Calculate time ranges
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(now);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const monthAgo = new Date(now);
+    monthAgo.setMonth(monthAgo.getMonth() - 1);
+    const threeMonthsAgo = new Date(now);
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+    // Applications by status
+    const byStatus = {
+      total: allApplications.length,
+      pending: allApplications.filter(a => !a.status || a.status === 'pending').length,
+      accepted: allApplications.filter(a => a.status === 'accepted').length,
+      declined: allApplications.filter(a => a.status === 'declined').length,
+      archived: allApplications.filter(a => a.status === 'archived').length
+    };
+
+    // Applications over time
+    const overTime = {
+      today: allApplications.filter(a => new Date(a.created_at) >= today).length,
+      thisWeek: allApplications.filter(a => new Date(a.created_at) >= weekAgo).length,
+      thisMonth: allApplications.filter(a => new Date(a.created_at) >= monthAgo).length,
+      last3Months: allApplications.filter(a => new Date(a.created_at) >= threeMonthsAgo).length
+    };
+
+    // Applications by board
+    const applicationsByBoard = await knex('board_applications')
+      .select('boards.name as board_name', 'boards.id as board_id')
+      .count('board_applications.id as count')
+      .join('boards', 'board_applications.board_id', 'boards.id')
+      .join('applications', 'board_applications.application_id', 'applications.id')
+      .where('applications.agency_id', agencyId)
+      .groupBy('boards.id', 'boards.name')
+      .orderBy('count', 'desc');
+
+    // Match score distribution
+    const matchScores = await knex('board_applications')
+      .select('board_applications.match_score')
+      .join('applications', 'board_applications.application_id', 'applications.id')
+      .where('applications.agency_id', agencyId)
+      .whereNotNull('board_applications.match_score')
+      .pluck('match_score');
+
+    const scoreDistribution = {
+      excellent: matchScores.filter(s => s >= 80).length,
+      good: matchScores.filter(s => s >= 60 && s < 80).length,
+      fair: matchScores.filter(s => s >= 40 && s < 60).length,
+      poor: matchScores.filter(s => s < 40).length
+    };
+
+    // Average match score
+    const avgMatchScore = matchScores.length > 0
+      ? Math.round(matchScores.reduce((a, b) => a + b, 0) / matchScores.length)
+      : 0;
+
+    // Applications timeline (last 30 days)
+    const timeline = [];
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+
+      const count = allApplications.filter(a => {
+        const created = new Date(a.created_at);
+        return created >= dayStart && created < dayEnd;
+      }).length;
+
+      timeline.push({
+        date: dayStart.toISOString().split('T')[0],
+        count
+      });
+    }
+
+    // Acceptance rate
+    const acceptedCount = byStatus.accepted;
+    const processedCount = acceptedCount + byStatus.declined;
+    const acceptanceRate = processedCount > 0
+      ? Math.round((acceptedCount / processedCount) * 100)
+      : 0;
+
+    return res.json({
+      success: true,
+      analytics: {
+        byStatus,
+        overTime,
+        byBoard: applicationsByBoard.map(b => ({
+          board_id: b.board_id,
+          board_name: b.board_name,
+          count: parseInt(b.count || 0)
+        })),
+        matchScores: {
+          distribution: scoreDistribution,
+          average: avgMatchScore,
+          total: matchScores.length
+        },
+        timeline,
+        acceptanceRate
+      }
+    });
+  } catch (error) {
+    console.error('[Dashboard/Agency Analytics] Error:', error);
+    return res.status(500).json({
+      error: 'Failed to load analytics',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    });
+  }
+});
+
 // GET route for activity feed
 router.get('/dashboard/talent/activity', requireRole('TALENT'), async (req, res, next) => {
   try {

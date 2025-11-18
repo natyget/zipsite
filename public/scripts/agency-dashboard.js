@@ -31,6 +31,7 @@
     initExportData();
     initBoardsManagement();
     initBoardEditor();
+    initAnalytics();
     
     // Load data from window if available
     if (window.AGENCY_DASHBOARD_DATA) {
@@ -853,6 +854,12 @@
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
 
+        // Focus first focusable element
+        const firstFocusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (firstFocusable) {
+          setTimeout(() => firstFocusable.focus(), 100);
+        }
+
         // Load notes and tags
         loadNotes(applicationId);
         loadTags(applicationId);
@@ -1505,6 +1512,21 @@
     overlay.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
 
+    // ESC key to close
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && modal.style.display === 'flex') {
+        closeModal();
+        document.removeEventListener('keydown', handleEscape);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+
+    // Focus first focusable element
+    const firstFocusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (firstFocusable) {
+      setTimeout(() => firstFocusable.focus(), 100);
+    }
+
     downloadBtn.addEventListener('click', async () => {
       const format = modal.querySelector('input[name="export-format"]:checked').value;
       const urlParams = new URLSearchParams({
@@ -1728,9 +1750,25 @@
     const tabs = document.querySelectorAll('.board-editor-modal__tab');
 
     // Close modal
-    [closeBtn, cancelBtn, modal.querySelector('.board-editor-modal__overlay')].forEach(el => {
+    const closeHandlers = [closeBtn, cancelBtn, modal.querySelector('.board-editor-modal__overlay')];
+    closeHandlers.forEach(el => {
       if (el) el.addEventListener('click', () => closeBoardEditor());
     });
+
+    // ESC key to close
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && modal.style.display === 'block') {
+        closeBoardEditor();
+        document.removeEventListener('keydown', handleEscape);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+
+    // Focus trap: focus first focusable element when modal opens
+    const firstFocusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (firstFocusable) {
+      setTimeout(() => firstFocusable.focus(), 100);
+    }
 
     // Tab switching
     tabs.forEach(tab => {
@@ -1921,6 +1959,131 @@
     } catch (error) {
       console.error('Error deleting board:', error);
       alert('Failed to delete board');
+    }
+  }
+
+  /**
+   * Analytics Section
+   */
+  function initAnalytics() {
+    const analyticsSection = document.getElementById('analytics');
+    if (!analyticsSection) return;
+
+    // Only load if analytics section is visible or in viewport
+    const loadAnalytics = async () => {
+      const loadingEl = document.getElementById('analytics-loading');
+      const errorEl = document.getElementById('analytics-error');
+      const contentEl = document.getElementById('analytics-content');
+
+      try {
+        loadingEl.style.display = 'block';
+        errorEl.style.display = 'none';
+        contentEl.style.display = 'none';
+
+        const response = await fetch('/dashboard/agency/analytics');
+        if (!response.ok) {
+          throw new Error('Failed to load analytics');
+        }
+
+        const data = await response.json();
+        if (!data.success || !data.analytics) {
+          throw new Error('Invalid analytics data');
+        }
+
+        const analytics = data.analytics;
+
+        // Update key metrics
+        document.getElementById('analytics-total').textContent = analytics.byStatus.total || 0;
+        document.getElementById('analytics-acceptance-rate').textContent = 
+          analytics.acceptanceRate !== undefined ? `${analytics.acceptanceRate}%` : '—';
+        document.getElementById('analytics-this-month').textContent = analytics.overTime.thisMonth || 0;
+        document.getElementById('analytics-avg-score').textContent = 
+          analytics.matchScores.average || 0;
+
+        // Update status breakdown
+        const statusGrid = document.getElementById('analytics-status-grid');
+        if (statusGrid) {
+          const statuses = [
+            { label: 'Pending', value: analytics.byStatus.pending, key: 'pending' },
+            { label: 'Accepted', value: analytics.byStatus.accepted, key: 'accepted' },
+            { label: 'Declined', value: analytics.byStatus.declined, key: 'declined' },
+            { label: 'Archived', value: analytics.byStatus.archived, key: 'archived' }
+          ];
+
+          statusGrid.innerHTML = statuses.map(status => `
+            <div class="agency-dashboard__analytics-status-item">
+              <span class="agency-dashboard__analytics-status-label">${status.label}</span>
+              <span class="agency-dashboard__analytics-status-value">${status.value || 0}</span>
+            </div>
+          `).join('');
+        }
+
+        // Update match score distribution
+        const scoresEl = document.getElementById('analytics-scores');
+        if (scoresEl && analytics.matchScores.distribution) {
+          const dist = analytics.matchScores.distribution;
+          scoresEl.innerHTML = `
+            <div class="agency-dashboard__analytics-score-item agency-dashboard__analytics-score-item--excellent">
+              <span class="agency-dashboard__analytics-score-label">Excellent (80-100)</span>
+              <span class="agency-dashboard__analytics-score-value">${dist.excellent || 0}</span>
+            </div>
+            <div class="agency-dashboard__analytics-score-item agency-dashboard__analytics-score-item--good">
+              <span class="agency-dashboard__analytics-score-label">Good (60-79)</span>
+              <span class="agency-dashboard__analytics-score-value">${dist.good || 0}</span>
+            </div>
+            <div class="agency-dashboard__analytics-score-item agency-dashboard__analytics-score-item--fair">
+              <span class="agency-dashboard__analytics-score-label">Fair (40-59)</span>
+              <span class="agency-dashboard__analytics-score-value">${dist.fair || 0}</span>
+            </div>
+            <div class="agency-dashboard__analytics-score-item agency-dashboard__analytics-score-item--poor">
+              <span class="agency-dashboard__analytics-score-label">Poor (0-39)</span>
+              <span class="agency-dashboard__analytics-score-value">${dist.poor || 0}</span>
+            </div>
+          `;
+        }
+
+        // Update applications by board
+        const boardsEl = document.getElementById('analytics-boards');
+        if (boardsEl && analytics.byBoard && analytics.byBoard.length > 0) {
+          boardsEl.innerHTML = analytics.byBoard.map(board => `
+            <div class="agency-dashboard__analytics-board-item">
+              <span class="agency-dashboard__analytics-board-name">${board.board_name}</span>
+              <span class="agency-dashboard__analytics-board-count">${board.count}</span>
+            </div>
+          `).join('');
+        } else if (boardsEl) {
+          boardsEl.innerHTML = `
+            <div style="padding: 1.5rem; text-align: center; color: var(--agency-text-tertiary); font-size: 0.875rem;">
+              No applications assigned to boards yet
+            </div>
+          `;
+        }
+
+        // Show content
+        loadingEl.style.display = 'none';
+        contentEl.style.display = 'block';
+      } catch (error) {
+        console.error('Error loading analytics:', error);
+        loadingEl.style.display = 'none';
+        errorEl.style.display = 'block';
+      }
+    };
+
+    // Load analytics immediately if section is visible
+    if (analyticsSection.offsetParent !== null) {
+      loadAnalytics();
+    } else {
+      // Use Intersection Observer to load when section comes into view
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            loadAnalytics();
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { rootMargin: '100px' });
+
+      observer.observe(analyticsSection);
     }
   }
 
