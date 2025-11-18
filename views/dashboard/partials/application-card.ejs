@@ -46,9 +46,16 @@
       </span>
     </div>
 
-    <!-- AI Match Score -->
-    <div class="agency-dashboard__card-score">
-      <div class="agency-dashboard__score-value"><%= aiScore %></div>
+    <!-- Match Score (Board or AI) -->
+    <% 
+      const matchScore = profile.board_match_score !== null && profile.board_match_score !== undefined 
+        ? profile.board_match_score 
+        : aiScore;
+      const scoreClass = matchScore >= 80 ? 'excellent' : matchScore >= 60 ? 'good' : matchScore >= 40 ? 'fair' : 'poor';
+    %>
+    <div class="agency-dashboard__card-score agency-dashboard__card-score--<%= scoreClass %>" 
+         title="<%= profile.board_match_score !== null && profile.board_match_score !== undefined ? 'Board Match Score' : 'AI Match Score' %>">
+      <div class="agency-dashboard__score-value"><%= matchScore %></div>
       <div class="agency-dashboard__score-label">Match</div>
     </div>
   </div>

@@ -4,6 +4,7 @@
   const safeCommissionsTotal = (typeof commissionsTotal !== 'undefined') ? commissionsTotal : '0.00';
   const safeLatestCommissions = (typeof latestCommissions !== 'undefined' && latestCommissions) ? latestCommissions : [];
   const currentUser = (typeof user !== 'undefined' && user) ? user : {};
+  const safeBoards = (typeof boards !== 'undefined' && boards) ? boards : [];
   const safeStats = (typeof stats !== 'undefined') ? stats : {
     total: 0,
     pending: 0,
@@ -396,6 +397,91 @@
       </div>
     </div>
   </section>
+
+  <!-- Boards / Divisions Accordion -->
+  <section class="agency-profile-accordion">
+    <div class="agency-profile-accordion__container">
+      <div class="agency-profile-accordion__item">
+        <button class="agency-profile-accordion__header" data-accordion="boards">
+          <div class="agency-profile-accordion__header-content">
+            <h3 class="agency-profile-accordion__title">Boards / Divisions</h3>
+            <span class="agency-profile-accordion__status">
+              <%= safeBoards.length %> <%= safeBoards.length === 1 ? 'board' : 'boards' %>
+            </span>
+          </div>
+          <svg class="agency-profile-accordion__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="agency-profile-accordion__content" data-content="boards">
+          <div class="boards-management">
+            <div class="boards-management__header">
+              <h4 class="boards-management__title">Manage Your Boards</h4>
+              <p class="boards-management__subtitle">Create boards to organize applications by division, type, or requirements</p>
+              <button class="boards-management__create-btn" id="create-board-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Create New Board
+              </button>
+            </div>
+            <div class="boards-management__list" id="boards-list">
+              <% if (safeBoards.length === 0) { %>
+                <div class="boards-management__empty">
+                  <p>No boards yet. Create your first board to organize applications by division or requirements.</p>
+                </div>
+              <% } else { %>
+                <% safeBoards.forEach((board) => { %>
+                  <div class="boards-management__card" data-board-id="<%= board.id %>">
+                    <div class="boards-management__card-header">
+                      <div class="boards-management__card-info">
+                        <h5 class="boards-management__card-name"><%= board.name %></h5>
+                        <% if (board.description) { %>
+                          <p class="boards-management__card-description"><%= board.description %></p>
+                        <% } %>
+                        <div class="boards-management__card-meta">
+                          <span class="boards-management__card-status <%= board.is_active ? 'boards-management__card-status--active' : 'boards-management__card-status--inactive' %>">
+                            <%= board.is_active ? 'Active' : 'Inactive' %>
+                          </span>
+                          <span class="boards-management__card-count"><%= board.application_count || 0 %> applications</span>
+                        </div>
+                      </div>
+                      <div class="boards-management__card-actions">
+                        <button class="boards-management__card-action" data-action="edit" data-board-id="<%= board.id %>" title="Edit Board">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                        </button>
+                        <button class="boards-management__card-action" data-action="duplicate" data-board-id="<%= board.id %>" title="Duplicate Board">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                          </svg>
+                        </button>
+                        <button class="boards-management__card-action" data-action="toggle" data-board-id="<%= board.id %>" title="<%= board.is_active ? 'Deactivate' : 'Activate' %> Board">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <%= board.is_active ? '<path d="M18 6L6 18M6 6l12 12"/>' : '<path d="M20 6L9 17l-5-5"/>' %>
+                          </svg>
+                        </button>
+                        <button class="boards-management__card-action boards-management__card-action--danger" data-action="delete" data-board-id="<%= board.id %>" title="Delete Board">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                <% }); %>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
   
   <!-- Tab Navigation -->
   <section class="agency-dashboard__tabs">
@@ -527,6 +613,17 @@
 
       <!-- Filter Chips -->
       <div class="agency-dashboard__filter-chips" id="filter-chips">
+        <% if (safeFilters.board_id) { %>
+          <% 
+            const selectedBoard = safeBoards.find(b => b.id === safeFilters.board_id);
+            if (selectedBoard) {
+          %>
+          <span class="agency-dashboard__filter-chip" data-filter="board_id" data-value="<%= safeFilters.board_id %>">
+            Board: <%= selectedBoard.name %>
+            <button class="agency-dashboard__filter-chip-remove">×</button>
+          </span>
+          <% } %>
+        <% } %>
         <% if (safeFilters.city) { %>
           <span class="agency-dashboard__filter-chip" data-filter="city" data-value="<%= safeFilters.city %>">
             City: <%= safeFilters.city %>
@@ -564,6 +661,19 @@
             <input type="hidden" name="view" value="scout">
           <% } %>
           <div class="agency-dashboard__filters-grid">
+          <% if (typeof view === 'undefined' || view === 'applicants') { %>
+          <div class="form-field">
+              <label for="filter-board">Board / Division</label>
+              <select id="filter-board" name="board_id" class="agency-dashboard__filter-select">
+                <option value="">All Boards</option>
+                <% safeBoards.forEach((board) => { %>
+                  <option value="<%= board.id %>" <%= safeFilters.board_id === board.id ? 'selected' : '' %>>
+                    <%= board.name %>
+                  </option>
+                <% }); %>
+              </select>
+          </div>
+          <% } %>
           <div class="form-field">
               <label for="filter-city">City</label>
               <input id="filter-city" name="city" type="text" placeholder="Any city" value="<%= safeFilters.city || '' %>">
@@ -591,6 +701,9 @@
           <div class="form-field">
               <label for="filter-sort">Sort By</label>
               <select id="filter-sort" name="sort">
+                <% if (safeFilters.board_id) { %>
+                  <option value="match_score" <%= safeFilters.sort === 'match_score' ? 'selected' : '' %>>Match Score (Highest First)</option>
+                <% } %>
                 <option value="az" <%= safeFilters.sort === 'az' ? 'selected' : '' %>>A–Z (Last name)</option>
                 <option value="city" <%= safeFilters.sort === 'city' ? 'selected' : '' %>>City</option>
                 <option value="newest" <%= safeFilters.sort === 'newest' ? 'selected' : '' %>>Newest First</option>
@@ -1097,9 +1210,239 @@
     </div>
   </div>
 
+  <!-- Board Editor Modal -->
+  <div class="board-editor-modal" id="board-editor-modal" style="display: none;">
+    <div class="board-editor-modal__overlay"></div>
+    <div class="board-editor-modal__content">
+      <div class="board-editor-modal__header">
+        <h2 class="board-editor-modal__title" id="board-editor-title">Create New Board</h2>
+        <button class="board-editor-modal__close" id="board-editor-close" aria-label="Close">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="board-editor-modal__tabs">
+        <button class="board-editor-modal__tab board-editor-modal__tab--active" data-tab="basic">Basic Info</button>
+        <button class="board-editor-modal__tab" data-tab="requirements">Requirements</button>
+        <button class="board-editor-modal__tab" data-tab="weights">Scoring Weights</button>
+      </div>
+
+      <form class="board-editor-modal__form" id="board-editor-form">
+        <input type="hidden" id="board-editor-id" name="board_id" value="">
+
+        <!-- Basic Info Tab -->
+        <div class="board-editor-modal__tab-content board-editor-modal__tab-content--active" data-content="basic">
+          <div class="board-editor-modal__field">
+            <label for="board-name">Board Name *</label>
+            <input type="text" id="board-name" name="name" required placeholder="e.g., Women's Division, Men's Commercial">
+          </div>
+          <div class="board-editor-modal__field">
+            <label for="board-description">Description</label>
+            <textarea id="board-description" name="description" rows="3" placeholder="Optional description of this board..."></textarea>
+          </div>
+          <div class="board-editor-modal__field">
+            <label class="board-editor-modal__checkbox-label">
+              <input type="checkbox" id="board-is-active" name="is_active" checked>
+              <span>Active (board will be used for matching)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Requirements Tab -->
+        <div class="board-editor-modal__tab-content" data-content="requirements">
+          <div class="board-editor-modal__section">
+            <h3 class="board-editor-modal__section-title">Age Range</h3>
+            <div class="board-editor-modal__range-group">
+              <div class="board-editor-modal__field">
+                <label for="req-min-age">Min Age</label>
+                <input type="number" id="req-min-age" name="min_age" min="16" max="99" placeholder="Any">
+              </div>
+              <div class="board-editor-modal__field">
+                <label for="req-max-age">Max Age</label>
+                <input type="number" id="req-max-age" name="max_age" min="16" max="99" placeholder="Any">
+              </div>
+            </div>
+          </div>
+
+          <div class="board-editor-modal__section">
+            <h3 class="board-editor-modal__section-title">Height Range (cm)</h3>
+            <div class="board-editor-modal__range-group">
+              <div class="board-editor-modal__field">
+                <label for="req-min-height">Min Height</label>
+                <input type="number" id="req-min-height" name="min_height_cm" min="120" max="220" placeholder="Any">
+              </div>
+              <div class="board-editor-modal__field">
+                <label for="req-max-height">Max Height</label>
+                <input type="number" id="req-max-height" name="max_height_cm" min="120" max="220" placeholder="Any">
+              </div>
+            </div>
+          </div>
+
+          <div class="board-editor-modal__section">
+            <h3 class="board-editor-modal__section-title">Gender</h3>
+            <div class="board-editor-modal__checkbox-group" id="req-genders">
+              <label class="board-editor-modal__checkbox-label">
+                <input type="checkbox" name="genders" value="Female">
+                <span>Female</span>
+              </label>
+              <label class="board-editor-modal__checkbox-label">
+                <input type="checkbox" name="genders" value="Male">
+                <span>Male</span>
+              </label>
+              <label class="board-editor-modal__checkbox-label">
+                <input type="checkbox" name="genders" value="Non-binary">
+                <span>Non-binary</span>
+              </label>
+              <label class="board-editor-modal__checkbox-label">
+                <input type="checkbox" name="genders" value="Other">
+                <span>Other</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="board-editor-modal__section">
+            <h3 class="board-editor-modal__section-title">Measurements</h3>
+            <div class="board-editor-modal__measurements-grid">
+              <div class="board-editor-modal__field">
+                <label for="req-min-bust">Min Bust</label>
+                <input type="number" id="req-min-bust" name="min_bust" step="0.5" placeholder="Any">
+              </div>
+              <div class="board-editor-modal__field">
+                <label for="req-max-bust">Max Bust</label>
+                <input type="number" id="req-max-bust" name="max_bust" step="0.5" placeholder="Any">
+              </div>
+              <div class="board-editor-modal__field">
+                <label for="req-min-waist">Min Waist</label>
+                <input type="number" id="req-min-waist" name="min_waist" step="0.5" placeholder="Any">
+              </div>
+              <div class="board-editor-modal__field">
+                <label for="req-max-waist">Max Waist</label>
+                <input type="number" id="req-max-waist" name="max_waist" step="0.5" placeholder="Any">
+              </div>
+              <div class="board-editor-modal__field">
+                <label for="req-min-hips">Min Hips</label>
+                <input type="number" id="req-min-hips" name="min_hips" step="0.5" placeholder="Any">
+              </div>
+              <div class="board-editor-modal__field">
+                <label for="req-max-hips">Max Hips</label>
+                <input type="number" id="req-max-hips" name="max_hips" step="0.5" placeholder="Any">
+              </div>
+            </div>
+          </div>
+
+          <div class="board-editor-modal__section">
+            <h3 class="board-editor-modal__section-title">Social Reach</h3>
+            <div class="board-editor-modal__field">
+              <label for="req-min-social-reach">Minimum Followers</label>
+              <input type="number" id="req-min-social-reach" name="min_social_reach" min="0" placeholder="Any">
+            </div>
+            <div class="board-editor-modal__field">
+              <label for="req-social-importance">Importance</label>
+              <select id="req-social-importance" name="social_reach_importance">
+                <option value="none">None</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical (Hard Filter)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scoring Weights Tab -->
+        <div class="board-editor-modal__tab-content" data-content="weights">
+          <p class="board-editor-modal__help-text">Adjust the importance (0-5) of each dimension in the match score calculation. Higher values mean that dimension has more influence.</p>
+          
+          <div class="board-editor-modal__weights-list" id="weights-list">
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-age">Age</label>
+              <div class="board-editor-modal__weight-control">
+                <input type="range" id="weight-age" name="age_weight" min="0" max="5" step="0.5" value="0">
+                <span class="board-editor-modal__weight-value" id="weight-age-value">0</span>
+              </div>
+            </div>
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-height">Height</label>
+              <div class="board-editor-modal__weight-control">
+                <input type="range" id="weight-height" name="height_weight" min="0" max="5" step="0.5" value="0">
+                <span class="board-editor-modal__weight-value" id="weight-height-value">0</span>
+              </div>
+            </div>
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-measurements">Measurements</label>
+              <div class="board-editor-modal__weight-control">
+                <input type="range" id="weight-measurements" name="measurements_weight" min="0" max="5" step="0.5" value="0">
+                <span class="board-editor-modal__weight-value" id="weight-measurements-value">0</span>
+              </div>
+            </div>
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-body-type">Body Type</label>
+              <div class="board-editor-modal__weight-control">
+                <input type="range" id="weight-body-type" name="body_type_weight" min="0" max="5" step="0.5" value="0">
+                <span class="board-editor-modal__weight-value" id="weight-body-type-value">0</span>
+              </div>
+            </div>
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-comfort">Comfort Levels</label>
+              <div class="board-editor-modal__weight-control">
+                <input type="range" id="weight-comfort" name="comfort_weight" min="0" max="5" step="0.5" value="0">
+                <span class="board-editor-modal__weight-value" id="weight-comfort-value">0</span>
+              </div>
+            </div>
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-experience">Experience</label>
+              <div class="board-editor-modal__weight-control">
+                <input type="range" id="weight-experience" name="experience_weight" min="0" max="5" step="0.5" value="0">
+                <span class="board-editor-modal__weight-value" id="weight-experience-value">0</span>
+              </div>
+            </div>
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-skills">Skills</label>
+              <div class="board-editor-modal__weight-control">
+                <input type="range" id="weight-skills" name="skills_weight" min="0" max="5" step="0.5" value="0">
+                <span class="board-editor-modal__weight-value" id="weight-skills-value">0</span>
+              </div>
+            </div>
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-location">Location</label>
+              <div class="board-editor-modal__weight-control">
+                <input type="range" id="weight-location" name="location_weight" min="0" max="5" step="0.5" value="0">
+                <span class="board-editor-modal__weight-value" id="weight-location-value">0</span>
+              </div>
+            </div>
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-social-reach">Social Reach</label>
+              <div class="board-editor-modal__weight-control">
+                <input type="range" id="weight-social-reach" name="social_reach_weight" min="0" max="5" step="0.5" value="0">
+                <span class="board-editor-modal__weight-value" id="weight-social-reach-value">0</span>
+              </div>
+            </div>
+          </div>
+          <div class="board-editor-modal__total-weight">
+            <strong>Total Weight: <span id="total-weight-value">0</span></strong>
+          </div>
+        </div>
+
+        <div class="board-editor-modal__actions">
+          <button type="button" class="board-editor-modal__btn board-editor-modal__btn--secondary" id="board-editor-cancel">Cancel</button>
+          <button type="submit" class="board-editor-modal__btn board-editor-modal__btn--primary" id="board-editor-save">
+            <span>Save Board</span>
+            <svg class="board-editor-modal__spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display: none;">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 <script>
   // Pass data to JavaScript
   window.AGENCY_DASHBOARD_DATA = {
+    boards: <%- JSON.stringify(safeBoards) %>,
     profiles: <%- JSON.stringify(safeProfiles.map(p => ({
       id: p.id,
       slug: p.slug,

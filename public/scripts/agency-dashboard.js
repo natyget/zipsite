@@ -29,11 +29,14 @@
     initNotesAndTags();
     initAgencyProfileAccordion();
     initExportData();
+    initBoardsManagement();
+    initBoardEditor();
     
     // Load data from window if available
     if (window.AGENCY_DASHBOARD_DATA) {
       state.profiles = window.AGENCY_DASHBOARD_DATA.profiles || [];
       state.stats = window.AGENCY_DASHBOARD_DATA.stats || {};
+      state.boards = window.AGENCY_DASHBOARD_DATA.boards || [];
     }
   });
 
@@ -1606,6 +1609,319 @@
     }
 
     return response.json();
+  }
+
+  /**
+   * Boards Management
+   */
+  function initBoardsManagement() {
+    const createBtn = document.getElementById('create-board-btn');
+    if (createBtn) {
+      createBtn.addEventListener('click', () => openBoardEditor());
+    }
+
+    // Handle board card actions
+    document.addEventListener('click', async (e) => {
+      const action = e.target.closest('[data-action]');
+      if (!action || !action.dataset.boardId) return;
+
+      const boardId = action.dataset.boardId;
+      const actionType = action.dataset.action;
+
+      switch (actionType) {
+        case 'edit':
+          await openBoardEditor(boardId);
+          break;
+        case 'duplicate':
+          await duplicateBoard(boardId);
+          break;
+        case 'toggle':
+          await toggleBoard(boardId);
+          break;
+        case 'delete':
+          await deleteBoard(boardId);
+          break;
+      }
+    });
+  }
+
+  async function openBoardEditor(boardId = null) {
+    const modal = document.getElementById('board-editor-modal');
+    const form = document.getElementById('board-editor-form');
+    const title = document.getElementById('board-editor-title');
+    
+    if (!modal || !form) return;
+
+    // Reset form
+    form.reset();
+    document.getElementById('board-editor-id').value = boardId || '';
+    title.textContent = boardId ? 'Edit Board' : 'Create New Board';
+
+    // Load board data if editing
+    if (boardId) {
+      try {
+        const response = await fetch(`/api/agency/boards/${boardId}`);
+        if (!response.ok) throw new Error('Failed to load board');
+        const board = await response.json();
+
+        // Populate form
+        document.getElementById('board-name').value = board.name || '';
+        document.getElementById('board-description').value = board.description || '';
+        document.getElementById('board-is-active').checked = board.is_active !== false;
+
+        // Populate requirements
+        if (board.requirements) {
+          const req = board.requirements;
+          if (req.min_age) document.getElementById('req-min-age').value = req.min_age;
+          if (req.max_age) document.getElementById('req-max-age').value = req.max_age;
+          if (req.min_height_cm) document.getElementById('req-min-height').value = req.min_height_cm;
+          if (req.max_height_cm) document.getElementById('req-max-height').value = req.max_height_cm;
+          if (req.genders && Array.isArray(req.genders)) {
+            req.genders.forEach(gender => {
+              const checkbox = document.querySelector(`input[name="genders"][value="${gender}"]`);
+              if (checkbox) checkbox.checked = true;
+            });
+          }
+          if (req.min_bust) document.getElementById('req-min-bust').value = req.min_bust;
+          if (req.max_bust) document.getElementById('req-max-bust').value = req.max_bust;
+          if (req.min_waist) document.getElementById('req-min-waist').value = req.min_waist;
+          if (req.max_waist) document.getElementById('req-max-waist').value = req.max_waist;
+          if (req.min_hips) document.getElementById('req-min-hips').value = req.min_hips;
+          if (req.max_hips) document.getElementById('req-max-hips').value = req.max_hips;
+          if (req.min_social_reach) document.getElementById('req-min-social-reach').value = req.min_social_reach;
+          if (req.social_reach_importance) document.getElementById('req-social-importance').value = req.social_reach_importance;
+        }
+
+        // Populate weights
+        if (board.scoring_weights) {
+          const weights = board.scoring_weights;
+          Object.keys(weights).forEach(key => {
+            if (key.endsWith('_weight')) {
+              const input = document.getElementById(`weight-${key.replace('_weight', '')}`);
+              if (input) {
+                input.value = weights[key] || 0;
+                updateWeightValue(input);
+              }
+            }
+          });
+          updateTotalWeight();
+        }
+      } catch (error) {
+        console.error('Error loading board:', error);
+        alert('Failed to load board data');
+        return;
+      }
+    }
+
+    // Show modal
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function initBoardEditor() {
+    const modal = document.getElementById('board-editor-modal');
+    if (!modal) return;
+
+    const closeBtn = document.getElementById('board-editor-close');
+    const cancelBtn = document.getElementById('board-editor-cancel');
+    const form = document.getElementById('board-editor-form');
+    const tabs = document.querySelectorAll('.board-editor-modal__tab');
+
+    // Close modal
+    [closeBtn, cancelBtn, modal.querySelector('.board-editor-modal__overlay')].forEach(el => {
+      if (el) el.addEventListener('click', () => closeBoardEditor());
+    });
+
+    // Tab switching
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.dataset.tab;
+        tabs.forEach(t => t.classList.remove('board-editor-modal__tab--active'));
+        tab.classList.add('board-editor-modal__tab--active');
+
+        document.querySelectorAll('.board-editor-modal__tab-content').forEach(content => {
+          content.classList.remove('board-editor-modal__tab-content--active');
+        });
+        const content = document.querySelector(`[data-content="${tabName}"]`);
+        if (content) content.classList.add('board-editor-modal__tab-content--active');
+      });
+    });
+
+    // Weight sliders
+    document.querySelectorAll('input[type="range"][name$="_weight"]').forEach(slider => {
+      slider.addEventListener('input', () => updateWeightValue(slider));
+      updateWeightValue(slider);
+    });
+    updateTotalWeight();
+
+    // Form submission
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveBoard();
+      });
+    }
+  }
+
+  function updateWeightValue(slider) {
+    const valueSpan = document.getElementById(`${slider.id}-value`);
+    if (valueSpan) valueSpan.textContent = slider.value;
+    updateTotalWeight();
+  }
+
+  function updateTotalWeight() {
+    const sliders = document.querySelectorAll('input[type="range"][name$="_weight"]');
+    let total = 0;
+    sliders.forEach(slider => {
+      total += parseFloat(slider.value) || 0;
+    });
+    const totalSpan = document.getElementById('total-weight-value');
+    if (totalSpan) totalSpan.textContent = total.toFixed(1);
+  }
+
+  function closeBoardEditor() {
+    const modal = document.getElementById('board-editor-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  }
+
+  async function saveBoard() {
+    const form = document.getElementById('board-editor-form');
+    const boardId = document.getElementById('board-editor-id').value;
+    const saveBtn = document.getElementById('board-editor-save');
+    const spinner = saveBtn.querySelector('.board-editor-modal__spinner');
+    const saveText = saveBtn.querySelector('span');
+
+    try {
+      saveBtn.disabled = true;
+      spinner.style.display = 'block';
+      saveText.textContent = 'Saving...';
+
+      // Collect form data
+      const formData = new FormData(form);
+      const name = formData.get('name');
+      const description = formData.get('description');
+      const is_active = formData.get('is_active') === 'on';
+
+      // Collect requirements
+      const requirements = {
+        min_age: formData.get('min_age') || null,
+        max_age: formData.get('max_age') || null,
+        min_height_cm: formData.get('min_height_cm') || null,
+        max_height_cm: formData.get('max_height_cm') || null,
+        genders: formData.getAll('genders'),
+        min_bust: formData.get('min_bust') || null,
+        max_bust: formData.get('max_bust') || null,
+        min_waist: formData.get('min_waist') || null,
+        max_waist: formData.get('max_waist') || null,
+        min_hips: formData.get('min_hips') || null,
+        max_hips: formData.get('max_hips') || null,
+        min_social_reach: formData.get('min_social_reach') || null,
+        social_reach_importance: formData.get('social_reach_importance') || null
+      };
+
+      // Collect weights
+      const weights = {};
+      document.querySelectorAll('input[type="range"][name$="_weight"]').forEach(slider => {
+        weights[slider.name] = parseFloat(slider.value) || 0;
+      });
+
+      if (boardId) {
+        // Update existing board
+        await fetch(`/api/agency/boards/${boardId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, description, is_active })
+        });
+
+        await fetch(`/api/agency/boards/${boardId}/requirements`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requirements)
+        });
+
+        await fetch(`/api/agency/boards/${boardId}/weights`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(weights)
+        });
+      } else {
+        // Create new board
+        await fetch('/api/agency/boards', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, description, is_active, requirements, scoring_weights: weights })
+        });
+      }
+
+      // Reload page to show updated boards
+      window.location.reload();
+    } catch (error) {
+      console.error('Error saving board:', error);
+      alert('Failed to save board. Please try again.');
+    } finally {
+      saveBtn.disabled = false;
+      spinner.style.display = 'none';
+      saveText.textContent = 'Save Board';
+    }
+  }
+
+  async function duplicateBoard(boardId) {
+    if (!confirm('Duplicate this board?')) return;
+
+    try {
+      const response = await fetch(`/api/agency/boards/${boardId}/duplicate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) throw new Error('Failed to duplicate board');
+      
+      window.location.reload();
+    } catch (error) {
+      console.error('Error duplicating board:', error);
+      alert('Failed to duplicate board');
+    }
+  }
+
+  async function toggleBoard(boardId) {
+    try {
+      // Get current board state
+      const response = await fetch(`/api/agency/boards/${boardId}`);
+      if (!response.ok) throw new Error('Failed to load board');
+      const board = await response.json();
+
+      await fetch(`/api/agency/boards/${boardId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !board.is_active })
+      });
+
+      window.location.reload();
+    } catch (error) {
+      console.error('Error toggling board:', error);
+      alert('Failed to update board');
+    }
+  }
+
+  async function deleteBoard(boardId) {
+    if (!confirm('Are you sure you want to delete this board? This action cannot be undone.')) return;
+
+    try {
+      const response = await fetch(`/api/agency/boards/${boardId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) throw new Error('Failed to delete board');
+      
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting board:', error);
+      alert('Failed to delete board');
+    }
   }
 
 })();

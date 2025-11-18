@@ -1380,10 +1380,29 @@ router.get('/dashboard/agency', requireRole('AGENCY'), async (req, res, next) =>
       search = '',
       min_height = '',
       max_height = '',
-      status = ''
+      status = '',
+      board_id = '' // Filter by board
     } = req.query;
 
     const agencyId = req.session.userId;
+
+    // Fetch boards for this agency
+    const boards = await knex('boards')
+      .where({ agency_id: agencyId })
+      .orderBy('sort_order', 'asc')
+      .orderBy('created_at', 'asc');
+
+    // Get application counts per board
+    const boardsWithCounts = await Promise.all(boards.map(async (board) => {
+      const applicationCount = await knex('board_applications')
+        .where({ board_id: board.id })
+        .count('* as count')
+        .first();
+      return {
+        ...board,
+        application_count: parseInt(applicationCount?.count || 0)
+      };
+    }));
 
     // Calculate dashboard statistics (for both views)
     const allApplications = await knex('applications')
@@ -1439,14 +1458,27 @@ router.get('/dashboard/agency', requireRole('AGENCY'), async (req, res, next) =>
           'applications.created_at as application_created_at',
           'applications.accepted_at',
           'applications.declined_at',
-          'applications.invited_by_agency_id'
+          'applications.invited_by_agency_id',
+          'board_applications.match_score as board_match_score',
+          'board_applications.match_details as board_match_details'
         )
         .leftJoin('users', 'profiles.user_id', 'users.id')
         .innerJoin('applications', (join) => {
           join.on('applications.profile_id', '=', 'profiles.id')
             .andOn('applications.agency_id', '=', knex.raw('?', [agencyId]));
         })
+        .leftJoin('board_applications', (join) => {
+          join.on('board_applications.application_id', '=', 'applications.id');
+          if (board_id) {
+            join.on('board_applications.board_id', '=', knex.raw('?', [board_id]));
+          }
+        })
         .whereNotNull('profiles.bio_curated');
+
+      // Filter by board if specified
+      if (board_id) {
+        query = query.where('board_applications.board_id', board_id);
+      }
 
       // Filter by application status (only for My Applicants view)
       if (status && status !== 'all') {
@@ -1486,10 +1518,18 @@ router.get('/dashboard/agency', requireRole('AGENCY'), async (req, res, next) =>
       query = query.where('profiles.height_cm', '<=', maxHeightNumber);
     }
 
-    if (sort === 'city') {
+    // Sort by match score if board is selected, otherwise use default sort
+    if (board_id && sort !== 'az' && sort !== 'city') {
+      // When board is selected, default to match score sorting
+      query = query.orderBy('board_applications.match_score', 'desc');
+      query = query.orderBy('profiles.last_name', 'asc');
+    } else if (sort === 'city') {
       query = query.orderBy(['profiles.city', 'profiles.last_name']);
     } else if (sort === 'newest') {
       query = query.orderBy('profiles.created_at', 'desc');
+    } else if (sort === 'match_score' && board_id) {
+      query = query.orderBy('board_applications.match_score', 'desc');
+      query = query.orderBy('profiles.last_name', 'asc');
     } else {
       query = query.orderBy(['profiles.last_name', 'profiles.first_name']);
     }
@@ -1569,8 +1609,9 @@ router.get('/dashboard/agency', requireRole('AGENCY'), async (req, res, next) =>
     return res.render('dashboard/agency', {
       title: 'Agency Dashboard',
       profiles,
+      boards: boardsWithCounts,
       view, // 'applicants' or 'scout'
-      filters: { sort, city, letter, search, min_height, max_height, status },
+      filters: { sort, city, letter, search, min_height, max_height, status, board_id },
       stats,
       user: currentUser,
       currentUser,
@@ -2754,5 +2795,659 @@ router.post('/dashboard/settings/visibility', requireRole('TALENT'), async (req,
     return res.redirect('/dashboard/settings/profile');
   }
 });
+
+// ============================================
+// Boards / Divisions API Endpoints
+// ============================================
+
+const { calculateMatchScore } = require('../lib/match-scoring');
+
+// GET /api/agency/boards - List all boards for agency
+router.get('/api/agency/boards', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const agencyId = req.session.userId;
+    
+    const boards = await knex('boards')
+      .where({ agency_id: agencyId })
+      .orderBy('sort_order', 'asc')
+      .orderBy('created_at', 'asc');
+    
+    // Get application counts for each board
+    const boardsWithCounts = await Promise.all(boards.map(async (board) => {
+      const count = await knex('board_applications')
+        .where({ board_id: board.id })
+        .count('* as count')
+        .first();
+      return {
+        ...board,
+        application_count: parseInt(count?.count || 0)
+      };
+    }));
+    
+    return res.json(boardsWithCounts);
+  } catch (error) {
+    console.error('[Boards API] Error fetching boards:', error);
+    return res.status(500).json({ error: 'Failed to fetch boards' });
+  }
+});
+
+// GET /api/agency/boards/:boardId - Get board details with requirements and weights
+router.get('/api/agency/boards/:boardId', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { boardId } = req.params;
+    const agencyId = req.session.userId;
+    
+    const board = await knex('boards')
+      .where({ id: boardId, agency_id: agencyId })
+      .first();
+    
+    if (!board) {
+      return res.status(404).json({ error: 'Board not found' });
+    }
+    
+    // Get requirements
+    const requirements = await knex('board_requirements')
+      .where({ board_id: boardId })
+      .first();
+    
+    // Get scoring weights
+    const scoring_weights = await knex('board_scoring_weights')
+      .where({ board_id: boardId })
+      .first();
+    
+    // Parse JSON fields
+    const parsedRequirements = requirements ? {
+      ...requirements,
+      genders: requirements.genders ? JSON.parse(requirements.genders) : null,
+      body_types: requirements.body_types ? JSON.parse(requirements.body_types) : null,
+      comfort_levels: requirements.comfort_levels ? JSON.parse(requirements.comfort_levels) : null,
+      experience_levels: requirements.experience_levels ? JSON.parse(requirements.experience_levels) : null,
+      skills: requirements.skills ? JSON.parse(requirements.skills) : null,
+      locations: requirements.locations ? JSON.parse(requirements.locations) : null
+    } : null;
+    
+    return res.json({
+      ...board,
+      requirements: parsedRequirements,
+      scoring_weights
+    });
+  } catch (error) {
+    console.error('[Boards API] Error fetching board:', error);
+    return res.status(500).json({ error: 'Failed to fetch board' });
+  }
+});
+
+// POST /api/agency/boards - Create new board
+router.post('/api/agency/boards', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const agencyId = req.session.userId;
+    const { name, description, is_active = true, sort_order = 0, requirements, scoring_weights } = req.body;
+    
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Board name is required' });
+    }
+    
+    // Create board
+    const [board] = await knex('boards')
+      .insert({
+        id: require('crypto').randomUUID(),
+        agency_id: agencyId,
+        name: name.trim(),
+        description: description || null,
+        is_active: !!is_active,
+        sort_order: parseInt(sort_order) || 0,
+        created_at: knex.fn.now(),
+        updated_at: knex.fn.now()
+      })
+      .returning('*');
+    
+    // Create default requirements if provided
+    if (requirements) {
+      await knex('board_requirements').insert({
+        id: require('crypto').randomUUID(),
+        board_id: board.id,
+        min_age: requirements.min_age || null,
+        max_age: requirements.max_age || null,
+        min_height_cm: requirements.min_height_cm || null,
+        max_height_cm: requirements.max_height_cm || null,
+        genders: requirements.genders ? JSON.stringify(requirements.genders) : null,
+        min_bust: requirements.min_bust || null,
+        max_bust: requirements.max_bust || null,
+        min_waist: requirements.min_waist || null,
+        max_waist: requirements.max_waist || null,
+        min_hips: requirements.min_hips || null,
+        max_hips: requirements.max_hips || null,
+        body_types: requirements.body_types ? JSON.stringify(requirements.body_types) : null,
+        comfort_levels: requirements.comfort_levels ? JSON.stringify(requirements.comfort_levels) : null,
+        experience_levels: requirements.experience_levels ? JSON.stringify(requirements.experience_levels) : null,
+        skills: requirements.skills ? JSON.stringify(requirements.skills) : null,
+        locations: requirements.locations ? JSON.stringify(requirements.locations) : null,
+        min_social_reach: requirements.min_social_reach || null,
+        social_reach_importance: requirements.social_reach_importance || null,
+        created_at: knex.fn.now(),
+        updated_at: knex.fn.now()
+      });
+    }
+    
+    // Create default scoring weights
+    const defaultWeights = scoring_weights || {
+      age_weight: 0,
+      height_weight: 0,
+      measurements_weight: 0,
+      body_type_weight: 0,
+      comfort_weight: 0,
+      experience_weight: 0,
+      skills_weight: 0,
+      location_weight: 0,
+      social_reach_weight: 0
+    };
+    
+    await knex('board_scoring_weights').insert({
+      id: require('crypto').randomUUID(),
+      board_id: board.id,
+      ...defaultWeights,
+      created_at: knex.fn.now(),
+      updated_at: knex.fn.now()
+    });
+    
+    return res.json(board);
+  } catch (error) {
+    console.error('[Boards API] Error creating board:', error);
+    return res.status(500).json({ error: 'Failed to create board' });
+  }
+});
+
+// PUT /api/agency/boards/:boardId - Update board
+router.put('/api/agency/boards/:boardId', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { boardId } = req.params;
+    const agencyId = req.session.userId;
+    const { name, description, is_active, sort_order } = req.body;
+    
+    // Verify board belongs to agency
+    const board = await knex('boards')
+      .where({ id: boardId, agency_id: agencyId })
+      .first();
+    
+    if (!board) {
+      return res.status(404).json({ error: 'Board not found' });
+    }
+    
+    // Update board
+    const updates = {
+      updated_at: knex.fn.now()
+    };
+    if (name !== undefined) updates.name = name.trim();
+    if (description !== undefined) updates.description = description || null;
+    if (is_active !== undefined) updates.is_active = !!is_active;
+    if (sort_order !== undefined) updates.sort_order = parseInt(sort_order) || 0;
+    
+    await knex('boards')
+      .where({ id: boardId })
+      .update(updates);
+    
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('[Boards API] Error updating board:', error);
+    return res.status(500).json({ error: 'Failed to update board' });
+  }
+});
+
+// PUT /api/agency/boards/:boardId/requirements - Update board requirements
+router.put('/api/agency/boards/:boardId/requirements', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { boardId } = req.params;
+    const agencyId = req.session.userId;
+    const requirements = req.body;
+    
+    // Verify board belongs to agency
+    const board = await knex('boards')
+      .where({ id: boardId, agency_id: agencyId })
+      .first();
+    
+    if (!board) {
+      return res.status(404).json({ error: 'Board not found' });
+    }
+    
+    // Check if requirements exist
+    const existing = await knex('board_requirements')
+      .where({ board_id: boardId })
+      .first();
+    
+    const requirementsData = {
+      min_age: requirements.min_age || null,
+      max_age: requirements.max_age || null,
+      min_height_cm: requirements.min_height_cm || null,
+      max_height_cm: requirements.max_height_cm || null,
+      genders: requirements.genders ? JSON.stringify(requirements.genders) : null,
+      min_bust: requirements.min_bust || null,
+      max_bust: requirements.max_bust || null,
+      min_waist: requirements.min_waist || null,
+      max_waist: requirements.max_waist || null,
+      min_hips: requirements.min_hips || null,
+      max_hips: requirements.max_hips || null,
+      body_types: requirements.body_types ? JSON.stringify(requirements.body_types) : null,
+      comfort_levels: requirements.comfort_levels ? JSON.stringify(requirements.comfort_levels) : null,
+      experience_levels: requirements.experience_levels ? JSON.stringify(requirements.experience_levels) : null,
+      skills: requirements.skills ? JSON.stringify(requirements.skills) : null,
+      locations: requirements.locations ? JSON.stringify(requirements.locations) : null,
+      min_social_reach: requirements.min_social_reach || null,
+      social_reach_importance: requirements.social_reach_importance || null,
+      updated_at: knex.fn.now()
+    };
+    
+    if (existing) {
+      await knex('board_requirements')
+        .where({ board_id: boardId })
+        .update(requirementsData);
+    } else {
+      await knex('board_requirements').insert({
+        id: require('crypto').randomUUID(),
+        board_id: boardId,
+        ...requirementsData,
+        created_at: knex.fn.now()
+      });
+    }
+    
+    // Recalculate match scores for all applications in this board
+    await recalculateBoardScores(boardId, agencyId);
+    
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('[Boards API] Error updating requirements:', error);
+    return res.status(500).json({ error: 'Failed to update requirements' });
+  }
+});
+
+// PUT /api/agency/boards/:boardId/weights - Update scoring weights
+router.put('/api/agency/boards/:boardId/weights', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { boardId } = req.params;
+    const agencyId = req.session.userId;
+    const weights = req.body;
+    
+    // Verify board belongs to agency
+    const board = await knex('boards')
+      .where({ id: boardId, agency_id: agencyId })
+      .first();
+    
+    if (!board) {
+      return res.status(404).json({ error: 'Board not found' });
+    }
+    
+    // Validate weights (0-5)
+    const weightFields = ['age_weight', 'height_weight', 'measurements_weight', 'body_type_weight', 
+                          'comfort_weight', 'experience_weight', 'skills_weight', 'location_weight', 'social_reach_weight'];
+    const weightsData = {};
+    weightFields.forEach(field => {
+      if (weights[field] !== undefined) {
+        const val = parseFloat(weights[field]);
+        weightsData[field] = Math.max(0, Math.min(5, val));
+      }
+    });
+    
+    // Check if weights exist
+    const existing = await knex('board_scoring_weights')
+      .where({ board_id: boardId })
+      .first();
+    
+    if (existing) {
+      await knex('board_scoring_weights')
+        .where({ board_id: boardId })
+        .update({
+          ...weightsData,
+          updated_at: knex.fn.now()
+        });
+    } else {
+      await knex('board_scoring_weights').insert({
+        id: require('crypto').randomUUID(),
+        board_id: boardId,
+        age_weight: 0,
+        height_weight: 0,
+        measurements_weight: 0,
+        body_type_weight: 0,
+        comfort_weight: 0,
+        experience_weight: 0,
+        skills_weight: 0,
+        location_weight: 0,
+        social_reach_weight: 0,
+        ...weightsData,
+        created_at: knex.fn.now(),
+        updated_at: knex.fn.now()
+      });
+    }
+    
+    // Recalculate match scores
+    await recalculateBoardScores(boardId, agencyId);
+    
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('[Boards API] Error updating weights:', error);
+    return res.status(500).json({ error: 'Failed to update weights' });
+  }
+});
+
+// DELETE /api/agency/boards/:boardId - Delete board
+router.delete('/api/agency/boards/:boardId', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { boardId } = req.params;
+    const agencyId = req.session.userId;
+    
+    // Verify board belongs to agency
+    const board = await knex('boards')
+      .where({ id: boardId, agency_id: agencyId })
+      .first();
+    
+    if (!board) {
+      return res.status(404).json({ error: 'Board not found' });
+    }
+    
+    // Delete board (cascade will handle requirements, weights, and board_applications)
+    await knex('boards')
+      .where({ id: boardId })
+      .delete();
+    
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('[Boards API] Error deleting board:', error);
+    return res.status(500).json({ error: 'Failed to delete board' });
+  }
+});
+
+// POST /api/agency/boards/:boardId/duplicate - Duplicate board
+router.post('/api/agency/boards/:boardId/duplicate', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { boardId } = req.params;
+    const agencyId = req.session.userId;
+    
+    // Get original board
+    const board = await knex('boards')
+      .where({ id: boardId, agency_id: agencyId })
+      .first();
+    
+    if (!board) {
+      return res.status(404).json({ error: 'Board not found' });
+    }
+    
+    // Get requirements and weights
+    const requirements = await knex('board_requirements')
+      .where({ board_id: boardId })
+      .first();
+    
+    const weights = await knex('board_scoring_weights')
+      .where({ board_id: boardId })
+      .first();
+    
+    // Create new board
+    const newBoardId = require('crypto').randomUUID();
+    await knex('boards').insert({
+      id: newBoardId,
+      agency_id: agencyId,
+      name: `${board.name} (Copy)`,
+      description: board.description,
+      is_active: false, // Inactive by default
+      sort_order: board.sort_order,
+      created_at: knex.fn.now(),
+      updated_at: knex.fn.now()
+    });
+    
+    // Copy requirements
+    if (requirements) {
+      const newReq = { ...requirements };
+      delete newReq.id;
+      delete newReq.board_id;
+      delete newReq.created_at;
+      delete newReq.updated_at;
+      await knex('board_requirements').insert({
+        id: require('crypto').randomUUID(),
+        board_id: newBoardId,
+        ...newReq,
+        created_at: knex.fn.now(),
+        updated_at: knex.fn.now()
+      });
+    }
+    
+    // Copy weights
+    if (weights) {
+      const newWeights = { ...weights };
+      delete newWeights.id;
+      delete newWeights.board_id;
+      delete newWeights.created_at;
+      delete newWeights.updated_at;
+      await knex('board_scoring_weights').insert({
+        id: require('crypto').randomUUID(),
+        board_id: newBoardId,
+        ...newWeights,
+        created_at: knex.fn.now(),
+        updated_at: knex.fn.now()
+      });
+    }
+    
+    return res.json({ id: newBoardId, success: true });
+  } catch (error) {
+    console.error('[Boards API] Error duplicating board:', error);
+    return res.status(500).json({ error: 'Failed to duplicate board' });
+  }
+});
+
+// POST /api/agency/boards/:boardId/calculate-scores - Recalculate all match scores for a board
+router.post('/api/agency/boards/:boardId/calculate-scores', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { boardId } = req.params;
+    const agencyId = req.session.userId;
+    
+    // Verify board belongs to agency
+    const board = await knex('boards')
+      .where({ id: boardId, agency_id: agencyId })
+      .first();
+    
+    if (!board) {
+      return res.status(404).json({ error: 'Board not found' });
+    }
+    
+    await recalculateBoardScores(boardId, agencyId);
+    
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('[Boards API] Error calculating scores:', error);
+    return res.status(500).json({ error: 'Failed to calculate scores' });
+  }
+});
+
+// POST /api/agency/applications/:applicationId/assign-board - Assign application to board
+router.post('/api/agency/applications/:applicationId/assign-board', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { applicationId } = req.params;
+    const { board_id } = req.body;
+    const agencyId = req.session.userId;
+
+    // Verify application belongs to agency
+    const application = await knex('applications')
+      .where({ id: applicationId, agency_id: agencyId })
+      .first();
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Verify board belongs to agency
+    if (board_id) {
+      const board = await knex('boards')
+        .where({ id: board_id, agency_id: agencyId })
+        .first();
+
+      if (!board) {
+        return res.status(404).json({ error: 'Board not found' });
+      }
+    }
+
+    // Remove from all boards first
+    await knex('board_applications')
+      .where({ application_id: applicationId })
+      .delete();
+
+    // Assign to new board if provided
+    if (board_id) {
+      // Check if already exists
+      const existing = await knex('board_applications')
+        .where({ board_id, application_id: applicationId })
+        .first();
+
+      if (!existing) {
+        // Get board requirements and weights
+        const board = await knex('boards')
+          .where({ id: board_id, agency_id: agencyId })
+          .first();
+
+        const requirements = await knex('board_requirements')
+          .where({ board_id })
+          .first();
+
+        const scoring_weights = await knex('board_scoring_weights')
+          .where({ board_id })
+          .first();
+
+        // Get profile
+        const profile = await knex('profiles')
+          .where({ id: application.profile_id })
+          .first();
+
+        let matchScore = 0;
+        let matchDetails = null;
+
+        // Calculate match score if requirements and weights exist
+        if (requirements && scoring_weights && profile) {
+          const { calculateMatchScore } = require('../lib/match-scoring');
+          
+          const parsedRequirements = {
+            ...requirements,
+            genders: requirements.genders ? JSON.parse(requirements.genders) : null,
+            body_types: requirements.body_types ? JSON.parse(requirements.body_types) : null,
+            comfort_levels: requirements.comfort_levels ? JSON.parse(requirements.comfort_levels) : null,
+            experience_levels: requirements.experience_levels ? JSON.parse(requirements.experience_levels) : null,
+            skills: requirements.skills ? JSON.parse(requirements.skills) : null,
+            locations: requirements.locations ? JSON.parse(requirements.locations) : null
+          };
+
+          const matchResult = calculateMatchScore(profile, {
+            requirements: parsedRequirements,
+            scoring_weights
+          });
+
+          matchScore = matchResult.score;
+          matchDetails = JSON.stringify(matchResult.details);
+        }
+
+        // Create board_applications entry
+        await knex('board_applications').insert({
+          id: require('crypto').randomUUID(),
+          board_id,
+          application_id: applicationId,
+          match_score: matchScore,
+          match_details: matchDetails,
+          created_at: knex.fn.now(),
+          updated_at: knex.fn.now()
+        });
+
+        // Update applications table cache
+        await knex('applications')
+          .where({ id: applicationId })
+          .update({
+            board_id,
+            match_score: matchScore,
+            match_calculated_at: knex.fn.now()
+          });
+      }
+    } else {
+      // Remove board_id from application if unassigning
+      await knex('applications')
+        .where({ id: applicationId })
+        .update({
+          board_id: null,
+          match_score: null,
+          match_calculated_at: null
+        });
+    }
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('[Boards API] Error assigning application to board:', error);
+    return res.status(500).json({ error: 'Failed to assign application to board' });
+  }
+});
+
+// Helper function to recalculate match scores for all applications in a board
+async function recalculateBoardScores(boardId, agencyId) {
+  // Get board with requirements and weights
+  const board = await knex('boards')
+    .where({ id: boardId, agency_id: agencyId })
+    .first();
+  
+  if (!board) return;
+  
+  const requirements = await knex('board_requirements')
+    .where({ board_id: boardId })
+    .first();
+  
+  const scoring_weights = await knex('board_scoring_weights')
+    .where({ board_id: boardId })
+    .first();
+  
+  if (!requirements || !scoring_weights) return;
+  
+  // Parse JSON fields
+  const parsedRequirements = {
+    ...requirements,
+    genders: requirements.genders ? JSON.parse(requirements.genders) : null,
+    body_types: requirements.body_types ? JSON.parse(requirements.body_types) : null,
+    comfort_levels: requirements.comfort_levels ? JSON.parse(requirements.comfort_levels) : null,
+    experience_levels: requirements.experience_levels ? JSON.parse(requirements.experience_levels) : null,
+    skills: requirements.skills ? JSON.parse(requirements.skills) : null,
+    locations: requirements.locations ? JSON.parse(requirements.locations) : null
+  };
+  
+  // Get all applications in this board
+  const boardApplications = await knex('board_applications')
+    .where({ board_id: boardId })
+    .select('application_id');
+  
+  // Calculate scores for each application
+  for (const ba of boardApplications) {
+    const application = await knex('applications')
+      .where({ id: ba.application_id, agency_id: agencyId })
+      .first();
+    
+    if (!application) continue;
+    
+    const profile = await knex('profiles')
+      .where({ id: application.profile_id })
+      .first();
+    
+    if (!profile) continue;
+    
+    // Calculate match score
+    const matchResult = calculateMatchScore(profile, {
+      requirements: parsedRequirements,
+      scoring_weights
+    });
+    
+    // Update board_applications table
+    await knex('board_applications')
+      .where({ board_id: boardId, application_id: application.id })
+      .update({
+        match_score: matchResult.score,
+        match_details: JSON.stringify(matchResult.details),
+        updated_at: knex.fn.now()
+      });
+    
+    // Update applications table (cache)
+    await knex('applications')
+      .where({ id: application.id })
+      .update({
+        match_score: matchResult.score,
+        match_calculated_at: knex.fn.now()
+      });
+  }
+}
 
 module.exports = router;
