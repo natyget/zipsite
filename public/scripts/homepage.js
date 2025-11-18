@@ -42,22 +42,26 @@
       if (isOpen()) return;
       lastFocusedElement = document.activeElement;
 
+      // Remove hidden attribute first
       navPanel.removeAttribute('hidden');
       navPanel.setAttribute('aria-hidden', 'false');
-      // Use requestAnimationFrame to ensure the panel is visible before animating
+      navOverlay.removeAttribute('hidden');
+      
+      // Force reflow to ensure panel is visible
+      navPanel.offsetHeight;
+      
+      // Add classes to trigger animations
       requestAnimationFrame(() => {
         navPanel.classList.add('is-open');
-        navOverlay.hidden = false;
-        requestAnimationFrame(() => {
-          navOverlay.classList.add('is-visible');
-        });
+        navOverlay.classList.add('is-visible');
       });
+      
       document.body.classList.add('nav-open');
       menuToggle.setAttribute('aria-expanded', 'true');
 
       const focusable = navPanel.querySelectorAll(focusableSelectors);
       if (focusable.length) {
-        setTimeout(() => focusable[0].focus(), 100);
+        setTimeout(() => focusable[0].focus(), 150);
       }
     };
 
