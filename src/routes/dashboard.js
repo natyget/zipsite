@@ -1518,6 +1518,49 @@ router.get('/dashboard/agency', requireRole('AGENCY'), async (req, res, next) =>
       profile.images = imagesByProfile[profile.id] || [];
     });
 
+    // Fetch notes and tags counts for applications (My Applicants view only)
+    if (view !== 'scout' && profiles.length > 0) {
+      const applicationIds = profiles
+        .map(p => p.application_id)
+        .filter(id => id);
+
+      if (applicationIds.length > 0) {
+        // Get notes counts
+        const notesCounts = await knex('application_notes')
+          .select('application_id')
+          .count('id as count')
+          .whereIn('application_id', applicationIds)
+          .groupBy('application_id');
+
+        const notesCountsMap = {};
+        notesCounts.forEach(item => {
+          notesCountsMap[item.application_id] = parseInt(item.count, 10);
+        });
+
+        // Get tags for each application
+        const allTags = await knex('application_tags')
+          .whereIn('application_id', applicationIds)
+          .where({ agency_id: agencyId })
+          .orderBy('created_at', 'desc');
+
+        const tagsByApplication = {};
+        allTags.forEach(tag => {
+          if (!tagsByApplication[tag.application_id]) {
+            tagsByApplication[tag.application_id] = [];
+          }
+          tagsByApplication[tag.application_id].push(tag);
+        });
+
+        // Attach notes counts and tags to profiles
+        profiles.forEach(profile => {
+          if (profile.application_id) {
+            profile.application_notes_count = notesCountsMap[profile.application_id] || 0;
+            profile.application_tags = tagsByApplication[profile.application_id] || [];
+          }
+        });
+      }
+    }
+
     // Get current user data with agency branding
     const currentUser = await knex('users')
       .where({ id: agencyId })
@@ -1782,6 +1825,600 @@ router.post('/api/talent/discoverability', requireRole('TALENT'), async (req, re
   } catch (error) {
     console.error('[Discoverability API] Error:', error);
     return res.status(500).json({ error: 'Failed to update discoverability' });
+  }
+});
+
+// ============================================
+// Application Notes & Tags API Endpoints
+// ============================================
+
+// GET /api/agency/applications/:applicationId/notes - Get all notes for an application
+router.get('/api/agency/applications/:applicationId/notes', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { applicationId } = req.params;
+    const agencyId = req.session.userId;
+
+    // Verify application belongs to this agency
+    const application = await knex('applications')
+      .where({ id: applicationId, agency_id: agencyId })
+      .first();
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    const notes = await knex('application_notes')
+      .where({ application_id: applicationId })
+      .orderBy('created_at', 'desc');
+
+    return res.json(notes);
+  } catch (error) {
+    console.error('[Notes API] Error:', error);
+    return res.status(500).json({ error: 'Failed to fetch notes' });
+  }
+});
+
+// POST /api/agency/applications/:applicationId/notes - Create a new note
+router.post('/api/agency/applications/:applicationId/notes', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { applicationId } = req.params;
+    const { note } = req.body;
+    const agencyId = req.session.userId;
+
+    if (!note || !note.trim()) {
+      return res.status(400).json({ error: 'Note text is required' });
+    }
+
+    // Verify application belongs to this agency
+    const application = await knex('applications')
+      .where({ id: applicationId, agency_id: agencyId })
+      .first();
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    const noteId = uuidv4();
+    const [newNote] = await knex('application_notes')
+      .insert({
+        id: noteId,
+        application_id: applicationId,
+        note: note.trim(),
+        created_at: knex.fn.now(),
+        updated_at: knex.fn.now()
+      })
+      .returning('*');
+
+    return res.json(newNote);
+  } catch (error) {
+    console.error('[Notes API] Error:', error);
+    return res.status(500).json({ error: 'Failed to create note' });
+  }
+});
+
+// PUT /api/agency/applications/:applicationId/notes/:noteId - Update a note
+router.put('/api/agency/applications/:applicationId/notes/:noteId', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { applicationId, noteId } = req.params;
+    const { note } = req.body;
+    const agencyId = req.session.userId;
+
+    if (!note || !note.trim()) {
+      return res.status(400).json({ error: 'Note text is required' });
+    }
+
+    // Verify application belongs to this agency
+    const application = await knex('applications')
+      .where({ id: applicationId, agency_id: agencyId })
+      .first();
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Verify note exists and belongs to this application
+    const existingNote = await knex('application_notes')
+      .where({ id: noteId, application_id: applicationId })
+      .first();
+
+    if (!existingNote) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+
+    const [updatedNote] = await knex('application_notes')
+      .where({ id: noteId })
+      .update({
+        note: note.trim(),
+        updated_at: knex.fn.now()
+      })
+      .returning('*');
+
+    return res.json(updatedNote);
+  } catch (error) {
+    console.error('[Notes API] Error:', error);
+    return res.status(500).json({ error: 'Failed to update note' });
+  }
+});
+
+// DELETE /api/agency/applications/:applicationId/notes/:noteId - Delete a note
+router.delete('/api/agency/applications/:applicationId/notes/:noteId', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { applicationId, noteId } = req.params;
+    const agencyId = req.session.userId;
+
+    // Verify application belongs to this agency
+    const application = await knex('applications')
+      .where({ id: applicationId, agency_id: agencyId })
+      .first();
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Verify note exists and belongs to this application
+    const existingNote = await knex('application_notes')
+      .where({ id: noteId, application_id: applicationId })
+      .first();
+
+    if (!existingNote) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+
+    await knex('application_notes')
+      .where({ id: noteId })
+      .delete();
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('[Notes API] Error:', error);
+    return res.status(500).json({ error: 'Failed to delete note' });
+  }
+});
+
+// GET /api/agency/applications/:applicationId/tags - Get all tags for an application
+router.get('/api/agency/applications/:applicationId/tags', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { applicationId } = req.params;
+    const agencyId = req.session.userId;
+
+    // Verify application belongs to this agency
+    const application = await knex('applications')
+      .where({ id: applicationId, agency_id: agencyId })
+      .first();
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    const tags = await knex('application_tags')
+      .where({ application_id: applicationId, agency_id: agencyId })
+      .orderBy('created_at', 'desc');
+
+    return res.json(tags);
+  } catch (error) {
+    console.error('[Tags API] Error:', error);
+    return res.status(500).json({ error: 'Failed to fetch tags' });
+  }
+});
+
+// POST /api/agency/applications/:applicationId/tags - Add a tag
+router.post('/api/agency/applications/:applicationId/tags', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { applicationId } = req.params;
+    const { tag, color } = req.body;
+    const agencyId = req.session.userId;
+
+    if (!tag || !tag.trim()) {
+      return res.status(400).json({ error: 'Tag name is required' });
+    }
+
+    // Verify application belongs to this agency
+    const application = await knex('applications')
+      .where({ id: applicationId, agency_id: agencyId })
+      .first();
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Check if tag already exists (unique constraint)
+    const existingTag = await knex('application_tags')
+      .where({ application_id: applicationId, agency_id: agencyId, tag: tag.trim() })
+      .first();
+
+    if (existingTag) {
+      return res.status(409).json({ error: 'Tag already exists' });
+    }
+
+    const tagId = uuidv4();
+    const [newTag] = await knex('application_tags')
+      .insert({
+        id: tagId,
+        application_id: applicationId,
+        agency_id: agencyId,
+        tag: tag.trim(),
+        color: color || null,
+        created_at: knex.fn.now()
+      })
+      .returning('*');
+
+    return res.json(newTag);
+  } catch (error) {
+    console.error('[Tags API] Error:', error);
+    if (error.code === '23505') { // Unique constraint violation
+      return res.status(409).json({ error: 'Tag already exists' });
+    }
+    return res.status(500).json({ error: 'Failed to create tag' });
+  }
+});
+
+// DELETE /api/agency/applications/:applicationId/tags/:tagId - Remove a tag
+router.delete('/api/agency/applications/:applicationId/tags/:tagId', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { applicationId, tagId } = req.params;
+    const agencyId = req.session.userId;
+
+    // Verify application belongs to this agency
+    const application = await knex('applications')
+      .where({ id: applicationId, agency_id: agencyId })
+      .first();
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Verify tag exists and belongs to this application and agency
+    const existingTag = await knex('application_tags')
+      .where({ id: tagId, application_id: applicationId, agency_id: agencyId })
+      .first();
+
+    if (!existingTag) {
+      return res.status(404).json({ error: 'Tag not found' });
+    }
+
+    await knex('application_tags')
+      .where({ id: tagId })
+      .delete();
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('[Tags API] Error:', error);
+    return res.status(500).json({ error: 'Failed to delete tag' });
+  }
+});
+
+// GET /api/agency/applications/:applicationId/details - Get full application details
+router.get('/api/agency/applications/:applicationId/details', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { applicationId } = req.params;
+    const agencyId = req.session.userId;
+
+    // Verify application belongs to this agency
+    const application = await knex('applications')
+      .where({ id: applicationId, agency_id: agencyId })
+      .first();
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Get full profile with all details
+    const profile = await knex('profiles')
+      .where({ id: application.profile_id })
+      .first();
+
+    if (!profile) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    // Get all images
+    const images = await knex('images')
+      .where({ profile_id: profile.id })
+      .orderBy(['sort', 'created_at']);
+
+    // Get user info
+    const user = await knex('users')
+      .where({ id: profile.user_id })
+      .first();
+
+    // Get notes
+    const notes = await knex('application_notes')
+      .where({ application_id: applicationId })
+      .orderBy('created_at', 'desc');
+
+    // Get tags
+    const tags = await knex('application_tags')
+      .where({ application_id: applicationId, agency_id: agencyId })
+      .orderBy('created_at', 'desc');
+
+    // Update viewed_at timestamp
+    await knex('applications')
+      .where({ id: applicationId })
+      .update({ viewed_at: knex.fn.now() });
+
+    return res.json({
+      application: {
+        id: application.id,
+        status: application.status,
+        created_at: application.created_at,
+        accepted_at: application.accepted_at,
+        declined_at: application.declined_at,
+        viewed_at: application.viewed_at,
+        invited_by_agency_id: application.invited_by_agency_id
+      },
+      profile: {
+        ...profile,
+        images,
+        user_email: user?.email || null
+      },
+      notes,
+      tags
+    });
+  } catch (error) {
+    console.error('[Application Details API] Error:', error);
+    return res.status(500).json({ error: 'Failed to fetch application details' });
+  }
+});
+
+// PUT /api/agency/profile - Update agency profile
+router.put('/api/agency/profile', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const agencyId = req.session.userId;
+    const { agency_name, agency_location, agency_website, agency_description } = req.body;
+
+    const updateData = {};
+    if (agency_name !== undefined) updateData.agency_name = agency_name || null;
+    if (agency_location !== undefined) updateData.agency_location = agency_location || null;
+    if (agency_website !== undefined) updateData.agency_website = agency_website || null;
+    if (agency_description !== undefined) updateData.agency_description = agency_description || null;
+
+    await knex('users')
+      .where({ id: agencyId })
+      .update(updateData);
+
+    return res.json({ success: true, message: 'Profile updated successfully' });
+  } catch (error) {
+    console.error('[Agency Profile API] Error:', error);
+    return res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// POST /api/agency/branding - Update agency branding (logo and color)
+router.post('/api/agency/branding', requireRole('AGENCY'), upload.single('agency_logo'), async (req, res, next) => {
+  try {
+    const agencyId = req.session.userId;
+    const { agency_brand_color, remove_logo } = req.body;
+
+    const updateData = {};
+    
+    if (remove_logo === 'true') {
+      // Remove existing logo
+      const user = await knex('users').where({ id: agencyId }).first();
+      if (user && user.agency_logo_path) {
+        // Delete file from storage if needed
+        updateData.agency_logo_path = null;
+      }
+    } else if (req.file) {
+      // Process and save new logo
+      const processedImage = await processImage(req.file, {
+        maxWidth: 400,
+        maxHeight: 400,
+        quality: 90
+      });
+      updateData.agency_logo_path = processedImage.path;
+    }
+
+    if (agency_brand_color !== undefined) {
+      updateData.agency_brand_color = agency_brand_color || null;
+    }
+
+    if (Object.keys(updateData).length > 0) {
+      await knex('users')
+        .where({ id: agencyId })
+        .update(updateData);
+    }
+
+    return res.json({ 
+      success: true, 
+      message: 'Branding updated successfully',
+      logo_path: updateData.agency_logo_path || null
+    });
+  } catch (error) {
+    console.error('[Agency Branding API] Error:', error);
+    return res.status(500).json({ error: 'Failed to update branding' });
+  }
+});
+
+// PUT /api/agency/settings - Update agency settings
+router.put('/api/agency/settings', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const agencyId = req.session.userId;
+    const { notify_new_applications, notify_status_changes, default_view } = req.body;
+
+    const updateData = {};
+    if (notify_new_applications !== undefined) updateData.notify_new_applications = !!notify_new_applications;
+    if (notify_status_changes !== undefined) updateData.notify_status_changes = !!notify_status_changes;
+    if (default_view !== undefined) updateData.default_view = default_view || null;
+
+    await knex('users')
+      .where({ id: agencyId })
+      .update(updateData);
+
+    return res.json({ success: true, message: 'Settings updated successfully' });
+  } catch (error) {
+    console.error('[Agency Settings API] Error:', error);
+    return res.status(500).json({ error: 'Failed to update settings' });
+  }
+});
+
+// GET /api/agency/export - Export applications as CSV or JSON
+router.get('/api/agency/export', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const agencyId = req.session.userId;
+    const { format = 'csv', status = '', city = '', search = '' } = req.query;
+
+    // Build query similar to main dashboard route
+    let query = knex('profiles')
+      .select(
+        'profiles.first_name',
+        'profiles.last_name',
+        'profiles.email',
+        'profiles.city',
+        'profiles.country',
+        'profiles.height_cm',
+        'profiles.measurements',
+        'profiles.age',
+        'profiles.bio_curated',
+        'applications.id as application_id',
+        'applications.status as application_status',
+        'applications.created_at as application_created_at',
+        'applications.accepted_at',
+        'applications.declined_at',
+        'users.email as owner_email'
+      )
+      .leftJoin('users', 'profiles.user_id', 'users.id')
+      .innerJoin('applications', (join) => {
+        join.on('applications.profile_id', '=', 'profiles.id')
+          .andOn('applications.agency_id', '=', knex.raw('?', [agencyId]));
+      })
+      .whereNotNull('profiles.bio_curated');
+
+    // Apply filters
+    if (status && status !== 'all') {
+      if (status === 'pending') {
+        query = query.where(function() {
+          this.where('applications.status', 'pending')
+            .orWhereNull('applications.status');
+        });
+      } else {
+        query = query.where('applications.status', status);
+      }
+    }
+
+    if (city) {
+      query = query.whereILike('profiles.city', `%${city}%`);
+    }
+
+    if (search) {
+      query = query.andWhere((qb) => {
+        qb.whereILike('profiles.first_name', `%${search}%`)
+          .orWhereILike('profiles.last_name', `%${search}%`);
+      });
+    }
+
+    const applications = await query.orderBy(['profiles.last_name', 'profiles.first_name']);
+
+    // Get notes and tags for each application
+    const applicationIds = applications.map(app => app.application_id).filter(Boolean);
+    
+    let notesMap = {};
+    let tagsMap = {};
+
+    if (applicationIds.length > 0) {
+      // Fetch aggregated notes
+      const notes = await knex('application_notes')
+        .select('application_id')
+        .select(knex.raw('string_agg(note, \' | \' ORDER BY created_at) as notes'))
+        .whereIn('application_id', applicationIds)
+        .groupBy('application_id');
+
+      notes.forEach(note => {
+        notesMap[note.application_id] = note.notes || '';
+      });
+
+      // Fetch tags
+      const tags = await knex('application_tags')
+        .select('application_id')
+        .select(knex.raw('string_agg(tag, \', \' ORDER BY created_at) as tags'))
+        .whereIn('application_id', applicationIds)
+        .groupBy('application_id');
+
+      tags.forEach(tag => {
+        tagsMap[tag.application_id] = tag.tags || '';
+      });
+    }
+
+    // Format data for export
+    const exportData = applications.map(app => ({
+      name: `${app.first_name} ${app.last_name}`,
+      email: app.owner_email || app.email || '',
+      city: app.city || '',
+      country: app.country || '',
+      height_cm: app.height_cm || '',
+      measurements: app.measurements || '',
+      age: app.age || '',
+      bio: app.bio_curated || '',
+      notes: notesMap[app.application_id] || '',
+      tags: tagsMap[app.application_id] || '',
+      application_status: app.application_status || 'pending',
+      applied_date: app.application_created_at ? new Date(app.application_created_at).toISOString() : '',
+      accepted_date: app.accepted_at ? new Date(app.accepted_at).toISOString() : '',
+      declined_date: app.declined_at ? new Date(app.declined_at).toISOString() : ''
+    }));
+
+    if (format === 'json') {
+      return res.json({
+        exported_at: new Date().toISOString(),
+        total: exportData.length,
+        applications: exportData
+      });
+    } else {
+      // CSV format
+      const csvHeaders = [
+        'Name',
+        'Email',
+        'City',
+        'Country',
+        'Height (cm)',
+        'Measurements',
+        'Age',
+        'Bio',
+        'Notes',
+        'Tags',
+        'Application Status',
+        'Applied Date',
+        'Accepted Date',
+        'Declined Date'
+      ];
+
+      const csvRows = exportData.map(app => {
+        const escapeCSV = (str) => {
+          if (!str) return '';
+          const string = String(str);
+          if (string.includes(',') || string.includes('"') || string.includes('\n')) {
+            return `"${string.replace(/"/g, '""')}"`;
+          }
+          return string;
+        };
+
+        return [
+          escapeCSV(app.name),
+          escapeCSV(app.email),
+          escapeCSV(app.city),
+          escapeCSV(app.country),
+          escapeCSV(app.height_cm),
+          escapeCSV(app.measurements),
+          escapeCSV(app.age),
+          escapeCSV(app.bio),
+          escapeCSV(app.notes),
+          escapeCSV(app.tags),
+          escapeCSV(app.application_status),
+          escapeCSV(app.applied_date ? new Date(app.applied_date).toLocaleDateString() : ''),
+          escapeCSV(app.accepted_date ? new Date(app.accepted_date).toLocaleDateString() : ''),
+          escapeCSV(app.declined_date ? new Date(app.declined_date).toLocaleDateString() : '')
+        ].join(',');
+      });
+
+      const csvContent = [csvHeaders.join(','), ...csvRows].join('\n');
+      const filename = `pholio-applications-${new Date().toISOString().split('T')[0]}.csv`;
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      return res.send(csvContent);
+    }
+  } catch (error) {
+    console.error('[Export API] Error:', error);
+    return res.status(500).json({ error: 'Failed to export applications' });
   }
 });
 
