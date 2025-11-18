@@ -52,16 +52,36 @@
   function initTalentAccordion() {
     const accordionItems = document.querySelectorAll('.talent-accordion__item');
     
-    accordionItems.forEach(item => {
+    // Auto-expand first incomplete section
+    let firstIncompleteExpanded = false;
+    
+    accordionItems.forEach((item, index) => {
       const header = item.querySelector('.talent-accordion__header');
       const content = item.querySelector('.talent-accordion__content');
-      
+      const status = item.querySelector('.talent-accordion__status');
+
       if (!header || !content) return;
+
+      // Check if section is incomplete
+      const isIncomplete = status && status.classList.contains('talent-accordion__status--incomplete');
       
-      // Set initial state (collapsed)
-      header.setAttribute('aria-expanded', 'false');
-      content.style.display = 'none';
-      
+      // Auto-expand first incomplete section
+      if (isIncomplete && !firstIncompleteExpanded) {
+        header.setAttribute('aria-expanded', 'true');
+        content.style.display = 'block';
+        firstIncompleteExpanded = true;
+        
+        // Smooth scroll to the expanded section
+        setTimeout(() => {
+          item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+      } else {
+        // Set initial state (collapsed)
+        header.setAttribute('aria-expanded', 'false');
+        content.style.display = 'none';
+      }
+
+      // Click handler
       header.addEventListener('click', () => {
         const isExpanded = header.getAttribute('aria-expanded') === 'true';
         
@@ -69,20 +89,44 @@
         header.setAttribute('aria-expanded', !isExpanded);
         content.style.display = isExpanded ? 'none' : 'block';
         
-        // Optional: Close other items (accordion behavior)
-        // Uncomment if you want only one section open at a time
-        // if (!isExpanded) {
-        //   accordionItems.forEach(otherItem => {
-        //     if (otherItem !== item) {
-        //       const otherHeader = otherItem.querySelector('.talent-accordion__header');
-        //       const otherContent = otherItem.querySelector('.talent-accordion__content');
-        //       if (otherHeader && otherContent) {
-        //         otherHeader.setAttribute('aria-expanded', 'false');
-        //         otherContent.style.display = 'none';
-        //       }
-        //     }
-        //   });
-        // }
+        // Smooth scroll to section when expanding
+        if (!isExpanded) {
+          setTimeout(() => {
+            item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }, 100);
+        }
+      });
+
+      // Keyboard navigation support
+      header.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          header.click();
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const nextItem = accordionItems[index + 1];
+          if (nextItem) {
+            const nextHeader = nextItem.querySelector('.talent-accordion__header');
+            if (nextHeader) {
+              nextHeader.focus();
+              if (nextHeader.getAttribute('aria-expanded') !== 'true') {
+                nextHeader.click();
+              }
+            }
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          const prevItem = accordionItems[index - 1];
+          if (prevItem) {
+            const prevHeader = prevItem.querySelector('.talent-accordion__header');
+            if (prevHeader) {
+              prevHeader.focus();
+              if (prevHeader.getAttribute('aria-expanded') !== 'true') {
+                prevHeader.click();
+              }
+            }
+          }
+        }
       });
     });
   }
@@ -1318,7 +1362,24 @@
         return;
       }
 
+      // Hide any previous errors
+      const errorDisplay = document.getElementById('upload-error');
+      if (errorDisplay) {
+        errorDisplay.style.display = 'none';
+        errorDisplay.textContent = '';
+      }
+
       // Show loading state
+      const progressBar = document.getElementById('upload-progress');
+      const progressFill = document.getElementById('upload-progress-fill');
+      const progressText = document.getElementById('upload-progress-text');
+      
+      if (progressBar) {
+        progressBar.style.display = 'block';
+        if (progressFill) progressFill.style.width = '0%';
+        if (progressText) progressText.textContent = `Uploading 0 of ${selectedFiles.length} images...`;
+      }
+
       if (uploadButton) {
         uploadButton.disabled = true;
         uploadButton.textContent = 'Uploading...';
@@ -1346,12 +1407,17 @@
           throw new Error(data.error || 'Upload failed');
         }
 
+        // Hide progress bar
+        if (progressBar) {
+          progressBar.style.display = 'none';
+        }
+
         // Success - add images to grid dynamically
         if (data.images && data.images.length > 0) {
           addImagesToGrid(data.images, data.heroImagePath);
           updateImageCount(data.totalImages);
           updateHeroImage(data.heroImagePath);
-          showSuccessMessage(data.message);
+          showSuccessMessage(data.message || `Successfully uploaded ${data.images.length} image${data.images.length > 1 ? 's' : ''}.`);
         }
 
         // Clear file input and preview
@@ -1367,8 +1433,20 @@
           uploadButton.style.cursor = 'pointer';
         }
       } catch (error) {
-        console.error('Upload error:', error);
-        alert(error.message || 'Failed to upload images. Please try again.');
+        console.error('[Image Upload] Error:', error);
+        
+        // Hide progress bar
+        if (progressBar) {
+          progressBar.style.display = 'none';
+        }
+
+        // Show error message
+        if (errorDisplay) {
+          errorDisplay.style.display = 'block';
+          errorDisplay.textContent = error.message || 'Failed to upload images. Please try again.';
+        } else {
+          alert(error.message || 'Failed to upload images. Please try again.');
+        }
 
         // Reset button
         if (uploadButton) {
@@ -1383,17 +1461,38 @@
 
   // Helper function to add images to grid dynamically
   function addImagesToGrid(images, heroImagePath) {
-    let mediaGrid = document.querySelector('[data-media-grid]');
+    // First try to find existing grid by ID or data attribute
+    // Look in Social & Portfolio accordion section (where Portfolio Imagery now lives)
+    let mediaGrid = document.querySelector('#media-grid') || 
+                    document.querySelector('[data-section="social-portfolio"] [data-media-grid]') ||
+                    document.querySelector('#portfolio-imagery [data-media-grid]');
     
     // If grid doesn't exist, create it
     if (!mediaGrid) {
-      // Find the portfolio imagery panel body
-      const portfolioPanel = document.querySelector('.dash-panel');
-      if (portfolioPanel) {
-        const panelBody = portfolioPanel.querySelector('.dash-panel__body');
-        if (panelBody) {
+      // Find the Social & Portfolio accordion section
+      const socialPortfolioSection = document.querySelector('[data-section="social-portfolio"]');
+      if (socialPortfolioSection) {
+        const accordionBody = socialPortfolioSection.querySelector('.talent-accordion__body');
+        if (accordionBody) {
+          // Find the Portfolio Imagery div within the accordion
+          let portfolioImageryDiv = accordionBody.querySelector('div[style*="margin-top: 3rem"]');
+          if (!portfolioImageryDiv) {
+            // Create the Portfolio Imagery container if it doesn't exist
+            portfolioImageryDiv = document.createElement('div');
+            portfolioImageryDiv.style.cssText = 'margin-top: 3rem; padding-top: 3rem; border-top: 1px solid var(--border-color);';
+            const heading = document.createElement('h4');
+            heading.style.cssText = 'margin-bottom: 0.5rem; font-size: 1.125rem; font-weight: 600;';
+            heading.textContent = 'Portfolio Imagery';
+            const description = document.createElement('p');
+            description.style.cssText = 'margin-bottom: 1.5rem; color: var(--text-secondary); font-size: 0.875rem;';
+            description.textContent = 'Upload 6-12 high-quality images. The first image becomes your hero shot.';
+            portfolioImageryDiv.appendChild(heading);
+            portfolioImageryDiv.appendChild(description);
+            accordionBody.appendChild(portfolioImageryDiv);
+          }
+          
           // Remove empty state if it exists
-          const emptyState = panelBody.querySelector('.empty-state');
+          const emptyState = portfolioImageryDiv.querySelector('.empty-state');
           if (emptyState) {
             emptyState.remove();
           }
@@ -1401,15 +1500,36 @@
           // Create new grid
           mediaGrid = document.createElement('div');
           mediaGrid.className = 'media-grid';
+          mediaGrid.id = 'media-grid';
           mediaGrid.setAttribute('data-media-grid', '');
-          panelBody.appendChild(mediaGrid);
+          portfolioImageryDiv.appendChild(mediaGrid);
         } else {
-          console.error('Portfolio panel body not found');
+          console.error('[Image Upload] Social & Portfolio accordion body not found');
           return;
         }
       } else {
-        console.error('Portfolio panel not found');
-        return;
+        // Fallback: try old portfolio-imagery section
+        const portfolioPanel = document.getElementById('portfolio-imagery');
+        if (portfolioPanel) {
+          const panelBody = portfolioPanel.querySelector('.dash-panel__body');
+          if (panelBody) {
+            const emptyState = panelBody.querySelector('.empty-state');
+            if (emptyState) {
+              emptyState.remove();
+            }
+            mediaGrid = document.createElement('div');
+            mediaGrid.className = 'media-grid';
+            mediaGrid.id = 'media-grid';
+            mediaGrid.setAttribute('data-media-grid', '');
+            panelBody.appendChild(mediaGrid);
+          } else {
+            console.error('[Image Upload] Portfolio panel body not found');
+            return;
+          }
+        } else {
+          console.error('[Image Upload] Portfolio imagery section not found');
+          return;
+        }
       }
     } else {
       // Remove empty state if it exists (it might be a sibling)
@@ -1574,38 +1694,50 @@
 
     // Update hero image in hero section
     const heroImageContainer = document.querySelector('.dash-hero__image');
-    if (heroImageContainer) {
-      // Remove placeholder if it exists
-      const placeholder = heroImageContainer.querySelector('.dash-hero__image-placeholder');
-      if (placeholder) {
-        placeholder.remove();
-      }
+    if (!heroImageContainer) {
+      console.warn('[Image Upload] Hero image container not found');
+      return;
+    }
 
-      // Get or create hero image element
-      let heroImage = heroImageContainer.querySelector('img');
-      if (!heroImage) {
-        heroImage = document.createElement('img');
-        heroImage.alt = 'Profile hero image';
-        heroImage.onload = function() {
-          this.classList.add('is-loaded');
-        };
-        heroImage.onerror = function() {
-          this.classList.add('is-loaded');
-        };
-        heroImageContainer.appendChild(heroImage);
-      }
+    // Remove placeholder if it exists
+    const placeholder = heroImageContainer.querySelector('.dash-hero__image-placeholder');
+    if (placeholder && placeholder.textContent.includes('Upload images')) {
+      placeholder.remove();
+    }
 
-      // Update image source
+    // Get or create hero image element
+    let heroImage = heroImageContainer.querySelector('img');
+    if (!heroImage) {
+      heroImage = document.createElement('img');
+      heroImage.alt = 'Profile hero image';
+      heroImage.onload = function() {
+        this.classList.add('is-loaded');
+        // Remove placeholder shimmer if it exists
+        const placeholderShimmer = heroImageContainer.querySelector('.dash-hero__placeholder-shimmer');
+        if (placeholderShimmer) {
+          placeholderShimmer.remove();
+        }
+      };
+      heroImage.onerror = function() {
+        this.classList.add('is-loaded');
+        console.error('[Image Upload] Failed to load hero image:', normalizedHeroPath);
+      };
+      heroImageContainer.appendChild(heroImage);
+    }
+
+    // Update image source (this will trigger onload if already cached)
+    if (heroImage.src !== normalizedHeroPath && heroImage.src !== window.location.origin + normalizedHeroPath) {
       heroImage.src = normalizedHeroPath;
-      
-      // Add loading placeholder if image hasn't loaded yet
-      if (!heroImage.complete) {
-        const placeholderDiv = document.createElement('div');
+    }
+    
+    // Add loading placeholder if image hasn't loaded yet
+    if (!heroImage.complete || heroImage.naturalHeight === 0) {
+      let placeholderDiv = heroImageContainer.querySelector('.dash-hero__image-placeholder');
+      if (!placeholderDiv) {
+        placeholderDiv = document.createElement('div');
         placeholderDiv.className = 'dash-hero__image-placeholder';
         placeholderDiv.innerHTML = '<div class="dash-hero__placeholder-shimmer"></div>';
-        if (!heroImageContainer.querySelector('.dash-hero__image-placeholder')) {
-          heroImageContainer.insertBefore(placeholderDiv, heroImage);
-        }
+        heroImageContainer.insertBefore(placeholderDiv, heroImage);
       }
     }
 
