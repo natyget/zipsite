@@ -2425,7 +2425,6 @@ router.get('/api/agency/export', requireRole('AGENCY'), async (req, res, next) =
       .select(
         'profiles.first_name',
         'profiles.last_name',
-        'profiles.email',
         'profiles.city',
         'profiles.country',
         'profiles.height_cm',
@@ -2504,7 +2503,7 @@ router.get('/api/agency/export', requireRole('AGENCY'), async (req, res, next) =
     // Format data for export
     const exportData = applications.map(app => ({
       name: `${app.first_name} ${app.last_name}`,
-      email: app.owner_email || app.email || '',
+      email: app.owner_email || '',
       city: app.city || '',
       country: app.country || '',
       height_cm: app.height_cm || '',
