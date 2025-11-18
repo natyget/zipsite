@@ -3,7 +3,8 @@
   const safeCustomizations = typeof customizations !== 'undefined' && customizations ? customizations : {};
   const safeTheme = typeof theme !== 'undefined' && theme ? theme : {};
   const safeCurrentTheme = typeof currentTheme !== 'undefined' ? currentTheme : 'classic-serif';
-  const profileSlug = typeof profileSlug !== 'undefined' ? profileSlug : safeProfile.slug || '';
+  // profileSlug is passed from route, use it directly or fall back to profile.slug
+  const effectiveProfileSlug = (typeof profileSlug !== 'undefined' && profileSlug) ? profileSlug : (safeProfile.slug || '');
   const baseUrl = typeof baseUrl !== 'undefined' ? baseUrl : '';
 %>
 
@@ -20,13 +21,13 @@
         <h2 class="pdf-customizer__preview-title">Live Preview</h2>
         <div class="pdf-customizer__preview-actions">
           <button type="button" class="pdf-customizer__button pdf-customizer__button--secondary" id="refresh-preview">Refresh</button>
-          <a href="<%= baseUrl %>/pdf/<%= profileSlug %>?download=1" target="_blank" class="pdf-customizer__button pdf-customizer__button--primary" id="download-pdf">Download PDF</a>
+          <a href="<%= baseUrl %>/pdf/<%= effectiveProfileSlug %>?download=1" target="_blank" class="pdf-customizer__button pdf-customizer__button--primary" id="download-pdf">Download PDF</a>
         </div>
       </div>
       <div class="pdf-customizer__preview-container">
         <iframe 
           id="pdf-preview-iframe"
-          src="<%= baseUrl %>/pdf/view/<%= profileSlug %>?theme=<%= safeCurrentTheme %>"
+          src="<%= baseUrl %>/pdf/view/<%= effectiveProfileSlug %>?theme=<%= safeCurrentTheme %>"
           class="pdf-customizer__preview-iframe"
           title="PDF Comp Card Preview"
           loading="lazy">
@@ -270,7 +271,7 @@
 <script>
   // Pass data to JavaScript
   window.PDF_CUSTOMIZER_DATA = {
-    profileSlug: '<%= profileSlug %>',
+    profileSlug: '<%= effectiveProfileSlug %>',
     baseUrl: '<%= baseUrl %>',
     currentTheme: '<%= safeCurrentTheme %>',
     customizations: <%- JSON.stringify(safeCustomizations) %>,
