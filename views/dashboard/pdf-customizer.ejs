@@ -3,8 +3,8 @@
   const safeCustomizations = typeof customizations !== 'undefined' && customizations ? customizations : {};
   const safeTheme = typeof theme !== 'undefined' && theme ? theme : {};
   const safeCurrentTheme = typeof currentTheme !== 'undefined' ? currentTheme : 'classic-serif';
-  // profileSlug is passed from route, use it directly or fall back to profile.slug
-  const effectiveProfileSlug = (typeof profileSlug !== 'undefined' && profileSlug) ? profileSlug : (safeProfile.slug || '');
+  // Use profile.slug directly (route passes profileSlug: profile.slug, but this avoids reference error)
+  const effectiveProfileSlug = safeProfile.slug || '';
   const baseUrl = typeof baseUrl !== 'undefined' ? baseUrl : '';
 %>
 
