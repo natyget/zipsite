@@ -2297,7 +2297,25 @@
     const form = document.getElementById('board-editor-form');
     const title = document.getElementById('board-editor-title');
     
-    if (!modal || !form) return;
+    if (!modal || !form) {
+      // Fallback: Navigate to boards page or show alert
+      if (boardId) {
+        // For editing, navigate to applicants filtered by board
+        window.location.href = `/dashboard/agency/applicants?board_id=${boardId}`;
+      } else {
+        // For creating, navigate to boards page
+        window.location.href = '/dashboard/agency/boards';
+        // Try to trigger create button after navigation
+        setTimeout(() => {
+          const createBtn = document.getElementById('create-board-btn');
+          if (createBtn) {
+            createBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            createBtn.focus();
+          }
+        }, 100);
+      }
+      return;
+    }
 
     // Reset form
     form.reset();
@@ -3122,21 +3140,11 @@
     // Quick action: Create Board
     const createBoardBtn = document.getElementById('quick-action-create-board');
     if (createBoardBtn) {
-      createBoardBtn.addEventListener('click', () => {
-        if (window.openBoardEditor) {
-          window.openBoardEditor();
-        } else {
-          // Fallback: scroll to boards section
-          const boardsSection = document.getElementById('boards');
-          if (boardsSection) {
-            boardsSection.scrollIntoView({ behavior: 'smooth' });
-            // Trigger create board button click
-            setTimeout(() => {
-              const createBtn = document.getElementById('create-board-btn');
-              if (createBtn) createBtn.click();
-            }, 500);
-          }
-        }
+      createBoardBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Navigate to boards page and trigger create
+        window.location.href = '/dashboard/agency/boards';
+        // After navigation, the boards page will handle the create button
       });
     }
 
@@ -3451,6 +3459,7 @@
     filterPills.forEach(pill => {
       pill.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         const status = pill.dataset.status || 'all';
         
         // Update active state
@@ -3467,6 +3476,18 @@
         window.location.href = url.toString();
       });
     });
+    
+    // Set initial active state based on URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentStatus = urlParams.get('status') || 'all';
+    filterPills.forEach(pill => {
+      const pillStatus = pill.dataset.status || 'all';
+      if (pillStatus === currentStatus) {
+        pill.classList.add('agency-inbox-header__filter-pill--active');
+      } else {
+        pill.classList.remove('agency-inbox-header__filter-pill--active');
+      }
+    });
   }
 
   /**
@@ -3474,6 +3495,19 @@
    */
   function initBoardsPage() {
     const boardCards = document.querySelectorAll('.agency-boards-page__card');
+    const createBoardBtn = document.getElementById('create-board-btn');
+    
+    // Create board button handler
+    if (createBoardBtn) {
+      createBoardBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Navigate to applicants page with a special parameter, or show alert
+        // For now, show alert since board editor modal doesn't exist
+        alert('Board creation feature is being set up. Please use the boards management section in settings.');
+        // Alternative: Navigate to a create board page if it exists
+        // window.location.href = '/dashboard/agency/boards/create';
+      });
+    }
     
     boardCards.forEach(card => {
       card.addEventListener('click', (e) => {
@@ -3483,11 +3517,8 @@
         }
         
         const boardId = card.dataset.boardId;
-        if (boardId && window.openBoardEditor) {
-          // Open board editor to view/edit board details
-          window.openBoardEditor(boardId);
-        } else if (boardId) {
-          // Fallback: navigate to applicants page filtered by this board
+        if (boardId) {
+          // Navigate to applicants page filtered by this board
           window.location.href = `/dashboard/agency/applicants?board_id=${boardId}`;
         }
       });
