@@ -11,7 +11,7 @@ const router = express.Router();
 async function getDashboardStats(agencyId) {
   const allApplications = await knex('applications')
     .where({ agency_id: agencyId })
-    .select('status', 'created_at');
+    .select('status', 'created_at', 'viewed_at');
   
   return {
     total: allApplications.length,
@@ -30,6 +30,49 @@ async function getDashboardStats(agencyId) {
       weekAgo.setDate(weekAgo.getDate() - 7);
       return created >= weekAgo;
     }).length
+  };
+}
+
+// Helper function to get pipeline stage counts
+async function getPipelineCounts(agencyId) {
+  const allApplications = await knex('applications')
+    .where({ agency_id: agencyId })
+    .select('status', 'viewed_at');
+  
+  const total = allApplications.length;
+  
+  // New: applications with no viewed_at and status='pending' or null
+  const newCount = allApplications.filter(a => 
+    (!a.viewed_at && (!a.status || a.status === 'pending'))
+  ).length;
+  
+  // Pending: status='pending' and viewed_at is null
+  const pendingCount = allApplications.filter(a => 
+    (!a.status || a.status === 'pending') && !a.viewed_at
+  ).length;
+  
+  // Under Review: viewed_at is set but not accepted/declined
+  const underReviewCount = allApplications.filter(a => 
+    a.viewed_at && (!a.status || a.status === 'pending')
+  ).length;
+  
+  // Accepted: status='accepted'
+  const acceptedCount = allApplications.filter(a => a.status === 'accepted').length;
+  
+  // Declined: status='declined'
+  const declinedCount = allApplications.filter(a => a.status === 'declined').length;
+  
+  // Archived: status='archived'
+  const archivedCount = allApplications.filter(a => a.status === 'archived').length;
+  
+  return {
+    all: total,
+    new: newCount,
+    pending: pendingCount,
+    'under-review': underReviewCount,
+    accepted: acceptedCount,
+    declined: declinedCount,
+    archived: archivedCount
   };
 }
 
@@ -135,6 +178,7 @@ router.get('/dashboard/agency/applicants', requireRole('AGENCY'), async (req, re
 
     const stats = await getDashboardStats(agencyId);
     const boards = await getBoardsWithCounts(agencyId);
+    const pipelineCounts = await getPipelineCounts(agencyId);
 
     // My Applicants: Only profiles with applications to this agency
     let query = knex('profiles')
@@ -146,6 +190,7 @@ router.get('/dashboard/agency/applicants', requireRole('AGENCY'), async (req, re
         'applications.created_at as application_created_at',
         'applications.accepted_at',
         'applications.declined_at',
+        'applications.viewed_at',
         'applications.invited_by_agency_id',
         'board_applications.match_score as board_match_score',
         'board_applications.match_details as board_match_details'
@@ -170,18 +215,33 @@ router.get('/dashboard/agency/applicants', requireRole('AGENCY'), async (req, re
 
     // Filter by application status
     if (status && status !== 'all') {
-      if (status === 'pending') {
+      if (status === 'new' || status === 'inbox') {
+        // New: no viewed_at and status='pending' or null
         query = query.where(function() {
-          this.where('applications.status', 'pending')
-            .orWhereNull('applications.status');
+          this.whereNull('applications.viewed_at')
+            .andWhere(function() {
+              this.where('applications.status', 'pending')
+                .orWhereNull('applications.status');
+            });
+        });
+      } else if (status === 'pending') {
+        // Pending: status='pending' and viewed_at is null
+        query = query.where(function() {
+          this.where(function() {
+            this.where('applications.status', 'pending')
+              .orWhereNull('applications.status');
+          }).whereNull('applications.viewed_at');
         });
       } else if (status === 'under-review') {
-        // Under review is typically pending applications that have been viewed
+        // Under review: viewed_at is set but not accepted/declined
         query = query.where(function() {
-          this.where('applications.status', 'pending')
-            .orWhereNull('applications.status');
-        }).whereNotNull('applications.viewed_at');
+          this.where(function() {
+            this.where('applications.status', 'pending')
+              .orWhereNull('applications.status');
+          }).whereNotNull('applications.viewed_at');
+        });
       } else {
+        // Accepted, Declined, Archived
         query = query.where('applications.status', status);
       }
     }
@@ -299,6 +359,7 @@ router.get('/dashboard/agency/applicants', requireRole('AGENCY'), async (req, re
       boards,
       filters: { sort, city, letter, search, min_height, max_height, status, board_id },
       stats,
+      pipelineCounts,
       user: currentUser,
       currentUser,
       isDashboard: true,

@@ -45,22 +45,33 @@
 
   // Group profiles by application status for Kanban board
   const profilesByStatus = {
+    new: [],
     pending: [],
     'under-review': [],
     accepted: [],
+    declined: [],
     archived: []
   };
 
   safeProfiles.forEach(profile => {
     const appStatus = profile.application_status || 'pending';
-    if (appStatus === 'pending' || !appStatus) {
-      profilesByStatus.pending.push(profile);
+    const viewedAt = profile.viewed_at || null;
+    
+    // New: no viewed_at and status='pending' or null
+    if ((!appStatus || appStatus === 'pending') && !viewedAt) {
+      profilesByStatus.new.push(profile);
     } else if (appStatus === 'accepted') {
       profilesByStatus.accepted.push(profile);
+    } else if (appStatus === 'declined') {
+      profilesByStatus.declined.push(profile);
     } else if (appStatus === 'archived') {
       profilesByStatus.archived.push(profile);
-    } else {
+    } else if ((!appStatus || appStatus === 'pending') && viewedAt) {
+      // Under Review: viewed_at is set but not accepted/declined
       profilesByStatus['under-review'].push(profile);
+    } else {
+      // Fallback to pending
+      profilesByStatus.pending.push(profile);
     }
   });
 %>
@@ -97,13 +108,14 @@
       <%- include('../partials/agency/overview', { currentUser, safeStats, safeBoards, profiles }) %>
     <% } else if (page === 'applicants') { %>
       <!-- My Applicants Page -->
-      <%- include('../partials/agency/inbox-header', { safeStats }) %>
-      <%- include('../partials/agency/header', { safeStats, view: 'applicants' }) %>
-      <%- include('../partials/agency/filters', { safeBoards, safeFilters, page }) %>
-      <%- include('../partials/agency/kanban', { profilesByStatus, currentUser }) %>
-      <%- include('../partials/agency/gallery', { safeProfiles, currentUser }) %>
-      <%- include('../partials/agency/list', { safeProfiles, currentUser }) %>
-      <%- include('../partials/agency/table', { safeProfiles, currentUser }) %>
+      <%- include('../partials/agency/inbox-header', { safeStats, pipelineCounts, filters }) %>
+      <%- include('../partials/agency/applicants-filter-drawer', { safeBoards }) %>
+      <div class="applicants-views-container">
+        <%- include('../partials/agency/kanban', { profilesByStatus, currentUser }) %>
+        <%- include('../partials/agency/gallery', { safeProfiles, currentUser }) %>
+        <%- include('../partials/agency/list', { safeProfiles, currentUser }) %>
+        <%- include('../partials/agency/table', { safeProfiles, currentUser }) %>
+      </div>
     <% } else if (page === 'discover') { %>
       <!-- Discover Page -->
       <%- include('../partials/agency/discover-header') %>

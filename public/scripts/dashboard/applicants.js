@@ -8,6 +8,9 @@
 
   const Applicants = {
     init() {
+      this.initPipeline();
+      this.initViewModes();
+      this.initFilterDrawer();
       this.initKanbanDragDrop();
       this.initPreviewModal();
       this.initBatchOperations();
@@ -94,6 +97,8 @@
       }
 
       const statusToAction = {
+        'new': null, // New status doesn't have an action, just viewed
+        'pending': null, // Pending doesn't have an action
         'accepted': 'accept',
         'declined': 'decline',
         'archived': 'archive',
@@ -422,16 +427,54 @@
     },
 
     initSearch() {
-       const searchInput = document.getElementById('agency-search'); // If exists in this view
-       if(searchInput) {
-           searchInput.addEventListener('input', (e) => {
-               // Filter cards in DOM
-               const term = e.target.value.toLowerCase();
-               document.querySelectorAll('.agency-dashboard__card').forEach(card => {
-                   const text = card.innerText.toLowerCase();
-                   card.style.display = text.includes(term) ? '' : 'none';
-               });
+       // Search in applicants header
+       const searchInput = document.getElementById('applicants-search-input');
+       if (searchInput) {
+         let searchTimeout;
+         searchInput.addEventListener('input', (e) => {
+           clearTimeout(searchTimeout);
+           const term = e.target.value.trim();
+           
+           searchTimeout = setTimeout(() => {
+             if (term.length >= 2 || term.length === 0) {
+               const url = new URL(window.location);
+               if (term) {
+                 url.searchParams.set('search', term);
+               } else {
+                 url.searchParams.delete('search');
+               }
+               window.location.href = url.toString();
+             }
+           }, 500);
+         });
+
+         // Enter key to search immediately
+         searchInput.addEventListener('keydown', (e) => {
+           if (e.key === 'Enter') {
+             e.preventDefault();
+             clearTimeout(searchTimeout);
+             const term = e.target.value.trim();
+             const url = new URL(window.location);
+             if (term) {
+               url.searchParams.set('search', term);
+             } else {
+               url.searchParams.delete('search');
+             }
+             window.location.href = url.toString();
+           }
+         });
+       }
+
+       // Legacy search (if exists)
+       const legacySearch = document.getElementById('agency-search');
+       if (legacySearch) {
+         legacySearch.addEventListener('input', (e) => {
+           const term = e.target.value.toLowerCase();
+           document.querySelectorAll('.agency-dashboard__card').forEach(card => {
+             const text = card.innerText.toLowerCase();
+             card.style.display = text.includes(term) ? '' : 'none';
            });
+         });
        }
     },
 
@@ -460,8 +503,209 @@
        });
     },
 
+    /**
+     * Pipeline Stage Click Handlers
+     */
+    initPipeline() {
+      const stages = document.querySelectorAll('.applicants-pipeline__stage');
+      stages.forEach(stage => {
+        stage.addEventListener('click', () => {
+          const status = stage.dataset.status;
+          const url = new URL(window.location);
+          if (status === 'all') {
+            url.searchParams.delete('status');
+          } else {
+            url.searchParams.set('status', status);
+          }
+          window.location.href = url.toString();
+        });
+      });
+    },
+
+    /**
+     * View Mode Toggle
+     */
+    initViewModes() {
+      const viewButtons = document.querySelectorAll('.agency-applicants-header__view-btn');
+      const views = {
+        pipeline: document.getElementById('view-pipeline'),
+        list: document.getElementById('view-list'),
+        gallery: document.getElementById('view-gallery'),
+        table: document.getElementById('view-table')
+      };
+
+      // Get saved preference or default to pipeline
+      const savedView = localStorage.getItem('applicants-view-mode') || 'pipeline';
+      
+      viewButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const viewMode = btn.dataset.view;
+          
+          // Update active button
+          viewButtons.forEach(b => b.classList.remove('agency-applicants-header__view-btn--active'));
+          btn.classList.add('agency-applicants-header__view-btn--active');
+          
+          // Hide all views
+          Object.values(views).forEach(view => {
+            if (view) {
+              view.style.display = 'none';
+              view.classList.remove('agency-dashboard__view--active');
+            }
+          });
+          
+          // Show selected view
+          if (views[viewMode]) {
+            views[viewMode].style.display = 'block';
+            views[viewMode].classList.add('agency-dashboard__view--active');
+          }
+          
+          // Save preference
+          localStorage.setItem('applicants-view-mode', viewMode);
+          
+          // Update URL
+          const url = new URL(window.location);
+          url.searchParams.set('view', viewMode);
+          window.history.pushState({}, '', url);
+        });
+      });
+
+      // Set initial view
+      const initialView = new URLSearchParams(window.location.search).get('view') || savedView;
+      const initialBtn = Array.from(viewButtons).find(btn => btn.dataset.view === initialView);
+      if (initialBtn) {
+        initialBtn.click();
+      } else if (views[initialView]) {
+        views[initialView].style.display = 'block';
+        views[initialView].classList.add('agency-dashboard__view--active');
+      }
+    },
+
+    /**
+     * Filter Drawer
+     */
+    initFilterDrawer() {
+      const drawer = document.getElementById('applicants-filter-drawer');
+      const openBtn = document.getElementById('applicants-filters-btn');
+      const closeBtn = document.getElementById('applicants-filter-drawer-close');
+      const overlay = document.getElementById('applicants-filter-drawer-overlay');
+      const applyBtn = document.getElementById('applicants-filter-apply');
+      const clearBtn = document.getElementById('applicants-filter-clear');
+
+      if (!drawer) return;
+
+      const openDrawer = () => {
+        drawer.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+      };
+
+      const closeDrawer = () => {
+        drawer.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      };
+
+      openBtn?.addEventListener('click', openDrawer);
+      closeBtn?.addEventListener('click', closeDrawer);
+      overlay?.addEventListener('click', closeDrawer);
+
+      // ESC key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && drawer.getAttribute('aria-hidden') === 'false') {
+          closeDrawer();
+        }
+      });
+
+      // Apply filters
+      applyBtn?.addEventListener('click', () => {
+        const filters = this.collectFilters();
+        const url = new URL(window.location);
+        
+        // Clear existing filter params
+        ['date_from', 'date_to', 'category', 'location', 'age_min', 'age_max', 'source', 'board', 'match_min', 'match_max'].forEach(param => {
+          url.searchParams.delete(param);
+        });
+
+        // Add new filter params
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value) {
+            if (Array.isArray(value)) {
+              value.forEach(v => url.searchParams.append(key, v));
+            } else {
+              url.searchParams.set(key, value);
+            }
+          }
+        });
+
+        window.location.href = url.toString();
+      });
+
+      // Clear filters
+      clearBtn?.addEventListener('click', () => {
+        document.querySelectorAll('.applicants-filter-drawer__input, .applicants-filter-drawer__select, .applicants-filter-drawer__checkbox').forEach(input => {
+          if (input.type === 'checkbox') {
+            input.checked = false;
+          } else {
+            input.value = '';
+          }
+        });
+      });
+
+      // Update match score display
+      const matchMin = document.getElementById('filter-match-min');
+      const matchMax = document.getElementById('filter-match-max');
+      const matchMinValue = document.getElementById('filter-match-min-value');
+      const matchMaxValue = document.getElementById('filter-match-max-value');
+
+      matchMin?.addEventListener('input', (e) => {
+        if (matchMinValue) matchMinValue.textContent = e.target.value;
+      });
+
+      matchMax?.addEventListener('input', (e) => {
+        if (matchMaxValue) matchMaxValue.textContent = e.target.value;
+      });
+    },
+
+    collectFilters() {
+      const filters = {};
+
+      // Date range
+      const dateFrom = document.getElementById('filter-date-from');
+      const dateTo = document.getElementById('filter-date-to');
+      if (dateFrom?.value) filters.date_from = dateFrom.value;
+      if (dateTo?.value) filters.date_to = dateTo.value;
+
+      // Categories
+      const categories = Array.from(document.querySelectorAll('input[name="category"]:checked')).map(cb => cb.value);
+      if (categories.length > 0) filters.category = categories;
+
+      // Location
+      const location = document.getElementById('filter-location');
+      if (location?.value) filters.location = location.value;
+
+      // Age range
+      const ageMin = document.getElementById('filter-age-min');
+      const ageMax = document.getElementById('filter-age-max');
+      if (ageMin?.value) filters.age_min = ageMin.value;
+      if (ageMax?.value) filters.age_max = ageMax.value;
+
+      // Source
+      const sources = Array.from(document.querySelectorAll('input[name="source"]:checked')).map(cb => cb.value);
+      if (sources.length > 0) filters.source = sources;
+
+      // Board
+      const board = document.getElementById('filter-board');
+      if (board?.value) filters.board = board.value;
+
+      // Match score
+      const matchMin = document.getElementById('filter-match-min');
+      const matchMax = document.getElementById('filter-match-max');
+      if (matchMin?.value && matchMin.value !== '0') filters.match_min = matchMin.value;
+      if (matchMax?.value && matchMax.value !== '100') filters.match_max = matchMax.value;
+
+      return filters;
+    },
+
     initInboxPage() {
-      // Logic specific to the new Inbox page (filter pills)
+      // Legacy filter pills (if they still exist)
       const pills = document.querySelectorAll('.agency-inbox-header__filter-pill');
       pills.forEach(pill => {
           pill.addEventListener('click', () => {

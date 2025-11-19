@@ -1,0 +1,169 @@
+<!-- Advanced Filter Drawer -->
+<aside class="applicants-filter-drawer" id="applicants-filter-drawer" aria-hidden="true">
+  <div class="applicants-filter-drawer__overlay" id="applicants-filter-drawer-overlay"></div>
+  <div class="applicants-filter-drawer__content">
+    <div class="applicants-filter-drawer__header">
+      <h2 class="applicants-filter-drawer__title">Filters</h2>
+      <button class="applicants-filter-drawer__close" id="applicants-filter-drawer-close" aria-label="Close filters">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="applicants-filter-drawer__body">
+      <!-- Date Applied -->
+      <div class="applicants-filter-drawer__section">
+        <label class="applicants-filter-drawer__label">Date Applied</label>
+        <div class="applicants-filter-drawer__date-range">
+          <input 
+            type="date" 
+            id="filter-date-from"
+            class="applicants-filter-drawer__date-input"
+            placeholder="From"
+          />
+          <span class="applicants-filter-drawer__date-separator">to</span>
+          <input 
+            type="date" 
+            id="filter-date-to"
+            class="applicants-filter-drawer__date-input"
+            placeholder="To"
+          />
+        </div>
+      </div>
+      
+      <!-- Talent Category -->
+      <div class="applicants-filter-drawer__section">
+        <label class="applicants-filter-drawer__label">Talent Category</label>
+        <div class="applicants-filter-drawer__checkbox-group">
+          <label class="applicants-filter-drawer__checkbox-label">
+            <input type="checkbox" name="category" value="commercial" class="applicants-filter-drawer__checkbox">
+            <span>Commercial</span>
+          </label>
+          <label class="applicants-filter-drawer__checkbox-label">
+            <input type="checkbox" name="category" value="editorial" class="applicants-filter-drawer__checkbox">
+            <span>Editorial</span>
+          </label>
+          <label class="applicants-filter-drawer__checkbox-label">
+            <input type="checkbox" name="category" value="runway" class="applicants-filter-drawer__checkbox">
+            <span>Runway</span>
+          </label>
+          <label class="applicants-filter-drawer__checkbox-label">
+            <input type="checkbox" name="category" value="fitness" class="applicants-filter-drawer__checkbox">
+            <span>Fitness</span>
+          </label>
+          <label class="applicants-filter-drawer__checkbox-label">
+            <input type="checkbox" name="category" value="beauty" class="applicants-filter-drawer__checkbox">
+            <span>Beauty</span>
+          </label>
+        </div>
+      </div>
+      
+      <!-- Location -->
+      <div class="applicants-filter-drawer__section">
+        <label class="applicants-filter-drawer__label">Location</label>
+        <input 
+          type="text" 
+          id="filter-location"
+          class="applicants-filter-drawer__input"
+          placeholder="Enter city or country..."
+        />
+      </div>
+      
+      <!-- Age Range -->
+      <div class="applicants-filter-drawer__section">
+        <label class="applicants-filter-drawer__label">Age Range</label>
+        <div class="applicants-filter-drawer__range-group">
+          <input 
+            type="number" 
+            id="filter-age-min"
+            class="applicants-filter-drawer__range-input"
+            placeholder="Min"
+            min="16"
+            max="50"
+          />
+          <span class="applicants-filter-drawer__range-separator">to</span>
+          <input 
+            type="number" 
+            id="filter-age-max"
+            class="applicants-filter-drawer__range-input"
+            placeholder="Max"
+            min="16"
+            max="50"
+          />
+        </div>
+      </div>
+      
+      <!-- Source -->
+      <div class="applicants-filter-drawer__section">
+        <label class="applicants-filter-drawer__label">Source</label>
+        <div class="applicants-filter-drawer__checkbox-group">
+          <label class="applicants-filter-drawer__checkbox-label">
+            <input type="checkbox" name="source" value="instagram" class="applicants-filter-drawer__checkbox">
+            <span>Instagram</span>
+          </label>
+          <label class="applicants-filter-drawer__checkbox-label">
+            <input type="checkbox" name="source" value="website" class="applicants-filter-drawer__checkbox">
+            <span>Website Form</span>
+          </label>
+          <label class="applicants-filter-drawer__checkbox-label">
+            <input type="checkbox" name="source" value="direct" class="applicants-filter-drawer__checkbox">
+            <span>Direct Invite</span>
+          </label>
+        </div>
+      </div>
+      
+      <!-- Board -->
+      <div class="applicants-filter-drawer__section">
+        <label class="applicants-filter-drawer__label">Board</label>
+        <select id="filter-board" class="applicants-filter-drawer__select">
+          <option value="">All Boards</option>
+          <% if (typeof safeBoards !== 'undefined' && safeBoards && safeBoards.length > 0) { %>
+            <% safeBoards.forEach((board) => { %>
+              <option value="<%= board.id %>"><%= board.name %></option>
+            <% }); %>
+          <% } %>
+        </select>
+      </div>
+      
+      <!-- AI Match Score -->
+      <div class="applicants-filter-drawer__section">
+        <label class="applicants-filter-drawer__label">AI Match Score</label>
+        <div class="applicants-filter-drawer__range-group">
+          <input 
+            type="range" 
+            id="filter-match-min"
+            class="applicants-filter-drawer__slider"
+            min="0"
+            max="100"
+            value="0"
+          />
+          <div class="applicants-filter-drawer__range-display">
+            <span id="filter-match-min-value">0</span>
+            <span>to</span>
+            <span id="filter-match-max-value">100</span>
+          </div>
+          <input 
+            type="range" 
+            id="filter-match-max"
+            class="applicants-filter-drawer__slider"
+            min="0"
+            max="100"
+            value="100"
+          />
+        </div>
+      </div>
+    </div>
+    
+    <div class="applicants-filter-drawer__footer">
+      <button class="applicants-filter-drawer__btn applicants-filter-drawer__btn--secondary" id="applicants-filter-clear">
+        Clear All
+      </button>
+      <button class="applicants-filter-drawer__btn applicants-filter-drawer__btn--primary" id="applicants-filter-apply">
+        Apply Filters
+      </button>
+    </div>
+  </div>
+</aside>
+
