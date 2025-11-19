@@ -215,7 +215,7 @@
     updateHeader();
   }
 
-  // Transformation Hero Animation
+  // Transformation Hero Animation with Interactive Slider
   function initTransformationHero() {
     const heroSection = document.getElementById('transformation-hero');
     if (!heroSection) return;
@@ -224,291 +224,322 @@
     const portfolioCard = heroSection.querySelector('.portfolio-card');
     const transformationZone = document.getElementById('transformation-zone');
     const replayButton = document.getElementById('replay-transformation');
+    const slider = document.getElementById('transformation-slider');
+    const sliderFill = document.getElementById('transformation-slider-fill');
+    const sliderThumb = document.getElementById('transformation-slider-thumb');
+    const sliderPercentage = document.getElementById('transformation-percentage');
+    const playPauseBtn = document.getElementById('transformation-play-pause');
+    const playIcon = playPauseBtn?.querySelector('.transformation-hero__slider-icon--play');
+    const pauseIcon = playPauseBtn?.querySelector('.transformation-hero__slider-icon--pause');
+    const progressFill = document.getElementById('transformation-progress-fill');
+    const progressSteps = document.querySelectorAll('.transformation-zone__progress-step');
 
-    if (!rawDocument || !portfolioCard || !transformationZone) return;
+    if (!rawDocument || !portfolioCard || !transformationZone || !slider) return;
 
     let isAnimating = false;
+    let isPlaying = false;
+    let animationFrameId = null;
+    let currentProgress = 0;
     const EMAIL_SHOW_DURATION = 2000; // Show email for 2 seconds
     const BUILD_DURATION = 4000; // Portfolio build takes 4 seconds
+    const TOTAL_DURATION = EMAIL_SHOW_DURATION + BUILD_DURATION;
+    
+    // Animation timeline (percentage -> function to execute)
+    const animationTimeline = [
+      { progress: 0, step: 0, label: 'Analyzing bio' },
+      { progress: 25, step: 1, label: 'Organizing stats' },
+      { progress: 50, step: 2, label: 'Formatting presentation' },
+      { progress: 75, step: 3, label: 'Finalizing portfolio' },
+      { progress: 100, step: 4, label: 'Complete' }
+    ];
 
-    // Build portfolio card in real-time
-    function buildPortfolio() {
-      if (isAnimating) return;
-      
-      isAnimating = true;
-      transformationZone.classList.add('animating');
 
-      // Step 1: Build header (name and location)
-      const header = portfolioCard.querySelector('.portfolio-card__header');
-      const name = portfolioCard.querySelector('.portfolio-card__name');
-      const location = portfolioCard.querySelector('.portfolio-card__location');
-      
-      setTimeout(() => {
-        if (header) {
-          header.style.opacity = '0';
-          header.style.transform = 'translateY(-20px)';
-          header.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-          header.style.opacity = '1';
-          header.style.transform = 'translateY(0)';
-        }
-      }, 0);
-
-      setTimeout(() => {
-        if (name) {
-          name.style.opacity = '0';
-          name.style.transform = 'translateY(10px) scale(0.95)';
-          name.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-          name.style.opacity = '1';
-          name.style.transform = 'translateY(0) scale(1)';
-        }
-      }, 300);
-
-      setTimeout(() => {
-        if (location) {
-          location.style.opacity = '0';
-          location.style.transform = 'translateY(5px)';
-          location.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-          location.style.opacity = '1';
-          location.style.transform = 'translateY(0)';
-        }
-      }, 800);
-
-      // Step 2: Build hero image
-      const heroImage = portfolioCard.querySelector('.portfolio-card__hero-image');
-      const heroImg = portfolioCard.querySelector('.portfolio-card__hero-image img');
-      
-      setTimeout(() => {
-        if (heroImage) {
-          heroImage.style.opacity = '0';
-          heroImage.style.transform = 'scale(0.98)';
-          heroImage.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-          heroImage.style.opacity = '1';
-          heroImage.style.transform = 'scale(1)';
-        }
-        if (heroImg) {
-          heroImg.style.filter = 'brightness(0.7) contrast(0.8) grayscale(0.3)';
-          heroImg.style.transition = 'filter 1.2s ease';
-          heroImg.style.filter = 'brightness(1.05) contrast(1.08) grayscale(0)';
-        }
-      }, 1200);
-
-      // Step 3: Build stats section
-      const stats = portfolioCard.querySelector('.portfolio-card__stats');
-      const statItems = portfolioCard.querySelectorAll('.portfolio-card__stat');
-      const contact = portfolioCard.querySelector('.portfolio-card__contact');
-      
-      setTimeout(() => {
-        if (stats) {
-          stats.style.opacity = '0';
-          stats.style.transform = 'translateY(15px)';
-          stats.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
-          stats.style.opacity = '1';
-          stats.style.transform = 'translateY(0)';
-        }
-      }, 2000);
-
-      statItems.forEach((stat, index) => {
-        const label = stat.querySelector('.portfolio-card__stat-label');
-        const value = stat.querySelector('.portfolio-card__stat-value');
-        
-        setTimeout(() => {
-          if (label) {
-            label.style.opacity = '0';
-            label.style.transform = 'translateX(-10px)';
-            label.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-            label.style.opacity = '1';
-            label.style.transform = 'translateX(0)';
-          }
-        }, 2200 + (index * 150));
-
-        setTimeout(() => {
-          if (value) {
-            value.style.opacity = '0';
-            value.style.transform = 'translateY(5px)';
-            value.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            value.style.opacity = '1';
-            value.style.transform = 'translateY(0)';
-          }
-        }, 2400 + (index * 150));
-      });
-
-      // Step 3.5: Build contact info
-      setTimeout(() => {
-        if (contact) {
-          contact.style.opacity = '0';
-          contact.style.transform = 'translateY(5px)';
-          contact.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-          contact.style.opacity = '1';
-          contact.style.transform = 'translateY(0)';
-        }
-      }, 2900);
-
-      // Step 4: Build gallery
-      const gallery = portfolioCard.querySelector('.portfolio-card__gallery');
-      const galleryItems = portfolioCard.querySelectorAll('.portfolio-card__gallery-item');
-      
-      setTimeout(() => {
-        if (gallery) {
-          gallery.style.opacity = '0';
-          gallery.style.transform = 'translateY(10px)';
-          gallery.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-          gallery.style.opacity = '1';
-          gallery.style.transform = 'translateY(0)';
-        }
-      }, 3000);
-
-      galleryItems.forEach((item, index) => {
-        const img = item.querySelector('img');
-        setTimeout(() => {
-          item.style.opacity = '0';
-          item.style.transform = 'scale(0.9)';
-          item.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-          item.style.opacity = '1';
-          item.style.transform = 'scale(1)';
-          
-          if (img) {
-            img.style.filter = 'brightness(0.8) contrast(0.85) grayscale(0.2)';
-            img.style.transition = 'filter 0.8s ease';
-            img.style.filter = 'brightness(1.05) contrast(1.05) grayscale(0)';
-          }
-        }, 3200 + (index * 120));
-      });
-
-      // Step 5: Build bio
-      const bio = portfolioCard.querySelector('.portfolio-card__bio');
-      const bioText = portfolioCard.querySelector('.portfolio-card__bio-text');
-      
-      setTimeout(() => {
-        if (bio) {
-          bio.style.opacity = '0';
-          bio.style.transform = 'translateY(10px)';
-          bio.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
-          bio.style.opacity = '1';
-          bio.style.transform = 'translateY(0)';
-        }
-        if (bioText) {
-          bioText.style.opacity = '0';
-          bioText.style.transform = 'translateY(5px)';
-          bioText.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-          bioText.style.opacity = '1';
-          bioText.style.transform = 'translateY(0)';
-        }
-      }, 4000);
-
-      // Fade out email draft while building
-      setTimeout(() => {
-        const emailFields = rawDocument.querySelectorAll('.email-draft__field-value, .email-draft__subject');
-        const emailBody = rawDocument.querySelector('.email-draft__body-content');
-        
-        emailFields.forEach((el, index) => {
-          setTimeout(() => {
-            el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-            el.style.opacity = '0.2';
-            el.style.transform = 'translateX(-15px)';
-          }, index * 50);
-        });
-
-        if (emailBody) {
-          setTimeout(() => {
-            emailBody.style.transition = 'opacity 0.6s ease';
-            emailBody.style.opacity = '0.15';
-          }, 500);
-        }
-      }, 1000);
-
-      // Show replay button after build completes
-      setTimeout(() => {
-        transformationZone.classList.remove('animating');
-        if (replayButton) {
-          replayButton.classList.add('visible');
-        }
-        isAnimating = false;
-      }, EMAIL_SHOW_DURATION + BUILD_DURATION);
+    // Update slider visual
+    function updateSlider(progress) {
+      if (sliderFill) sliderFill.style.width = `${progress}%`;
+      if (sliderThumb) sliderThumb.style.left = `${progress}%`;
+      if (sliderPercentage) sliderPercentage.textContent = `${Math.round(progress)}%`;
+      if (slider) slider.value = progress;
     }
 
-    // Reset transformation
-    function resetTransformation() {
-      isAnimating = false;
-      transformationZone.classList.remove('animating');
+    // Update progress indicators
+    function updateProgress(progress) {
+      if (progressFill) progressFill.style.width = `${progress}%`;
       
-      // Reset email draft
+      // Update step indicators
+      progressSteps.forEach((step, index) => {
+        const stepProgress = (index + 1) * 25;
+        step.classList.remove('active', 'completed');
+        
+        if (progress >= stepProgress) {
+          step.classList.add('completed');
+        } else if (progress >= stepProgress - 25) {
+          step.classList.add('active');
+        }
+      });
+    }
+
+    // Apply transformation state based on progress (0-100)
+    function applyTransformationState(progress) {
+      const time = (progress / 100) * TOTAL_DURATION;
+      const isEmailPhase = time < EMAIL_SHOW_DURATION;
+      const buildProgress = Math.max(0, (time - EMAIL_SHOW_DURATION) / BUILD_DURATION);
+      
+      // Email fade out
+      if (!isEmailPhase) {
+        const emailFields = rawDocument.querySelectorAll('.email-draft__field-value, .email-draft__subject');
+        const emailBody = rawDocument.querySelector('.email-draft__body-content');
+        const fadeProgress = Math.min(1, (time - EMAIL_SHOW_DURATION) / 1000);
+        
+        emailFields.forEach((el, index) => {
+          el.style.opacity = String(1 - fadeProgress * 0.8);
+          el.style.transform = `translateX(${-15 * fadeProgress}px)`;
+        });
+        
+        if (emailBody) {
+          emailBody.style.opacity = String(1 - fadeProgress * 0.85);
+        }
+      }
+
+      // Portfolio build
+      if (buildProgress > 0) {
+        transformationZone.classList.add('animating');
+        
+        // Header (0-15%)
+        if (buildProgress >= 0) {
+          const headerProgress = Math.min(1, buildProgress / 0.15);
+          const header = portfolioCard.querySelector('.portfolio-card__header');
+          const name = portfolioCard.querySelector('.portfolio-card__name');
+          const location = portfolioCard.querySelector('.portfolio-card__location');
+          
+          if (header) {
+            header.style.opacity = String(headerProgress);
+            header.style.transform = `translateY(${-20 * (1 - headerProgress)}px)`;
+          }
+          if (name && buildProgress >= 0.05) {
+            const nameProgress = Math.min(1, (buildProgress - 0.05) / 0.1);
+            name.style.opacity = String(nameProgress);
+            name.style.transform = `translateY(${10 * (1 - nameProgress)}px) scale(${0.95 + 0.05 * nameProgress})`;
+          }
+          if (location && buildProgress >= 0.13) {
+            const locProgress = Math.min(1, (buildProgress - 0.13) / 0.05);
+            location.style.opacity = String(locProgress);
+            location.style.transform = `translateY(${5 * (1 - locProgress)}px)`;
+          }
+        }
+
+        // Hero image (15-30%)
+        if (buildProgress >= 0.2) {
+          const imgProgress = Math.min(1, (buildProgress - 0.2) / 0.1);
+          const heroImage = portfolioCard.querySelector('.portfolio-card__hero-image');
+          const heroImg = portfolioCard.querySelector('.portfolio-card__hero-image img');
+          
+          if (heroImage) {
+            heroImage.style.opacity = String(imgProgress);
+            heroImage.style.transform = `scale(${0.98 + 0.02 * imgProgress})`;
+          }
+          if (heroImg) {
+            const brightness = 0.7 + 0.35 * imgProgress;
+            const contrast = 0.8 + 0.28 * imgProgress;
+            const grayscale = 0.3 * (1 - imgProgress);
+            heroImg.style.filter = `brightness(${brightness}) contrast(${contrast}) grayscale(${grayscale})`;
+          }
+        }
+
+        // Stats (30-55%)
+        if (buildProgress >= 0.33) {
+          const statsProgress = Math.min(1, (buildProgress - 0.33) / 0.22);
+          const stats = portfolioCard.querySelector('.portfolio-card__stats');
+          const statItems = portfolioCard.querySelectorAll('.portfolio-card__stat');
+          
+          if (stats) {
+            stats.style.opacity = String(statsProgress);
+            stats.style.transform = `translateY(${15 * (1 - statsProgress)}px)`;
+          }
+          
+          statItems.forEach((stat, index) => {
+            const itemProgress = Math.min(1, Math.max(0, (statsProgress - index * 0.15) / 0.15));
+            const label = stat.querySelector('.portfolio-card__stat-label');
+            const value = stat.querySelector('.portfolio-card__stat-value');
+            
+            if (label && itemProgress > 0) {
+              label.style.opacity = String(itemProgress);
+              label.style.transform = `translateX(${-10 * (1 - itemProgress)}px)`;
+            }
+            if (value && itemProgress > 0.3) {
+              const valProgress = Math.min(1, (itemProgress - 0.3) / 0.7);
+              value.style.opacity = String(valProgress);
+              value.style.transform = `translateY(${5 * (1 - valProgress)}px)`;
+            }
+          });
+        }
+
+        // Contact (48-55%)
+        if (buildProgress >= 0.48) {
+          const contactProgress = Math.min(1, (buildProgress - 0.48) / 0.07);
+          const contact = portfolioCard.querySelector('.portfolio-card__contact');
+          if (contact) {
+            contact.style.opacity = String(contactProgress);
+            contact.style.transform = `translateY(${5 * (1 - contactProgress)}px)`;
+          }
+        }
+
+        // Gallery (50-70%)
+        if (buildProgress >= 0.5) {
+          const galleryProgress = Math.min(1, (buildProgress - 0.5) / 0.2);
+          const gallery = portfolioCard.querySelector('.portfolio-card__gallery');
+          const galleryItems = portfolioCard.querySelectorAll('.portfolio-card__gallery-item');
+          
+          if (gallery) {
+            gallery.style.opacity = String(galleryProgress);
+            gallery.style.transform = `translateY(${10 * (1 - galleryProgress)}px)`;
+          }
+          
+          galleryItems.forEach((item, index) => {
+            const itemProgress = Math.min(1, Math.max(0, (galleryProgress - index * 0.2) / 0.2));
+            const img = item.querySelector('img');
+            
+            if (itemProgress > 0) {
+              item.style.opacity = String(itemProgress);
+              item.style.transform = `scale(${0.9 + 0.1 * itemProgress})`;
+              
+              if (img) {
+                const brightness = 0.8 + 0.25 * itemProgress;
+                const contrast = 0.85 + 0.2 * itemProgress;
+                const grayscale = 0.2 * (1 - itemProgress);
+                img.style.filter = `brightness(${brightness}) contrast(${contrast}) grayscale(${grayscale})`;
+              }
+            }
+          });
+        }
+
+        // Bio (66-100%)
+        if (buildProgress >= 0.66) {
+          const bioProgress = Math.min(1, (buildProgress - 0.66) / 0.34);
+          const bio = portfolioCard.querySelector('.portfolio-card__bio');
+          const bioText = portfolioCard.querySelector('.portfolio-card__bio-text');
+          
+          if (bio) {
+            bio.style.opacity = String(bioProgress);
+            bio.style.transform = `translateY(${10 * (1 - bioProgress)}px)`;
+          }
+          if (bioText) {
+            bioText.style.opacity = String(bioProgress);
+            bioText.style.transform = `translateY(${5 * (1 - bioProgress)}px)`;
+          }
+        }
+      } else {
+        transformationZone.classList.remove('animating');
+      }
+    }
+
+    // Animate transformation
+    function animateTransformation() {
+      if (!isPlaying) return;
+      
+      const startTime = performance.now() - (currentProgress / 100) * TOTAL_DURATION;
+      
+      function frame(currentTime) {
+        if (!isPlaying) {
+          if (animationFrameId) cancelAnimationFrame(animationFrameId);
+          return;
+        }
+        
+        const elapsed = currentTime - startTime;
+        const newProgress = Math.min(100, (elapsed / TOTAL_DURATION) * 100);
+        
+        currentProgress = newProgress;
+        updateSlider(newProgress);
+        updateProgress(newProgress);
+        applyTransformationState(newProgress);
+        
+        if (newProgress < 100) {
+          animationFrameId = requestAnimationFrame(frame);
+        } else {
+          isPlaying = false;
+          if (playIcon) playIcon.style.display = 'none';
+          if (pauseIcon) pauseIcon.style.display = 'block';
+          transformationZone.classList.remove('animating');
+          if (replayButton) replayButton.classList.add('visible');
+        }
+      }
+      
+      animationFrameId = requestAnimationFrame(frame);
+    }
+
+    // Play/pause toggle
+    function togglePlayPause() {
+      isPlaying = !isPlaying;
+      
+      if (isPlaying) {
+        if (playIcon) playIcon.style.display = 'none';
+        if (pauseIcon) pauseIcon.style.display = 'block';
+        animateTransformation();
+      } else {
+        if (playIcon) playIcon.style.display = 'block';
+        if (pauseIcon) pauseIcon.style.display = 'none';
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      }
+    }
+
+    // Slider input handler
+    function handleSliderInput() {
+      isPlaying = false;
+      if (playIcon) playIcon.style.display = 'block';
+      if (pauseIcon) pauseIcon.style.display = 'none';
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      
+      const progress = parseFloat(slider.value);
+      currentProgress = progress;
+      updateSlider(progress);
+      updateProgress(progress);
+      applyTransformationState(progress);
+    }
+
+    // Setup event listeners
+    if (playPauseBtn) {
+      playPauseBtn.addEventListener('click', togglePlayPause);
+    }
+
+    if (slider) {
+      slider.addEventListener('input', handleSliderInput);
+      slider.addEventListener('change', handleSliderInput);
+    }
+
+    // Reset function
+    function resetTransformation() {
+      isPlaying = false;
+      currentProgress = 0;
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (playIcon) playIcon.style.display = 'block';
+      if (pauseIcon) pauseIcon.style.display = 'none';
+      
+      // Reset all states
+      updateSlider(0);
+      updateProgress(0);
+      applyTransformationState(0);
+      
+      // Reset email
       const emailFields = rawDocument.querySelectorAll('.email-draft__field-value, .email-draft__subject');
       const emailBody = rawDocument.querySelector('.email-draft__body-content');
-      
       emailFields.forEach(el => {
         el.style.opacity = '1';
         el.style.transform = 'translateX(0)';
-        el.style.transition = 'none';
       });
-
-      if (emailBody) {
-        emailBody.style.opacity = '1';
-        emailBody.style.transition = 'none';
-      }
-
-      // Reset portfolio card - hide all elements
-      const portfolioSections = portfolioCard.querySelectorAll('.portfolio-card__header, .portfolio-card__hero-image, .portfolio-card__stats, .portfolio-card__gallery, .portfolio-card__bio');
-      const portfolioElements = portfolioCard.querySelectorAll('.portfolio-card__name, .portfolio-card__location, .portfolio-card__stat-label, .portfolio-card__stat-value, .portfolio-card__bio-text, .portfolio-card__contact');
-      const portfolioItems = portfolioCard.querySelectorAll('.portfolio-card__gallery-item');
-      const portfolioImages = portfolioCard.querySelectorAll('.portfolio-card__hero-image img, .portfolio-card__gallery-item img');
+      if (emailBody) emailBody.style.opacity = '1';
       
-      portfolioSections.forEach(section => {
-        section.style.opacity = '0';
-        section.style.transform = '';
-        section.style.transition = 'none';
-      });
-
-      portfolioElements.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = '';
-        el.style.transition = 'none';
-      });
-
-      portfolioItems.forEach(item => {
-        item.style.opacity = '0';
-        item.style.transform = 'scale(0.9)';
-        item.style.transition = 'none';
-      });
-
-      portfolioImages.forEach(img => {
-        img.style.filter = 'brightness(0.7) contrast(0.8) grayscale(0.3)';
-        img.style.transition = 'none';
-      });
-
       // Hide replay button
-      if (replayButton) {
-        replayButton.classList.remove('visible');
-      }
-
-      // Restore transitions and restart after brief delay
+      if (replayButton) replayButton.classList.remove('visible');
+      
+      // Auto-play after reset
       setTimeout(() => {
-        portfolioSections.forEach(section => {
-          section.style.transition = '';
-        });
-        portfolioElements.forEach(el => {
-          el.style.transition = '';
-        });
-        portfolioItems.forEach(item => {
-          item.style.transition = '';
-        });
-        portfolioImages.forEach(img => {
-          img.style.transition = '';
-        });
-        emailFields.forEach(el => {
-          el.style.transition = '';
-        });
-        if (emailBody) {
-          emailBody.style.transition = '';
-        }
-        
-        // Start sequence: show email, then build portfolio
-        setTimeout(() => {
-          buildPortfolio();
-        }, EMAIL_SHOW_DURATION);
-      }, 300);
+        isPlaying = true;
+        if (playIcon) playIcon.style.display = 'none';
+        if (pauseIcon) pauseIcon.style.display = 'block';
+        animateTransformation();
+      }, 500);
     }
 
-    // Set up replay button handler
     if (replayButton) {
       replayButton.addEventListener('click', (e) => {
         e.preventDefault();
@@ -516,7 +547,7 @@
       });
     }
 
-    // Initial state: show email fully, hide portfolio completely
+    // Initial state
     const portfolioSections = portfolioCard.querySelectorAll('.portfolio-card__header, .portfolio-card__hero-image, .portfolio-card__stats, .portfolio-card__gallery, .portfolio-card__bio');
     const portfolioElements = portfolioCard.querySelectorAll('.portfolio-card__name, .portfolio-card__location, .portfolio-card__stat-label, .portfolio-card__stat-value, .portfolio-card__bio-text, .portfolio-card__contact');
     const portfolioItems = portfolioCard.querySelectorAll('.portfolio-card__gallery-item');
@@ -525,45 +556,37 @@
     portfolioSections.forEach(section => {
       section.style.opacity = '0';
       section.style.transform = '';
-      section.style.transition = 'none';
+      section.style.transition = '';
     });
 
     portfolioElements.forEach(el => {
       el.style.opacity = '0';
       el.style.transform = '';
-      el.style.transition = 'none';
+      el.style.transition = '';
     });
 
     portfolioItems.forEach(item => {
       item.style.opacity = '0';
       item.style.transform = 'scale(0.9)';
-      item.style.transition = 'none';
+      item.style.transition = '';
     });
 
     portfolioImages.forEach(img => {
       img.style.filter = 'brightness(0.7) contrast(0.8) grayscale(0.3)';
-      img.style.transition = 'none';
+      img.style.transition = '';
     });
 
-    // Reset transitions after initial state
-    setTimeout(() => {
-      portfolioSections.forEach(section => {
-        section.style.transition = '';
-      });
-      portfolioElements.forEach(el => {
-        el.style.transition = '';
-      });
-      portfolioItems.forEach(item => {
-        item.style.transition = '';
-      });
-      portfolioImages.forEach(img => {
-        img.style.transition = '';
-      });
-    }, 100);
+    // Initialize
+    updateSlider(0);
+    updateProgress(0);
+    applyTransformationState(0);
 
-    // Start sequence: show email first, then build portfolio
+    // Auto-start after email show duration
     setTimeout(() => {
-      buildPortfolio();
+      isPlaying = true;
+      if (playIcon) playIcon.style.display = 'none';
+      if (pauseIcon) pauseIcon.style.display = 'block';
+      animateTransformation();
     }, EMAIL_SHOW_DURATION);
   }
 
@@ -593,6 +616,216 @@
     cards.forEach(card => {
       observer.observe(card);
     });
+  }
+
+  // Portfolio Lightbox Dialog
+  function initPortfolioLightbox() {
+    const lightbox = document.getElementById('portfolio-lightbox');
+    const overlay = document.getElementById('portfolio-lightbox-overlay');
+    const closeBtn = document.getElementById('portfolio-lightbox-close');
+    const cards = document.querySelectorAll('.homepage-portfolio-showcase__card');
+    const carouselTrack = document.getElementById('portfolio-carousel-track');
+    const thumbnailsContainer = document.getElementById('portfolio-lightbox-thumbnails');
+    const prevBtn = document.getElementById('portfolio-carousel-prev');
+    const nextBtn = document.getElementById('portfolio-carousel-next');
+    const currentIndicator = document.getElementById('portfolio-carousel-current');
+    const totalIndicator = document.getElementById('portfolio-carousel-total');
+    const titleEl = document.getElementById('portfolio-lightbox-title');
+    const metaEl = document.getElementById('portfolio-lightbox-meta');
+    const infoEl = document.getElementById('portfolio-lightbox-info');
+    const ctaEl = document.getElementById('portfolio-lightbox-cta');
+
+    if (!lightbox || !cards.length) return;
+
+    let currentIndex = 0;
+    let currentTalent = null;
+    let images = [];
+
+    // Generate placeholder images for demo (in real app, fetch from API)
+    function generatePlaceholderImages(talent) {
+      const baseImages = [
+        talent.hero_image,
+        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=900&q=80'
+      ];
+      return baseImages;
+    }
+
+    function openLightbox(talent, index) {
+      currentTalent = talent;
+      currentIndex = 0;
+      images = generatePlaceholderImages(talent);
+
+      // Update title and meta
+      if (titleEl) titleEl.textContent = talent.name;
+      if (metaEl) metaEl.textContent = talent.city;
+
+      // Populate carousel
+      if (carouselTrack) {
+        carouselTrack.innerHTML = '';
+        images.forEach((img, idx) => {
+          const slide = document.createElement('div');
+          slide.className = 'portfolio-lightbox__carousel-slide';
+          const imgEl = document.createElement('img');
+          imgEl.src = img;
+          imgEl.alt = `${talent.name} - Image ${idx + 1}`;
+          imgEl.loading = 'lazy';
+          slide.appendChild(imgEl);
+          carouselTrack.appendChild(slide);
+        });
+      }
+
+      // Populate thumbnails
+      if (thumbnailsContainer) {
+        thumbnailsContainer.innerHTML = '';
+        images.forEach((img, idx) => {
+          const thumb = document.createElement('button');
+          thumb.className = 'portfolio-lightbox__thumbnail';
+          if (idx === 0) thumb.classList.add('active');
+          thumb.setAttribute('data-index', idx);
+          thumb.setAttribute('aria-label', `View image ${idx + 1}`);
+          const imgEl = document.createElement('img');
+          imgEl.src = img;
+          imgEl.alt = `Thumbnail ${idx + 1}`;
+          thumb.appendChild(imgEl);
+          thumb.addEventListener('click', () => goToSlide(idx));
+          thumbnailsContainer.appendChild(thumb);
+        });
+      }
+
+      // Update indicators
+      if (totalIndicator) totalIndicator.textContent = images.length;
+      updateCarousel();
+
+      // Populate info (placeholder stats)
+      if (infoEl) {
+        infoEl.innerHTML = `
+          <div class="portfolio-lightbox__info-item">
+            <span class="portfolio-lightbox__info-label">Height</span>
+            <span class="portfolio-lightbox__info-value">180 cm</span>
+          </div>
+          <div class="portfolio-lightbox__info-item">
+            <span class="portfolio-lightbox__info-label">Measurements</span>
+            <span class="portfolio-lightbox__info-value">32-25-35</span>
+          </div>
+          <div class="portfolio-lightbox__info-item">
+            <span class="portfolio-lightbox__info-label">Location</span>
+            <span class="portfolio-lightbox__info-value">${talent.city}</span>
+          </div>
+        `;
+      }
+
+      // Update CTA link
+      if (ctaEl && talent.slug) {
+        ctaEl.href = `/portfolio/${talent.slug}`;
+      }
+
+      // Show lightbox
+      lightbox.removeAttribute('hidden');
+      lightbox.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+
+      // Focus management
+      if (closeBtn) closeBtn.focus();
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('is-open');
+      document.body.style.overflow = '';
+      setTimeout(() => {
+        lightbox.setAttribute('hidden', '');
+      }, 300);
+    }
+
+    function updateCarousel() {
+      if (!carouselTrack) return;
+      
+      const translateX = -currentIndex * 100;
+      carouselTrack.style.transform = `translateX(${translateX}%)`;
+
+      // Update indicators
+      if (currentIndicator) currentIndicator.textContent = currentIndex + 1;
+
+      // Update thumbnail active state
+      const thumbnails = thumbnailsContainer?.querySelectorAll('.portfolio-lightbox__thumbnail');
+      thumbnails?.forEach((thumb, idx) => {
+        thumb.classList.toggle('active', idx === currentIndex);
+      });
+
+      // Update button states
+      if (prevBtn) prevBtn.disabled = currentIndex === 0;
+      if (nextBtn) nextBtn.disabled = currentIndex === images.length - 1;
+    }
+
+    function goToSlide(index) {
+      if (index < 0 || index >= images.length) return;
+      currentIndex = index;
+      updateCarousel();
+    }
+
+    function nextSlide() {
+      if (currentIndex < images.length - 1) {
+        goToSlide(currentIndex + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentIndex > 0) {
+        goToSlide(currentIndex - 1);
+      }
+    }
+
+    // Event listeners
+    cards.forEach((card, index) => {
+      card.addEventListener('click', () => {
+        const talent = {
+          name: card.getAttribute('data-talent-name') || 'Talent',
+          city: card.getAttribute('data-talent-city') || '',
+          slug: card.getAttribute('data-talent-slug') || '',
+          hero_image: card.getAttribute('data-talent-image') || ''
+        };
+        openLightbox(talent, index);
+      });
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeLightbox);
+    }
+
+    if (overlay) {
+      overlay.addEventListener('click', closeLightbox);
+    }
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', prevSlide);
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', nextSlide);
+    }
+
+    // Keyboard navigation
+    lightbox.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeLightbox();
+      } else if (e.key === 'ArrowLeft') {
+        prevSlide();
+      } else if (e.key === 'ArrowRight') {
+        nextSlide();
+      }
+    });
+
+    // Prevent body scroll when lightbox is open
+    const observer = new MutationObserver(() => {
+      if (lightbox.classList.contains('is-open')) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    });
+
+    observer.observe(lightbox, { attributes: true, attributeFilter: ['class'] });
   }
 
   // Scroll-triggered animations for other sections
@@ -682,10 +915,52 @@
       rootMargin: '0px 0px -50px 0px'
     };
 
+    // Animate counter function
+    function animateCounter(element, target, suffix = '') {
+      const skeleton = element.querySelector('.stat-counter-skeleton');
+      if (skeleton) {
+        skeleton.classList.add('hidden');
+      }
+      
+      let current = 0;
+      const duration = 2000; // 2 seconds
+      const increment = target / (duration / 16); // 60fps
+      
+      const animate = () => {
+        current += increment;
+        if (current < target) {
+          element.textContent = Math.round(current) + suffix;
+          requestAnimationFrame(animate);
+        } else {
+          element.textContent = target + suffix;
+          if (skeleton) {
+            skeleton.remove();
+          }
+        }
+      };
+      
+      // Clear skeleton and start animation
+      if (skeleton) {
+        element.textContent = '';
+      }
+      animate();
+    }
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible');
+        if (entry.isIntersecting && !entry.target.classList.contains('counters-animated')) {
+          entry.target.classList.add('is-visible', 'counters-animated');
+          
+          // Animate stat counters
+          const statValues = entry.target.querySelectorAll('[data-target]');
+          statValues.forEach((stat, index) => {
+            const target = parseInt(stat.getAttribute('data-target'), 10);
+            const suffix = stat.textContent.includes('%') ? '%' : '';
+            
+            setTimeout(() => {
+              animateCounter(stat, target, suffix);
+            }, 300 + (index * 100));
+          });
           
           // Animate profile completion progress bar
           const progressSection = entry.target.querySelector('#talent-profile-progress');
@@ -695,13 +970,14 @@
             const completionItems = progressSection.querySelectorAll('.dashboard-showcase__completion-item');
             
             if (progressFill && progressPercentage) {
+              const targetProgress = parseInt(progressPercentage.getAttribute('data-target') || '95', 10);
+              
               // Reset to 0
               progressFill.style.width = '0%';
               progressPercentage.textContent = '0%';
               
-              // Animate to 95%
+              // Animate to target
               let currentProgress = 0;
-              const targetProgress = 95;
               const duration = 2000; // 2 seconds
               const increment = targetProgress / (duration / 16); // 60fps
               
@@ -1036,6 +1312,7 @@
     initHeaderScroll();
     initTransformationHero();
     initPortfolioShowcaseAnimations();
+    initPortfolioLightbox();
     initScrollAnimations();
     initDashboardShowcase();
     initHowItWorks();
