@@ -456,7 +456,7 @@ router.get('/dashboard/agency/boards', requireRole('AGENCY'), async (req, res, n
     // Fetch profile images for each board's applications
     const boardsWithImages = await Promise.all(boards.map(async (board) => {
       const boardApplications = await knex('board_applications')
-        .where({ board_id: board.id })
+        .where('board_applications.board_id', board.id)
         .join('applications', 'board_applications.application_id', 'applications.id')
         .join('profiles', 'applications.profile_id', 'profiles.id')
         .select('profiles.id', 'profiles.hero_image_path')
