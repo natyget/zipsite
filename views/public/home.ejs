@@ -564,15 +564,41 @@
 
           <!-- Quick Analytics -->
           <div class="dashboard-showcase__analytics">
-            <div class="dashboard-showcase__analytics-card">
+            <div class="dashboard-showcase__analytics-card" data-analytics-card>
               <div class="dashboard-showcase__analytics-icon">👁</div>
-              <div class="dashboard-showcase__analytics-value">1,247</div>
+              <div class="dashboard-showcase__analytics-value" data-target="1247">0</div>
               <div class="dashboard-showcase__analytics-label">Total Views</div>
+              <div class="dashboard-showcase__analytics-trend">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                  <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                <span>+12% this month</span>
+              </div>
             </div>
-            <div class="dashboard-showcase__analytics-card">
+            <div class="dashboard-showcase__analytics-card" data-analytics-card>
               <div class="dashboard-showcase__analytics-icon">📄</div>
-              <div class="dashboard-showcase__analytics-value">89</div>
+              <div class="dashboard-showcase__analytics-value" data-target="89">0</div>
               <div class="dashboard-showcase__analytics-label">PDF Downloads</div>
+              <div class="dashboard-showcase__analytics-trend">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                  <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                <span>+5 this week</span>
+              </div>
+            </div>
+            <div class="dashboard-showcase__analytics-card" data-analytics-card>
+              <div class="dashboard-showcase__analytics-icon">⭐</div>
+              <div class="dashboard-showcase__analytics-value" data-target="42">0</div>
+              <div class="dashboard-showcase__analytics-label">Agency Views</div>
+              <div class="dashboard-showcase__analytics-trend">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                  <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                <span>+8% this week</span>
+              </div>
             </div>
           </div>
         </div>
@@ -753,14 +779,18 @@
       <p class="homepage-how-it-works__subtitle">Three simple steps to your publication-ready portfolio</p>
     </div>
     
-    <div class="homepage-how-it-works__steps">
-      <div class="homepage-how-it-works__step">
+      <div class="homepage-how-it-works__steps">
+      <div class="homepage-how-it-works__step feature-card" data-tooltip="Support for photos, PDFs, text files, and more. We handle any format.">
         <div class="homepage-how-it-works__step-number">1</div>
         <div class="homepage-how-it-works__step-icon">📤</div>
         <h3 class="homepage-how-it-works__step-title">Submit</h3>
         <p class="homepage-how-it-works__step-description">
           Upload your data—photos, stats, bio, and contact info. No formatting required. Just send us what you have.
         </p>
+        <div class="feature-card__details">
+          <p>Drag and drop or browse files. We accept images, documents, and text in any format. Your messy data is welcome.</p>
+        </div>
+        <div class="feature-card__badge">Easy Upload</div>
       </div>
       
       <div class="homepage-how-it-works__connector">
@@ -769,13 +799,17 @@
         </svg>
       </div>
       
-      <div class="homepage-how-it-works__step">
+      <div class="homepage-how-it-works__step feature-card" data-tooltip="Advanced AI algorithms trained on editorial standards.">
         <div class="homepage-how-it-works__step-number">2</div>
         <div class="homepage-how-it-works__step-icon">✨</div>
         <h3 class="homepage-how-it-works__step-title">AI Curates</h3>
         <p class="homepage-how-it-works__step-description">
           Our AI refines and organizes everything. Bios are enhanced, stats are formatted, and images are curated with editorial precision.
         </p>
+        <div class="feature-card__details">
+          <p>Our AI analyzes your content, enhances bios with professional language, formats measurements consistently, and selects your best images.</p>
+        </div>
+        <div class="feature-card__badge">AI-Powered</div>
       </div>
       
       <div class="homepage-how-it-works__connector">
@@ -784,13 +818,17 @@
         </svg>
       </div>
       
-      <div class="homepage-how-it-works__step">
+      <div class="homepage-how-it-works__step feature-card" data-tooltip="Download PDF comp card or share your live portfolio URL instantly.">
         <div class="homepage-how-it-works__step-number">3</div>
         <div class="homepage-how-it-works__step-icon">🚀</div>
         <h3 class="homepage-how-it-works__step-title">Publish</h3>
         <p class="homepage-how-it-works__step-description">
           Get your publication-ready portfolio. Download your comp card, share your live portfolio, or both. Ready in minutes.
         </p>
+        <div class="feature-card__details">
+          <p>Download a professional PDF comp card or share your live portfolio URL. Both options are available instantly after processing.</p>
+        </div>
+        <div class="feature-card__badge">Instant</div>
       </div>
     </div>
     
@@ -813,17 +851,41 @@
         Pholio's AI transforms raw talent data into publication-ready comp cards. Refined bios, organized stats, and editorial-quality presentation—all in minutes.
       </p>
       <div class="homepage-value-prop__benefits">
-        <div class="homepage-value-prop__benefit">
-          <span class="homepage-value-prop__benefit-icon">⚡</span>
-          <span class="homepage-value-prop__benefit-text">Publication-ready in minutes</span>
+        <div class="homepage-value-prop__benefit feature-card" data-tooltip="No manual formatting needed. Our AI handles everything automatically.">
+          <div class="feature-card__icon">
+            <span class="homepage-value-prop__benefit-icon">⚡</span>
+          </div>
+          <div class="feature-card__content">
+            <span class="homepage-value-prop__benefit-text">Publication-ready in minutes</span>
+            <div class="feature-card__details">
+              <p>Transform raw data into polished comp cards instantly. No design skills required.</p>
+            </div>
+          </div>
+          <div class="feature-card__badge">Fast</div>
         </div>
-        <div class="homepage-value-prop__benefit">
-          <span class="homepage-value-prop__benefit-icon">🎨</span>
-          <span class="homepage-value-prop__benefit-text">Editorial-quality presentation</span>
+        <div class="homepage-value-prop__benefit feature-card" data-tooltip="Professional layouts that match industry standards.">
+          <div class="feature-card__icon">
+            <span class="homepage-value-prop__benefit-icon">🎨</span>
+          </div>
+          <div class="feature-card__content">
+            <span class="homepage-value-prop__benefit-text">Editorial-quality presentation</span>
+            <div class="feature-card__details">
+              <p>Every portfolio meets publication standards. Ready for agency submissions and casting calls.</p>
+            </div>
+          </div>
+          <div class="feature-card__badge">Premium</div>
         </div>
-        <div class="homepage-value-prop__benefit">
-          <span class="homepage-value-prop__benefit-icon">📊</span>
-          <span class="homepage-value-prop__benefit-text">Organized stats and metrics</span>
+        <div class="homepage-value-prop__benefit feature-card" data-tooltip="All your stats organized and formatted consistently.">
+          <div class="feature-card__icon">
+            <span class="homepage-value-prop__benefit-icon">📊</span>
+          </div>
+          <div class="feature-card__content">
+            <span class="homepage-value-prop__benefit-text">Organized stats and metrics</span>
+            <div class="feature-card__details">
+              <p>Height, measurements, experience—all formatted consistently and professionally.</p>
+            </div>
+          </div>
+          <div class="feature-card__badge">Organized</div>
         </div>
       </div>
     </div>
@@ -843,14 +905,14 @@
     
     <div class="homepage-portfolio-showcase__grid">
       <% featuredTalents.slice(0, 8).forEach((talent, index) => { %>
-        <button 
+        <a 
+          href="/portfolio/<%= talent.slug %>" 
           class="homepage-portfolio-showcase__card" 
           data-index="<%= index %>"
           data-talent-slug="<%= talent.slug %>"
           data-talent-name="<%= talent.first_name %> <%= talent.last_name %>"
           data-talent-city="<%= talent.city %>"
           data-talent-image="<%= talent.hero_image %>"
-          aria-label="View <%= talent.first_name %> <%= talent.last_name %> portfolio"
         >
           <div class="homepage-portfolio-showcase__image-wrapper">
             <img 
@@ -869,7 +931,7 @@
               </div>
             </div>
           </div>
-        </button>
+        </a>
       <% }); %>
     </div>
   </div>
@@ -888,39 +950,275 @@
       </div>
       
       <div class="homepage-agency__features">
-        <div class="homepage-agency__feature">
-          <div class="homepage-agency__feature-icon-wrapper">
+        <div class="homepage-agency__feature feature-card" data-tooltip="Drag and drop applications between status columns. Add notes and tags for organization.">
+          <div class="homepage-agency__feature-icon-wrapper feature-card__icon">
             <span class="homepage-agency__feature-icon">📋</span>
           </div>
-          <div class="homepage-agency__feature-content">
+          <div class="homepage-agency__feature-content feature-card__content">
             <h3 class="homepage-agency__feature-title">Application Management</h3>
             <p class="homepage-agency__feature-text">Review and organize all incoming talent applications in one place. Use our Kanban board to track applications from submission to acceptance.</p>
-            <div class="homepage-agency__feature-highlight">
+            <div class="feature-card__details">
+              <p>Organize applications by status, add custom notes, tag talent by type, and filter by match score. Everything you need to manage your pipeline efficiently.</p>
+            </div>
+            <div class="homepage-agency__feature-highlight feature-card__badge">
               <span>Streamlined review process</span>
             </div>
           </div>
         </div>
-        <div class="homepage-agency__feature">
-          <div class="homepage-agency__feature-icon-wrapper">
+        <div class="homepage-agency__feature feature-card" data-tooltip="Match scores calculated based on your board requirements and scoring weights.">
+          <div class="homepage-agency__feature-icon-wrapper feature-card__icon">
             <span class="homepage-agency__feature-icon">🤖</span>
           </div>
-          <div class="homepage-agency__feature-content">
+          <div class="homepage-agency__feature-content feature-card__content">
             <h3 class="homepage-agency__feature-title">AI-Powered Insights</h3>
             <p class="homepage-agency__feature-text">Get AI-generated match scores and tags to quickly identify talent that fits your agency's needs. Save time on initial screening.</p>
-            <div class="homepage-agency__feature-highlight">
+            <div class="feature-card__details">
+              <p>Our AI analyzes talent profiles against your board requirements and generates match scores. Auto-tagging helps you quickly identify editorial, runway, or commercial talent.</p>
+            </div>
+            <div class="homepage-agency__feature-highlight feature-card__badge">
               <span>Smart talent discovery</span>
             </div>
           </div>
         </div>
-        <div class="homepage-agency__feature">
-          <div class="homepage-agency__feature-icon-wrapper">
+        <div class="homepage-agency__feature feature-card" data-tooltip="No credit card required. Free access to all dashboard features forever.">
+          <div class="homepage-agency__feature-icon-wrapper feature-card__icon">
             <span class="homepage-agency__feature-icon">💼</span>
           </div>
-          <div class="homepage-agency__feature-content">
+          <div class="homepage-agency__feature-content feature-card__content">
             <h3 class="homepage-agency__feature-title">100% Free for Agencies</h3>
             <p class="homepage-agency__feature-text">Our dashboard is completely free for verified partner agencies. No subscription fees, no hidden costs—just powerful tools to manage your talent pipeline.</p>
-            <div class="homepage-agency__feature-highlight">
+            <div class="feature-card__details">
+              <p>Full access to application management, AI insights, talent discovery, and analytics. No limits, no trials, no hidden fees. Free forever for verified agencies.</p>
+            </div>
+            <div class="homepage-agency__feature-highlight feature-card__badge">
               <span>Free forever</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Command Palette Demo -->
+      <div class="agency-command-palette-demo">
+        <div class="agency-command-palette-demo__header">
+          <h3 class="agency-command-palette-demo__title">Powerful Navigation</h3>
+          <p class="agency-command-palette-demo__subtitle">Press <kbd class="agency-command-palette-demo__kbd">⌘K</kbd> or <kbd class="agency-command-palette-demo__kbd">Ctrl+K</kbd> to open the command palette</p>
+        </div>
+        
+        <div class="agency-command-palette-demo__trigger-wrapper">
+          <button class="agency-command-palette-demo__trigger" id="homepage-command-palette-trigger">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <span>Try Command Palette</span>
+            <kbd class="agency-command-palette-demo__shortcut">⌘K</kbd>
+          </button>
+        </div>
+        
+        <!-- Command Palette Modal -->
+        <div class="agency-command-palette-demo__modal" id="homepage-command-palette-modal" hidden>
+          <div class="agency-command-palette-demo__overlay"></div>
+          <div class="agency-command-palette-demo__content">
+            <div class="agency-command-palette-demo__input-wrapper">
+              <svg class="agency-command-palette-demo__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input 
+                type="text" 
+                class="agency-command-palette-demo__input" 
+                id="homepage-command-palette-input"
+                placeholder="Type to search commands, navigate, or find talent..."
+                autocomplete="off"
+              />
+              <kbd class="agency-command-palette-demo__esc">ESC</kbd>
+            </div>
+            
+            <div class="agency-command-palette-demo__results">
+              <div class="agency-command-palette-demo__section">
+                <div class="agency-command-palette-demo__section-header">Navigation</div>
+                <div class="agency-command-palette-demo__item agency-command-palette-demo__item--active">
+                  <svg class="agency-command-palette-demo__item-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/>
+                    <rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/>
+                  </svg>
+                  <span class="agency-command-palette-demo__item-label">Go to Dashboard</span>
+                  <kbd class="agency-command-palette-demo__item-shortcut">↩</kbd>
+                </div>
+                <div class="agency-command-palette-demo__item">
+                  <svg class="agency-command-palette-demo__item-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                  </svg>
+                  <span class="agency-command-palette-demo__item-label">Go to Inbox</span>
+                  <kbd class="agency-command-palette-demo__item-shortcut">↩</kbd>
+                </div>
+                <div class="agency-command-palette-demo__item">
+                  <svg class="agency-command-palette-demo__item-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  <span class="agency-command-palette-demo__item-label">Go to Scout</span>
+                  <kbd class="agency-command-palette-demo__item-shortcut">↩</kbd>
+                </div>
+              </div>
+              
+              <div class="agency-command-palette-demo__section">
+                <div class="agency-command-palette-demo__section-header">Quick Actions</div>
+                <div class="agency-command-palette-demo__item">
+                  <svg class="agency-command-palette-demo__item-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  <span class="agency-command-palette-demo__item-label">Export Data</span>
+                </div>
+                <div class="agency-command-palette-demo__item">
+                  <svg class="agency-command-palette-demo__item-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"/>
+                  </svg>
+                  <span class="agency-command-palette-demo__item-label">Settings</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="agency-command-palette-demo__footer">
+              <div class="agency-command-palette-demo__hint">
+                <kbd>↑</kbd><kbd>↓</kbd> Navigate
+              </div>
+              <div class="agency-command-palette-demo__hint">
+                <kbd>↩</kbd> Select
+              </div>
+              <div class="agency-command-palette-demo__hint">
+                <kbd>ESC</kbd> Close
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Live Dashboard Preview with Charts -->
+      <div class="agency-dashboard-preview">
+        <div class="agency-dashboard-preview__header">
+          <h3 class="agency-dashboard-preview__title">Live Dashboard Preview</h3>
+          <div class="agency-dashboard-preview__badge">
+            <span class="agency-dashboard-preview__badge-dot"></span>
+            Live Data
+          </div>
+        </div>
+        
+        <div class="agency-dashboard-preview__content">
+          <!-- Mini Stats Cards -->
+          <div class="agency-dashboard-preview__stats">
+            <div class="agency-dashboard-preview__stat-card">
+              <div class="agency-dashboard-preview__stat-label">Total Applications</div>
+              <div class="agency-dashboard-preview__stat-value" data-target="24">0</div>
+              <div class="agency-dashboard-preview__stat-change">+3 today</div>
+            </div>
+            <div class="agency-dashboard-preview__stat-card">
+              <div class="agency-dashboard-preview__stat-label">Accepted</div>
+              <div class="agency-dashboard-preview__stat-value" data-target="8">0</div>
+              <div class="agency-dashboard-preview__stat-change">33% acceptance rate</div>
+            </div>
+            <div class="agency-dashboard-preview__stat-card">
+              <div class="agency-dashboard-preview__stat-label">Pending Review</div>
+              <div class="agency-dashboard-preview__stat-value" data-target="5">0</div>
+              <div class="agency-dashboard-preview__stat-change">Awaiting decision</div>
+            </div>
+          </div>
+          
+          <!-- Charts Grid -->
+          <div class="agency-dashboard-preview__charts">
+            <!-- Activity Chart (Area) -->
+            <div class="agency-dashboard-preview__chart-card">
+              <div class="agency-dashboard-preview__chart-header">
+                <h4 class="agency-dashboard-preview__chart-title">Application Activity</h4>
+                <span class="agency-dashboard-preview__chart-period">Last 7 days</span>
+              </div>
+              <div class="agency-dashboard-preview__chart-container">
+                <svg class="agency-dashboard-preview__area-chart" id="agency-activity-chart" viewBox="0 0 400 120" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="activityGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" style="stop-color:rgba(201, 165, 90, 0.3);stop-opacity:1" />
+                      <stop offset="100%" style="stop-color:rgba(201, 165, 90, 0.05);stop-opacity:1" />
+                    </linearGradient>
+                  </defs>
+                  <path class="agency-dashboard-preview__area-path" d="M 0,100 L 50,85 L 100,70 L 150,60 L 200,55 L 250,50 L 300,45 L 350,40 L 400,35 L 400,120 L 0,120 Z" fill="url(#activityGradient)" stroke="none"/>
+                  <polyline class="agency-dashboard-preview__area-line" points="0,100 50,85 100,70 150,60 200,55 250,50 300,45 350,40 400,35" fill="none" stroke="var(--color-accent)" stroke-width="2.5"/>
+                </svg>
+              </div>
+            </div>
+            
+            <!-- Status Breakdown (Pie) -->
+            <div class="agency-dashboard-preview__chart-card">
+              <div class="agency-dashboard-preview__chart-header">
+                <h4 class="agency-dashboard-preview__chart-title">Status Breakdown</h4>
+              </div>
+              <div class="agency-dashboard-preview__chart-container">
+                <svg class="agency-dashboard-preview__pie-chart" id="agency-status-chart" viewBox="0 0 200 200">
+                  <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(201, 165, 90, 0.2)" stroke-width="40"/>
+                  <circle cx="100" cy="100" r="80" fill="none" stroke="var(--color-accent)" stroke-width="40" stroke-dasharray="150 400" stroke-dashoffset="0" transform="rotate(-90 100 100)"/>
+                  <circle cx="100" cy="100" r="80" fill="none" stroke="#10B981" stroke-width="40" stroke-dasharray="100 400" stroke-dashoffset="-150" transform="rotate(-90 100 100)"/>
+                  <circle cx="100" cy="100" r="80" fill="none" stroke="#F59E0B" stroke-width="40" stroke-dasharray="60 400" stroke-dashoffset="-250" transform="rotate(-90 100 100)"/>
+                  <text x="100" y="95" text-anchor="middle" font-family="var(--font-serif)" font-size="24" font-weight="400" fill="var(--color-text)">24</text>
+                  <text x="100" y="115" text-anchor="middle" font-family="var(--font-sans)" font-size="12" fill="var(--color-muted)">Total</text>
+                </svg>
+                <div class="agency-dashboard-preview__pie-legend">
+                  <div class="agency-dashboard-preview__legend-item">
+                    <span class="agency-dashboard-preview__legend-color" style="background: var(--color-accent);"></span>
+                    <span class="agency-dashboard-preview__legend-label">Accepted (8)</span>
+                  </div>
+                  <div class="agency-dashboard-preview__legend-item">
+                    <span class="agency-dashboard-preview__legend-color" style="background: #10B981;"></span>
+                    <span class="agency-dashboard-preview__legend-label">Pending (5)</span>
+                  </div>
+                  <div class="agency-dashboard-preview__legend-item">
+                    <span class="agency-dashboard-preview__legend-color" style="background: #F59E0B;"></span>
+                    <span class="agency-dashboard-preview__legend-label">New (11)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Match Score Distribution (Bar) -->
+            <div class="agency-dashboard-preview__chart-card">
+              <div class="agency-dashboard-preview__chart-header">
+                <h4 class="agency-dashboard-preview__chart-title">Match Score Distribution</h4>
+              </div>
+              <div class="agency-dashboard-preview__chart-container">
+                <div class="agency-dashboard-preview__bar-chart" id="agency-match-chart">
+                  <div class="agency-dashboard-preview__bar-group">
+                    <div class="agency-dashboard-preview__bar-label">0-50</div>
+                    <div class="agency-dashboard-preview__bar-track">
+                      <div class="agency-dashboard-preview__bar-fill" style="width: 20%;"></div>
+                    </div>
+                    <div class="agency-dashboard-preview__bar-value">2</div>
+                  </div>
+                  <div class="agency-dashboard-preview__bar-group">
+                    <div class="agency-dashboard-preview__bar-label">51-70</div>
+                    <div class="agency-dashboard-preview__bar-track">
+                      <div class="agency-dashboard-preview__bar-fill" style="width: 35%;"></div>
+                    </div>
+                    <div class="agency-dashboard-preview__bar-value">4</div>
+                  </div>
+                  <div class="agency-dashboard-preview__bar-group">
+                    <div class="agency-dashboard-preview__bar-label">71-85</div>
+                    <div class="agency-dashboard-preview__bar-track">
+                      <div class="agency-dashboard-preview__bar-fill" style="width: 60%;"></div>
+                    </div>
+                    <div class="agency-dashboard-preview__bar-value">7</div>
+                  </div>
+                  <div class="agency-dashboard-preview__bar-group">
+                    <div class="agency-dashboard-preview__bar-label">86-100</div>
+                    <div class="agency-dashboard-preview__bar-track">
+                      <div class="agency-dashboard-preview__bar-fill" style="width: 90%;"></div>
+                    </div>
+                    <div class="agency-dashboard-preview__bar-value">11</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -945,19 +1243,111 @@
       <h2 class="homepage-testimonials__title">Trusted by Talent & Agencies</h2>
       <p class="homepage-testimonials__subtitle">See what our community says about Pholio</p>
     </div>
-    <div class="homepage-testimonials__content">
-      <div class="testimonial__image-wrapper">
-        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80" alt="Sarah Chen" class="testimonial__image">
+    
+    <!-- Testimonial Carousel -->
+    <div class="testimonial-carousel" id="testimonial-carousel">
+      <div class="testimonial-carousel__viewport">
+        <div class="testimonial-carousel__track" id="testimonial-carousel-track">
+          <!-- Testimonial 1: Agency -->
+          <div class="testimonial-carousel__slide" data-index="0">
+            <div class="testimonial-carousel__content">
+              <div class="testimonial__image-wrapper">
+                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80" alt="Sarah Chen" class="testimonial__image">
+                <div class="testimonial__badge testimonial__badge--agency">Agency</div>
+              </div>
+              <blockquote class="testimonial">
+                <p class="testimonial__text">
+                  "Pholio transformed how we manage our talent roster. The AI curation maintains editorial standards while saving hours of manual work. Every comp card is publication-ready."
+                </p>
+                <footer class="testimonial__author">
+                  <span class="testimonial__name">Sarah Chen</span>
+                  <span class="testimonial__role">Creative Director, Elite Model Management</span>
+                  <div class="testimonial__company-logo">Elite Model Management</div>
+                </footer>
+              </blockquote>
+            </div>
+          </div>
+          
+          <!-- Testimonial 2: Talent -->
+          <div class="testimonial-carousel__slide" data-index="1">
+            <div class="testimonial-carousel__content">
+              <div class="testimonial__image-wrapper">
+                <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=200&q=80" alt="Elara Keats" class="testimonial__image">
+                <div class="testimonial__badge testimonial__badge--talent">Talent</div>
+              </div>
+              <blockquote class="testimonial">
+                <p class="testimonial__text">
+                  "I used to spend hours trying to format my portfolio. Pholio's AI did it in minutes, and it looks more professional than anything I could have created myself. The comp card is perfect."
+                </p>
+                <footer class="testimonial__author">
+                  <span class="testimonial__name">Elara Keats</span>
+                  <span class="testimonial__role">Model, Los Angeles</span>
+                  <div class="testimonial__company-logo testimonial__company-logo--talent">Studio+ Member</div>
+                </footer>
+              </blockquote>
+            </div>
+          </div>
+          
+          <!-- Testimonial 3: Talent -->
+          <div class="testimonial-carousel__slide" data-index="2">
+            <div class="testimonial-carousel__content">
+              <div class="testimonial__image-wrapper">
+                <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80" alt="Aiko Ren" class="testimonial__image">
+                <div class="testimonial__badge testimonial__badge--talent">Talent</div>
+              </div>
+              <blockquote class="testimonial">
+                <p class="testimonial__text">
+                  "The booking analytics feature is a game-changer. I can see which agencies are viewing my portfolio and track my applications. It's like having a personal agent."
+                </p>
+                <footer class="testimonial__author">
+                  <span class="testimonial__name">Aiko Ren</span>
+                  <span class="testimonial__role">Model, Tokyo / New York</span>
+                  <div class="testimonial__company-logo testimonial__company-logo--talent">Studio+ Member</div>
+                </footer>
+              </blockquote>
+            </div>
+          </div>
+          
+          <!-- Testimonial 4: Agency -->
+          <div class="testimonial-carousel__slide" data-index="3">
+            <div class="testimonial-carousel__content">
+              <div class="testimonial__image-wrapper">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" alt="Marcus Thompson" class="testimonial__image">
+                <div class="testimonial__badge testimonial__badge--agency">Agency</div>
+              </div>
+              <blockquote class="testimonial">
+                <p class="testimonial__text">
+                  "The free dashboard has streamlined our entire application process. We can review, organize, and discover talent all in one place. The match scoring saves us so much time."
+                </p>
+                <footer class="testimonial__author">
+                  <span class="testimonial__name">Marcus Thompson</span>
+                  <span class="testimonial__role">Talent Director, True Modeling Agency</span>
+                  <div class="testimonial__company-logo">True Modeling Agency</div>
+                </footer>
+              </blockquote>
+            </div>
+          </div>
+        </div>
       </div>
-      <blockquote class="testimonial">
-        <p class="testimonial__text">
-          "Pholio transformed how we manage our talent roster. The AI curation maintains editorial standards while saving hours of manual work. Every comp card is publication-ready."
-        </p>
-        <footer class="testimonial__author">
-          <span class="testimonial__name">Sarah Chen</span>
-          <span class="testimonial__role">Creative Director, Elite Model Management</span>
-        </footer>
-      </blockquote>
+      
+      <!-- Carousel Navigation -->
+      <div class="testimonial-carousel__controls">
+        <button class="testimonial-carousel__btn testimonial-carousel__btn--prev" id="testimonial-carousel-prev" aria-label="Previous testimonial">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        
+        <div class="testimonial-carousel__dots" id="testimonial-carousel-dots">
+          <!-- Dots will be generated by JavaScript -->
+        </div>
+        
+        <button class="testimonial-carousel__btn testimonial-carousel__btn--next" id="testimonial-carousel-next" aria-label="Next testimonial">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 </section>
@@ -968,43 +1358,182 @@
     <h2 class="homepage-cta__section-title">Choose Your Path</h2>
     <p class="homepage-cta__section-subtitle">Start free or unlock the full experience</p>
   </div>
-  <div class="homepage-cta__grid">
-    <div class="homepage-cta__column homepage-cta__column--free">
-      <div class="homepage-cta__badge homepage-cta__badge--free">FREE</div>
-      <div class="homepage-cta__icon homepage-cta__icon--free">📄</div>
-      <h3 class="homepage-cta__title">The Comp Card</h3>
-      <p class="homepage-cta__description">
-        A single, perfect, AI-curated PDF comp card. Pholio's AI refines your bio, organizes your stats, and delivers a publication-ready portfolio. Free. Forever.
-      </p>
-      <ul class="homepage-cta__features">
-        <li>✓ AI-curated PDF comp card</li>
-        <li>✓ Publication-ready formatting</li>
-        <li>✓ Free forever</li>
-      </ul>
-      <a href="/apply" class="homepage-cta__button button button-primary">Create Free Comp Card</a>
-    </div>
-
-    <div class="homepage-cta__column homepage-cta__column--pro">
-      <div class="homepage-cta__popular-badge">MOST POPULAR</div>
-      <div class="homepage-cta__badge homepage-cta__badge--pro">STUDIO+</div>
-      <div class="homepage-cta__icon homepage-cta__icon--pro">✨</div>
-      <h3 class="homepage-cta__title homepage-cta__title--pro">The Live Portfolio</h3>
-      <p class="homepage-cta__description homepage-cta__description--pro">
-        Your own public portfolio URL with multiple editorial themes, no watermarks, booking analytics, and advanced AI curation.
-      </p>
-      <div class="homepage-cta__price homepage-cta__price--pro">
-        <span class="homepage-cta__price-amount homepage-cta__price-amount--pro">$9.99</span>
-        <span class="homepage-cta__price-period">/month</span>
+  
+  <!-- Comparison Table -->
+  <div class="comparison-table-wrapper">
+    <div class="comparison-table">
+      <div class="comparison-table__header">
+        <div class="comparison-table__header-cell comparison-table__header-cell--feature">Feature</div>
+        <div class="comparison-table__header-cell comparison-table__header-cell--free">
+          <div class="comparison-table__plan-badge comparison-table__plan-badge--free">FREE</div>
+          <div class="comparison-table__plan-title">The Comp Card</div>
+        </div>
+        <div class="comparison-table__header-cell comparison-table__header-cell--pro">
+          <div class="comparison-table__plan-badge comparison-table__plan-badge--pro">STUDIO+</div>
+          <div class="comparison-table__plan-title">The Live Portfolio</div>
+          <div class="comparison-table__plan-price">
+            <span class="comparison-table__price-amount">$9.99</span>
+            <span class="comparison-table__price-period">/month</span>
+          </div>
+          <div class="comparison-table__popular-badge">MOST POPULAR</div>
+        </div>
       </div>
-      <ul class="homepage-cta__features homepage-cta__features--pro">
-        <li>✓ Live portfolio URL</li>
-        <li>✓ Multiple editorial themes</li>
-        <li>✓ Booking analytics</li>
-        <li>✓ Advanced AI curation</li>
-        <li>✓ No watermarks</li>
-        <li>✓ Custom domain option</li>
-      </ul>
-      <a href="/pro/upgrade" class="homepage-cta__button homepage-cta__button--pro button button-secondary">Upgrade to Studio+</a>
+      
+      <div class="comparison-table__body">
+        <div class="comparison-table__row" data-tooltip="AI-powered bio refinement and stat organization">
+          <div class="comparison-table__cell comparison-table__cell--feature">
+            <span class="comparison-table__feature-name">AI-Curated Comp Card</span>
+            <button class="comparison-table__tooltip-trigger" aria-label="More info">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
+              </svg>
+            </button>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--free">
+            <span class="comparison-table__check">✓</span>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--pro">
+            <span class="comparison-table__check">✓</span>
+          </div>
+        </div>
+        
+        <div class="comparison-table__row" data-tooltip="Professional formatting that meets industry standards">
+          <div class="comparison-table__cell comparison-table__cell--feature">
+            <span class="comparison-table__feature-name">Publication-Ready Formatting</span>
+            <button class="comparison-table__tooltip-trigger" aria-label="More info">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
+              </svg>
+            </button>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--free">
+            <span class="comparison-table__check">✓</span>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--pro">
+            <span class="comparison-table__check">✓</span>
+          </div>
+        </div>
+        
+        <div class="comparison-table__row comparison-table__row--highlight" data-tooltip="Your own shareable portfolio URL">
+          <div class="comparison-table__cell comparison-table__cell--feature">
+            <span class="comparison-table__feature-name">Live Portfolio URL</span>
+            <button class="comparison-table__tooltip-trigger" aria-label="More info">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
+              </svg>
+            </button>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--free">
+            <span class="comparison-table__cross">—</span>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--pro">
+            <span class="comparison-table__check">✓</span>
+          </div>
+        </div>
+        
+        <div class="comparison-table__row" data-tooltip="Choose from multiple editorial design themes">
+          <div class="comparison-table__cell comparison-table__cell--feature">
+            <span class="comparison-table__feature-name">Multiple Editorial Themes</span>
+            <button class="comparison-table__tooltip-trigger" aria-label="More info">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
+              </svg>
+            </button>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--free">
+            <span class="comparison-table__cross">—</span>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--pro">
+            <span class="comparison-table__check">✓</span>
+          </div>
+        </div>
+        
+        <div class="comparison-table__row" data-tooltip="Track which agencies view your portfolio and when">
+          <div class="comparison-table__cell comparison-table__cell--feature">
+            <span class="comparison-table__feature-name">Booking Analytics</span>
+            <button class="comparison-table__tooltip-trigger" aria-label="More info">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
+              </svg>
+            </button>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--free">
+            <span class="comparison-table__cross">—</span>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--pro">
+            <span class="comparison-table__check">✓</span>
+          </div>
+        </div>
+        
+        <div class="comparison-table__row" data-tooltip="Enhanced AI processing with priority curation">
+          <div class="comparison-table__cell comparison-table__cell--feature">
+            <span class="comparison-table__feature-name">Advanced AI Curation</span>
+            <button class="comparison-table__tooltip-trigger" aria-label="More info">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
+              </svg>
+            </button>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--free">
+            <span class="comparison-table__cross">—</span>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--pro">
+            <span class="comparison-table__check">✓</span>
+          </div>
+        </div>
+        
+        <div class="comparison-table__row" data-tooltip="No watermarks on your portfolio images">
+          <div class="comparison-table__cell comparison-table__cell--feature">
+            <span class="comparison-table__feature-name">No Watermarks</span>
+            <button class="comparison-table__tooltip-trigger" aria-label="More info">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
+              </svg>
+            </button>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--free">
+            <span class="comparison-table__cross">—</span>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--pro">
+            <span class="comparison-table__check">✓</span>
+          </div>
+        </div>
+        
+        <div class="comparison-table__row" data-tooltip="Use your own custom domain for your portfolio">
+          <div class="comparison-table__cell comparison-table__cell--feature">
+            <span class="comparison-table__feature-name">Custom Domain Option</span>
+            <button class="comparison-table__tooltip-trigger" aria-label="More info">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
+              </svg>
+            </button>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--free">
+            <span class="comparison-table__cross">—</span>
+          </div>
+          <div class="comparison-table__cell comparison-table__cell--pro">
+            <span class="comparison-table__check">✓</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="comparison-table__footer">
+        <div class="comparison-table__footer-cell"></div>
+        <div class="comparison-table__footer-cell">
+          <a href="/apply" class="comparison-table__cta comparison-table__cta--free button button-primary">Create Free Comp Card</a>
+        </div>
+        <div class="comparison-table__footer-cell">
+          <a href="/pro/upgrade" class="comparison-table__cta comparison-table__cta--pro button button-secondary">Upgrade to Studio+</a>
+        </div>
+      </div>
     </div>
   </div>
 </section>

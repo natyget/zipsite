@@ -778,7 +778,8 @@
 
     // Event listeners
     cards.forEach((card, index) => {
-      card.addEventListener('click', () => {
+      card.addEventListener('click', (e) => {
+        e.preventDefault(); // Prevent default link navigation
         const talent = {
           name: card.getAttribute('data-talent-name') || 'Talent',
           city: card.getAttribute('data-talent-city') || '',
@@ -957,9 +958,26 @@
             const target = parseInt(stat.getAttribute('data-target'), 10);
             const suffix = stat.textContent.includes('%') ? '%' : '';
             
+            // Check if it's an analytics value (has parent with data-analytics-card)
+            const isAnalyticsValue = stat.closest('[data-analytics-card]');
+            const delay = isAnalyticsValue ? 500 + (index * 150) : 300 + (index * 100);
+            
             setTimeout(() => {
               animateCounter(stat, target, suffix);
-            }, 300 + (index * 100));
+            }, delay);
+          });
+          
+          // Animate analytics cards entrance
+          const analyticsCards = entry.target.querySelectorAll('[data-analytics-card]');
+          analyticsCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+              card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+              card.style.opacity = '1';
+              card.style.transform = 'translateY(0)';
+            }, 400 + (index * 100));
           });
           
           // Animate profile completion progress bar
@@ -1143,6 +1161,154 @@
     });
   }
 
+  // Command Palette Demo
+  function initCommandPaletteDemo() {
+    const trigger = document.getElementById('homepage-command-palette-trigger');
+    const modal = document.getElementById('homepage-command-palette-modal');
+    const input = document.getElementById('homepage-command-palette-input');
+    const overlay = modal?.querySelector('.agency-command-palette-demo__overlay');
+    const items = modal?.querySelectorAll('.agency-command-palette-demo__item');
+    
+    if (!trigger || !modal || !input) return;
+    
+    let selectedIndex = 0;
+    
+    function openModal() {
+      modal.removeAttribute('hidden');
+      setTimeout(() => {
+        input.focus();
+      }, 100);
+      selectedIndex = 0;
+      updateSelection();
+    }
+    
+    function closeModal() {
+      modal.setAttribute('hidden', '');
+      input.value = '';
+      selectedIndex = 0;
+      updateSelection();
+    }
+    
+    function updateSelection() {
+      items.forEach((item, index) => {
+        if (index === selectedIndex) {
+          item.classList.add('agency-command-palette-demo__item--active');
+        } else {
+          item.classList.remove('agency-command-palette-demo__item--active');
+        }
+      });
+    }
+    
+    function navigateItems(direction) {
+      if (direction === 'down') {
+        selectedIndex = (selectedIndex + 1) % items.length;
+      } else {
+        selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+      }
+      updateSelection();
+    }
+    
+    trigger.addEventListener('click', openModal);
+    overlay?.addEventListener('click', closeModal);
+    
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        navigateItems('down');
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        navigateItems('up');
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        // Just close for demo purposes
+        closeModal();
+      }
+    });
+    
+    // Keyboard shortcut: Cmd/Ctrl + K
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        if (modal.hasAttribute('hidden')) {
+          openModal();
+        } else {
+          closeModal();
+        }
+      }
+    });
+  }
+
+  // Agency Dashboard Preview
+  function initAgencyDashboardPreview() {
+    const preview = document.querySelector('.agency-dashboard-preview');
+    if (!preview) return;
+
+    // Intersection Observer for scroll-triggered animations
+    const observerOptions = {
+      threshold: 0.2,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    // Animate counter function (reuse from dashboard showcase)
+    function animateCounter(element, target, suffix = '') {
+      let current = 0;
+      const duration = 2000; // 2 seconds
+      const increment = target / (duration / 16); // 60fps
+      
+      const animate = () => {
+        current += increment;
+        if (current < target) {
+          element.textContent = Math.round(current) + suffix;
+          requestAnimationFrame(animate);
+        } else {
+          element.textContent = target + suffix;
+        }
+      };
+      
+      animate();
+    }
+
+    // Animate bar chart fills
+    function animateBarChart() {
+      const barFills = preview.querySelectorAll('.agency-dashboard-preview__bar-fill');
+      barFills.forEach((bar, index) => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        
+        setTimeout(() => {
+          bar.style.width = width;
+        }, 300 + (index * 100));
+      });
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !entry.target.classList.contains('preview-animated')) {
+          entry.target.classList.add('preview-animated');
+          
+          // Animate stat counters
+          const statValues = entry.target.querySelectorAll('.agency-dashboard-preview__stat-value[data-target]');
+          statValues.forEach((stat, index) => {
+            const target = parseInt(stat.getAttribute('data-target'), 10);
+            
+            setTimeout(() => {
+              animateCounter(stat, target);
+            }, 200 + (index * 150));
+          });
+          
+          // Animate bar chart
+          setTimeout(() => {
+            animateBarChart();
+          }, 800);
+        }
+      });
+    }, observerOptions);
+
+    observer.observe(preview);
+  }
+
   // How It Works Section Animations
   function initHowItWorks() {
     const howItWorks = document.getElementById('homepage-how-it-works');
@@ -1239,6 +1405,220 @@
     observer.observe(howItWorks);
   }
 
+  // Testimonial Carousel
+  function initTestimonialCarousel() {
+    const carousel = document.getElementById('testimonial-carousel');
+    if (!carousel) return;
+
+    const track = document.getElementById('testimonial-carousel-track');
+    const slides = carousel.querySelectorAll('.testimonial-carousel__slide');
+    const prevBtn = document.getElementById('testimonial-carousel-prev');
+    const nextBtn = document.getElementById('testimonial-carousel-next');
+    const dotsContainer = document.getElementById('testimonial-carousel-dots');
+
+    if (!track || !slides.length) return;
+
+    let currentIndex = 0;
+    let autoRotateInterval = null;
+    const AUTO_ROTATE_DELAY = 5000; // 5 seconds
+
+    // Create dots
+    if (dotsContainer) {
+      slides.forEach((_, index) => {
+        const dot = document.createElement('button');
+        dot.className = 'testimonial-carousel__dot';
+        if (index === 0) dot.classList.add('active');
+        dot.setAttribute('aria-label', `Go to testimonial ${index + 1}`);
+        dot.addEventListener('click', () => goToSlide(index));
+        dotsContainer.appendChild(dot);
+      });
+    }
+
+    function updateCarousel() {
+      // Update track position
+      const translateX = -currentIndex * 100;
+      track.style.transform = `translateX(${translateX}%)`;
+
+      // Update slide active states
+      slides.forEach((slide, index) => {
+        slide.classList.toggle('active', index === currentIndex);
+      });
+
+      // Update dots
+      const dots = dotsContainer?.querySelectorAll('.testimonial-carousel__dot');
+      dots?.forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentIndex);
+      });
+
+      // Update button states
+      if (prevBtn) prevBtn.disabled = currentIndex === 0;
+      if (nextBtn) nextBtn.disabled = currentIndex === slides.length - 1;
+    }
+
+    function goToSlide(index) {
+      if (index < 0 || index >= slides.length) return;
+      currentIndex = index;
+      updateCarousel();
+      resetAutoRotate();
+    }
+
+    function nextSlide() {
+      if (currentIndex < slides.length - 1) {
+        goToSlide(currentIndex + 1);
+      } else {
+        goToSlide(0); // Loop back to start
+      }
+    }
+
+    function prevSlide() {
+      if (currentIndex > 0) {
+        goToSlide(currentIndex - 1);
+      } else {
+        goToSlide(slides.length - 1); // Loop to end
+      }
+    }
+
+    function startAutoRotate() {
+      autoRotateInterval = setInterval(() => {
+        nextSlide();
+      }, AUTO_ROTATE_DELAY);
+    }
+
+    function stopAutoRotate() {
+      if (autoRotateInterval) {
+        clearInterval(autoRotateInterval);
+        autoRotateInterval = null;
+      }
+    }
+
+    function resetAutoRotate() {
+      stopAutoRotate();
+      startAutoRotate();
+    }
+
+    // Event listeners
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        prevSlide();
+        resetAutoRotate();
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        nextSlide();
+        resetAutoRotate();
+      });
+    }
+
+    // Pause on hover
+    carousel.addEventListener('mouseenter', stopAutoRotate);
+    carousel.addEventListener('mouseleave', startAutoRotate);
+
+    // Keyboard navigation
+    carousel.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') {
+        prevSlide();
+        resetAutoRotate();
+      } else if (e.key === 'ArrowRight') {
+        nextSlide();
+        resetAutoRotate();
+      }
+    });
+
+    // Initialize
+    updateCarousel();
+    startAutoRotate();
+
+    // Make carousel focusable for keyboard navigation
+    carousel.setAttribute('tabindex', '0');
+  }
+
+  // Interactive Feature Cards
+  function initInteractiveFeatureCards() {
+    const featureCards = document.querySelectorAll('.feature-card');
+    
+    featureCards.forEach(card => {
+      // Create tooltip if data-tooltip exists
+      const tooltipText = card.getAttribute('data-tooltip');
+      if (tooltipText) {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'feature-card__tooltip';
+        tooltip.textContent = tooltipText;
+        tooltip.setAttribute('role', 'tooltip');
+        card.appendChild(tooltip);
+      }
+
+      // Toggle expand on click
+      card.addEventListener('click', (e) => {
+        // Don't expand if clicking on a link or button inside
+        if (e.target.closest('a, button')) return;
+        
+        const isExpanded = card.classList.contains('expanded');
+        // Close all other cards
+        featureCards.forEach(otherCard => {
+          if (otherCard !== card) {
+            otherCard.classList.remove('expanded');
+          }
+        });
+        
+        // Toggle current card
+        card.classList.toggle('expanded', !isExpanded);
+      });
+
+      // Keyboard support
+      card.setAttribute('tabindex', '0');
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          card.click();
+        }
+      });
+    });
+  }
+
+  // Interactive Comparison Table
+  function initComparisonTable() {
+    const tableRows = document.querySelectorAll('.comparison-table__row[data-tooltip]');
+    
+    tableRows.forEach(row => {
+      const tooltipText = row.getAttribute('data-tooltip');
+      if (tooltipText) {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'comparison-table__row-tooltip';
+        tooltip.textContent = tooltipText;
+        tooltip.setAttribute('role', 'tooltip');
+        row.appendChild(tooltip);
+      }
+
+      // Add hover effect for highlight rows
+      if (row.classList.contains('comparison-table__row--highlight')) {
+        row.addEventListener('mouseenter', () => {
+          row.style.transform = 'scale(1.01)';
+        });
+        row.addEventListener('mouseleave', () => {
+          row.style.transform = 'scale(1)';
+        });
+      }
+    });
+
+    // Tooltip trigger buttons
+    const tooltipTriggers = document.querySelectorAll('.comparison-table__tooltip-trigger');
+    tooltipTriggers.forEach(trigger => {
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const row = trigger.closest('.comparison-table__row');
+        const tooltip = row?.querySelector('.comparison-table__row-tooltip');
+        if (tooltip) {
+          // Toggle tooltip visibility
+          const isVisible = tooltip.style.opacity === '1';
+          tooltip.style.opacity = isVisible ? '0' : '1';
+          tooltip.style.pointerEvents = isVisible ? 'none' : 'auto';
+        }
+      });
+    });
+  }
+
   // Enhanced scroll animations for all sections
   function initEnhancedScrollAnimations() {
     const sections = document.querySelectorAll(
@@ -1315,7 +1695,12 @@
     initPortfolioLightbox();
     initScrollAnimations();
     initDashboardShowcase();
+    initAgencyDashboardPreview();
+    initCommandPaletteDemo();
     initHowItWorks();
+    initTestimonialCarousel();
+    initInteractiveFeatureCards();
+    initComparisonTable();
     initEnhancedScrollAnimations();
     respectReducedMotion();
   });
