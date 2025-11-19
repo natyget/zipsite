@@ -1,0 +1,74 @@
+    <!-- Table View -->
+    <div class="agency-dashboard__view agency-dashboard__view--table" id="view-table" style="display: none;">
+      <div class="agency-dashboard__table-wrapper">
+        <table class="agency-dashboard__table">
+              <thead>
+                <tr>
+              <th>
+                <input type="checkbox" id="select-all" class="agency-dashboard__select-all">
+              </th>
+              <th>Name</th>
+              <th>Location</th>
+              <th>Height</th>
+              <th>Measurements</th>
+              <th>Status</th>
+              <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+            <% safeProfiles.forEach((profile) => { %>
+              <tr class="agency-dashboard__table-row" data-profile-id="<%= profile.id %>">
+                <td>
+                  <input type="checkbox" class="agency-dashboard__select-checkbox" data-profile-id="<%= profile.id %>">
+                    </td>
+                <td>
+                  <div class="agency-dashboard__table-name">
+                    <% if (profile.hero_image_path || (profile.images && profile.images.length > 0)) { %>
+                      <img 
+                        src="<%= normalizeImagePath(profile.hero_image_path || profile.images[0].path) %>" 
+                        alt="<%= profile.first_name %> <%= profile.last_name %>"
+                        class="agency-dashboard__table-avatar"
+                        loading="lazy">
+                    <% } %>
+                    <span><%= profile.first_name %> <%= profile.last_name %></span>
+                  </div>
+                    </td>
+                <td><%= profile.city || '—' %></td>
+                <td><%= profile.height_cm ? profile.height_cm + ' cm' : '—' %></td>
+                <td><%= profile.measurements || '—' %></td>
+                <td>
+                  <% const appStatus = profile.application_status || 'pending'; %>
+                  <span class="agency-dashboard__status-badge agency-dashboard__status-badge--<%= appStatus %>">
+                    <%= appStatus.charAt(0).toUpperCase() + appStatus.slice(1) %>
+                  </span>
+                    </td>
+                    <td>
+                  <div class="agency-dashboard__table-actions">
+                    <button class="agency-dashboard__table-preview" data-profile-id="<%= profile.id %>">Preview</button>
+                    <% if (appStatus !== 'accepted') { %>
+                      <form method="post" action="/dashboard/agency/application/accept" class="agency-dashboard__quick-form">
+                        <input type="hidden" name="profile_id" value="<%= profile.id %>">
+                        <button type="submit" class="agency-dashboard__table-btn agency-dashboard__table-btn--accept">Accept</button>
+                      </form>
+                    <% } %>
+                    <% if (appStatus !== 'declined') { %>
+                      <form method="post" action="/dashboard/agency/application/decline" class="agency-dashboard__quick-form">
+                        <input type="hidden" name="profile_id" value="<%= profile.id %>">
+                        <button type="submit" class="agency-dashboard__table-btn agency-dashboard__table-btn--decline">Decline</button>
+                      </form>
+                    <% } %>
+                  </div>
+                    </td>
+                  </tr>
+                  <% }); %>
+            <% if (safeProfiles.length === 0) { %>
+              <tr>
+                <td colspan="7" class="agency-dashboard__empty-state">
+                  <p>No applications found</p>
+                </td>
+              </tr>
+            <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>

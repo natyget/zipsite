@@ -1,0 +1,100 @@
+  <!-- Agency Hero Section -->
+  <section class="agency-hero" id="agency-overview">
+    <div class="agency-hero__content">
+      <div class="agency-hero__main">
+        <div class="agency-hero__header">
+          <div class="agency-hero__logo">
+            <% if (currentUser && currentUser.agency_name) { %>
+              <div class="agency-hero__logo-placeholder">
+                <%= currentUser.agency_name.charAt(0).toUpperCase() %>
+              </div>
+            <% } else { %>
+              <div class="agency-hero__logo-placeholder">A</div>
+            <% } %>
+          </div>
+          <div class="agency-hero__info">
+            <div class="agency-hero__title-wrapper">
+              <h1 class="agency-hero__title">
+        <% if (currentUser && currentUser.agency_name) { %>
+          <%= currentUser.agency_name %>
+        <% } else { %>
+                  Partner Agency
+        <% } %>
+              </h1>
+              <span class="agency-hero__badge agency-hero__badge--verified">Verified Partner</span>
+            </div>
+            <p class="agency-hero__subtitle">
+              <% if (currentUser && currentUser.email) { %>
+                <%= currentUser.email %>
+              <% } else { %>
+                Agency Dashboard
+              <% } %>
+            </p>
+            <div class="agency-hero__meta">
+              <% if (currentUser && currentUser.agency_location) { %>
+                <div class="agency-hero__meta-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  <span><%= currentUser.agency_location %></span>
+                </div>
+              <% } %>
+              <% if (currentUser && currentUser.agency_website) { %>
+                <div class="agency-hero__meta-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    <polyline points="15 3 21 3 21 9"/>
+                    <line x1="10" y1="14" x2="21" y2="3"/>
+                  </svg>
+                  <a href="<%= currentUser.agency_website.startsWith('http') ? currentUser.agency_website : 'https://' + currentUser.agency_website %>" target="_blank" rel="noopener"><%= currentUser.agency_website %></a>
+                </div>
+              <% } %>
+              <div class="agency-hero__meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>Partner Since <%= currentUser && currentUser.created_at ? new Date(currentUser.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '2024' %></span>
+              </div>
+            </div>
+          </div>
+    </div>
+
+    <div class="agency-hero__stats">
+          <div class="agency-hero__stat">
+            <span class="agency-hero__stat-value"><%= safeStats.total %></span>
+            <span class="agency-hero__stat-label">Total Applications</span>
+          </div>
+          <div class="agency-hero__stat">
+            <span class="agency-hero__stat-value"><%= safeStats.accepted %></span>
+            <span class="agency-hero__stat-label">Accepted Talent</span>
+          </div>
+          <div class="agency-hero__stat">
+            <span class="agency-hero__stat-value"><%= safeStats.pending %></span>
+            <span class="agency-hero__stat-label">Pending Review</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="agency-hero__actions">
+        <button class="agency-hero__action agency-hero__action--primary" id="export-data-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>Export Data</span>
+        </button>
+        <button class="agency-hero__action agency-hero__action--secondary" id="settings-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"/>
+          </svg>
+          <span>Settings</span>
+        </button>
+      </div>
+    </div>
+  </section>

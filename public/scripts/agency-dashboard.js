@@ -514,8 +514,11 @@
           </div>
         `;
       }
-      });
+    } catch (error) {
+      console.error('Error loading application details:', error);
+      body.innerHTML = '<div class="agency-detail-drawer__error"><p>Error loading details</p></div>';
     }
+  }
 
     // Expose function globally for command palette
     window.openApplicationDetail = openApplicationDetail;
@@ -2425,7 +2428,7 @@
         errorEl.style.display = 'none';
         contentEl.style.display = 'none';
 
-        const response = await fetch('/dashboard/agency/analytics');
+        const response = await fetch('/api/agency/analytics');
         if (!response.ok) {
           throw new Error('Failed to load analytics');
         }
@@ -2636,7 +2639,7 @@
     const loadOverviewData = async () => {
       try {
         // Fetch analytics data
-        const response = await fetch('/dashboard/agency/analytics');
+        const response = await fetch('/api/agency/analytics');
         if (!response.ok) return;
 
         const data = await response.json();

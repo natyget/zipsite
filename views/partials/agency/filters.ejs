@@ -1,0 +1,142 @@
+  <!-- Intelligent Filtering & Search -->
+  <section class="agency-dashboard__filters">
+    <div class="agency-dashboard__filters-main">
+      <!-- Search Bar -->
+      <div class="agency-dashboard__search">
+        <svg class="agency-dashboard__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input 
+          type="search" 
+          class="agency-dashboard__search-input" 
+          id="agency-search"
+          placeholder="Search by name, city, or describe what you're looking for..."
+          value="<%= safeFilters.search || '' %>"
+          autocomplete="off">
+        <button class="agency-dashboard__search-clear" id="clear-search" style="display: none;">×</button>
+          </div>
+
+      <!-- Filter Chips -->
+      <div class="agency-dashboard__filter-chips" id="filter-chips">
+        <% if (safeFilters.board_id) { %>
+          <% 
+            const selectedBoard = safeBoards.find(b => b.id === safeFilters.board_id);
+            if (selectedBoard) {
+          %>
+          <span class="agency-dashboard__filter-chip" data-filter="board_id" data-value="<%= safeFilters.board_id %>">
+            Board: <%= selectedBoard.name %>
+            <button class="agency-dashboard__filter-chip-remove">×</button>
+          </span>
+          <% } %>
+        <% } %>
+        <% if (safeFilters.city) { %>
+          <span class="agency-dashboard__filter-chip" data-filter="city" data-value="<%= safeFilters.city %>">
+            City: <%= safeFilters.city %>
+            <button class="agency-dashboard__filter-chip-remove">×</button>
+          </span>
+        <% } %>
+        <% if (safeFilters.min_height || safeFilters.max_height) { %>
+          <span class="agency-dashboard__filter-chip" data-filter="height">
+            Height: <%= safeFilters.min_height || 'Any' %> - <%= safeFilters.max_height || 'Any' %> cm
+            <button class="agency-dashboard__filter-chip-remove">×</button>
+          </span>
+        <% } %>
+        <% if ((typeof view === 'undefined' || view === 'applicants') && safeFilters.status && safeFilters.status !== 'all') { %>
+          <span class="agency-dashboard__filter-chip" data-filter="status" data-value="<%= safeFilters.status %>">
+            Status: <%= safeFilters.status.charAt(0).toUpperCase() + safeFilters.status.slice(1) %>
+            <button class="agency-dashboard__filter-chip-remove">×</button>
+          </span>
+        <% } %>
+      </div>
+          </div>
+
+    <!-- Advanced Filters Toggle -->
+    <div class="agency-dashboard__filters-advanced">
+      <button class="agency-dashboard__filters-toggle" id="toggle-advanced-filters">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+        </svg>
+        <span>Advanced Filters</span>
+      </button>
+      
+      <div class="agency-dashboard__filters-panel" id="advanced-filters-panel" style="display: none;">
+        <form method="get" action="/dashboard/agency" class="agency-dashboard__filters-form" id="filters-form">
+          <% if (typeof view !== 'undefined' && view === 'scout') { %>
+            <input type="hidden" name="view" value="scout">
+          <% } %>
+          <div class="agency-dashboard__filters-grid">
+          <% if (typeof view === 'undefined' || view === 'applicants') { %>
+          <div class="form-field">
+              <label for="filter-board">Board / Division</label>
+              <select id="filter-board" name="board_id" class="agency-dashboard__filter-select">
+                <option value="">All Boards</option>
+                <% safeBoards.forEach((board) => { %>
+                  <option value="<%= board.id %>" <%= safeFilters.board_id === board.id ? 'selected' : '' %>>
+                    <%= board.name %>
+                  </option>
+                <% }); %>
+              </select>
+          </div>
+          <% } %>
+          <div class="form-field">
+              <label for="filter-city">City</label>
+              <input id="filter-city" name="city" type="text" placeholder="Any city" value="<%= safeFilters.city || '' %>">
+          </div>
+          <div class="form-field">
+              <label for="filter-min-height">Min Height (cm)</label>
+              <input id="filter-min-height" name="min_height" type="number" min="120" max="220" placeholder="160" value="<%= safeFilters.min_height || '' %>">
+          </div>
+          <div class="form-field">
+              <label for="filter-max-height">Max Height (cm)</label>
+              <input id="filter-max-height" name="max_height" type="number" min="120" max="220" placeholder="190" value="<%= safeFilters.max_height || '' %>">
+          </div>
+          <% if (typeof view === 'undefined' || view === 'applicants') { %>
+          <div class="form-field">
+              <label for="filter-status">Status</label>
+              <select id="filter-status" name="status">
+                <option value="all" <%= safeFilters.status === 'all' || !safeFilters.status ? 'selected' : '' %>>All Applications</option>
+                <option value="pending" <%= safeFilters.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                <option value="accepted" <%= safeFilters.status === 'accepted' ? 'selected' : '' %>>Accepted</option>
+                <option value="archived" <%= safeFilters.status === 'archived' ? 'selected' : '' %>>Archived</option>
+                <option value="declined" <%= safeFilters.status === 'declined' ? 'selected' : '' %>>Declined</option>
+            </select>
+          </div>
+          <% } %>
+          <div class="form-field">
+              <label for="filter-sort">Sort By</label>
+              <select id="filter-sort" name="sort">
+                <% if (safeFilters.board_id) { %>
+                  <option value="match_score" <%= safeFilters.sort === 'match_score' ? 'selected' : '' %>>Match Score (Highest First)</option>
+                <% } %>
+                <option value="az" <%= safeFilters.sort === 'az' ? 'selected' : '' %>>A–Z (Last name)</option>
+                <option value="city" <%= safeFilters.sort === 'city' ? 'selected' : '' %>>City</option>
+                <option value="newest" <%= safeFilters.sort === 'newest' ? 'selected' : '' %>>Newest First</option>
+                <option value="oldest" <%= safeFilters.sort === 'oldest' ? 'selected' : '' %>>Oldest First</option>
+            </select>
+          </div>
+        </div>
+          <div class="agency-dashboard__filters-actions">
+          <button type="submit" class="button-primary">Apply Filters</button>
+          <a href="/dashboard/agency<%= (typeof view !== 'undefined' && view === 'scout') ? '?view=scout' : '' %>" class="button-secondary">Clear All</a>
+        </div>
+      </form>
+      </div>
+    </div>
+
+    <!-- Batch Actions Bar (hidden by default, only for My Applicants view) -->
+    <% if (typeof view === 'undefined' || view === 'applicants') { %>
+    <div class="agency-dashboard__batch-actions" id="batch-actions" style="display: none;">
+      <div class="agency-dashboard__batch-info">
+        <span id="batch-count">0</span> selected
+      </div>
+      <div class="agency-dashboard__batch-buttons">
+        <button class="agency-dashboard__batch-btn" data-action="accept" id="batch-accept">Accept Selected</button>
+        <button class="agency-dashboard__batch-btn" data-action="decline" id="batch-decline">Decline Selected</button>
+        <button class="agency-dashboard__batch-btn" data-action="archive" id="batch-archive">Archive Selected</button>
+        <button class="agency-dashboard__batch-btn agency-dashboard__batch-btn--cancel" id="batch-cancel">Cancel</button>
+      </div>
+    </div>
+    <% } %>
+  </section>

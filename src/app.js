@@ -20,6 +20,7 @@ const portfolioRoutes = require('./routes/portfolio');
 const pdfRoutes = require('./routes/pdf');
 const uploadRoutes = require('./routes/upload');
 const agencyRoutes = require('./routes/agency');
+const agencyApiRoutes = require('./routes/api/agency');
 const proRoutes = require('./routes/pro');
 const stripeRoutes = require('./routes/stripe');
 
@@ -638,6 +639,7 @@ app.use('/', portfolioRoutes);
 app.use('/', pdfRoutes);
 app.use('/', uploadRoutes);
 app.use('/', agencyRoutes);
+app.use('/', agencyApiRoutes);
 app.use('/', proRoutes);
 app.use('/stripe', stripeRoutes);
 

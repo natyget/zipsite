@@ -1,0 +1,58 @@
+    <!-- List View -->
+    <div class="agency-dashboard__view agency-dashboard__view--list" id="view-list" style="display: none;">
+      <div class="agency-dashboard__list">
+        <% safeProfiles.forEach((profile, index) => { %>
+          <div class="agency-dashboard__list-item" data-profile-id="<%= profile.id %>">
+            <div class="agency-dashboard__list-checkbox">
+              <input type="checkbox" class="agency-dashboard__select-checkbox" data-profile-id="<%= profile.id %>" id="select-<%= profile.id %>">
+            </div>
+            <div class="agency-dashboard__list-image">
+              <% if (profile.hero_image_path || (profile.images && profile.images.length > 0)) { %>
+                <img 
+                  src="<%= normalizeImagePath(profile.hero_image_path || profile.images[0].path) %>" 
+                  alt="<%= profile.first_name %> <%= profile.last_name %>"
+                  loading="lazy">
+              <% } else { %>
+                <div class="agency-dashboard__list-placeholder">
+                  <%= profile.first_name.charAt(0) %><%= profile.last_name.charAt(0) %>
+                </div>
+              <% } %>
+            </div>
+            <div class="agency-dashboard__list-content">
+              <h4 class="agency-dashboard__list-name"><%= profile.first_name %> <%= profile.last_name %></h4>
+              <p class="agency-dashboard__list-meta">
+                  <%= profile.city || 'Location TBD' %>
+                    <% if (profile.height_cm) { %> • <%= profile.height_cm %> cm<% } %>
+                <% if (profile.measurements) { %> • <%= profile.measurements %><% } %>
+                </p>
+                <% if (profile.bio_curated) { %>
+                <p class="agency-dashboard__list-bio"><%= profile.bio_curated.length > 150 ? profile.bio_curated.substring(0, 150) + '...' : profile.bio_curated %></p>
+                  <% } %>
+            </div>
+            <div class="agency-dashboard__list-actions">
+              <button class="agency-dashboard__list-preview" data-profile-id="<%= profile.id %>">Preview</button>
+              <div class="agency-dashboard__list-quick-actions">
+                <% const appStatus = profile.application_status || 'pending'; %>
+                <% if (appStatus !== 'accepted') { %>
+                  <form method="post" action="/dashboard/agency/application/accept" class="agency-dashboard__quick-form">
+                            <input type="hidden" name="profile_id" value="<%= profile.id %>">
+                    <button type="submit" class="agency-dashboard__quick-btn agency-dashboard__quick-btn--accept">Accept</button>
+                          </form>
+                          <% } %>
+                <% if (appStatus !== 'declined') { %>
+                  <form method="post" action="/dashboard/agency/application/decline" class="agency-dashboard__quick-form">
+                                <input type="hidden" name="profile_id" value="<%= profile.id %>">
+                    <button type="submit" class="agency-dashboard__quick-btn agency-dashboard__quick-btn--decline">Decline</button>
+                        </form>
+                        <% } %>
+                    </div>
+              </div>
+          </div>
+            <% }); %>
+        <% if (safeProfiles.length === 0) { %>
+          <div class="agency-dashboard__empty-state">
+            <p>No applications found</p>
+        </div>
+        <% } %>
+      </div>
+    </div>

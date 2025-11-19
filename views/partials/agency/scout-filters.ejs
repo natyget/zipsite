@@ -1,0 +1,231 @@
+  <!-- Scout Filter Sidebar -->
+  <aside class="scout-filters" id="scout-filters">
+    <div class="scout-filters__header">
+      <h3 class="scout-filters__title">Filter Talent</h3>
+      <button class="scout-filters__reset" id="scout-filters-reset">Clear All</button>
+    </div>
+
+    <form class="scout-filters__form" id="scout-filters-form">
+      <input type="hidden" name="view" value="scout">
+      
+      <!-- Height Range -->
+      <div class="scout-filters__group">
+        <label class="scout-filters__label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="2" x2="12" y2="22"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          Height Range (cm)
+        </label>
+        <div class="scout-filters__range-inputs">
+          <input 
+            type="number" 
+            name="min_height" 
+            id="scout-min-height"
+            placeholder="Min" 
+            min="120" 
+            max="220"
+            value="<%= safeFilters.min_height || '' %>"
+            class="scout-filters__input scout-filters__input--small">
+          <span class="scout-filters__range-separator">–</span>
+          <input 
+            type="number" 
+            name="max_height" 
+            id="scout-max-height"
+            placeholder="Max" 
+            min="120" 
+            max="220"
+            value="<%= safeFilters.max_height || '' %>"
+            class="scout-filters__input scout-filters__input--small">
+        </div>
+      </div>
+
+      <!-- Age Range -->
+      <div class="scout-filters__group">
+        <label class="scout-filters__label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Age Range
+        </label>
+        <div class="scout-filters__range-inputs">
+          <input 
+            type="number" 
+            name="min_age" 
+            id="scout-min-age"
+            placeholder="Min" 
+            min="16" 
+            max="80"
+            value="<%= safeFilters.min_age || '' %>"
+            class="scout-filters__input scout-filters__input--small">
+          <span class="scout-filters__range-separator">–</span>
+          <input 
+            type="number" 
+            name="max_age" 
+            id="scout-max-age"
+            placeholder="Max" 
+            min="16" 
+            max="80"
+            value="<%= safeFilters.max_age || '' %>"
+            class="scout-filters__input scout-filters__input--small">
+        </div>
+      </div>
+
+      <!-- City -->
+      <div class="scout-filters__group">
+        <label class="scout-filters__label" for="scout-city">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          City
+        </label>
+        <input 
+          type="text" 
+          name="city" 
+          id="scout-city"
+          placeholder="e.g., New York, Paris"
+          value="<%= safeFilters.city || '' %>"
+          class="scout-filters__input">
+      </div>
+
+      <!-- Gender -->
+      <div class="scout-filters__group">
+        <label class="scout-filters__label" for="scout-gender">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Gender
+        </label>
+        <select 
+          name="gender" 
+          id="scout-gender"
+          class="scout-filters__select">
+          <option value="">All</option>
+          <option value="male" <%= safeFilters.gender === 'male' ? 'selected' : '' %>>Male</option>
+          <option value="female" <%= safeFilters.gender === 'female' ? 'selected' : '' %>>Female</option>
+          <option value="non-binary" <%= safeFilters.gender === 'non-binary' ? 'selected' : '' %>>Non-Binary</option>
+          <option value="other" <%= safeFilters.gender === 'other' ? 'selected' : '' %>>Other</option>
+        </select>
+      </div>
+
+      <!-- Eye Color -->
+      <div class="scout-filters__group">
+        <label class="scout-filters__label" for="scout-eye-color">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          Eye Color
+        </label>
+        <select 
+          name="eye_color" 
+          id="scout-eye-color"
+          class="scout-filters__select">
+          <option value="">All</option>
+          <option value="blue" <%= safeFilters.eye_color === 'blue' ? 'selected' : '' %>>Blue</option>
+          <option value="brown" <%= safeFilters.eye_color === 'brown' ? 'selected' : '' %>>Brown</option>
+          <option value="green" <%= safeFilters.eye_color === 'green' ? 'selected' : '' %>>Green</option>
+          <option value="hazel" <%= safeFilters.eye_color === 'hazel' ? 'selected' : '' %>>Hazel</option>
+          <option value="gray" <%= safeFilters.eye_color === 'gray' ? 'selected' : '' %>>Gray</option>
+          <option value="amber" <%= safeFilters.eye_color === 'amber' ? 'selected' : '' %>>Amber</option>
+          <option value="other" <%= safeFilters.eye_color === 'other' ? 'selected' : '' %>>Other</option>
+        </select>
+      </div>
+
+      <!-- Hair Color -->
+      <div class="scout-filters__group">
+        <label class="scout-filters__label" for="scout-hair-color">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="8" r="7"/>
+            <path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.11"/>
+          </svg>
+          Hair Color
+        </label>
+        <select 
+          name="hair_color" 
+          id="scout-hair-color"
+          class="scout-filters__select">
+          <option value="">All</option>
+          <option value="black" <%= safeFilters.hair_color === 'black' ? 'selected' : '' %>>Black</option>
+          <option value="brown" <%= safeFilters.hair_color === 'brown' ? 'selected' : '' %>>Brown</option>
+          <option value="blonde" <%= safeFilters.hair_color === 'blonde' ? 'selected' : '' %>>Blonde</option>
+          <option value="red" <%= safeFilters.hair_color === 'red' ? 'selected' : '' %>>Red</option>
+          <option value="auburn" <%= safeFilters.hair_color === 'auburn' ? 'selected' : '' %>>Auburn</option>
+          <option value="gray" <%= safeFilters.hair_color === 'gray' ? 'selected' : '' %>>Gray</option>
+          <option value="white" <%= safeFilters.hair_color === 'white' ? 'selected' : '' %>>White</option>
+          <option value="other" <%= safeFilters.hair_color === 'other' ? 'selected' : '' %>>Other</option>
+        </select>
+      </div>
+
+      <!-- Apply Button -->
+      <div class="scout-filters__actions">
+        <button type="submit" class="scout-filters__apply">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Apply Filters
+        </button>
+      </div>
+    </form>
+
+    <!-- Active Filters -->
+    <div class="scout-filters__active" id="scout-active-filters">
+      <% 
+        const activeFilters = [];
+        if (safeFilters.min_height || safeFilters.max_height) {
+          activeFilters.push({
+            key: 'height',
+            label: `Height: ${safeFilters.min_height || 'Any'} - ${safeFilters.max_height || 'Any'} cm`
+          });
+        }
+        if (safeFilters.min_age || safeFilters.max_age) {
+          activeFilters.push({
+            key: 'age',
+            label: `Age: ${safeFilters.min_age || 'Any'} - ${safeFilters.max_age || 'Any'}`
+          });
+        }
+        if (safeFilters.city) {
+          activeFilters.push({
+            key: 'city',
+            label: `City: ${safeFilters.city}`
+          });
+        }
+        if (safeFilters.gender) {
+          activeFilters.push({
+            key: 'gender',
+            label: `Gender: ${safeFilters.gender.charAt(0).toUpperCase() + safeFilters.gender.slice(1)}`
+          });
+        }
+        if (safeFilters.eye_color) {
+          activeFilters.push({
+            key: 'eye_color',
+            label: `Eyes: ${safeFilters.eye_color.charAt(0).toUpperCase() + safeFilters.eye_color.slice(1)}`
+          });
+        }
+        if (safeFilters.hair_color) {
+          activeFilters.push({
+            key: 'hair_color',
+            label: `Hair: ${safeFilters.hair_color.charAt(0).toUpperCase() + safeFilters.hair_color.slice(1)}`
+          });
+        }
+      %>
+      <% if (activeFilters.length > 0) { %>
+        <div class="scout-filters__active-header">
+          <span class="scout-filters__active-title">Active Filters</span>
+        </div>
+        <div class="scout-filters__active-list">
+          <% activeFilters.forEach(filter => { %>
+            <span class="scout-filters__active-chip" data-filter="<%= filter.key %>">
+              <%= filter.label %>
+              <button class="scout-filters__active-remove" data-filter="<%= filter.key %>" aria-label="Remove filter">×</button>
+            </span>
+          <% }); %>
+        </div>
+      <% } %>
+    </div>
+  </aside>

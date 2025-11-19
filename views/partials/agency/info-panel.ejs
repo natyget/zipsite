@@ -1,0 +1,38 @@
+  <!-- Agency Information Panel -->
+  <section class="agency-info-panel">
+    <div class="agency-info-panel__content">
+      <div class="agency-info-panel__header">
+        <h2 class="agency-info-panel__title">Agency Overview</h2>
+        <p class="agency-info-panel__subtitle">Your partnership dashboard at a glance</p>
+      </div>
+      <div class="agency-info-panel__grid">
+        <div class="agency-info-panel__card">
+          <div class="agency-info-panel__icon">📊</div>
+          <div class="agency-info-panel__card-content">
+            <h3 class="agency-info-panel__card-title">Application Activity</h3>
+            <p class="agency-info-panel__card-text">
+              <%= safeStats.newToday %> new applications today, <%= safeStats.newThisWeek %> this week
+        </p>
+      </div>
+        </div>
+        <div class="agency-info-panel__card">
+          <div class="agency-info-panel__icon">⭐</div>
+          <div class="agency-info-panel__card-content">
+            <h3 class="agency-info-panel__card-title">Accepted Talent</h3>
+            <p class="agency-info-panel__card-text">
+              <%= safeStats.accepted %> talent profiles in your roster
+            </p>
+          </div>
+        </div>
+        <div class="agency-info-panel__card">
+          <div class="agency-info-panel__icon">💼</div>
+          <div class="agency-info-panel__card-content">
+            <h3 class="agency-info-panel__card-title">Partnership Status</h3>
+            <p class="agency-info-panel__card-text">
+              Verified partner agency with full access to talent applications
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>

@@ -1,0 +1,45 @@
+      <!-- Scout Talent View -->
+      <div class="agency-dashboard__scout-grid">
+        <% safeProfiles.forEach((profile, index) => { %>
+          <div class="agency-dashboard__scout-card" data-profile-id="<%= profile.id %>">
+            <div class="agency-dashboard__scout-image">
+              <% if (profile.hero_image_path || (profile.images && profile.images.length > 0)) { %>
+                <img 
+                  src="<%= normalizeImagePath(profile.hero_image_path || (profile.images && profile.images[0] ? profile.images[0].path : '')) %>" 
+                  alt="<%= profile.first_name %> <%= profile.last_name %>"
+                  loading="lazy">
+              <% } else { %>
+                <div class="agency-dashboard__scout-placeholder">
+                  <%= (profile.first_name || 'T').charAt(0).toUpperCase() %><%= (profile.last_name || 'T').charAt(0).toUpperCase() %>
+                </div>
+              <% } %>
+            </div>
+            <div class="agency-dashboard__scout-info">
+              <h3 class="agency-dashboard__scout-name">
+                <a href="/portfolio/<%= profile.slug %>" target="_blank">
+                  <%= profile.first_name %> <%= profile.last_name %>
+                </a>
+              </h3>
+              <p class="agency-dashboard__scout-details">
+                <%= profile.city || 'Location not specified' %> • 
+                <%= profile.height_cm ? profile.height_cm + ' cm' : 'Height not specified' %>
+                <% if (profile.measurements) { %>
+                  • <%= profile.measurements %>
+                <% } %>
+              </p>
+              <button 
+                class="agency-dashboard__scout-invite-btn" 
+                data-profile-id="<%= profile.id %>"
+                data-profile-name="<%= profile.first_name %> <%= profile.last_name %>"
+              >
+                Invite to Apply
+              </button>
+            </div>
+          </div>
+        <% }); %>
+        <% if (safeProfiles.length === 0) { %>
+          <div class="agency-dashboard__empty-state">
+            <p>No discoverable talent found. Try adjusting your filters.</p>
+          </div>
+        <% } %>
+      </div>

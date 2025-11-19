@@ -1,0 +1,35 @@
+    <!-- Gallery View -->
+    <div class="agency-dashboard__view agency-dashboard__view--gallery" id="view-gallery" style="display: none;">
+      <div class="agency-dashboard__gallery-grid">
+        <% safeProfiles.forEach((profile, index) => { %>
+          <div class="agency-dashboard__gallery-card" data-profile-id="<%= profile.id %>">
+            <div class="agency-dashboard__gallery-image">
+              <% if (profile.hero_image_path || (profile.images && profile.images.length > 0)) { %>
+                <img 
+                  src="<%= normalizeImagePath(profile.hero_image_path || profile.images[0].path) %>" 
+                  alt="<%= profile.first_name %> <%= profile.last_name %>"
+                  loading="lazy">
+              <% } else { %>
+                <div class="agency-dashboard__gallery-placeholder">
+                  <%= profile.first_name.charAt(0) %><%= profile.last_name.charAt(0) %>
+                </div>
+              <% } %>
+              <div class="agency-dashboard__gallery-overlay">
+                <div class="agency-dashboard__gallery-actions">
+                  <button class="agency-dashboard__gallery-preview" data-profile-id="<%= profile.id %>">Preview</button>
+                </div>
+              </div>
+            </div>
+            <div class="agency-dashboard__gallery-info">
+              <h4 class="agency-dashboard__gallery-name"><%= profile.first_name %> <%= profile.last_name %></h4>
+              <p class="agency-dashboard__gallery-location"><%= profile.city || 'Location TBD' %></p>
+            </div>
+          </div>
+        <% }); %>
+        <% if (safeProfiles.length === 0) { %>
+          <div class="agency-dashboard__empty-state">
+            <p>No applications found</p>
+          </div>
+        <% } %>
+      </div>
+    </div>

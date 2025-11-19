@@ -1,0 +1,113 @@
+  <!-- Fixed Sidebar Navigation -->
+  <aside class="agency-sidebar" id="agency-sidebar">
+    <div class="agency-sidebar__inner">
+      <!-- Logo & Brand Section -->
+      <div class="agency-sidebar__header">
+        <a href="/" class="agency-sidebar__logo">
+          <h1 class="agency-sidebar__logo-text">Pholio.</h1>
+        </a>
+        <div class="agency-sidebar__brand">
+          <div class="agency-sidebar__brand-dot" style="background-color: <%= brandColor %>;"></div>
+          <span class="agency-sidebar__brand-name">
+            <%= currentUser && currentUser.agency_name ? currentUser.agency_name : 'Agency' %>
+          </span>
+        </div>
+        
+        <!-- Command Palette Trigger -->
+        <button 
+          class="agency-sidebar__search-trigger" 
+          id="command-palette-trigger"
+          aria-label="Open command palette"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/>
+          </svg>
+          <span>Search...</span>
+          <kbd class="agency-sidebar__kbd">⌘K</kbd>
+        </button>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="agency-sidebar__nav">
+        <a 
+          href="/dashboard/agency" 
+          class="agency-sidebar__nav-item <%= (typeof view === 'undefined' || view === '') ? 'agency-sidebar__nav-item--active' : '' %>"
+          data-view="overview"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          <span>Overview</span>
+        </a>
+        
+        <a 
+          href="/dashboard/agency?view=applicants" 
+          class="agency-sidebar__nav-item <%= (typeof view !== 'undefined' && view === 'applicants') ? 'agency-sidebar__nav-item--active' : '' %>"
+          data-view="inbox"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span>My Applicants</span>
+          <% if (safeStats.pending > 0) { %>
+            <span class="agency-sidebar__badge"><%= safeStats.pending %></span>
+          <% } %>
+        </a>
+        
+        <a 
+          href="/dashboard/agency?view=scout" 
+          class="agency-sidebar__nav-item <%= (typeof view !== 'undefined' && view === 'scout') ? 'agency-sidebar__nav-item--active' : '' %>"
+          data-view="scout"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+          <span>Scout Talent</span>
+        </a>
+        
+        <a 
+          href="/dashboard/agency#boards" 
+          class="agency-sidebar__nav-item"
+          data-view="boards"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span>Boards</span>
+        </a>
+      </nav>
+
+      <!-- Footer -->
+      <div class="agency-sidebar__footer">
+        <a 
+          href="/dashboard/settings" 
+          class="agency-sidebar__nav-item"
+          data-view="settings"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"/>
+          </svg>
+          <span>Settings</span>
+        </a>
+        
+        <form method="post" action="/logout" class="agency-sidebar__logout-form">
+          <button type="submit" class="agency-sidebar__logout-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span>Sign Out</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </aside>

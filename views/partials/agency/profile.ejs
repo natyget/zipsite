@@ -1,0 +1,209 @@
+  <!-- Agency Profile Management Accordion -->
+  <section class="agency-profile-accordion">
+    <div class="agency-profile-accordion__container">
+      <div class="agency-profile-accordion__item">
+        <button class="agency-profile-accordion__header" data-accordion="profile">
+          <div class="agency-profile-accordion__header-content">
+            <h3 class="agency-profile-accordion__title">Agency Profile</h3>
+            <p class="agency-profile-accordion__subtitle">Manage your agency information and branding</p>
+          </div>
+          <svg class="agency-profile-accordion__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="agency-profile-accordion__content" data-content="profile">
+          <form class="agency-profile-form" id="agency-profile-form">
+            <div class="agency-profile-form__grid">
+              <div class="agency-profile-form__field">
+                <label for="agency-name">Agency Name</label>
+                <input 
+                  type="text" 
+                  id="agency-name" 
+                  name="agency_name" 
+                  value="<%= currentUser && currentUser.agency_name ? currentUser.agency_name : '' %>"
+                  placeholder="True Modeling Agency"
+                  class="agency-profile-form__input">
+          </div>
+              <div class="agency-profile-form__field">
+                <label for="agency-location">Location</label>
+                <input 
+                  type="text" 
+                  id="agency-location" 
+                  name="agency_location" 
+                  value="<%= currentUser && currentUser.agency_location ? currentUser.agency_location : '' %>"
+                  placeholder="New York, NY"
+                  class="agency-profile-form__input">
+          </div>
+              <div class="agency-profile-form__field">
+                <label for="agency-website">Website</label>
+                <input 
+                  type="url" 
+                  id="agency-website" 
+                  name="agency_website" 
+                  value="<%= currentUser && currentUser.agency_website ? currentUser.agency_website : '' %>"
+                  placeholder="https://www.example.com"
+                  class="agency-profile-form__input">
+          </div>
+              <div class="agency-profile-form__field agency-profile-form__field--full">
+                <label for="agency-description">Description</label>
+                <textarea 
+                  id="agency-description" 
+                  name="agency_description" 
+                  rows="3"
+                  placeholder="Brief description of your agency..."
+                  class="agency-profile-form__textarea"><%= currentUser && currentUser.agency_description ? currentUser.agency_description : '' %></textarea>
+              </div>
+            </div>
+            <div class="agency-profile-form__actions">
+              <button type="submit" class="agency-profile-form__btn agency-profile-form__btn--primary">
+                <span>Save Changes</span>
+                <svg class="agency-profile-form__btn-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+              </button>
+            </div>
+            <div class="agency-profile-form__message" id="agency-profile-message" role="alert" aria-live="polite"></div>
+          </form>
+        </div>
+          </div>
+
+      <div class="agency-profile-accordion__item">
+        <button class="agency-profile-accordion__header" data-accordion="branding">
+          <div class="agency-profile-accordion__header-content">
+            <h3 class="agency-profile-accordion__title">Branding</h3>
+            <p class="agency-profile-accordion__subtitle">Customize your agency logo and brand colors</p>
+          </div>
+          <svg class="agency-profile-accordion__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="agency-profile-accordion__content" data-content="branding">
+          <form class="agency-profile-form" id="agency-branding-form">
+            <div class="agency-profile-form__grid">
+              <div class="agency-profile-form__field agency-profile-form__field--full">
+                <label for="agency-logo">Agency Logo</label>
+                <div class="agency-profile-form__logo-wrapper">
+                  <% if (currentUser && currentUser.agency_logo_path) { %>
+                    <div class="agency-profile-form__logo-preview">
+                      <img src="<%= currentUser.agency_logo_path.startsWith('http') ? currentUser.agency_logo_path : '/' + currentUser.agency_logo_path %>" alt="Agency Logo" id="logo-preview-img">
+                      <button type="button" class="agency-profile-form__logo-remove" id="remove-logo-btn">Remove</button>
+                    </div>
+                  <% } else { %>
+                    <div class="agency-profile-form__logo-placeholder" id="logo-placeholder">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                      </svg>
+                      <p>No logo uploaded</p>
+                    </div>
+                  <% } %>
+                  <input 
+                    type="file" 
+                    id="agency-logo" 
+                    name="agency_logo" 
+                    accept="image/*"
+                    class="agency-profile-form__file-input">
+                  <label for="agency-logo" class="agency-profile-form__file-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="17 8 12 3 7 8"/>
+                      <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    Upload Logo
+                  </label>
+                </div>
+                <p class="agency-profile-form__help">Recommended: 200x200px, PNG or JPG, max 2MB</p>
+              </div>
+              <div class="agency-profile-form__field">
+                <label for="agency-brand-color">Brand Color</label>
+                <div class="agency-profile-form__color-wrapper">
+                  <input 
+                    type="color" 
+                    id="agency-brand-color" 
+                    name="agency_brand_color" 
+                    value="<%= currentUser && currentUser.agency_brand_color ? currentUser.agency_brand_color : '#C9A55A' %>"
+                    class="agency-profile-form__color-input">
+                  <input 
+                    type="text" 
+                    value="<%= currentUser && currentUser.agency_brand_color ? currentUser.agency_brand_color : '#C9A55A' %>"
+                    class="agency-profile-form__color-text"
+                    id="agency-brand-color-text"
+                    placeholder="#C9A55A">
+                </div>
+                <p class="agency-profile-form__help">Used for branding elements throughout the dashboard</p>
+              </div>
+            </div>
+            <div class="agency-profile-form__actions">
+              <button type="submit" class="agency-profile-form__btn agency-profile-form__btn--primary">
+                <span>Save Branding</span>
+                <svg class="agency-profile-form__btn-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+              </button>
+            </div>
+            <div class="agency-profile-form__message" id="agency-branding-message" role="alert" aria-live="polite"></div>
+          </form>
+        </div>
+          </div>
+
+      <div class="agency-profile-accordion__item">
+        <button class="agency-profile-accordion__header" data-accordion="settings">
+          <div class="agency-profile-accordion__header-content">
+            <h3 class="agency-profile-accordion__title">Settings</h3>
+            <p class="agency-profile-accordion__subtitle">Configure your dashboard preferences</p>
+          </div>
+          <svg class="agency-profile-accordion__chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="agency-profile-accordion__content" data-content="settings">
+          <form class="agency-profile-form" id="agency-settings-form">
+            <div class="agency-profile-form__grid">
+              <div class="agency-profile-form__field agency-profile-form__field--full">
+                <label>Notification Preferences</label>
+                <div class="agency-profile-form__checkbox-group">
+                  <label class="agency-profile-form__checkbox-label">
+                    <input 
+                      type="checkbox" 
+                      name="notify_new_applications" 
+                      value="1"
+                      <%= currentUser && currentUser.notify_new_applications !== false ? 'checked' : '' %>
+                      class="agency-profile-form__checkbox">
+                    <span>Email me when new applications are submitted</span>
+                  </label>
+                  <label class="agency-profile-form__checkbox-label">
+                    <input 
+                      type="checkbox" 
+                      name="notify_status_changes" 
+                      value="1"
+                      <%= currentUser && currentUser.notify_status_changes !== false ? 'checked' : '' %>
+                      class="agency-profile-form__checkbox">
+                    <span>Email me when application status changes</span>
+                  </label>
+                </div>
+              </div>
+              <div class="agency-profile-form__field">
+                <label for="default-view">Default View</label>
+                <select id="default-view" name="default_view" class="agency-profile-form__select">
+                  <option value="pipeline" <%= currentUser && currentUser.default_view === 'pipeline' ? 'selected' : '' %>>Pipeline (Kanban)</option>
+                  <option value="gallery" <%= currentUser && currentUser.default_view === 'gallery' ? 'selected' : '' %>>Gallery</option>
+                  <option value="list" <%= currentUser && currentUser.default_view === 'list' ? 'selected' : '' %>>List</option>
+                  <option value="table" <%= currentUser && currentUser.default_view === 'table' ? 'selected' : '' %>>Table</option>
+            </select>
+          </div>
+        </div>
+            <div class="agency-profile-form__actions">
+              <button type="submit" class="agency-profile-form__btn agency-profile-form__btn--primary">
+                <span>Save Settings</span>
+                <svg class="agency-profile-form__btn-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+              </button>
+        </div>
+            <div class="agency-profile-form__message" id="agency-settings-message" role="alert" aria-live="polite"></div>
+      </form>
+        </div>
+      </div>
+    </div>
+  </section>

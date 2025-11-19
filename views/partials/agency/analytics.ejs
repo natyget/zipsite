@@ -1,0 +1,107 @@
+  <!-- Analytics Section -->
+  <section class="agency-dashboard__analytics" id="analytics">
+    <div class="agency-dashboard__analytics-container">
+      <div class="agency-dashboard__analytics-header">
+        <h2 class="agency-dashboard__analytics-title">Analytics & Insights</h2>
+        <p class="agency-dashboard__analytics-subtitle">Track your application pipeline and performance metrics</p>
+          </div>
+
+      <div class="agency-dashboard__analytics-content">
+        <!-- Loading State -->
+        <div class="agency-dashboard__analytics-loading" id="analytics-loading">
+          <div style="text-align: center; padding: 3rem;">
+            <div style="margin-bottom: 1rem; color: var(--agency-text-secondary);">Loading analytics...</div>
+            <div style="font-size: 0.875rem; color: var(--agency-text-tertiary);">This may take a moment</div>
+        </div>
+      </div>
+
+        <!-- Error State -->
+        <div class="agency-dashboard__analytics-error" id="analytics-error" style="display: none;">
+          <div style="text-align: center; padding: 3rem; color: var(--agency-text-tertiary);">
+            <div style="margin-bottom: 0.5rem; font-size: 0.875rem;">Analytics unavailable</div>
+            <div style="font-size: 0.8125rem;">Unable to load analytics data at this time</div>
+          </div>
+        </div>
+
+        <!-- Analytics Content -->
+        <div class="agency-dashboard__analytics-main" id="analytics-content" style="display: none;">
+          <!-- Key Metrics Grid -->
+          <div class="agency-dashboard__analytics-grid">
+            <div class="agency-dashboard__analytics-card">
+              <div class="agency-dashboard__analytics-card-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <h3 class="agency-dashboard__analytics-card-title">Total Applications</h3>
+              </div>
+              <div class="agency-dashboard__analytics-card-value" id="analytics-total">—</div>
+              <div class="agency-dashboard__analytics-card-subtext" id="analytics-total-subtext">All time</div>
+            </div>
+
+            <div class="agency-dashboard__analytics-card">
+              <div class="agency-dashboard__analytics-card-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                <h3 class="agency-dashboard__analytics-card-title">Acceptance Rate</h3>
+              </div>
+              <div class="agency-dashboard__analytics-card-value" id="analytics-acceptance-rate">—</div>
+              <div class="agency-dashboard__analytics-card-subtext" id="analytics-acceptance-subtext">Of processed applications</div>
+            </div>
+
+            <div class="agency-dashboard__analytics-card">
+              <div class="agency-dashboard__analytics-card-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+                <h3 class="agency-dashboard__analytics-card-title">This Month</h3>
+              </div>
+              <div class="agency-dashboard__analytics-card-value" id="analytics-this-month">—</div>
+              <div class="agency-dashboard__analytics-card-subtext" id="analytics-month-subtext">New applications</div>
+            </div>
+
+            <div class="agency-dashboard__analytics-card">
+              <div class="agency-dashboard__analytics-card-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M2 12L12 2l10 10M12 2v20"/>
+                </svg>
+                <h3 class="agency-dashboard__analytics-card-title">Avg Match Score</h3>
+              </div>
+              <div class="agency-dashboard__analytics-card-value" id="analytics-avg-score">—</div>
+              <div class="agency-dashboard__analytics-card-subtext" id="analytics-score-subtext">Across all boards</div>
+            </div>
+          </div>
+
+          <!-- Status Breakdown -->
+          <div class="agency-dashboard__analytics-section">
+            <h3 class="agency-dashboard__analytics-section-title">Applications by Status</h3>
+            <div class="agency-dashboard__analytics-status-grid" id="analytics-status-grid">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Match Score Distribution -->
+          <div class="agency-dashboard__analytics-section">
+            <h3 class="agency-dashboard__analytics-section-title">Match Score Distribution</h3>
+            <div class="agency-dashboard__analytics-scores" id="analytics-scores">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Applications by Board -->
+          <div class="agency-dashboard__analytics-section">
+            <h3 class="agency-dashboard__analytics-section-title">Applications by Board</h3>
+            <div class="agency-dashboard__analytics-boards" id="analytics-boards">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>

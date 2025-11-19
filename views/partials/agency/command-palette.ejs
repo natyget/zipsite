@@ -1,0 +1,65 @@
+  <!-- Command Palette -->
+  <div class="agency-command-palette" id="command-palette" style="display: none;">
+    <div class="agency-command-palette__overlay"></div>
+    <div class="agency-command-palette__content">
+      <div class="agency-command-palette__header">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input
+          type="text"
+          class="agency-command-palette__input"
+          id="command-palette-input"
+          placeholder="Type a command or search..."
+          autocomplete="off"
+        />
+        <div class="agency-command-palette__kbd-wrapper">
+          <kbd class="agency-command-palette__kbd">ESC</kbd>
+        </div>
+      </div>
+
+      <div class="agency-command-palette__results" id="command-palette-results">
+        <!-- Talent Section -->
+        <div class="agency-command-palette__section" id="command-palette-talent" style="display: none;">
+          <h3 class="agency-command-palette__section-title">Talent</h3>
+          <div class="agency-command-palette__items" id="command-palette-talent-items">
+            <!-- Populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Navigation Section -->
+        <div class="agency-command-palette__section" id="command-palette-nav" style="display: none;">
+          <h3 class="agency-command-palette__section-title">Navigation</h3>
+          <div class="agency-command-palette__items" id="command-palette-nav-items">
+            <!-- Populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Commands Section -->
+        <div class="agency-command-palette__section" id="command-palette-commands" style="display: none;">
+          <h3 class="agency-command-palette__section-title">Commands</h3>
+          <div class="agency-command-palette__items" id="command-palette-commands-items">
+            <!-- Populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="agency-command-palette__empty" id="command-palette-empty" style="display: none;">
+          <p>No results found</p>
+        </div>
+      </div>
+
+      <div class="agency-command-palette__footer">
+        <div class="agency-command-palette__footer-item">
+          <kbd>↑</kbd> <kbd>↓</kbd> to navigate
+        </div>
+        <div class="agency-command-palette__footer-item">
+          <kbd>↵</kbd> to select
+        </div>
+        <div class="agency-command-palette__footer-item">
+          <kbd>esc</kbd> to close
+        </div>
+      </div>
+    </div>
+  </div>

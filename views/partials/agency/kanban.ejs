@@ -1,0 +1,130 @@
+      <!-- My Applicants View (Kanban Board) -->
+      <div class="agency-dashboard__view agency-dashboard__view--pipeline" id="view-pipeline">
+        <div class="agency-dashboard__kanban">
+        
+        <!-- New Applications Column -->
+        <div class="agency-dashboard__kanban-column" data-status="pending">
+          <div class="agency-dashboard__kanban-header">
+            <h3 class="agency-dashboard__kanban-title">New Applications</h3>
+            <span class="agency-dashboard__kanban-count"><%= profilesByStatus.pending.length %></span>
+      </div>
+          <div class="agency-dashboard__kanban-cards" data-column="pending">
+            <% profilesByStatus.pending.forEach((profile, index) => { 
+              const appStatus = profile.application_status || 'pending';
+              const aiScore = Math.floor(Math.random() * 30) + 70;
+              const aiTags = [];
+              if (profile.bio_curated && profile.bio_curated.toLowerCase().includes('editorial')) {
+                aiTags.push({ label: 'Editorial Potential', color: 'purple' });
+              }
+              if (profile.bio_curated && profile.bio_curated.toLowerCase().includes('commercial')) {
+                aiTags.push({ label: 'Commercial Ready', color: 'blue' });
+              }
+              if (profile.height_cm && profile.height_cm >= 175) {
+                aiTags.push({ label: 'Runway Fit', color: 'green' });
+              }
+            %>
+              <%- include('../application-card', { profile, index, currentUser, appStatus, aiScore, aiTags }) %>
+            <% }); %>
+            <% if (profilesByStatus.pending.length === 0) { %>
+              <div class="agency-dashboard__empty-column">
+                <p>No new applications</p>
+                    </div>
+                    <% } %>
+          </div>
+        </div>
+
+        <!-- Under Review Column -->
+        <div class="agency-dashboard__kanban-column" data-status="under-review">
+          <div class="agency-dashboard__kanban-header">
+            <h3 class="agency-dashboard__kanban-title">Under Review</h3>
+            <span class="agency-dashboard__kanban-count"><%= profilesByStatus['under-review'].length %></span>
+          </div>
+          <div class="agency-dashboard__kanban-cards" data-column="under-review">
+            <% profilesByStatus['under-review'].forEach((profile, index) => { 
+              const appStatus = profile.application_status || 'pending';
+              const aiScore = Math.floor(Math.random() * 30) + 70;
+              const aiTags = [];
+              if (profile.bio_curated && profile.bio_curated.toLowerCase().includes('editorial')) {
+                aiTags.push({ label: 'Editorial Potential', color: 'purple' });
+              }
+              if (profile.bio_curated && profile.bio_curated.toLowerCase().includes('commercial')) {
+                aiTags.push({ label: 'Commercial Ready', color: 'blue' });
+              }
+              if (profile.height_cm && profile.height_cm >= 175) {
+                aiTags.push({ label: 'Runway Fit', color: 'green' });
+              }
+            %>
+              <%- include('../application-card', { profile, index, currentUser, appStatus, aiScore, aiTags }) %>
+            <% }); %>
+            <% if (profilesByStatus['under-review'].length === 0) { %>
+              <div class="agency-dashboard__empty-column">
+                <p>No applications under review</p>
+              </div>
+                                      <% } %>
+                      </div>
+              </div>
+
+        <!-- Accepted Column -->
+        <div class="agency-dashboard__kanban-column" data-status="accepted">
+          <div class="agency-dashboard__kanban-header">
+            <h3 class="agency-dashboard__kanban-title">Accepted</h3>
+            <span class="agency-dashboard__kanban-count"><%= profilesByStatus.accepted.length %></span>
+          </div>
+          <div class="agency-dashboard__kanban-cards" data-column="accepted">
+            <% profilesByStatus.accepted.forEach((profile, index) => { 
+              const appStatus = profile.application_status || 'pending';
+              const aiScore = Math.floor(Math.random() * 30) + 70;
+              const aiTags = [];
+              if (profile.bio_curated && profile.bio_curated.toLowerCase().includes('editorial')) {
+                aiTags.push({ label: 'Editorial Potential', color: 'purple' });
+              }
+              if (profile.bio_curated && profile.bio_curated.toLowerCase().includes('commercial')) {
+                aiTags.push({ label: 'Commercial Ready', color: 'blue' });
+              }
+              if (profile.height_cm && profile.height_cm >= 175) {
+                aiTags.push({ label: 'Runway Fit', color: 'green' });
+              }
+            %>
+              <%- include('../application-card', { profile, index, currentUser, appStatus, aiScore, aiTags }) %>
+            <% }); %>
+            <% if (profilesByStatus.accepted.length === 0) { %>
+              <div class="agency-dashboard__empty-column">
+                <p>No accepted applications</p>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Archived Column -->
+        <div class="agency-dashboard__kanban-column" data-status="archived">
+          <div class="agency-dashboard__kanban-header">
+            <h3 class="agency-dashboard__kanban-title">Archived</h3>
+            <span class="agency-dashboard__kanban-count"><%= profilesByStatus.archived.length %></span>
+          </div>
+          <div class="agency-dashboard__kanban-cards" data-column="archived">
+            <% profilesByStatus.archived.forEach((profile, index) => { 
+              const appStatus = profile.application_status || 'pending';
+              const aiScore = Math.floor(Math.random() * 30) + 70;
+              const aiTags = [];
+              if (profile.bio_curated && profile.bio_curated.toLowerCase().includes('editorial')) {
+                aiTags.push({ label: 'Editorial Potential', color: 'purple' });
+              }
+              if (profile.bio_curated && profile.bio_curated.toLowerCase().includes('commercial')) {
+                aiTags.push({ label: 'Commercial Ready', color: 'blue' });
+              }
+              if (profile.height_cm && profile.height_cm >= 175) {
+                aiTags.push({ label: 'Runway Fit', color: 'green' });
+              }
+            %>
+              <%- include('../application-card', { profile, index, currentUser, appStatus, aiScore, aiTags }) %>
+            <% }); %>
+            <% if (profilesByStatus.archived.length === 0) { %>
+              <div class="agency-dashboard__empty-column">
+                <p>No archived applications</p>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+      </div>
+    </div>
