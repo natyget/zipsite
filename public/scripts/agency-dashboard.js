@@ -66,9 +66,10 @@
 
     const navigationItems = [
       { label: 'Go to Dashboard', view: 'overview', href: '/dashboard/agency', icon: 'dashboard' },
-      { label: 'Go to Inbox', view: 'inbox', href: '/dashboard/agency?view=applicants', icon: 'inbox' },
-      { label: 'Go to Scout', view: 'scout', href: '/dashboard/agency?view=scout', icon: 'scout' },
-      { label: 'Go to Boards', view: 'boards', href: '/dashboard/agency#boards', icon: 'boards' },
+      { label: 'Go to Inbox', view: 'inbox', href: '/dashboard/agency/applicants', icon: 'inbox' },
+      { label: 'Go to Discover', view: 'discover', href: '/dashboard/agency/discover', icon: 'scout' },
+      { label: 'Go to Boards', view: 'boards', href: '/dashboard/agency/boards', icon: 'boards' },
+      { label: 'Go to Analytics', view: 'analytics', href: '/dashboard/agency/analytics', icon: 'analytics' },
       { label: 'Go to Settings', view: 'settings', href: '/dashboard/settings', icon: 'settings' }
     ];
 
@@ -1212,7 +1213,6 @@
     // Build query string from form data
     function buildQueryString(formData) {
       const params = new URLSearchParams();
-      params.set('view', 'scout');
       
       const formEntries = new FormData(scoutFiltersForm);
       for (const [key, value] of formEntries.entries()) {
@@ -1227,7 +1227,7 @@
     // Apply filters (with loading state)
     async function applyFilters() {
       const queryString = buildQueryString();
-      const url = `/dashboard/agency?${queryString}`;
+      const url = `/dashboard/agency/discover${queryString ? '?' + queryString : ''}`;
       
       // Show loading state
       scoutGrid.style.opacity = '0.5';
@@ -1294,7 +1294,7 @@
       scoutFiltersReset.addEventListener('click', () => {
         scoutFiltersForm.reset();
         clearTimeout(debounceTimer);
-        window.location.href = '/dashboard/agency?view=scout';
+        window.location.href = '/dashboard/agency/discover';
       });
     }
 
@@ -1352,7 +1352,7 @@
         btn.textContent = 'Inviting...';
 
         try {
-          const response = await fetch(`/dashboard/agency/scout/${profileId}/invite`, {
+          const response = await fetch(`/dashboard/agency/discover/${profileId}/invite`, {
             method: 'POST',
             headers: {
               'Accept': 'application/json',
@@ -1365,7 +1365,7 @@
             if (data.success) {
               alert(`Invitation sent to ${profileName}! They've been added to your applicants queue.`);
               // Redirect to My Applicants view
-              window.location.href = '/dashboard/agency?view=applicants';
+              window.location.href = '/dashboard/agency/applicants';
             } else {
               throw new Error(data.error || 'Invite failed');
             }

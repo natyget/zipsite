@@ -1535,7 +1535,7 @@ router.get('/dashboard/pdf-customizer', requireRole('TALENT'), async (req, res, 
 // ==================== SETTINGS ROUTES ====================
 
 // GET /dashboard/settings - Main settings page (defaults to account section)
-router.get('/dashboard/settings', requireRole('TALENT'), async (req, res, next) => {
+router.get('/dashboard/settings', requireRole('TALENT', 'AGENCY'), async (req, res, next) => {
   try {
     const profile = await knex('profiles').where({ user_id: req.session.userId }).first();
     const currentUser = await knex('users')
@@ -1558,7 +1558,7 @@ router.get('/dashboard/settings', requireRole('TALENT'), async (req, res, next) 
 });
 
 // GET /dashboard/settings/:section - Section-specific settings page
-router.get('/dashboard/settings/:section', requireRole('TALENT'), async (req, res, next) => {
+router.get('/dashboard/settings/:section', requireRole('TALENT', 'AGENCY'), async (req, res, next) => {
   try {
     const { section } = req.params;
     const validSections = ['account', 'profile', 'notifications', 'privacy', 'billing'];

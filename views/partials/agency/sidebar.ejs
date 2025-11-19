@@ -31,8 +31,8 @@
       <nav class="agency-sidebar__nav">
         <a 
           href="/dashboard/agency" 
-          class="agency-sidebar__nav-item <%= (typeof view === 'undefined' || view === '') ? 'agency-sidebar__nav-item--active' : '' %>"
-          data-view="overview"
+          class="agency-sidebar__nav-item <%= (typeof page === 'undefined' || page === 'overview') ? 'agency-sidebar__nav-item--active' : '' %>"
+          data-page="overview"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <rect x="3" y="3" width="7" height="7" rx="1"/>
@@ -44,35 +44,35 @@
         </a>
         
         <a 
-          href="/dashboard/agency?view=applicants" 
-          class="agency-sidebar__nav-item <%= (typeof view !== 'undefined' && view === 'applicants') ? 'agency-sidebar__nav-item--active' : '' %>"
-          data-view="inbox"
+          href="/dashboard/agency/applicants" 
+          class="agency-sidebar__nav-item <%= (typeof page !== 'undefined' && page === 'applicants') ? 'agency-sidebar__nav-item--active' : '' %>"
+          data-page="applicants"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
           <span>My Applicants</span>
-          <% if (safeStats.pending > 0) { %>
+          <% if (safeStats && safeStats.pending > 0) { %>
             <span class="agency-sidebar__badge"><%= safeStats.pending %></span>
           <% } %>
         </a>
         
         <a 
-          href="/dashboard/agency?view=scout" 
-          class="agency-sidebar__nav-item <%= (typeof view !== 'undefined' && view === 'scout') ? 'agency-sidebar__nav-item--active' : '' %>"
-          data-view="scout"
+          href="/dashboard/agency/discover" 
+          class="agency-sidebar__nav-item <%= (typeof page !== 'undefined' && page === 'discover') ? 'agency-sidebar__nav-item--active' : '' %>"
+          data-page="discover"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <circle cx="11" cy="11" r="8"/>
             <path d="m21 21-4.35-4.35"/>
           </svg>
-          <span>Scout Talent</span>
+          <span>Discover</span>
         </a>
         
         <a 
-          href="/dashboard/agency#boards" 
-          class="agency-sidebar__nav-item"
-          data-view="boards"
+          href="/dashboard/agency/boards" 
+          class="agency-sidebar__nav-item <%= (typeof page !== 'undefined' && page === 'boards') ? 'agency-sidebar__nav-item--active' : '' %>"
+          data-page="boards"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
@@ -81,6 +81,19 @@
             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
           <span>Boards</span>
+        </a>
+        
+        <a 
+          href="/dashboard/agency/analytics" 
+          class="agency-sidebar__nav-item <%= (typeof page !== 'undefined' && page === 'analytics') ? 'agency-sidebar__nav-item--active' : '' %>"
+          data-page="analytics"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <line x1="12" y1="20" x2="12" y2="10"/>
+            <line x1="18" y1="20" x2="18" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="16"/>
+          </svg>
+          <span>Analytics</span>
         </a>
       </nav>
 

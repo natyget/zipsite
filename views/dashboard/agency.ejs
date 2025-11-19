@@ -75,39 +75,34 @@
 </style>
 <div class="agency-dashboard" id="agency-dashboard">
 
-  <%- include('../partials/agency/sidebar', { brandColor, currentUser, safeStats, view }) %>
+  <%- include('../partials/agency/sidebar', { brandColor, currentUser, safeStats, page }) %>
 
   <!-- Main Content Area -->
   <main class="agency-dashboard__main">
 
-    <%- include('../partials/agency/hero', { currentUser, safeStats }) %>
-
-    <%- include('../partials/agency/info-panel', { safeStats }) %>
-
-    <%- include('../partials/agency/profile', { currentUser }) %>
-
-    <%- include('../partials/agency/boards', { safeBoards, currentUser }) %>
-
-    <% if (typeof view === 'undefined' || view === '') { %>
-      <%- include('../partials/agency/overview', { currentUser, safeStats, safeBoards, view }) %>
-    <% } else { %>
+    <% if (typeof page === 'undefined' || page === 'overview') { %>
+      <!-- Overview Page: Only greeting, stats, quick actions, recent applicants -->
+      <%- include('../partials/agency/overview', { currentUser, safeStats, safeBoards, profiles }) %>
+    <% } else if (page === 'applicants') { %>
+      <!-- My Applicants Page -->
       <%- include('../partials/agency/header', { safeStats }) %>
-      
+      <%- include('../partials/agency/filters', { safeBoards, safeFilters, page }) %>
+      <%- include('../partials/agency/kanban', { profilesByStatus, currentUser }) %>
+      <%- include('../partials/agency/gallery', { safeProfiles, currentUser }) %>
+      <%- include('../partials/agency/list', { safeProfiles, currentUser }) %>
+      <%- include('../partials/agency/table', { safeProfiles, currentUser }) %>
+    <% } else if (page === 'discover') { %>
+      <!-- Discover Page -->
+      <div class="agency-dashboard__scout-container">
+        <%- include('../partials/agency/scout-filters', { safeFilters }) %>
+        <%- include('../partials/agency/scout', { safeProfiles, currentUser }) %>
+      </div>
+    <% } else if (page === 'boards') { %>
+      <!-- Boards Page -->
+      <%- include('../partials/agency/boards', { safeBoards, currentUser }) %>
+    <% } else if (page === 'analytics') { %>
+      <!-- Analytics Page -->
       <%- include('../partials/agency/analytics', { safeStats }) %>
-      
-      <%- include('../partials/agency/filters', { safeBoards, safeFilters, view }) %>
-      
-      <% if (view === 'scout') { %>
-        <div class="agency-dashboard__scout-container">
-          <%- include('../partials/agency/scout-filters', { safeFilters }) %>
-          <%- include('../partials/agency/scout', { safeProfiles, currentUser }) %>
-        </div>
-      <% } else { %>
-        <%- include('../partials/agency/kanban', { profilesByStatus, currentUser }) %>
-        <%- include('../partials/agency/gallery', { safeProfiles, currentUser }) %>
-        <%- include('../partials/agency/list', { safeProfiles, currentUser }) %>
-        <%- include('../partials/agency/table', { safeProfiles, currentUser }) %>
-      <% } %>
     <% } %>
 
   </main>
