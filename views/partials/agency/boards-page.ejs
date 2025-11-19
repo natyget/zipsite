@@ -1,0 +1,45 @@
+<!-- Boards Page Content -->
+<section class="agency-boards-page">
+  <div class="agency-boards-page__grid" id="boards-grid">
+    <% if (safeBoards.length === 0) { %>
+      <div class="agency-boards-page__empty">
+        <p>No boards yet. Create your first board to organize talent into collections.</p>
+      </div>
+    <% } else { %>
+      <% safeBoards.forEach((board) => { %>
+        <div class="agency-boards-page__card" data-board-id="<%= board.id %>">
+          <div class="agency-boards-page__card-images">
+            <% 
+              // Get applications for this board
+              const boardApplications = board.applications || [];
+              const imageCount = Math.min(boardApplications.length, 4);
+            %>
+            <% if (imageCount > 0) { %>
+              <% for (let i = 0; i < imageCount; i++) { %>
+                <div class="agency-boards-page__card-image">
+                  <% if (boardApplications[i] && boardApplications[i].profile_image) { %>
+                    <img src="<%= boardApplications[i].profile_image %>" alt="Model">
+                  <% } else { %>
+                    <div class="agency-boards-page__card-image-placeholder"></div>
+                  <% } %>
+                </div>
+              <% } %>
+            <% } else { %>
+              <div class="agency-boards-page__card-image-placeholder"></div>
+            <% } %>
+          </div>
+          <div class="agency-boards-page__card-info">
+            <div class="agency-boards-page__card-type">
+              <%= board.type || 'Runway' %>
+            </div>
+            <h3 class="agency-boards-page__card-name"><%= board.name %></h3>
+            <div class="agency-boards-page__card-count">
+              <%= board.application_count || 0 %> Models
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    <% } %>
+  </div>
+</section>
+

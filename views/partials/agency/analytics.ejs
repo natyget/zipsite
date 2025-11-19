@@ -29,52 +29,89 @@
           <div class="agency-dashboard__analytics-grid">
             <div class="agency-dashboard__analytics-card">
               <div class="agency-dashboard__analytics-card-header">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
                 <h3 class="agency-dashboard__analytics-card-title">Total Applications</h3>
               </div>
-              <div class="agency-dashboard__analytics-card-value" id="analytics-total">—</div>
-              <div class="agency-dashboard__analytics-card-subtext" id="analytics-total-subtext">All time</div>
+              <div class="agency-dashboard__analytics-card-value" id="analytics-total"><%= safeStats.total %></div>
+              <div class="agency-dashboard__analytics-card-trend">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                  <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                <span class="agency-dashboard__analytics-card-trend-text" id="analytics-total-trend">+12% from last week</span>
+              </div>
             </div>
 
             <div class="agency-dashboard__analytics-card">
               <div class="agency-dashboard__analytics-card-header">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
+                <h3 class="agency-dashboard__analytics-card-title">Scout Profile Views</h3>
+              </div>
+              <div class="agency-dashboard__analytics-card-value" id="analytics-profile-views">1,204</div>
+              <div class="agency-dashboard__analytics-card-trend">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                  <polyline points="17 6 23 6 23 12"/>
                 </svg>
+                <span class="agency-dashboard__analytics-card-trend-text">+8% from last week</span>
+              </div>
+            </div>
+
+            <div class="agency-dashboard__analytics-card">
+              <div class="agency-dashboard__analytics-card-header">
                 <h3 class="agency-dashboard__analytics-card-title">Acceptance Rate</h3>
               </div>
-              <div class="agency-dashboard__analytics-card-value" id="analytics-acceptance-rate">—</div>
-              <div class="agency-dashboard__analytics-card-subtext" id="analytics-acceptance-subtext">Of processed applications</div>
+              <div class="agency-dashboard__analytics-card-value" id="analytics-acceptance-rate">
+                <%= safeStats.total > 0 ? ((safeStats.accepted / safeStats.total) * 100).toFixed(1) : 0 %>%
+              </div>
+              <div class="agency-dashboard__analytics-card-trend agency-dashboard__analytics-card-trend--negative">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+                  <polyline points="17 18 23 18 23 12"/>
+                </svg>
+                <span class="agency-dashboard__analytics-card-trend-text">-2% from last week</span>
+              </div>
             </div>
 
             <div class="agency-dashboard__analytics-card">
               <div class="agency-dashboard__analytics-card-header">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                  <path d="M2 17l10 5 10-5"/>
-                  <path d="M2 12l10 5 10-5"/>
-                </svg>
-                <h3 class="agency-dashboard__analytics-card-title">This Month</h3>
+                <h3 class="agency-dashboard__analytics-card-title">Avg. Response Time</h3>
               </div>
-              <div class="agency-dashboard__analytics-card-value" id="analytics-this-month">—</div>
-              <div class="agency-dashboard__analytics-card-subtext" id="analytics-month-subtext">New applications</div>
+              <div class="agency-dashboard__analytics-card-value" id="analytics-response-time">4h 12m</div>
+              <div class="agency-dashboard__analytics-card-subtext">Same as average</div>
+            </div>
+          </div>
+
+          <!-- Charts Section -->
+          <div class="agency-dashboard__analytics-charts">
+            <div class="agency-dashboard__analytics-chart-card">
+              <h3 class="agency-dashboard__analytics-chart-title">Weekly overview of incoming talent traffic.</h3>
+              <div class="agency-dashboard__analytics-chart-container" id="analytics-traffic-chart">
+                <!-- Chart will be rendered here -->
+              </div>
             </div>
 
-            <div class="agency-dashboard__analytics-card">
-              <div class="agency-dashboard__analytics-card-header">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M2 12L12 2l10 10M12 2v20"/>
-                </svg>
-                <h3 class="agency-dashboard__analytics-card-title">Avg Match Score</h3>
+            <div class="agency-dashboard__analytics-chart-card">
+              <h3 class="agency-dashboard__analytics-chart-title">Distribution by experience level.</h3>
+              <div class="agency-dashboard__analytics-chart-container" id="analytics-distribution-chart">
+                <!-- Chart will be rendered here -->
               </div>
-              <div class="agency-dashboard__analytics-card-value" id="analytics-avg-score">—</div>
-              <div class="agency-dashboard__analytics-card-subtext" id="analytics-score-subtext">Across all boards</div>
+              <div class="agency-dashboard__analytics-legend">
+                <div class="agency-dashboard__analytics-legend-item">
+                  <span class="agency-dashboard__analytics-legend-dot" style="background-color: #1a1a1a;"></span>
+                  <span>New Faces</span>
+                </div>
+                <div class="agency-dashboard__analytics-legend-item">
+                  <span class="agency-dashboard__analytics-legend-dot" style="background-color: #666;"></span>
+                  <span>Developing</span>
+                </div>
+                <div class="agency-dashboard__analytics-legend-item">
+                  <span class="agency-dashboard__analytics-legend-dot" style="background-color: #999;"></span>
+                  <span>Professional</span>
+                </div>
+                <div class="agency-dashboard__analytics-legend-item">
+                  <span class="agency-dashboard__analytics-legend-dot" style="background-color: #ccc;"></span>
+                  <span>Top Talent</span>
+                </div>
+              </div>
             </div>
           </div>
 

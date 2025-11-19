@@ -447,6 +447,34 @@ router.get('/dashboard/agency/boards', requireRole('AGENCY'), async (req, res, n
     const stats = await getDashboardStats(agencyId);
     const boards = await getBoardsWithCounts(agencyId);
 
+    // Fetch profile images for each board's applications
+    const boardsWithImages = await Promise.all(boards.map(async (board) => {
+      const boardApplications = await knex('board_applications')
+        .where({ board_id: board.id })
+        .join('applications', 'board_applications.application_id', 'applications.id')
+        .join('profiles', 'applications.profile_id', 'profiles.id')
+        .select('profiles.id', 'profiles.hero_image_path')
+        .limit(4);
+
+      const applications = await Promise.all(boardApplications.map(async (app) => {
+        const images = await knex('images')
+          .where({ profile_id: app.id })
+          .orderBy('sort', 'asc')
+          .orderBy('created_at', 'asc')
+          .limit(1)
+          .first();
+        
+        return {
+          profile_image: images ? images.path : app.hero_image_path || null
+        };
+      }));
+
+      return {
+        ...board,
+        applications
+      };
+    }));
+
     const currentUser = await knex('users')
       .where({ id: agencyId })
       .first();
@@ -455,7 +483,7 @@ router.get('/dashboard/agency/boards', requireRole('AGENCY'), async (req, res, n
       title: 'Boards',
       page: 'boards',
       profiles: [],
-      boards,
+      boards: boardsWithImages,
       stats,
       user: currentUser,
       currentUser,

@@ -85,7 +85,7 @@
       <%- include('../partials/agency/overview', { currentUser, safeStats, safeBoards, profiles }) %>
     <% } else if (page === 'applicants') { %>
       <!-- My Applicants Page -->
-      <%- include('../partials/agency/header', { safeStats }) %>
+      <%- include('../partials/agency/inbox-header', { safeStats }) %>
       <%- include('../partials/agency/filters', { safeBoards, safeFilters, page }) %>
       <%- include('../partials/agency/kanban', { profilesByStatus, currentUser }) %>
       <%- include('../partials/agency/gallery', { safeProfiles, currentUser }) %>
@@ -93,15 +93,18 @@
       <%- include('../partials/agency/table', { safeProfiles, currentUser }) %>
     <% } else if (page === 'discover') { %>
       <!-- Discover Page -->
+      <%- include('../partials/agency/discover-header') %>
       <div class="agency-dashboard__scout-container">
         <%- include('../partials/agency/scout-filters', { safeFilters }) %>
         <%- include('../partials/agency/scout', { safeProfiles, currentUser }) %>
       </div>
     <% } else if (page === 'boards') { %>
       <!-- Boards Page -->
-      <%- include('../partials/agency/boards', { safeBoards, currentUser }) %>
+      <%- include('../partials/agency/boards-header', { safeBoards, currentUser }) %>
+      <%- include('../partials/agency/boards-page', { safeBoards, currentUser }) %>
     <% } else if (page === 'analytics') { %>
       <!-- Analytics Page -->
+      <%- include('../partials/agency/analytics-header') %>
       <%- include('../partials/agency/analytics', { safeStats }) %>
     <% } %>
 

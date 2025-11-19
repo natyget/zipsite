@@ -1,0 +1,39 @@
+<!-- Inbox/My Applicants Page Header -->
+<section class="agency-inbox-header">
+  <div class="agency-inbox-header__content">
+    <h1 class="agency-inbox-header__title">Inbox</h1>
+    <p class="agency-inbox-header__subtitle">Manage incoming applications.</p>
+    
+    <div class="agency-inbox-header__filters">
+      <button class="agency-inbox-header__filter-pill agency-inbox-header__filter-pill--active" data-status="all">
+        All
+      </button>
+      <button class="agency-inbox-header__filter-pill" data-status="pending">
+        Pending
+      </button>
+      <button class="agency-inbox-header__filter-pill" data-status="under-review">
+        Under Review
+      </button>
+    </div>
+    
+    <div class="agency-inbox-header__search">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input 
+        type="text" 
+        placeholder="Search applicants by name, location..." 
+        class="agency-inbox-header__search-input"
+        id="inbox-search-input"
+      />
+      <button class="agency-inbox-header__filters-btn" id="inbox-filters-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+        </svg>
+        Filters
+      </button>
+    </div>
+  </div>
+</section>
+

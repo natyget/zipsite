@@ -21,18 +21,27 @@
                 </a>
               </h3>
               <p class="agency-dashboard__scout-details">
-                <%= profile.city || 'Location not specified' %> • 
-                <%= profile.height_cm ? profile.height_cm + ' cm' : 'Height not specified' %>
-                <% if (profile.measurements) { %>
-                  • <%= profile.measurements %>
-                <% } %>
+                <% 
+                  const location = profile.city && profile.country 
+                    ? `${profile.city.toUpperCase()}, ${profile.country.toUpperCase()}`
+                    : profile.city 
+                      ? `${profile.city.toUpperCase()}, ${profile.country || ''}`
+                      : 'LOCATION NOT SPECIFIED';
+                  
+                  const heightFeet = profile.height_cm ? Math.floor(profile.height_cm / 30.48) : null;
+                  const heightInches = profile.height_cm ? Math.round((profile.height_cm % 30.48) / 2.54) : null;
+                  const heightDisplay = heightFeet && heightInches ? `${heightFeet}'${heightInches}"` : profile.height_cm ? `${profile.height_cm} cm` : '';
+                  
+                  const ageDisplay = profile.age ? `${profile.age} Years` : '';
+                %>
+                <%= location %> • <%= heightDisplay %> • <%= ageDisplay %>
               </p>
               <button 
                 class="agency-dashboard__scout-invite-btn" 
                 data-profile-id="<%= profile.id %>"
                 data-profile-name="<%= profile.first_name %> <%= profile.last_name %>"
               >
-                Invite to Apply
+                View Profile
               </button>
             </div>
           </div>
