@@ -6678,6 +6678,50 @@
 .agency-overview__kpi-trend {
   color: var(--agency-brand-color, var(--agency-accent-gold));
   font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.agency-overview__kpi-trend.positive {
+  color: #10b981;
+}
+
+.agency-overview__kpi-trend.negative {
+  color: #ef4444;
+}
+
+.agency-overview__kpi-trend.neutral {
+  color: var(--agency-text-tertiary);
+}
+
+.agency-overview__kpi-value.loading,
+.agency-overview__kpi-trend.loading {
+  position: relative;
+  color: transparent;
+}
+
+.agency-overview__kpi-value.loading::after,
+.agency-overview__kpi-trend.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--agency-border);
+  border-top-color: var(--agency-brand-color, var(--agency-accent-gold));
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.agency-overview__kpi-value.error,
+.agency-overview__kpi-trend.error {
+  color: var(--agency-text-tertiary);
+  opacity: 0.6;
+}
+
+@keyframes spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
 /* Charts Section */

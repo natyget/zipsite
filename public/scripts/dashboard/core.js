@@ -33,6 +33,7 @@
       
       // Initialize other modules if they exist
       if (window.AgencyDashboard) {
+        if (window.AgencyDashboard.Overview) window.AgencyDashboard.Overview.init();
         if (window.AgencyDashboard.Discover) window.AgencyDashboard.Discover.init();
         if (window.AgencyDashboard.Applicants) window.AgencyDashboard.Applicants.init();
         if (window.AgencyDashboard.Boards) window.AgencyDashboard.Boards.init();

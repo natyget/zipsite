@@ -2,15 +2,9 @@
 <section class="agency-overview" id="overview-dashboard">
   <!-- Personalized Greeting -->
   <div class="agency-overview__greeting">
-    <h1 class="agency-overview__greeting-title" id="overview-greeting">
-      <% 
-        const hour = new Date().getHours();
-        let greeting = 'Good Morning';
-        if (hour >= 12 && hour < 17) greeting = 'Good Afternoon';
-        if (hour >= 17) greeting = 'Good Evening';
-        const agencyName = currentUser && currentUser.agency_name ? currentUser.agency_name : 'Agency';
-      %>
-      <%= greeting %>, <%= agencyName %>
+    <h1 class="agency-overview__greeting-title" id="overview-greeting" data-agency-name="<%= currentUser && currentUser.agency_name ? currentUser.agency_name : 'Agency' %>">
+      <!-- Greeting will be updated by JavaScript -->
+      <%= currentUser && currentUser.agency_name ? currentUser.agency_name : 'Agency' %>
     </h1>
     <p class="agency-overview__greeting-subtitle">Here is your daily overview</p>
   </div>
@@ -74,7 +68,7 @@
     <div class="agency-overview__recent-list" id="overview-recent-applicants">
       <% if (profiles && profiles.length > 0) { %>
         <% profiles.forEach((profile) => { %>
-          <div class="agency-overview__recent-item">
+          <div class="agency-overview__recent-item" data-application-id="<%= profile.application_id || '' %>" data-profile-id="<%= profile.id %>" style="cursor: pointer;">
             <div class="agency-overview__recent-avatar">
               <% if (profile.images && profile.images.length > 0) { %>
                 <img src="<%= profile.images[0].path.startsWith('http') ? profile.images[0].path : '/' + profile.images[0].path %>" alt="<%= profile.first_name %> <%= profile.last_name %>">
