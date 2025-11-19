@@ -1362,7 +1362,7 @@ router.get('/dashboard/agency/analytics', requireRole('AGENCY'), async (req, res
     });
   } catch (error) {
     console.error('[Dashboard/Agency Analytics] Error:', error);
-    return res.status(500).json({
+    return res.status(500).json({ 
       error: 'Failed to load analytics',
       details: process.env.NODE_ENV !== 'production' ? error.message : undefined
     });
@@ -1495,7 +1495,7 @@ async function logAnalyticsEvent(profileId, eventType, metadata = {}, req = null
 router.get('/dashboard/agency', requireRole('AGENCY'), async (req, res, next) => {
   try {
     const {
-      view = 'applicants', // 'applicants' or 'scout'
+      view = '', // '' for overview, 'applicants', or 'scout'
       sort = 'az',
       city = '',
       letter = '',
@@ -1572,10 +1572,10 @@ router.get('/dashboard/agency', requireRole('AGENCY'), async (req, res, next) =>
     } else {
       // My Applicants: Only profiles with applications to this agency
       query = knex('profiles')
-        .select(
-          'profiles.*',
-          'users.email as owner_email',
-          'applications.status as application_status',
+      .select(
+        'profiles.*',
+        'users.email as owner_email',
+        'applications.status as application_status',
           'applications.id as application_id',
           'applications.created_at as application_created_at',
           'applications.accepted_at',
@@ -1583,10 +1583,10 @@ router.get('/dashboard/agency', requireRole('AGENCY'), async (req, res, next) =>
           'applications.invited_by_agency_id',
           'board_applications.match_score as board_match_score',
           'board_applications.match_details as board_match_details'
-        )
-        .leftJoin('users', 'profiles.user_id', 'users.id')
+      )
+      .leftJoin('users', 'profiles.user_id', 'users.id')
         .innerJoin('applications', (join) => {
-          join.on('applications.profile_id', '=', 'profiles.id')
+        join.on('applications.profile_id', '=', 'profiles.id')
             .andOn('applications.agency_id', '=', knex.raw('?', [agencyId]));
         })
         .leftJoin('board_applications', (join) => {
@@ -1594,8 +1594,8 @@ router.get('/dashboard/agency', requireRole('AGENCY'), async (req, res, next) =>
           if (board_id) {
             join.on('board_applications.board_id', '=', knex.raw('?', [board_id]));
           }
-        })
-        .whereNotNull('profiles.bio_curated');
+      })
+      .whereNotNull('profiles.bio_curated');
 
       // Filter by board if specified
       if (board_id) {
@@ -1790,27 +1790,27 @@ router.post('/dashboard/agency/applications/:applicationId/:action', requireRole
     }
 
     // Update application
-    await knex('applications')
+      await knex('applications')
       .where({ id: applicationId })
-      .update(updateData);
+        .update(updateData);
 
     // Send email notifications
-    try {
-      // Get profile and user info for email
-      const profile = await knex('profiles')
+      try {
+        // Get profile and user info for email
+        const profile = await knex('profiles')
         .where({ id: application.profile_id })
-        .first();
-      
-      if (profile) {
-        const talentUser = await knex('users')
-          .where({ id: profile.user_id })
           .first();
         
-        const agency = await knex('users')
-          .where({ id: req.session.userId })
-          .first();
+        if (profile) {
+          const talentUser = await knex('users')
+            .where({ id: profile.user_id })
+            .first();
+          
+          const agency = await knex('users')
+            .where({ id: req.session.userId })
+            .first();
 
-        if (talentUser && agency) {
+          if (talentUser && agency) {
           if (action === 'decline') {
             // Send decline email with Pro upsell
             await sendRejectedApplicantEmail({
@@ -1828,11 +1828,11 @@ router.post('/dashboard/agency/applications/:applicationId/:action', requireRole
               status: 'accepted'
             });
           }
+          }
         }
-      }
-    } catch (emailError) {
-      // Log error but don't fail the request
-      console.error('[Application] Email send error:', emailError);
+      } catch (emailError) {
+        // Log error but don't fail the request
+        console.error('[Application] Email send error:', emailError);
     }
 
     if (req.headers.accept?.includes('application/json')) {

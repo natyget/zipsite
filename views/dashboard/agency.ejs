@@ -75,6 +75,123 @@
 </style>
 <div class="agency-dashboard" id="agency-dashboard">
 
+  <!-- Fixed Sidebar Navigation -->
+  <aside class="agency-sidebar" id="agency-sidebar">
+    <div class="agency-sidebar__inner">
+      <!-- Logo & Brand Section -->
+      <div class="agency-sidebar__header">
+        <a href="/" class="agency-sidebar__logo">
+          <h1 class="agency-sidebar__logo-text">Pholio.</h1>
+        </a>
+        <div class="agency-sidebar__brand">
+          <div class="agency-sidebar__brand-dot" style="background-color: <%= brandColor %>;"></div>
+          <span class="agency-sidebar__brand-name">
+            <%= currentUser && currentUser.agency_name ? currentUser.agency_name : 'Agency' %>
+          </span>
+        </div>
+        
+        <!-- Command Palette Trigger -->
+        <button 
+          class="agency-sidebar__search-trigger" 
+          id="command-palette-trigger"
+          aria-label="Open command palette"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/>
+          </svg>
+          <span>Search...</span>
+          <kbd class="agency-sidebar__kbd">⌘K</kbd>
+        </button>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="agency-sidebar__nav">
+        <a 
+          href="/dashboard/agency" 
+          class="agency-sidebar__nav-item <%= (typeof view === 'undefined' || view === '') ? 'agency-sidebar__nav-item--active' : '' %>"
+          data-view="overview"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          <span>Overview</span>
+        </a>
+        
+        <a 
+          href="/dashboard/agency?view=applicants" 
+          class="agency-sidebar__nav-item <%= (typeof view !== 'undefined' && view === 'applicants') ? 'agency-sidebar__nav-item--active' : '' %>"
+          data-view="inbox"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span>My Applicants</span>
+          <% if (safeStats.pending > 0) { %>
+            <span class="agency-sidebar__badge"><%= safeStats.pending %></span>
+          <% } %>
+        </a>
+        
+        <a 
+          href="/dashboard/agency?view=scout" 
+          class="agency-sidebar__nav-item <%= (typeof view !== 'undefined' && view === 'scout') ? 'agency-sidebar__nav-item--active' : '' %>"
+          data-view="scout"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+          <span>Scout Talent</span>
+        </a>
+        
+        <a 
+          href="/dashboard/agency#boards" 
+          class="agency-sidebar__nav-item"
+          data-view="boards"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span>Boards</span>
+        </a>
+      </nav>
+
+      <!-- Footer -->
+      <div class="agency-sidebar__footer">
+        <a 
+          href="/dashboard/settings" 
+          class="agency-sidebar__nav-item"
+          data-view="settings"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"/>
+          </svg>
+          <span>Settings</span>
+        </a>
+        
+        <form method="post" action="/logout" class="agency-sidebar__logout-form">
+          <button type="submit" class="agency-sidebar__logout-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span>Sign Out</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="agency-dashboard__main">
+
   <!-- Agency Hero Section -->
   <section class="agency-hero" id="agency-overview">
     <div class="agency-hero__content">
@@ -510,7 +627,183 @@
     </div>
   </section>
   
-  <!-- Tab Navigation -->
+  <!-- Overview Dashboard Section (shown when no view specified) -->
+  <% if (typeof view === 'undefined' || view === '') { %>
+    <section class="agency-overview" id="overview-dashboard">
+      <div class="agency-overview__header">
+        <div>
+          <h1 class="agency-overview__title">Dashboard Overview</h1>
+          <p class="agency-overview__subtitle">Your application pipeline at a glance</p>
+        </div>
+        <div class="agency-overview__header-actions">
+          <a href="/dashboard/agency?view=applicants" class="agency-overview__cta">
+            View All Applications
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="agency-overview__kpi-grid">
+        <div class="agency-overview__kpi-card">
+          <div class="agency-overview__kpi-header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span class="agency-overview__kpi-label">Total Applications</span>
+          </div>
+          <div class="agency-overview__kpi-value"><%= safeStats.total %></div>
+          <div class="agency-overview__kpi-subtext">All time</div>
+        </div>
+
+        <div class="agency-overview__kpi-card agency-overview__kpi-card--highlight">
+          <div class="agency-overview__kpi-header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span class="agency-overview__kpi-label">Pending Review</span>
+          </div>
+          <div class="agency-overview__kpi-value"><%= safeStats.pending %></div>
+          <div class="agency-overview__kpi-subtext">
+            <% if (safeStats.newToday > 0) { %>
+              <span class="agency-overview__kpi-trend">+<%= safeStats.newToday %> today</span>
+            <% } else { %>
+              No new applications today
+            <% } %>
+          </div>
+        </div>
+
+        <div class="agency-overview__kpi-card">
+          <div class="agency-overview__kpi-header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <span class="agency-overview__kpi-label">Acceptance Rate</span>
+          </div>
+          <div class="agency-overview__kpi-value" id="overview-acceptance-rate">
+            <% 
+              const processed = safeStats.accepted + safeStats.declined;
+              const acceptanceRate = processed > 0 ? Math.round((safeStats.accepted / processed) * 100) : 0;
+            %>
+            <%= acceptanceRate %>%
+          </div>
+          <div class="agency-overview__kpi-subtext">
+            <%= safeStats.accepted %> of <%= processed > 0 ? processed : '0' %> processed
+          </div>
+        </div>
+
+        <div class="agency-overview__kpi-card">
+          <div class="agency-overview__kpi-header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span class="agency-overview__kpi-label">This Month</span>
+          </div>
+          <div class="agency-overview__kpi-value" id="overview-this-month">—</div>
+          <div class="agency-overview__kpi-subtext">New applications</div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="agency-overview__charts">
+        <!-- Application Activity Chart -->
+        <div class="agency-overview__chart-card">
+          <div class="agency-overview__chart-header">
+            <h3 class="agency-overview__chart-title">Application Activity</h3>
+            <span class="agency-overview__chart-subtitle">Last 30 days</span>
+          </div>
+          <div class="agency-overview__chart-container" id="overview-activity-chart">
+            <div class="agency-overview__chart-loading">Loading chart data...</div>
+          </div>
+        </div>
+
+        <!-- Pipeline Status Chart -->
+        <div class="agency-overview__chart-card">
+          <div class="agency-overview__chart-header">
+            <h3 class="agency-overview__chart-title">Pipeline Status</h3>
+            <span class="agency-overview__chart-subtitle">Current breakdown</span>
+          </div>
+          <div class="agency-overview__chart-container" id="overview-pipeline-chart">
+            <div class="agency-overview__pipeline-breakdown">
+              <div class="agency-overview__pipeline-item">
+                <div class="agency-overview__pipeline-bar">
+                  <div class="agency-overview__pipeline-fill agency-overview__pipeline-fill--pending" style="width: <%= safeStats.total > 0 ? (safeStats.pending / safeStats.total * 100) : 0 %>%"></div>
+                </div>
+                <div class="agency-overview__pipeline-info">
+                  <span class="agency-overview__pipeline-label">Pending</span>
+                  <span class="agency-overview__pipeline-value"><%= safeStats.pending %></span>
+                </div>
+              </div>
+              <div class="agency-overview__pipeline-item">
+                <div class="agency-overview__pipeline-bar">
+                  <div class="agency-overview__pipeline-fill agency-overview__pipeline-fill--accepted" style="width: <%= safeStats.total > 0 ? (safeStats.accepted / safeStats.total * 100) : 0 %>%"></div>
+                </div>
+                <div class="agency-overview__pipeline-info">
+                  <span class="agency-overview__pipeline-label">Accepted</span>
+                  <span class="agency-overview__pipeline-value"><%= safeStats.accepted %></span>
+                </div>
+              </div>
+              <div class="agency-overview__pipeline-item">
+                <div class="agency-overview__pipeline-bar">
+                  <div class="agency-overview__pipeline-fill agency-overview__pipeline-fill--declined" style="width: <%= safeStats.total > 0 ? (safeStats.declined / safeStats.total * 100) : 0 %>%"></div>
+                </div>
+                <div class="agency-overview__pipeline-info">
+                  <span class="agency-overview__pipeline-label">Declined</span>
+                  <span class="agency-overview__pipeline-value"><%= safeStats.declined %></span>
+                </div>
+              </div>
+              <div class="agency-overview__pipeline-item">
+                <div class="agency-overview__pipeline-bar">
+                  <div class="agency-overview__pipeline-fill agency-overview__pipeline-fill--archived" style="width: <%= safeStats.total > 0 ? (safeStats.archived / safeStats.total * 100) : 0 %>%"></div>
+                </div>
+                <div class="agency-overview__pipeline-info">
+                  <span class="agency-overview__pipeline-label">Archived</span>
+                  <span class="agency-overview__pipeline-value"><%= safeStats.archived %></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="agency-overview__quick-stats">
+        <div class="agency-overview__stat-card">
+          <div class="agency-overview__stat-icon">📊</div>
+          <div class="agency-overview__stat-content">
+            <div class="agency-overview__stat-value"><%= safeStats.newThisWeek %></div>
+            <div class="agency-overview__stat-label">New This Week</div>
+          </div>
+        </div>
+        <div class="agency-overview__stat-card">
+          <div class="agency-overview__stat-icon">⭐</div>
+          <div class="agency-overview__stat-content">
+            <div class="agency-overview__stat-value" id="overview-avg-score">—</div>
+            <div class="agency-overview__stat-label">Avg Match Score</div>
+          </div>
+        </div>
+        <div class="agency-overview__stat-card">
+          <div class="agency-overview__stat-icon">📋</div>
+          <div class="agency-overview__stat-content">
+            <div class="agency-overview__stat-value"><%= safeBoards.length %></div>
+            <div class="agency-overview__stat-label">Active Boards</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  <% } %>
+
+  <!-- Tab Navigation (only show when not on overview) -->
+  <% if (typeof view !== 'undefined' && view !== '') { %>
   <section class="agency-dashboard__tabs">
     <div class="agency-dashboard__tabs-container">
       <a 
@@ -539,6 +832,7 @@
       </a>
     </div>
   </section>
+  <% } %>
 
   <!-- Dashboard Header -->
   <section class="agency-dashboard__header" id="applications">
@@ -1223,6 +1517,62 @@
     <% } %>
   </section>
 
+  <!-- Command Palette -->
+  <div class="agency-command-palette" id="command-palette" style="display: none;">
+    <div class="agency-command-palette__overlay"></div>
+    <div class="agency-command-palette__content">
+      <div class="agency-command-palette__header">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input
+          type="text"
+          class="agency-command-palette__input"
+          id="command-palette-input"
+          placeholder="Type a command or search..."
+          autocomplete="off"
+        />
+        <div class="agency-command-palette__kbd-wrapper">
+          <kbd class="agency-command-palette__kbd">ESC</kbd>
+        </div>
+      </div>
+
+      <div class="agency-command-palette__results" id="command-palette-results">
+        <!-- Talent Section -->
+        <div class="agency-command-palette__section" id="command-palette-talent" style="display: none;">
+          <h3 class="agency-command-palette__section-title">Talent</h3>
+          <div class="agency-command-palette__items" id="command-palette-talent-items">
+            <!-- Populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Navigation Section -->
+        <div class="agency-command-palette__section" id="command-palette-nav" style="display: none;">
+          <h3 class="agency-command-palette__section-title">Navigation</h3>
+          <div class="agency-command-palette__items" id="command-palette-nav-items">
+            <!-- Populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="agency-command-palette__empty" id="command-palette-empty">
+          <p>No results found.</p>
+        </div>
+      </div>
+
+      <div class="agency-command-palette__footer">
+        <span class="agency-command-palette__footer-text">
+          <strong>Pro Tip:</strong> Use arrows to navigate
+        </span>
+        <div class="agency-command-palette__footer-brand">
+          <span>Pholio Intelligence</span>
+          <div class="agency-command-palette__footer-dot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Notes & Tags Modal -->
   <div class="agency-notes-modal" id="notes-tags-modal" style="display: none;">
     <div class="agency-notes-modal__overlay"></div>
@@ -1309,38 +1659,73 @@
     </div>
   </div>
 
-  <!-- Application Detail Modal -->
-  <div class="agency-detail-modal" id="application-detail-modal" style="display: none;">
-    <div class="agency-detail-modal__overlay"></div>
-    <div class="agency-detail-modal__content">
-      <div class="agency-detail-modal__header">
-        <div class="agency-detail-modal__header-main">
-          <h2 class="agency-detail-modal__title" id="detail-modal-name">Application Details</h2>
-          <p class="agency-detail-modal__subtitle" id="detail-modal-subtitle">Loading...</p>
+  <!-- Application Detail Drawer -->
+  <div class="agency-detail-drawer" id="application-detail-drawer" style="display: none;">
+    <div class="agency-detail-drawer__overlay"></div>
+    <div class="agency-detail-drawer__content">
+      <div class="agency-detail-drawer__header">
+        <div class="agency-detail-drawer__header-actions">
+          <div class="agency-detail-drawer__header-main">
+            <h2 class="agency-detail-drawer__title" id="detail-drawer-name">Application Details</h2>
+            <p class="agency-detail-drawer__subtitle" id="detail-drawer-subtitle">Loading...</p>
+          </div>
+          <div class="agency-detail-drawer__header-buttons">
+            <button class="agency-detail-drawer__action-btn agency-detail-drawer__action-btn--accept" id="detail-drawer-accept" style="display: none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Accept
+            </button>
+            <button class="agency-detail-drawer__action-btn agency-detail-drawer__action-btn--decline" id="detail-drawer-decline" style="display: none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+              Decline
+            </button>
+            <button class="agency-detail-drawer__action-btn agency-detail-drawer__action-btn--board" id="detail-drawer-board" style="display: none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              Add to Board
+            </button>
+            <a href="#" id="detail-drawer-portfolio-link" target="_blank" class="agency-detail-drawer__portfolio-link" style="display: none;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              View Portfolio
+            </a>
+          </div>
         </div>
-        <div class="agency-detail-modal__header-actions">
-          <a href="#" id="detail-modal-portfolio-link" target="_blank" class="agency-detail-modal__portfolio-link">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-              <polyline points="15 3 21 3 21 9"/>
-              <line x1="10" y1="14" x2="21" y2="3"/>
-            </svg>
-            View Portfolio
-          </a>
-          <button class="agency-detail-modal__close" id="detail-modal-close" aria-label="Close">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
+        <button class="agency-detail-drawer__close" id="detail-drawer-close" aria-label="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="agency-detail-drawer__body" id="detail-drawer-body">
+        <div class="agency-detail-drawer__loading">
+          <div class="agency-detail-drawer__spinner"></div>
+          <p>Loading application details...</p>
         </div>
       </div>
 
-      <div class="agency-detail-modal__body" id="detail-modal-body">
-        <div class="agency-detail-modal__loading">
-          <div class="agency-detail-modal__spinner"></div>
-          <p>Loading application details...</p>
+      <div class="agency-detail-drawer__footer">
+        <div class="agency-detail-drawer__footer-info" id="detail-drawer-footer-info">
+          <!-- Applied date will be shown here -->
         </div>
+        <button class="agency-detail-drawer__footer-action" id="detail-drawer-archive" style="display: none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="21 8 21 21 3 21 3 8"/>
+            <rect x="1" y="3" width="22" height="5"/>
+            <line x1="10" y1="12" x2="14" y2="12"/>
+          </svg>
+          Archive
+        </button>
       </div>
     </div>
   </div>
@@ -1597,3 +1982,6 @@
   };
 </script>
 <script src="/scripts/agency-dashboard.js?v=<%= Date.now() %>" defer></script>
+
+  </main>
+</div>

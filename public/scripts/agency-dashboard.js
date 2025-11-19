@@ -18,6 +18,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     if (!document.getElementById('agency-dashboard')) return;
     
+    initCommandPalette();
     initViewSwitcher();
     initKanbanDragDrop();
     initPreviewModal();
@@ -32,6 +33,7 @@
     initBoardsManagement();
     initBoardEditor();
     initAnalytics();
+    initOverviewDashboard();
     
     // Load data from window if available
     if (window.AGENCY_DASHBOARD_DATA) {
@@ -40,6 +42,252 @@
       state.boards = window.AGENCY_DASHBOARD_DATA.boards || [];
     }
   });
+
+  /**
+   * Command Palette
+   */
+  function initCommandPalette() {
+    const commandPalette = document.getElementById('command-palette');
+    const commandPaletteTrigger = document.getElementById('command-palette-trigger');
+    const commandPaletteInput = document.getElementById('command-palette-input');
+    const commandPaletteOverlay = commandPalette?.querySelector('.agency-command-palette__overlay');
+    const talentSection = document.getElementById('command-palette-talent');
+    const navSection = document.getElementById('command-palette-nav');
+    const talentItems = document.getElementById('command-palette-talent-items');
+    const navItems = document.getElementById('command-palette-nav-items');
+    const emptyState = document.getElementById('command-palette-empty');
+    
+    if (!commandPalette || !commandPaletteInput) return;
+
+    let selectedIndex = -1;
+    let currentItems = [];
+
+    const navigationItems = [
+      { label: 'Go to Dashboard', view: 'overview', href: '/dashboard/agency', icon: 'dashboard' },
+      { label: 'Go to Inbox', view: 'inbox', href: '/dashboard/agency?view=applicants', icon: 'inbox' },
+      { label: 'Go to Scout', view: 'scout', href: '/dashboard/agency?view=scout', icon: 'scout' },
+      { label: 'Go to Boards', view: 'boards', href: '/dashboard/agency#boards', icon: 'boards' },
+      { label: 'Go to Settings', view: 'settings', href: '/dashboard/settings', icon: 'settings' }
+    ];
+
+    function openCommandPalette() {
+      commandPalette.style.display = 'flex';
+      setTimeout(() => {
+        commandPaletteInput.focus();
+      }, 50);
+      updateResults('');
+    }
+
+    function closeCommandPalette() {
+      commandPalette.style.display = 'none';
+      commandPaletteInput.value = '';
+      selectedIndex = -1;
+      currentItems = [];
+    }
+
+    function updateResults(query) {
+      const searchQuery = query.toLowerCase().trim();
+      let hasResults = false;
+
+      // Clear previous results
+      if (talentItems) talentItems.innerHTML = '';
+      if (navItems) navItems.innerHTML = '';
+      if (talentSection) talentSection.style.display = 'none';
+      if (navSection) navSection.style.display = 'none';
+      if (emptyState) emptyState.style.display = 'none';
+
+      currentItems = [];
+
+      // Search talent
+      if (state.profiles && state.profiles.length > 0) {
+        const filteredProfiles = state.profiles.filter(profile => {
+          const name = `${profile.first_name || ''} ${profile.last_name || ''}`.toLowerCase();
+          const location = (profile.city || '').toLowerCase();
+          return name.includes(searchQuery) || location.includes(searchQuery);
+        }).slice(0, 5);
+
+        if (filteredProfiles.length > 0 && searchQuery) {
+          hasResults = true;
+          if (talentSection) talentSection.style.display = 'block';
+          
+          filteredProfiles.forEach(profile => {
+            const item = document.createElement('a');
+            item.href = '#';
+            item.className = 'agency-command-palette__item';
+            item.dataset.profileId = profile.id;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'agency-command-palette__item-avatar';
+            if (profile.hero_image_path) {
+              const img = document.createElement('img');
+              img.src = profile.hero_image_path.startsWith('http') ? profile.hero_image_path : '/' + profile.hero_image_path;
+              img.alt = `${profile.first_name} ${profile.last_name}`;
+              avatar.appendChild(img);
+            } else {
+              avatar.textContent = (profile.first_name?.[0] || '') + (profile.last_name?.[0] || '');
+            }
+            
+            const info = document.createElement('div');
+            info.className = 'agency-command-palette__item-info';
+            const name = document.createElement('div');
+            name.className = 'agency-command-palette__item-name';
+            name.textContent = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+            const meta = document.createElement('div');
+            meta.className = 'agency-command-palette__item-meta';
+            meta.textContent = profile.city || 'Location TBD';
+            info.appendChild(name);
+            info.appendChild(meta);
+            
+            const icon = document.createElement('svg');
+            icon.className = 'agency-command-palette__item-icon';
+            icon.width = '16';
+            icon.height = '16';
+            icon.viewBox = '0 0 24 24';
+            icon.innerHTML = '<path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+            
+            item.appendChild(avatar);
+            item.appendChild(info);
+            item.appendChild(icon);
+            
+            item.addEventListener('click', (e) => {
+              e.preventDefault();
+              // Open application detail modal/drawer
+              if (window.openApplicationDetail) {
+                window.openApplicationDetail(profile.id);
+              }
+              closeCommandPalette();
+            });
+            
+            if (talentItems) talentItems.appendChild(item);
+            currentItems.push(item);
+          });
+        }
+      }
+
+      // Search navigation
+      const filteredNav = navigationItems.filter(nav => 
+        nav.label.toLowerCase().includes(searchQuery)
+      );
+
+      if (filteredNav.length > 0) {
+        hasResults = true;
+        if (navSection) navSection.style.display = 'block';
+        
+        filteredNav.forEach(nav => {
+          const item = document.createElement('a');
+          item.href = nav.href;
+          item.className = 'agency-command-palette__item';
+          
+          const icon = document.createElement('svg');
+          icon.width = '18';
+          icon.height = '18';
+          icon.viewBox = '0 0 24 24';
+          icon.innerHTML = getNavIcon(nav.icon);
+          icon.style.color = 'var(--agency-text-tertiary)';
+          
+          const label = document.createElement('span');
+          label.textContent = nav.label;
+          label.style.fontSize = '0.875rem';
+          label.style.color = 'var(--agency-text-primary)';
+          
+          item.appendChild(icon);
+          item.appendChild(label);
+          
+          item.addEventListener('click', () => {
+            closeCommandPalette();
+          });
+          
+          if (navItems) navItems.appendChild(item);
+          currentItems.push(item);
+        });
+      }
+
+      if (!hasResults && searchQuery && emptyState) {
+        emptyState.style.display = 'block';
+      }
+
+      selectedIndex = -1;
+      updateSelectedItem();
+    }
+
+    function getNavIcon(type) {
+      const icons = {
+        dashboard: '<rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>',
+        inbox: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="1.5" fill="none"/>',
+        scout: '<circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="1.5" fill="none"/>',
+        boards: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M22 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.5" fill="none"/>',
+        settings: '<circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M12 1v6m0 6v6m9-9h-6m-6 0H3" stroke="currentColor" stroke-width="1.5" fill="none"/>'
+      };
+      return icons[type] || icons.dashboard;
+    }
+
+    function updateSelectedItem() {
+      currentItems.forEach((item, index) => {
+        item.classList.toggle('agency-command-palette__item--active', index === selectedIndex);
+      });
+    }
+
+    function navigateItems(direction) {
+      if (currentItems.length === 0) return;
+      
+      if (direction === 'down') {
+        selectedIndex = (selectedIndex + 1) % currentItems.length;
+      } else if (direction === 'up') {
+        selectedIndex = selectedIndex <= 0 ? currentItems.length - 1 : selectedIndex - 1;
+      }
+      
+      updateSelectedItem();
+      currentItems[selectedIndex]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    function selectCurrentItem() {
+      if (selectedIndex >= 0 && currentItems[selectedIndex]) {
+        currentItems[selectedIndex].click();
+      }
+    }
+
+    // Event listeners
+    if (commandPaletteTrigger) {
+      commandPaletteTrigger.addEventListener('click', openCommandPalette);
+    }
+
+    if (commandPaletteOverlay) {
+      commandPaletteOverlay.addEventListener('click', closeCommandPalette);
+    }
+
+    if (commandPaletteInput) {
+      commandPaletteInput.addEventListener('input', (e) => {
+        updateResults(e.target.value);
+      });
+
+      commandPaletteInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeCommandPalette();
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          navigateItems('down');
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          navigateItems('up');
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          selectCurrentItem();
+        }
+      });
+    }
+
+    // Keyboard shortcut: Cmd/Ctrl + K
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        if (commandPalette.style.display === 'none' || !commandPalette.style.display) {
+          openCommandPalette();
+        } else {
+          closeCommandPalette();
+        }
+      }
+    });
+  }
 
   /**
    * View Mode Switcher
@@ -186,22 +434,92 @@
   }
 
   /**
-   * Application Detail Modal
+   * Application Detail Drawer
    */
   function initPreviewModal() {
-    const modal = document.getElementById('application-detail-modal');
-    const overlay = modal?.querySelector('.agency-detail-modal__overlay');
-    const closeBtn = document.getElementById('detail-modal-close');
+    const drawer = document.getElementById('application-detail-drawer');
+    const overlay = drawer?.querySelector('.agency-detail-drawer__overlay');
+    const closeBtn = document.getElementById('detail-drawer-close');
     const previewButtons = document.querySelectorAll('.agency-dashboard__card-preview, .agency-dashboard__gallery-preview, .agency-dashboard__list-preview, .agency-dashboard__table-preview');
-    const body = document.getElementById('detail-modal-body');
-    const nameEl = document.getElementById('detail-modal-name');
-    const subtitleEl = document.getElementById('detail-modal-subtitle');
-    const portfolioLink = document.getElementById('detail-modal-portfolio-link');
+    const body = document.getElementById('detail-drawer-body');
+    const nameEl = document.getElementById('detail-drawer-name');
+    const subtitleEl = document.getElementById('detail-drawer-subtitle');
+    const portfolioLink = document.getElementById('detail-drawer-portfolio-link');
+    const acceptBtn = document.getElementById('detail-drawer-accept');
+    const declineBtn = document.getElementById('detail-drawer-decline');
+    const boardBtn = document.getElementById('detail-drawer-board');
+    const archiveBtn = document.getElementById('detail-drawer-archive');
+    const footerInfo = document.getElementById('detail-drawer-footer-info');
 
     let currentApplicationId = null;
     let currentProfileSlug = null;
 
-    // Open modal
+    // Function to open detail view (exposed globally for command palette)
+    async function openApplicationDetail(profileIdOrApplicationId) {
+      // Try to find application ID from profile ID
+      let applicationId = profileIdOrApplicationId;
+      const profile = state.profiles?.find(p => p.id === profileIdOrApplicationId);
+      
+      if (profile && profile.application_id) {
+        applicationId = profile.application_id;
+      }
+      
+      if (!applicationId) {
+        // Fallback: open portfolio if no application ID
+        if (profile && profile.slug) {
+          window.open(`/portfolio/${profile.slug}`, '_blank');
+        }
+        return;
+      }
+
+      currentApplicationId = applicationId;
+      drawer.style.display = 'flex';
+      drawer.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+
+      // Show loading state
+      body.innerHTML = `
+        <div class="agency-detail-drawer__loading">
+          <div class="agency-detail-drawer__spinner"></div>
+          <p>Loading application details...</p>
+        </div>
+      `;
+
+        // Load application details
+        try {
+          const response = await fetch(`/api/agency/applications/${applicationId}/details`);
+          if (response.ok) {
+            const data = await response.json();
+            renderApplicationDetails(data);
+            currentProfileSlug = data.profile.slug;
+            if (portfolioLink) {
+              portfolioLink.href = `/portfolio/${data.profile.slug}`;
+            }
+          } else {
+          const error = await response.json();
+          body.innerHTML = `
+            <div class="agency-detail-drawer__error">
+              <p>Failed to load application details: ${error.error || 'Unknown error'}</p>
+              <button class="agency-detail-drawer__action-btn" onclick="document.getElementById('application-detail-drawer').style.display='none'">Close</button>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Load application details error:', error);
+        body.innerHTML = `
+          <div class="agency-detail-drawer__error">
+            <p>Failed to load application details. Please try again.</p>
+            <button class="agency-detail-drawer__action-btn" onclick="document.getElementById('application-detail-drawer').style.display='none'">Close</button>
+          </div>
+        `;
+      }
+      });
+    }
+
+    // Expose function globally for command palette
+    window.openApplicationDetail = openApplicationDetail;
+
+    // Open modal from preview buttons
     previewButtons.forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.preventDefault();
@@ -219,64 +537,28 @@
           return;
         }
 
-        currentApplicationId = applicationId;
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-
-        // Show loading state
-        body.innerHTML = `
-          <div class="agency-detail-modal__loading">
-            <div class="agency-detail-modal__spinner"></div>
-            <p>Loading application details...</p>
-          </div>
-        `;
-
-        // Load application details
-        try {
-          const response = await fetch(`/api/agency/applications/${applicationId}/details`);
-          if (response.ok) {
-            const data = await response.json();
-            renderApplicationDetails(data);
-            currentProfileSlug = data.profile.slug;
-            if (portfolioLink) {
-              portfolioLink.href = `/portfolio/${data.profile.slug}`;
-            }
-          } else {
-            const error = await response.json();
-            body.innerHTML = `
-              <div class="agency-detail-modal__error">
-                <p>Failed to load application details: ${error.error || 'Unknown error'}</p>
-                <button class="agency-detail-modal__btn agency-detail-modal__btn--primary" onclick="document.getElementById('application-detail-modal').style.display='none'">Close</button>
-              </div>
-            `;
-          }
-        } catch (error) {
-          console.error('Load application details error:', error);
-          body.innerHTML = `
-            <div class="agency-detail-modal__error">
-              <p>Failed to load application details. Please try again.</p>
-              <button class="agency-detail-modal__btn agency-detail-modal__btn--primary" onclick="document.getElementById('application-detail-modal').style.display='none'">Close</button>
-            </div>
-          `;
-        }
+        await openApplicationDetail(applicationId);
       });
     });
 
-    // Close modal
-    function closeModal() {
-      modal.style.display = 'none';
+    // Close drawer
+    function closeDrawer() {
+      drawer.classList.remove('is-open');
+      setTimeout(() => {
+        drawer.style.display = 'none';
+      }, 300);
       document.body.style.overflow = '';
       currentApplicationId = null;
       currentProfileSlug = null;
     }
 
-    closeBtn?.addEventListener('click', closeModal);
-    overlay?.addEventListener('click', closeModal);
+    closeBtn?.addEventListener('click', closeDrawer);
+    overlay?.addEventListener('click', closeDrawer);
 
     // ESC key to close
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal.style.display === 'flex') {
-        closeModal();
+      if (e.key === 'Escape' && drawer.style.display === 'flex') {
+        closeDrawer();
       }
     });
 
@@ -284,220 +566,370 @@
       const { application, profile, notes, tags } = data;
       
       const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown';
-      nameEl.textContent = fullName;
-      subtitleEl.textContent = `Application ${application.status.charAt(0).toUpperCase() + application.status.slice(1)} • Applied ${formatDate(application.created_at)}`;
+      if (nameEl) nameEl.textContent = fullName;
+      if (subtitleEl) subtitleEl.textContent = `Application ${application.status.charAt(0).toUpperCase() + application.status.slice(1)} • Applied ${formatDate(application.created_at)}`;
 
-      // Format timeline events
+      // Update header action buttons visibility
+      if (acceptBtn) acceptBtn.style.display = application.status !== 'accepted' ? 'flex' : 'none';
+      if (declineBtn) declineBtn.style.display = application.status !== 'declined' ? 'flex' : 'none';
+      if (archiveBtn) archiveBtn.style.display = application.status !== 'archived' ? 'flex' : 'none';
+      if (portfolioLink) portfolioLink.style.display = profile.slug ? 'flex' : 'none';
+      if (boardBtn) boardBtn.style.display = 'flex';
+
+      // Update footer info
+      if (footerInfo) {
+        footerInfo.innerHTML = `Applied ${formatDate(application.created_at)}`;
+      }
+
+      // Format timeline events (include notes as timeline items)
       const timelineEvents = [];
       if (application.created_at) {
-        timelineEvents.push({ type: 'created', date: application.created_at, label: 'Application submitted' });
+        timelineEvents.push({ type: 'status', date: application.created_at, label: 'Application submitted', author: 'System' });
       }
       if (application.viewed_at) {
-        timelineEvents.push({ type: 'viewed', date: application.viewed_at, label: 'Viewed by agency' });
+        timelineEvents.push({ type: 'status', date: application.viewed_at, label: 'Viewed by agency', author: 'System' });
       }
       if (application.accepted_at) {
-        timelineEvents.push({ type: 'accepted', date: application.accepted_at, label: 'Application accepted' });
+        timelineEvents.push({ type: 'status', date: application.accepted_at, label: 'Application accepted', author: 'System' });
       }
       if (application.declined_at) {
-        timelineEvents.push({ type: 'declined', date: application.declined_at, label: 'Application declined' });
+        timelineEvents.push({ type: 'status', date: application.declined_at, label: 'Application declined', author: 'System' });
       }
-      timelineEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+      // Add notes as timeline events
+      notes.forEach(note => {
+        timelineEvents.push({ 
+          type: 'comment', 
+          date: note.created_at, 
+          label: note.note, 
+          author: 'Agency Team' 
+        });
+      });
+      timelineEvents.sort((a, b) => new Date(b.date) - new Date(a.date)); // Most recent first
 
-      // Render images gallery
-      const imagesHtml = profile.images && profile.images.length > 0
+      // Prepare images for viewer
+      const images = profile.images || [];
+      const portfolioImages = images.filter(img => !img.label || !img.label.toLowerCase().includes('digital'));
+      const digitalImages = images.filter(img => img.label && img.label.toLowerCase().includes('digital'));
+      const allImages = portfolioImages.length > 0 ? portfolioImages : images;
+      const currentImage = allImages[0] || null;
+
+      // Render image viewer with Portfolio/Digitals toggle
+      const imageViewerHtml = currentImage
         ? `
-          <div class="agency-detail-modal__images">
-            <h3 class="agency-detail-modal__section-title">Portfolio Images</h3>
-            <div class="agency-detail-modal__images-grid">
-              ${profile.images.map(img => `
-                <div class="agency-detail-modal__image-item">
-                  <img src="${normalizeImagePath(img.path)}" alt="${img.label || 'Portfolio image'}" loading="lazy">
+          <div class="agency-detail-drawer__image-viewer">
+            <div class="agency-detail-drawer__image-viewer-group">
+              ${portfolioImages.length > 0 && digitalImages.length > 0 ? `
+                <div class="agency-detail-drawer__image-mode-toggle">
+                  <button class="agency-detail-drawer__image-mode-btn agency-detail-drawer__image-mode-btn--active" data-mode="portfolio">Portfolio</button>
+                  <button class="agency-detail-drawer__image-mode-btn" data-mode="digitals">Digitals</button>
                 </div>
-              `).join('')}
+              ` : ''}
+              <img 
+                src="${normalizeImagePath(currentImage.path)}" 
+                alt="${currentImage.label || 'Portfolio image'}" 
+                class="agency-detail-drawer__main-image agency-detail-drawer__main-image--portfolio"
+                id="drawer-main-image"
+                loading="eager"
+              >
+              ${allImages.length > 1 ? `
+                <div class="agency-detail-drawer__image-thumbnails">
+                  ${allImages.slice(0, 6).map((img, idx) => `
+                    <img 
+                      src="${normalizeImagePath(img.path)}" 
+                      alt="${img.label || 'Thumbnail'}"
+                      class="agency-detail-drawer__image-thumbnail ${idx === 0 ? 'agency-detail-drawer__image-thumbnail--active' : ''}"
+                      data-image-index="${idx}"
+                      data-image-path="${normalizeImagePath(img.path)}"
+                    >
+                  `).join('')}
+                </div>
+              ` : ''}
             </div>
           </div>
         `
         : '';
 
-      body.innerHTML = `
-        <div class="agency-detail-modal__tabs">
-          <button class="agency-detail-modal__tab agency-detail-modal__tab--active" data-tab="overview">Overview</button>
-          <button class="agency-detail-modal__tab" data-tab="timeline">Timeline</button>
-          <button class="agency-detail-modal__tab" data-tab="notes">Notes & Tags</button>
-        </div>
+      // Calculate match score (use board match score if available, otherwise AI score)
+      const matchScore = profile.board_match_score !== null && profile.board_match_score !== undefined
+        ? profile.board_match_score
+        : (profile.ai_score || 0);
 
-        <div class="agency-detail-modal__tab-content agency-detail-modal__tab-content--active" data-tab="overview">
-          <div class="agency-detail-modal__overview">
-            ${imagesHtml}
-            
-            <div class="agency-detail-modal__info-section">
-              <h3 class="agency-detail-modal__section-title">Profile Information</h3>
-              <div class="agency-detail-modal__info-grid">
-                ${profile.city ? `<div class="agency-detail-modal__info-item">
-                  <span class="agency-detail-modal__info-label">Location</span>
-                  <span class="agency-detail-modal__info-value">${escapeHtml(profile.city)}${profile.country ? ', ' + escapeHtml(profile.country) : ''}</span>
-                </div>` : ''}
-                ${profile.height_cm ? `<div class="agency-detail-modal__info-item">
-                  <span class="agency-detail-modal__info-label">Height</span>
-                  <span class="agency-detail-modal__info-value">${profile.height_cm} cm</span>
-                </div>` : ''}
-                ${profile.measurements ? `<div class="agency-detail-modal__info-item">
-                  <span class="agency-detail-modal__info-label">Measurements</span>
-                  <span class="agency-detail-modal__info-value">${escapeHtml(profile.measurements)}</span>
-                </div>` : ''}
-                ${profile.age ? `<div class="agency-detail-modal__info-item">
-                  <span class="agency-detail-modal__info-label">Age</span>
-                  <span class="agency-detail-modal__info-value">${profile.age}</span>
-                </div>` : ''}
-                ${profile.user_email ? `<div class="agency-detail-modal__info-item">
-                  <span class="agency-detail-modal__info-label">Email</span>
-                  <span class="agency-detail-modal__info-value"><a href="mailto:${escapeHtml(profile.user_email)}">${escapeHtml(profile.user_email)}</a></span>
-                </div>` : ''}
+      // Format measurements
+      const measurements = [];
+      if (profile.bust) measurements.push(`Bust: ${profile.bust}`);
+      if (profile.waist) measurements.push(`Waist: ${profile.waist}`);
+      if (profile.hips) measurements.push(`Hips: ${profile.hips}`);
+      const measurementsStr = measurements.length > 0 ? measurements.join(', ') : '';
+
+      body.innerHTML = `
+        <div class="agency-detail-drawer__content-section">
+          ${imageViewerHtml}
+          
+          <div class="agency-detail-drawer__info-header">
+            <div>
+              <h1 class="agency-detail-drawer__info-name">${escapeHtml(fullName)}</h1>
+              <div class="agency-detail-drawer__info-meta">
+                ${profile.city ? `<span>📍 ${escapeHtml(profile.city)}</span>` : ''}
+                ${profile.height_cm ? `<span>📏 ${profile.height_cm} cm</span>` : ''}
+                ${profile.age ? `<span>🎂 ${profile.age} years</span>` : ''}
               </div>
             </div>
-
-            ${profile.bio_curated ? `
-              <div class="agency-detail-modal__bio-section">
-                <h3 class="agency-detail-modal__section-title">Bio</h3>
-                <p class="agency-detail-modal__bio">${escapeHtml(profile.bio_curated)}</p>
-              </div>
-            ` : ''}
-
-            <div class="agency-detail-modal__actions-section">
-              <h3 class="agency-detail-modal__section-title">Quick Actions</h3>
-              <div class="agency-detail-modal__actions-grid">
-                ${application.status !== 'accepted' ? `
-                  <button class="agency-detail-modal__action-btn agency-detail-modal__action-btn--accept" data-action="accept" data-application-id="${application.id}">
-                    Accept Application
-                  </button>
-                ` : ''}
-                ${application.status !== 'declined' ? `
-                  <button class="agency-detail-modal__action-btn agency-detail-modal__action-btn--decline" data-action="decline" data-application-id="${application.id}">
-                    Decline Application
-                  </button>
-                ` : ''}
-                ${application.status !== 'archived' ? `
-                  <button class="agency-detail-modal__action-btn agency-detail-modal__action-btn--archive" data-action="archive" data-application-id="${application.id}">
-                    Archive Application
-                  </button>
-                ` : ''}
-                <button class="agency-detail-modal__action-btn agency-detail-modal__action-btn--notes" data-application-id="${application.id}" onclick="document.querySelector('[data-tab=\\'notes\\']').click()">
-                  View Notes & Tags
-                </button>
-              </div>
+            <div class="agency-detail-drawer__match-score">
+              <div class="agency-detail-drawer__match-score-value">${matchScore}</div>
+              <div class="agency-detail-drawer__match-score-label">Match Score</div>
             </div>
           </div>
-        </div>
 
-        <div class="agency-detail-modal__tab-content" data-tab="timeline">
-          <div class="agency-detail-modal__timeline">
+          <div class="agency-detail-drawer__stats-grid">
+            ${profile.height_cm ? `
+              <div class="agency-detail-drawer__stat-item">
+                <div class="agency-detail-drawer__stat-label">Height</div>
+                <div class="agency-detail-drawer__stat-value">${profile.height_cm} cm</div>
+              </div>
+            ` : ''}
+            ${measurementsStr ? `
+              <div class="agency-detail-drawer__stat-item">
+                <div class="agency-detail-drawer__stat-label">Measurements</div>
+                <div class="agency-detail-drawer__stat-value" style="font-size: 1.25rem;">${escapeHtml(measurementsStr)}</div>
+              </div>
+            ` : ''}
+            ${profile.age ? `
+              <div class="agency-detail-drawer__stat-item">
+                <div class="agency-detail-drawer__stat-label">Age</div>
+                <div class="agency-detail-drawer__stat-value">${profile.age}</div>
+              </div>
+            ` : ''}
+          </div>
+
+          ${tags.length > 0 ? `
+            <div class="agency-detail-drawer__tags">
+              <div class="agency-detail-drawer__tags-title">Tags</div>
+              <div class="agency-detail-drawer__tags-list">
+                ${tags.map(tag => {
+                  const colorStyle = tag.color ? `background-color: ${tag.color}20; color: ${tag.color}; border-color: ${tag.color}40;` : '';
+                  return `<span class="agency-detail-drawer__tag" style="${colorStyle}">${escapeHtml(tag.tag)}</span>`;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${profile.bio_curated ? `
+            <div style="margin-bottom: 3rem;">
+              <div class="agency-detail-drawer__tags-title" style="margin-bottom: 1rem;">Bio</div>
+              <p style="font-size: 0.9375rem; line-height: 1.6; color: var(--agency-text-secondary);">${escapeHtml(profile.bio_curated)}</p>
+            </div>
+          ` : ''}
+
+          ${profile.user_email ? `
+            <div style="margin-bottom: 3rem;">
+              <div class="agency-detail-drawer__tags-title" style="margin-bottom: 1rem;">Contact</div>
+              <a href="mailto:${escapeHtml(profile.user_email)}" style="font-size: 0.9375rem; color: var(--agency-brand-color, var(--agency-accent-gold)); text-decoration: none;">${escapeHtml(profile.user_email)}</a>
+            </div>
+          ` : ''}
+
+          <div class="agency-detail-drawer__timeline">
+            <div class="agency-detail-drawer__timeline-title">Activity Timeline</div>
             ${timelineEvents.length > 0 ? `
-              <div class="agency-detail-modal__timeline-list">
+              <div class="agency-detail-drawer__timeline-list">
                 ${timelineEvents.map(event => `
-                  <div class="agency-detail-modal__timeline-item agency-detail-modal__timeline-item--${event.type}">
-                    <div class="agency-detail-modal__timeline-icon"></div>
-                    <div class="agency-detail-modal__timeline-content">
-                      <div class="agency-detail-modal__timeline-label">${escapeHtml(event.label)}</div>
-                      <div class="agency-detail-modal__timeline-date">${formatDate(event.date)}</div>
+                  <div class="agency-detail-drawer__timeline-item">
+                    <div class="agency-detail-drawer__timeline-dot agency-detail-drawer__timeline-dot--${event.type}"></div>
+                    <div class="agency-detail-drawer__timeline-content">
+                      <div class="agency-detail-drawer__timeline-header">
+                        <span class="agency-detail-drawer__timeline-author">${escapeHtml(event.author || 'System')}</span>
+                        <span class="agency-detail-drawer__timeline-date">${formatDate(event.date)}</span>
+                      </div>
+                      <div class="agency-detail-drawer__timeline-text">${escapeHtml(event.label)}</div>
                     </div>
                   </div>
                 `).join('')}
               </div>
-            ` : '<p class="agency-detail-modal__empty">No timeline events yet.</p>'}
-          </div>
-        </div>
-
-        <div class="agency-detail-modal__tab-content" data-tab="notes">
-          <div class="agency-detail-modal__notes-section">
-            <div class="agency-detail-modal__notes-header">
-              <h3 class="agency-detail-modal__section-title">Tags</h3>
-              <button class="agency-detail-modal__add-btn" onclick="document.getElementById('notes-tags-modal').style.display='flex'; document.getElementById('notes-tags-modal').querySelector('[data-application-id=\\'${application.id}\\']')?.click();">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
+            ` : '<p style="color: var(--agency-text-tertiary); font-size: 0.875rem;">No activity yet.</p>'}
+            
+            <div class="agency-detail-drawer__note-input-wrapper" style="margin-top: 1.5rem;">
+              <textarea 
+                class="agency-detail-drawer__note-input" 
+                id="drawer-note-input"
+                placeholder="Add a note..."
+                rows="3"
+              ></textarea>
+              <button class="agency-detail-drawer__note-send" id="drawer-note-send" data-application-id="${application.id}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
                 </svg>
-                Manage Tags
               </button>
             </div>
-            ${tags.length > 0 ? `
-              <div class="agency-detail-modal__tags-list">
-                ${tags.map(tag => {
-                  const colorStyle = tag.color ? `background-color: ${tag.color}20; color: ${tag.color}; border-color: ${tag.color}40;` : '';
-                  return `<span class="agency-detail-modal__tag" style="${colorStyle}">${escapeHtml(tag.tag)}</span>`;
-                }).join('')}
-              </div>
-            ` : '<p class="agency-detail-modal__empty">No tags yet.</p>'}
-
-            <div class="agency-detail-modal__notes-header" style="margin-top: 2rem;">
-              <h3 class="agency-detail-modal__section-title">Notes</h3>
-              <button class="agency-detail-modal__add-btn" onclick="document.getElementById('notes-tags-modal').style.display='flex'; document.getElementById('notes-tags-modal').querySelector('[data-application-id=\\'${application.id}\\']')?.click();">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                Add Note
-              </button>
-            </div>
-            ${notes.length > 0 ? `
-              <div class="agency-detail-modal__notes-list">
-                ${notes.map(note => `
-                  <div class="agency-detail-modal__note-item">
-                    <div class="agency-detail-modal__note-text">${escapeHtml(note.note)}</div>
-                    <div class="agency-detail-modal__note-date">${formatDate(note.created_at)}</div>
-                  </div>
-                `).join('')}
-              </div>
-            ` : '<p class="agency-detail-modal__empty">No notes yet.</p>'}
           </div>
         </div>
       `;
 
-      // Initialize tabs
-      initDetailModalTabs();
+      // Initialize image viewer
+      initDrawerImageViewer(portfolioImages, digitalImages);
       
       // Initialize action buttons
-      body.querySelectorAll('.agency-detail-modal__action-btn[data-action]').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const action = btn.dataset.action;
-          const applicationId = btn.dataset.applicationId;
-          
-          if (!confirm(`Are you sure you want to ${action} this application?`)) return;
-
+      if (acceptBtn) {
+        acceptBtn.onclick = async () => {
+          if (!confirm('Are you sure you want to accept this application?')) return;
           try {
-            await updateApplicationStatus(applicationId, action);
-            alert(`Application ${action}ed successfully!`);
-            closeModal();
+            await updateApplicationStatus(application.id, 'accept');
+            alert('Application accepted successfully!');
+            closeDrawer();
             window.location.reload();
           } catch (error) {
             console.error('Action failed:', error);
-            alert(`Failed to ${action} application. Please try again.`);
+            alert('Failed to accept application. Please try again.');
           }
-        });
-      });
+        };
+      }
+
+      if (declineBtn) {
+        declineBtn.onclick = async () => {
+          if (!confirm('Are you sure you want to decline this application?')) return;
+          try {
+            await updateApplicationStatus(application.id, 'decline');
+            alert('Application declined successfully!');
+            closeDrawer();
+            window.location.reload();
+          } catch (error) {
+            console.error('Action failed:', error);
+            alert('Failed to decline application. Please try again.');
+          }
+        };
+      }
+
+      if (archiveBtn) {
+        archiveBtn.onclick = async () => {
+          if (!confirm('Are you sure you want to archive this application?')) return;
+          try {
+            await updateApplicationStatus(application.id, 'archive');
+            alert('Application archived successfully!');
+            closeDrawer();
+            window.location.reload();
+          } catch (error) {
+            console.error('Action failed:', error);
+            alert('Failed to archive application. Please try again.');
+          }
+        };
+      }
+
+      // Initialize note input
+      const noteInput = document.getElementById('drawer-note-input');
+      const noteSend = document.getElementById('drawer-note-send');
+      if (noteInput && noteSend) {
+        noteSend.onclick = async () => {
+          const noteText = noteInput.value.trim();
+          if (!noteText) return;
+
+          try {
+            const response = await fetch(`/api/agency/applications/${application.id}/notes`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ note: noteText })
+            });
+
+            if (response.ok) {
+              noteInput.value = '';
+              // Reload drawer to show new note
+              await openApplicationDetail(application.id);
+            } else {
+              alert('Failed to add note. Please try again.');
+            }
+          } catch (error) {
+            console.error('Error adding note:', error);
+            alert('Failed to add note. Please try again.');
+          }
+        };
+      }
     }
 
-    function initDetailModalTabs() {
-      const tabs = body.querySelectorAll('.agency-detail-modal__tab');
-      const tabContents = body.querySelectorAll('.agency-detail-modal__tab-content');
+    function initDrawerImageViewer(portfolioImages, digitalImages) {
+      const modeToggle = document.querySelector('.agency-detail-drawer__image-mode-toggle');
+      const mainImage = document.getElementById('drawer-main-image');
+      const thumbnails = document.querySelectorAll('.agency-detail-drawer__image-thumbnail');
+      let currentMode = 'portfolio';
+      let currentImages = portfolioImages.length > 0 ? portfolioImages : (digitalImages.length > 0 ? digitalImages : []);
 
-      tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-          const targetTab = tab.dataset.tab;
-          
-          // Update active tab
-          tabs.forEach(t => t.classList.remove('agency-detail-modal__tab--active'));
-          tab.classList.add('agency-detail-modal__tab--active');
-          
-          // Update active content
-          tabContents.forEach(content => {
-            if (content.dataset.tab === targetTab) {
-              content.classList.add('agency-detail-modal__tab-content--active');
+      // Mode toggle
+      if (modeToggle && portfolioImages.length > 0 && digitalImages.length > 0) {
+        const portfolioBtn = modeToggle.querySelector('[data-mode="portfolio"]');
+        const digitalsBtn = modeToggle.querySelector('[data-mode="digitals"]');
+
+        portfolioBtn?.addEventListener('click', () => {
+          currentMode = 'portfolio';
+          currentImages = portfolioImages;
+          portfolioBtn.classList.add('agency-detail-drawer__image-mode-btn--active');
+          digitalsBtn?.classList.remove('agency-detail-drawer__image-mode-btn--active');
+          if (mainImage && currentImages[0]) {
+            mainImage.src = normalizeImagePath(currentImages[0].path);
+            mainImage.classList.remove('agency-detail-drawer__main-image--digitals');
+          }
+          updateThumbnails();
+        });
+
+        digitalsBtn?.addEventListener('click', () => {
+          currentMode = 'digitals';
+          currentImages = digitalImages;
+          digitalsBtn.classList.add('agency-detail-drawer__image-mode-btn--active');
+          portfolioBtn?.classList.remove('agency-detail-drawer__image-mode-btn--active');
+          if (mainImage && currentImages[0]) {
+            mainImage.src = normalizeImagePath(currentImages[0].path);
+            mainImage.classList.add('agency-detail-drawer__main-image--digitals');
+          }
+          updateThumbnails();
+        });
+      }
+
+      // Thumbnail click
+      thumbnails.forEach((thumb, idx) => {
+        thumb.addEventListener('click', () => {
+          const imagePath = thumb.dataset.imagePath;
+          if (mainImage && imagePath) {
+            mainImage.src = imagePath;
+            if (currentMode === 'digitals') {
+              mainImage.classList.add('agency-detail-drawer__main-image--digitals');
             } else {
-              content.classList.remove('agency-detail-modal__tab-content--active');
+              mainImage.classList.remove('agency-detail-drawer__main-image--digitals');
             }
-          });
+          }
+          thumbnails.forEach(t => t.classList.remove('agency-detail-drawer__image-thumbnail--active'));
+          thumb.classList.add('agency-detail-drawer__image-thumbnail--active');
         });
       });
+
+      function updateThumbnails() {
+        // Update thumbnail display based on current mode
+        const thumbnailContainer = document.querySelector('.agency-detail-drawer__image-thumbnails');
+        if (thumbnailContainer) {
+          thumbnailContainer.innerHTML = currentImages.slice(0, 6).map((img, idx) => `
+            <img 
+              src="${normalizeImagePath(img.path)}" 
+              alt="${img.label || 'Thumbnail'}"
+              class="agency-detail-drawer__image-thumbnail ${idx === 0 ? 'agency-detail-drawer__image-thumbnail--active' : ''} ${currentMode === 'digitals' ? 'agency-detail-drawer__image-thumbnail--digitals' : ''}"
+              data-image-index="${idx}"
+              data-image-path="${normalizeImagePath(img.path)}"
+            >
+          `).join('');
+          
+          // Re-attach event listeners
+          const newThumbnails = thumbnailContainer.querySelectorAll('.agency-detail-drawer__image-thumbnail');
+          newThumbnails.forEach((thumb, idx) => {
+            thumb.addEventListener('click', () => {
+              const imagePath = thumb.dataset.imagePath;
+              if (mainImage && imagePath) {
+                mainImage.src = imagePath;
+                if (currentMode === 'digitals') {
+                  mainImage.classList.add('agency-detail-drawer__main-image--digitals');
+                } else {
+                  mainImage.classList.remove('agency-detail-drawer__main-image--digitals');
+                }
+              }
+              newThumbnails.forEach(t => t.classList.remove('agency-detail-drawer__image-thumbnail--active'));
+              thumb.classList.add('agency-detail-drawer__image-thumbnail--active');
+            });
+          });
+        }
+      }
     }
 
     function normalizeImagePath(path) {
@@ -2085,6 +2517,210 @@
 
       observer.observe(analyticsSection);
     }
+  }
+
+  /**
+   * Overview Dashboard
+   */
+  function initOverviewDashboard() {
+    const overviewSection = document.getElementById('overview-dashboard');
+    if (!overviewSection) return;
+
+    const activityChart = document.getElementById('overview-activity-chart');
+    const thisMonthEl = document.getElementById('overview-this-month');
+    const avgScoreEl = document.getElementById('overview-avg-score');
+
+    // Load overview data
+    const loadOverviewData = async () => {
+      try {
+        // Fetch analytics data
+        const response = await fetch('/dashboard/agency/analytics');
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (!data.success || !data.analytics) return;
+
+        const analytics = data.analytics;
+
+        // Update "This Month" value
+        if (thisMonthEl) {
+          thisMonthEl.textContent = analytics.overTime.thisMonth || 0;
+        }
+
+        // Update average match score
+        if (avgScoreEl && analytics.matchScores.average !== undefined) {
+          avgScoreEl.textContent = analytics.matchScores.average || 0;
+        }
+
+        // Render activity chart
+        if (activityChart && analytics.timeline) {
+          renderActivityChart(activityChart, analytics.timeline);
+        }
+
+        // Render pipeline breakdown
+        const pipelineContainer = document.getElementById('overview-pipeline-breakdown');
+        if (pipelineContainer && analytics.byStatus) {
+          renderPipelineBreakdown(pipelineContainer, analytics.byStatus);
+        }
+      } catch (error) {
+        console.error('Error loading overview data:', error);
+      }
+    };
+
+    // Load immediately if section is visible
+    if (overviewSection.offsetParent !== null) {
+      loadOverviewData();
+    } else {
+      // Use Intersection Observer to load when section comes into view
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            loadOverviewData();
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { rootMargin: '100px' });
+
+      observer.observe(overviewSection);
+    }
+  }
+
+  function renderActivityChart(container, timelineData) {
+    if (!timelineData || timelineData.length === 0) {
+      container.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--agency-text-tertiary);">No activity data available</div>';
+      return;
+    }
+
+    const maxCount = Math.max(...timelineData.map(d => d.count), 1);
+    const chartHeight = 200;
+    const chartWidth = container.offsetWidth || 600;
+    const padding = { top: 20, right: 20, bottom: 30, left: 40 };
+    const graphWidth = chartWidth - padding.left - padding.right;
+    const graphHeight = chartHeight - padding.top - padding.bottom;
+
+    // Create SVG
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', chartWidth);
+    svg.setAttribute('height', chartHeight);
+    svg.setAttribute('class', 'agency-overview__activity-chart');
+    svg.style.overflow = 'visible';
+
+    // Create area path
+    const points = timelineData.map((d, i) => {
+      const x = padding.left + (i / (timelineData.length - 1 || 1)) * graphWidth;
+      const y = padding.top + graphHeight - (d.count / maxCount) * graphHeight;
+      return { x, y, count: d.count };
+    });
+
+    // Area path
+    let areaPath = `M ${points[0].x} ${padding.top + graphHeight}`;
+    points.forEach(p => {
+      areaPath += ` L ${p.x} ${p.y}`;
+    });
+    areaPath += ` L ${points[points.length - 1].x} ${padding.top + graphHeight} Z`;
+
+    // Line path
+    let linePath = `M ${points[0].x} ${points[0].y}`;
+    points.slice(1).forEach(p => {
+      linePath += ` L ${p.x} ${p.y}`;
+    });
+
+    // Create gradient
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+    gradient.setAttribute('id', 'areaGradient');
+    gradient.setAttribute('x1', '0%');
+    gradient.setAttribute('y1', '0%');
+    gradient.setAttribute('x2', '0%');
+    gradient.setAttribute('y2', '100%');
+    const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop1.setAttribute('offset', '0%');
+    stop1.setAttribute('stop-color', 'var(--agency-brand-color, var(--agency-accent-gold))');
+    stop1.setAttribute('stop-opacity', '0.4');
+    const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop2.setAttribute('offset', '100%');
+    stop2.setAttribute('stop-color', 'var(--agency-brand-color, var(--agency-accent-gold))');
+    stop2.setAttribute('stop-opacity', '0');
+    gradient.appendChild(stop1);
+    gradient.appendChild(stop2);
+    defs.appendChild(gradient);
+    svg.appendChild(defs);
+
+    // Create area
+    const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    area.setAttribute('d', areaPath);
+    area.setAttribute('fill', 'url(#areaGradient)');
+    area.setAttribute('opacity', '0.3');
+    svg.appendChild(area);
+
+    // Create line
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    line.setAttribute('d', linePath);
+    line.setAttribute('fill', 'none');
+    line.setAttribute('stroke', 'var(--agency-brand-color, var(--agency-accent-gold))');
+    line.setAttribute('stroke-width', '2');
+    line.setAttribute('stroke-linecap', 'round');
+    line.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(line);
+
+    // Create dots
+    points.forEach((p, i) => {
+      if (i % 5 === 0 || i === points.length - 1) {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', p.x);
+        circle.setAttribute('cy', p.y);
+        circle.setAttribute('r', '4');
+        circle.setAttribute('fill', 'var(--agency-brand-color, var(--agency-accent-gold))');
+        circle.setAttribute('stroke', 'white');
+        circle.setAttribute('stroke-width', '2');
+        svg.appendChild(circle);
+      }
+    });
+
+    // X-axis labels
+    const xAxisGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    points.forEach((p, i) => {
+      if (i % 5 === 0 || i === points.length - 1) {
+        const date = new Date(timelineData[i].date);
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', p.x);
+        label.setAttribute('y', chartHeight - 5);
+        label.setAttribute('text-anchor', 'middle');
+        label.setAttribute('font-size', '10');
+        label.setAttribute('fill', 'var(--agency-text-tertiary)');
+        label.textContent = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        xAxisGroup.appendChild(label);
+      }
+    });
+    svg.appendChild(xAxisGroup);
+
+    container.innerHTML = '';
+    container.appendChild(svg);
+  }
+
+  function renderPipelineBreakdown(container, statusData) {
+    const total = statusData.total || 1;
+    const items = [
+      { label: 'Pending', value: statusData.pending || 0, class: 'pending' },
+      { label: 'Accepted', value: statusData.accepted || 0, class: 'accepted' },
+      { label: 'Declined', value: statusData.declined || 0, class: 'declined' },
+      { label: 'Archived', value: statusData.archived || 0, class: 'archived' }
+    ];
+
+    container.innerHTML = items.map(item => `
+      <div class="agency-overview__pipeline-item">
+        <div class="agency-overview__pipeline-info">
+          <span class="agency-overview__pipeline-label">${item.label}</span>
+          <span class="agency-overview__pipeline-value">${item.value}</span>
+        </div>
+        <div class="agency-overview__pipeline-bar">
+          <div 
+            class="agency-overview__pipeline-fill agency-overview__pipeline-fill--${item.class}"
+            style="width: ${(item.value / total) * 100}%"
+          ></div>
+        </div>
+      </div>
+    `).join('');
   }
 
 })();

@@ -25,7 +25,7 @@
 <body class="dashboard-body <%= typeof user !== 'undefined' && user && user.role === 'AGENCY' ? 'dashboard-body--agency' : 'dashboard-body--talent' %>">
 
     <!-- Dashboard Header -->
-    <header class="dash-header">
+    <header class="dash-header" <% if (typeof user !== 'undefined' && user && user.role === 'AGENCY') { %>style="display: none;"<% } %>>
         <div class="dash-header__inner">
             <!-- Logo Section -->
             <div class="dash-header__logo-wrapper">
