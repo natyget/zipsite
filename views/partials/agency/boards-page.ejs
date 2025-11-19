@@ -1,13 +1,32 @@
 <!-- Boards Page Content -->
 <section class="agency-boards-page">
-  <div class="agency-boards-page__grid" id="boards-grid">
+  <div class="agency-dashboard__scout-grid" id="boards-grid">
     <% if (safeBoards.length === 0) { %>
-      <div class="agency-boards-page__empty">
-        <p>No boards yet. Create your first board to organize talent into collections.</p>
+      <div class="agency-dashboard__empty-state">
+        <div class="agency-dashboard__empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <h3>No boards yet</h3>
+        <p>Create your first board to organize talent into collections.</p>
+        <button class="agency-dashboard__empty-action" id="create-board-btn-empty">Create Board</button>
       </div>
     <% } else { %>
       <% safeBoards.forEach((board) => { %>
-        <div class="agency-boards-page__card" data-board-id="<%= board.id %>">
+        <div class="agency-dashboard__scout-card agency-boards-page__card" data-board-id="<%= board.id %>">
+          <!-- Quick Actions Menu Trigger -->
+          <button class="agency-boards-page__menu-btn" data-board-id="<%= board.id %>" aria-label="Board options">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="1"/>
+              <circle cx="12" cy="5" r="1"/>
+              <circle cx="12" cy="19" r="1"/>
+            </svg>
+          </button>
+
           <div class="agency-boards-page__card-images">
             <% 
               // Get applications for this board
@@ -15,26 +34,60 @@
               const imageCount = Math.min(boardApplications.length, 4);
             %>
             <% if (imageCount > 0) { %>
-              <% for (let i = 0; i < imageCount; i++) { %>
-                <div class="agency-boards-page__card-image">
-                  <% if (boardApplications[i] && boardApplications[i].profile_image) { %>
-                    <img src="<%= boardApplications[i].profile_image %>" alt="Model">
-                  <% } else { %>
-                    <div class="agency-boards-page__card-image-placeholder"></div>
-                  <% } %>
-                </div>
-              <% } %>
+              <div class="agency-boards-page__image-grid agency-boards-page__image-grid--<%= imageCount %>">
+                <% for (let i = 0; i < imageCount; i++) { %>
+                  <div class="agency-boards-page__grid-image">
+                    <% if (boardApplications[i] && boardApplications[i].profile_image) { %>
+                      <img src="<%= boardApplications[i].profile_image %>" alt="Model">
+                    <% } else { %>
+                      <div class="agency-boards-page__image-placeholder"></div>
+                    <% } %>
+                  </div>
+                <% } %>
+              </div>
             <% } else { %>
-              <div class="agency-boards-page__card-image-placeholder"></div>
+              <div class="agency-boards-page__card-placeholder">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="opacity: 0.2;">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
             <% } %>
+            
+            <!-- Quick View/Open Button -->
+            <button class="agency-dashboard__scout-preview-btn" data-board-id="<%= board.id %>">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+              </svg>
+              Open Board
+            </button>
           </div>
-          <div class="agency-boards-page__card-info">
-            <div class="agency-boards-page__card-type">
-              <%= board.type || 'Runway' %>
+
+          <div class="agency-dashboard__scout-info">
+            <div class="agency-dashboard__scout-header">
+              <h3 class="agency-dashboard__scout-name">
+                <%= board.name %>
+              </h3>
+              <span class="agency-dashboard__scout-badge" style="background: #f3f4f6; color: #4b5563;">
+                <%= board.type || 'Runway' %>
+              </span>
             </div>
-            <h3 class="agency-boards-page__card-name"><%= board.name %></h3>
-            <div class="agency-boards-page__card-count">
-              <%= board.application_count || 0 %> Models
+            
+            <p class="agency-dashboard__scout-details">
+              <%= board.description ? (board.description.length > 60 ? board.description.substring(0, 60) + '...' : board.description) : 'No description' %>
+            </p>
+
+            <div class="agency-dashboard__scout-stats" style="margin-top: auto; border-bottom: none; padding-bottom: 0; margin-bottom: 0.5rem;">
+              <div class="agency-dashboard__scout-stat">
+                <span class="agency-dashboard__scout-stat-label">Models</span>
+                <span class="agency-dashboard__scout-stat-value"><%= board.application_count || 0 %></span>
+              </div>
+              <div class="agency-dashboard__scout-stat">
+                <span class="agency-dashboard__scout-stat-label">Created</span>
+                <span class="agency-dashboard__scout-stat-value"><%= new Date(board.created_at).toLocaleDateString() %></span>
+              </div>
             </div>
           </div>
         </div>
@@ -42,4 +95,3 @@
     <% } %>
   </div>
 </section>
-

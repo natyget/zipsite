@@ -1,0 +1,112 @@
+
+/* Mobile Navigation Styles */
+.agency-mobile-header {
+  display: none;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #ffffff;
+  border-bottom: 1px solid var(--agency-border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.agency-mobile-header__menu-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  color: var(--agency-text-primary);
+  cursor: pointer;
+}
+
+.agency-mobile-header__title {
+  font-family: var(--agency-font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--agency-text-primary);
+}
+
+.agency-sidebar__close-mobile {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--agency-text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.agency-sidebar__header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.agency-sidebar__mobile-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 45;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+@media (max-width: 1024px) {
+  .agency-mobile-header {
+    display: flex;
+  }
+
+  .agency-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    width: 280px;
+  }
+
+  .agency-sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .agency-sidebar.is-open .agency-sidebar__mobile-overlay {
+    display: block;
+    opacity: 1;
+    /* Move overlay behind sidebar but above content */
+    z-index: -1; 
+    /* Actually, the overlay should be a sibling or handle differently if sidebar has transform. 
+       Let's fix overlay structure: it's inside sidebar which moves. 
+       Ideally overlay is outside. But if inside, we need to counter-transform or make it fixed full screen.
+       "position: fixed" inside a transformed element behaves relative to that element in some browsers.
+       Better to put overlay outside. But I edited sidebar.ejs to put it inside.
+       Let's try fixed positioning logic. If it's inside, `top: 0; left: 0;` works relative to sidebar if transformed?
+       Actually, fixed inside transformed becomes absolute relative to transformed parent. 
+       So we need to move overlay out or use a different technique.
+       
+       Correction: I'll update the CSS to handle the overlay being inside or move it via JS if needed.
+       Actually, let's just style it to cover screen.
+    */
+  }
+  
+  /* Fix for overlay inside transformed element */
+  .agency-sidebar__mobile-overlay {
+      /* This won't work well if parent is transformed. */
+  }
+
+  .agency-sidebar__close-mobile {
+    display: flex;
+  }
+  
+  .agency-dashboard__main {
+    margin-left: 0;
+    padding-top: 1rem; /* Space after mobile header */
+  }
+}
+

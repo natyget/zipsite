@@ -13,29 +13,56 @@
                   <%= (profile.first_name || 'T').charAt(0).toUpperCase() %><%= (profile.last_name || 'T').charAt(0).toUpperCase() %>
                 </div>
               <% } %>
+              <button class="agency-dashboard__scout-preview-btn" data-profile-id="<%= profile.id %>">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                Quick View
+              </button>
             </div>
             <div class="agency-dashboard__scout-info">
-              <h3 class="agency-dashboard__scout-name">
-                <a href="/portfolio/<%= profile.slug %>" target="_blank">
-                  <%= profile.first_name %> <%= profile.last_name %>
-                </a>
-              </h3>
-              <p class="agency-dashboard__scout-details">
+              <div class="agency-dashboard__scout-header">
+                <h3 class="agency-dashboard__scout-name">
+                  <a href="/portfolio/<%= profile.slug %>" target="_blank">
+                    <%= profile.first_name %> <%= profile.last_name %>
+                  </a>
+                </h3>
+                <% if (profile.is_new) { %>
+                  <span class="agency-dashboard__scout-badge">New</span>
+                <% } %>
+              </div>
+              <p class="agency-dashboard__scout-location">
                 <% 
                   const location = profile.city && profile.country 
-                    ? `${profile.city.toUpperCase()}, ${profile.country.toUpperCase()}`
+                    ? `${profile.city}, ${profile.country}`
                     : profile.city 
-                      ? `${profile.city.toUpperCase()}, ${profile.country || ''}`
-                      : 'LOCATION NOT SPECIFIED';
-                  
+                      ? `${profile.city}, ${profile.country || ''}`
+                      : 'Location not specified';
+                %>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                <%= location %>
+              </p>
+              <div class="agency-dashboard__scout-stats">
+                <% 
                   const heightFeet = profile.height_cm ? Math.floor(profile.height_cm / 30.48) : null;
                   const heightInches = profile.height_cm ? Math.round((profile.height_cm % 30.48) / 2.54) : null;
-                  const heightDisplay = heightFeet && heightInches ? `${heightFeet}'${heightInches}"` : profile.height_cm ? `${profile.height_cm} cm` : '';
+                  const heightDisplay = heightFeet && heightInches ? `${heightFeet}'${heightInches}"` : profile.height_cm ? `${profile.height_cm} cm` : '--';
                   
-                  const ageDisplay = profile.age ? `${profile.age} Years` : '';
+                  const ageDisplay = profile.age ? `${profile.age} yr` : '--';
                 %>
-                <%= location %> • <%= heightDisplay %> • <%= ageDisplay %>
-              </p>
+                <div class="agency-dashboard__scout-stat">
+                  <span class="agency-dashboard__scout-stat-label">Height</span>
+                  <span class="agency-dashboard__scout-stat-value"><%= heightDisplay %></span>
+                </div>
+                <div class="agency-dashboard__scout-stat">
+                  <span class="agency-dashboard__scout-stat-label">Age</span>
+                  <span class="agency-dashboard__scout-stat-value"><%= ageDisplay %></span>
+                </div>
+              </div>
               <button 
                 class="agency-dashboard__scout-invite-btn" 
                 data-profile-id="<%= profile.id %>"
@@ -48,7 +75,15 @@
         <% }); %>
         <% if (safeProfiles.length === 0) { %>
           <div class="agency-dashboard__empty-state">
-            <p>No discoverable talent found. Try adjusting your filters.</p>
+            <div class="agency-dashboard__empty-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+              </svg>
+            </div>
+            <h3>No talent found</h3>
+            <p>Try adjusting your filters to see more results.</p>
+            <button class="agency-dashboard__empty-action" id="scout-reset-filters-btn">Clear Filters</button>
           </div>
         <% } %>
       </div>

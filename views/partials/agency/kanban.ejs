@@ -5,9 +5,12 @@
         <!-- New Applications Column -->
         <div class="agency-dashboard__kanban-column" data-status="pending">
           <div class="agency-dashboard__kanban-header">
-            <h3 class="agency-dashboard__kanban-title">New Applications</h3>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background-color: #3b82f6;"></div>
+              <h3 class="agency-dashboard__kanban-title">New Applications</h3>
+            </div>
             <span class="agency-dashboard__kanban-count"><%= profilesByStatus.pending.length %></span>
-      </div>
+          </div>
           <div class="agency-dashboard__kanban-cards" data-column="pending">
             <% profilesByStatus.pending.forEach((profile, index) => { 
               const appStatus = profile.application_status || 'pending';
@@ -28,15 +31,18 @@
             <% if (profilesByStatus.pending.length === 0) { %>
               <div class="agency-dashboard__empty-column">
                 <p>No new applications</p>
-                    </div>
-                    <% } %>
+              </div>
+            <% } %>
           </div>
         </div>
 
         <!-- Under Review Column -->
         <div class="agency-dashboard__kanban-column" data-status="under-review">
           <div class="agency-dashboard__kanban-header">
-            <h3 class="agency-dashboard__kanban-title">Under Review</h3>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background-color: #f59e0b;"></div>
+              <h3 class="agency-dashboard__kanban-title">Under Review</h3>
+            </div>
             <span class="agency-dashboard__kanban-count"><%= profilesByStatus['under-review'].length %></span>
           </div>
           <div class="agency-dashboard__kanban-cards" data-column="under-review">
@@ -60,14 +66,17 @@
               <div class="agency-dashboard__empty-column">
                 <p>No applications under review</p>
               </div>
-                                      <% } %>
-                      </div>
-              </div>
+            <% } %>
+          </div>
+        </div>
 
         <!-- Accepted Column -->
         <div class="agency-dashboard__kanban-column" data-status="accepted">
           <div class="agency-dashboard__kanban-header">
-            <h3 class="agency-dashboard__kanban-title">Accepted</h3>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981;"></div>
+              <h3 class="agency-dashboard__kanban-title">Accepted</h3>
+            </div>
             <span class="agency-dashboard__kanban-count"><%= profilesByStatus.accepted.length %></span>
           </div>
           <div class="agency-dashboard__kanban-cards" data-column="accepted">
@@ -98,7 +107,10 @@
         <!-- Archived Column -->
         <div class="agency-dashboard__kanban-column" data-status="archived">
           <div class="agency-dashboard__kanban-header">
-            <h3 class="agency-dashboard__kanban-title">Archived</h3>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background-color: #6b7280;"></div>
+              <h3 class="agency-dashboard__kanban-title">Archived</h3>
+            </div>
             <span class="agency-dashboard__kanban-count"><%= profilesByStatus.archived.length %></span>
           </div>
           <div class="agency-dashboard__kanban-cards" data-column="archived">
