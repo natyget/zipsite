@@ -75,44 +75,44 @@
 </style>
 <div class="agency-dashboard" id="agency-dashboard">
 
-  <%- include('../../partials/agency/sidebar') %>
+  <%- include('partials/agency/sidebar') %>
 
   <!-- Main Content Area -->
   <main class="agency-dashboard__main">
 
-    <%- include('../../partials/agency/hero') %>
+    <%- include('partials/agency/hero') %>
 
-    <%- include('../../partials/agency/info-panel') %>
+    <%- include('partials/agency/info-panel') %>
 
-    <%- include('../../partials/agency/profile') %>
+    <%- include('partials/agency/profile') %>
 
-    <%- include('../../partials/agency/boards') %>
+    <%- include('partials/agency/boards') %>
 
     <% if (typeof view === 'undefined' || view === '') { %>
-      <%- include('../../partials/agency/overview') %>
+      <%- include('partials/agency/overview') %>
     <% } else { %>
-      <%- include('../../partials/agency/header') %>
+      <%- include('partials/agency/header') %>
       
-      <%- include('../../partials/agency/analytics') %>
+      <%- include('partials/agency/analytics') %>
       
-      <%- include('../../partials/agency/filters') %>
+      <%- include('partials/agency/filters') %>
       
       <% if (view === 'scout') { %>
         <div class="agency-dashboard__scout-container">
-          <%- include('../../partials/agency/scout-filters') %>
-          <%- include('../../partials/agency/scout') %>
+          <%- include('partials/agency/scout-filters') %>
+          <%- include('partials/agency/scout') %>
         </div>
       <% } else { %>
-        <%- include('../../partials/agency/kanban') %>
-        <%- include('../../partials/agency/gallery') %>
-        <%- include('../../partials/agency/list') %>
-        <%- include('../../partials/agency/table') %>
+        <%- include('partials/agency/kanban') %>
+        <%- include('partials/agency/gallery') %>
+        <%- include('partials/agency/list') %>
+        <%- include('partials/agency/table') %>
       <% } %>
     <% } %>
 
   </main>
 
-  <%- include('../../partials/agency/command-palette') %>
+  <%- include('partials/agency/command-palette') %>
 
 </div>
 
