@@ -1,0 +1,71 @@
+<!-- Application Detail Drawer -->
+<div class="agency-detail-drawer" id="application-detail-drawer" style="display: none;">
+  <div class="agency-detail-drawer__overlay"></div>
+  <div class="agency-detail-drawer__content">
+    <!-- Header -->
+    <div class="agency-detail-drawer__header">
+      <div class="agency-detail-drawer__header-main">
+        <h2 class="agency-detail-drawer__title" id="detail-drawer-name">Loading...</h2>
+        <p class="agency-detail-drawer__subtitle" id="detail-drawer-subtitle"></p>
+      </div>
+      <div class="agency-detail-drawer__header-actions">
+        <div class="agency-detail-drawer__header-buttons">
+          <button 
+            class="agency-detail-drawer__action-btn agency-detail-drawer__action-btn--accept" 
+            id="detail-drawer-accept"
+            style="display: none;"
+          >
+            Accept
+          </button>
+          <button 
+            class="agency-detail-drawer__action-btn agency-detail-drawer__action-btn--decline" 
+            id="detail-drawer-decline"
+            style="display: none;"
+          >
+            Decline
+          </button>
+          <button 
+            class="agency-detail-drawer__action-btn agency-detail-drawer__action-btn--archive" 
+            id="detail-drawer-archive"
+            style="display: none;"
+          >
+            Archive
+          </button>
+          <button 
+            class="agency-detail-drawer__action-btn agency-detail-drawer__action-btn--board" 
+            id="detail-drawer-board"
+            style="display: none;"
+          >
+            Assign to Board
+          </button>
+          <a 
+            href="#" 
+            class="agency-detail-drawer__portfolio-link" 
+            id="detail-drawer-portfolio-link"
+            target="_blank"
+            style="display: none;"
+          >
+            View Portfolio
+          </a>
+        </div>
+        <button class="agency-detail-drawer__close" id="detail-drawer-close" aria-label="Close drawer">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="agency-detail-drawer__body" id="detail-drawer-body">
+      <!-- Content will be dynamically inserted here -->
+    </div>
+
+    <!-- Footer -->
+    <div class="agency-detail-drawer__footer">
+      <div class="agency-detail-drawer__footer-info" id="detail-drawer-footer-info"></div>
+    </div>
+  </div>
+</div>
+

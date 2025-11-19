@@ -2,7 +2,10 @@
     <div class="agency-dashboard__view agency-dashboard__view--gallery" id="view-gallery" style="display: none;">
       <div class="agency-dashboard__gallery-grid">
         <% safeProfiles.forEach((profile, index) => { %>
-          <div class="agency-dashboard__gallery-card" data-profile-id="<%= profile.id %>">
+          <div class="agency-dashboard__gallery-card" data-profile-id="<%= profile.id %>" data-application-id="<%= profile.application_id || '' %>">
+            <div class="agency-dashboard__gallery-checkbox" style="position: absolute; top: 0.5rem; left: 0.5rem; z-index: 10;">
+              <input type="checkbox" class="agency-dashboard__select-checkbox" data-profile-id="<%= profile.id %>" id="gallery-select-<%= profile.id %>">
+            </div>
             <div class="agency-dashboard__gallery-image">
               <% if (profile.hero_image_path || (profile.images && profile.images.length > 0)) { %>
                 <img 
@@ -16,7 +19,7 @@
               <% } %>
               <div class="agency-dashboard__gallery-overlay">
                 <div class="agency-dashboard__gallery-actions">
-                  <button class="agency-dashboard__gallery-preview" data-profile-id="<%= profile.id %>">Preview</button>
+                  <button class="agency-dashboard__gallery-preview" data-profile-id="<%= profile.id %>" data-application-id="<%= profile.application_id || '' %>">Preview</button>
                 </div>
               </div>
             </div>

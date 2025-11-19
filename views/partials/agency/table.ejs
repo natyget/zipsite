@@ -17,7 +17,7 @@
               </thead>
               <tbody>
             <% safeProfiles.forEach((profile) => { %>
-              <tr class="agency-dashboard__table-row" data-profile-id="<%= profile.id %>">
+              <tr class="agency-dashboard__table-row" data-profile-id="<%= profile.id %>" data-application-id="<%= profile.application_id || '' %>">
                 <td>
                   <input type="checkbox" class="agency-dashboard__select-checkbox" data-profile-id="<%= profile.id %>">
                     </td>

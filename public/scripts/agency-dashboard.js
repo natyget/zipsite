@@ -464,7 +464,12 @@
    */
   function initPreviewModal() {
     const drawer = document.getElementById('application-detail-drawer');
-    const overlay = drawer?.querySelector('.agency-detail-drawer__overlay');
+    if (!drawer) {
+      console.warn('Application detail drawer not found in DOM');
+      return;
+    }
+
+    const overlay = drawer.querySelector('.agency-detail-drawer__overlay');
     const closeBtn = document.getElementById('detail-drawer-close');
     const previewButtons = document.querySelectorAll('.agency-dashboard__card-preview, .agency-dashboard__gallery-preview, .agency-dashboard__list-preview, .agency-dashboard__table-preview');
     const body = document.getElementById('detail-drawer-body');
@@ -476,6 +481,11 @@
     const boardBtn = document.getElementById('detail-drawer-board');
     const archiveBtn = document.getElementById('detail-drawer-archive');
     const footerInfo = document.getElementById('detail-drawer-footer-info');
+
+    if (!body || !nameEl || !subtitleEl) {
+      console.warn('Required drawer elements not found');
+      return;
+    }
 
     let currentApplicationId = null;
     let currentProfileSlug = null;
@@ -504,46 +514,48 @@
       document.body.style.overflow = 'hidden';
 
       // Show loading state
-      body.innerHTML = `
-        <div class="agency-detail-drawer__loading">
-          <div class="agency-detail-drawer__spinner"></div>
-          <p>Loading application details...</p>
-        </div>
-      `;
+      if (body) {
+        body.innerHTML = `
+          <div class="agency-detail-drawer__loading">
+            <div class="agency-detail-drawer__spinner"></div>
+            <p>Loading application details...</p>
+          </div>
+        `;
+      }
 
-        // Load application details
-        try {
-          const response = await fetch(`/api/agency/applications/${applicationId}/details`);
-          if (response.ok) {
-            const data = await response.json();
-            renderApplicationDetails(data);
-            currentProfileSlug = data.profile.slug;
-            if (portfolioLink) {
-              portfolioLink.href = `/portfolio/${data.profile.slug}`;
-            }
-          } else {
-          const error = await response.json();
+      // Load application details
+      try {
+        const response = await fetch(`/api/agency/applications/${applicationId}/details`);
+        if (response.ok) {
+          const data = await response.json();
+          renderApplicationDetails(data);
+          currentProfileSlug = data.profile.slug;
+          if (portfolioLink) {
+            portfolioLink.href = `/portfolio/${data.profile.slug}`;
+          }
+        } else {
+          const error = await response.json().catch(() => ({}));
+          if (body) {
+            body.innerHTML = `
+              <div class="agency-detail-drawer__error">
+                <p>Failed to load application details: ${error.error || 'Unknown error'}</p>
+                <button class="agency-detail-drawer__action-btn" onclick="document.getElementById('application-detail-drawer').style.display='none'">Close</button>
+              </div>
+            `;
+          }
+        }
+      } catch (error) {
+        console.error('Load application details error:', error);
+        if (body) {
           body.innerHTML = `
             <div class="agency-detail-drawer__error">
-              <p>Failed to load application details: ${error.error || 'Unknown error'}</p>
+              <p>Failed to load application details. Please try again.</p>
               <button class="agency-detail-drawer__action-btn" onclick="document.getElementById('application-detail-drawer').style.display='none'">Close</button>
             </div>
           `;
         }
-      } catch (error) {
-        console.error('Load application details error:', error);
-        body.innerHTML = `
-          <div class="agency-detail-drawer__error">
-            <p>Failed to load application details. Please try again.</p>
-            <button class="agency-detail-drawer__action-btn" onclick="document.getElementById('application-detail-drawer').style.display='none'">Close</button>
-          </div>
-        `;
       }
-    } catch (error) {
-      console.error('Error loading application details:', error);
-      body.innerHTML = '<div class="agency-detail-drawer__error"><p>Error loading details</p></div>';
     }
-  }
 
     // Expose function globally for command palette
     window.openApplicationDetail = openApplicationDetail;
@@ -731,17 +743,35 @@
             ` : ''}
           </div>
 
-          ${tags.length > 0 ? `
-            <div class="agency-detail-drawer__tags">
-              <div class="agency-detail-drawer__tags-title">Tags</div>
-              <div class="agency-detail-drawer__tags-list">
-                ${tags.map(tag => {
-                  const colorStyle = tag.color ? `background-color: ${tag.color}20; color: ${tag.color}; border-color: ${tag.color}40;` : '';
-                  return `<span class="agency-detail-drawer__tag" style="${colorStyle}">${escapeHtml(tag.tag)}</span>`;
-                }).join('')}
-              </div>
+          <div class="agency-detail-drawer__tags">
+            <div class="agency-detail-drawer__tags-title">Tags</div>
+            <div class="agency-detail-drawer__tags-list" id="drawer-tags-list">
+              ${tags.length > 0 ? tags.map(tag => {
+                const colorStyle = tag.color ? `background-color: ${tag.color}20; color: ${tag.color}; border-color: ${tag.color}40;` : '';
+                return `<span class="agency-detail-drawer__tag" style="${colorStyle}" data-tag-id="${tag.id}">
+                  ${escapeHtml(tag.tag)}
+                  <button class="agency-detail-drawer__tag-remove" data-tag-id="${tag.id}" aria-label="Remove tag" style="margin-left: 0.5rem; background: none; border: none; color: inherit; cursor: pointer; font-size: 0.875rem;">×</button>
+                </span>`;
+              }).join('') : '<span style="color: var(--agency-text-tertiary); font-size: 0.875rem;">No tags yet</span>'}
             </div>
-          ` : ''}
+            <div class="agency-detail-drawer__tag-input-wrapper" style="margin-top: 0.75rem; display: flex; gap: 0.5rem;">
+              <input 
+                type="text" 
+                class="agency-detail-drawer__tag-input" 
+                id="drawer-tag-input"
+                placeholder="Add a tag..."
+                style="flex: 1; padding: 0.5rem; border: 1px solid var(--agency-border); border-radius: 4px; font-size: 0.875rem;"
+              >
+              <button 
+                class="agency-detail-drawer__tag-add" 
+                id="drawer-tag-add"
+                data-application-id="${application.id}"
+                style="padding: 0.5rem 1rem; background: var(--agency-text-primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem;"
+              >
+                Add
+              </button>
+            </div>
+          </div>
 
           ${profile.bio_curated ? `
             <div style="margin-bottom: 3rem;">
@@ -839,6 +869,56 @@
           } catch (error) {
             console.error('Action failed:', error);
             alert('Failed to archive application. Please try again.');
+          }
+        };
+      }
+
+      // Initialize board assignment button
+      if (boardBtn) {
+        boardBtn.onclick = async () => {
+          // Get available boards
+          try {
+            const boardsResponse = await fetch('/api/agency/boards');
+            if (!boardsResponse.ok) throw new Error('Failed to load boards');
+            const boards = await boardsResponse.json();
+
+            if (boards.length === 0) {
+              alert('No boards available. Please create a board first.');
+              return;
+            }
+
+            // Show board selection
+            const boardNames = boards.map(b => b.name);
+            const selectedBoard = prompt(`Assign to board:\n\n${boardNames.map((name, idx) => `${idx + 1}. ${name}`).join('\n')}\n\nEnter board number:`, '1');
+            
+            if (!selectedBoard) return;
+            
+            const boardIndex = parseInt(selectedBoard) - 1;
+            if (boardIndex < 0 || boardIndex >= boards.length) {
+              alert('Invalid board selection');
+              return;
+            }
+
+            const selectedBoardId = boards[boardIndex].id;
+
+            // Assign to board
+            const assignResponse = await fetch(`/api/agency/applications/${application.id}/assign-board`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ board_id: selectedBoardId })
+            });
+
+            if (assignResponse.ok) {
+              alert(`Application assigned to ${boards[boardIndex].name} successfully!`);
+              // Reload drawer to show updated data
+              await openApplicationDetail(application.id);
+            } else {
+              const error = await assignResponse.json().catch(() => ({}));
+              alert(`Failed to assign to board: ${error.error || 'Unknown error'}`);
+            }
+          } catch (error) {
+            console.error('Error assigning to board:', error);
+            alert('Failed to assign to board. Please try again.');
           }
         };
       }
@@ -998,6 +1078,11 @@
     const batchActions = document.getElementById('batch-actions');
     const batchCancel = document.getElementById('batch-cancel');
 
+    if (checkboxes.length === 0) {
+      // No checkboxes on this page
+      return;
+    }
+
     checkboxes.forEach(checkbox => {
       checkbox.addEventListener('change', updateBatchMode);
     });
@@ -1020,14 +1105,15 @@
         cb.checked = false;
         state.selectedProfiles.delete(cb.dataset.profileId);
       });
+      if (selectAll) selectAll.checked = false;
       updateBatchMode();
     });
 
     // Batch action buttons
     ['accept', 'decline', 'archive'].forEach(action => {
       const btn = document.getElementById(`batch-${action}`);
-      btn?.addEventListener('click', () => {
-        performBatchAction(action);
+      btn?.addEventListener('click', async () => {
+        await performBatchAction(action);
       });
     });
   }
@@ -1053,34 +1139,70 @@
   }
 
   async function performBatchAction(action) {
-    if (state.selectedProfiles.size === 0) return;
-
-    // Get application IDs from selected profile cards
-    const selectedCards = Array.from(document.querySelectorAll('.agency-dashboard__select-checkbox:checked'))
-      .map(cb => {
-        const card = cb.closest('.agency-dashboard__card');
-        return card ? card.dataset.applicationId : null;
-      })
-      .filter(id => id);
-
-    if (selectedCards.length === 0) {
+    if (state.selectedProfiles.size === 0) {
       alert('No applications selected');
       return;
     }
 
-    const confirmed = confirm(`Are you sure you want to ${action} ${selectedCards.length} application(s)?`);
+    // Get application IDs from selected checkboxes across all views
+    const selectedCheckboxes = Array.from(document.querySelectorAll('.agency-dashboard__select-checkbox:checked'));
+    const applicationIds = [];
+
+    selectedCheckboxes.forEach(cb => {
+      const profileId = cb.dataset.profileId;
+      // Try to find application ID from various sources
+      const card = cb.closest('.agency-dashboard__card, .agency-dashboard__gallery-card, .agency-dashboard__list-item, .agency-dashboard__table-row');
+      if (card) {
+        const appId = card.dataset.applicationId;
+        if (appId) {
+          applicationIds.push(appId);
+        } else {
+          // Fallback: try to find from profile data
+          const profile = state.profiles?.find(p => p.id === profileId);
+          if (profile && profile.application_id) {
+            applicationIds.push(profile.application_id);
+          }
+        }
+      }
+    });
+
+    if (applicationIds.length === 0) {
+      alert('No applications found for selected items. Please refresh the page and try again.');
+      return;
+    }
+
+    const confirmed = confirm(`Are you sure you want to ${action} ${applicationIds.length} application(s)?`);
 
     if (!confirmed) return;
 
     try {
-      const promises = selectedCards.map(id => updateApplicationStatus(id, action));
-      await Promise.all(promises);
+      // Show loading state
+      const batchActions = document.getElementById('batch-actions');
+      if (batchActions) {
+        batchActions.style.opacity = '0.6';
+        batchActions.style.pointerEvents = 'none';
+      }
+
+      const promises = applicationIds.map(id => updateApplicationStatus(id, action));
+      const results = await Promise.allSettled(promises);
+      
+      const failed = results.filter(r => r.status === 'rejected').length;
+      if (failed > 0) {
+        alert(`${failed} of ${applicationIds.length} actions failed. Please refresh and try again.`);
+      }
       
       // Reload page to reflect changes
       window.location.reload();
     } catch (error) {
       console.error('Batch action failed:', error);
       alert('Failed to perform batch action. Please try again.');
+      
+      // Restore batch actions
+      const batchActions = document.getElementById('batch-actions');
+      if (batchActions) {
+        batchActions.style.opacity = '1';
+        batchActions.style.pointerEvents = 'auto';
+      }
     }
   }
 
@@ -1136,27 +1258,49 @@
     const toggleBtn = document.getElementById('toggle-advanced-filters');
     const filtersPanel = document.getElementById('advanced-filters-panel');
 
-    filterChips.forEach(chip => {
-      chip.addEventListener('click', (e) => {
+    // Use delegated event listener for dynamically added chips
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('agency-dashboard__filter-chip-remove') || e.target.closest('.agency-dashboard__filter-chip-remove')) {
+        e.preventDefault();
         e.stopPropagation();
-        const chipEl = chip.closest('.agency-dashboard__filter-chip');
+        const removeBtn = e.target.classList.contains('agency-dashboard__filter-chip-remove') 
+          ? e.target 
+          : e.target.closest('.agency-dashboard__filter-chip-remove');
+        const chipEl = removeBtn.closest('.agency-dashboard__filter-chip');
+        if (!chipEl) return;
+        
         const filter = chipEl.dataset.filter;
-        removeFilter(filter);
-      });
+        const filterValue = chipEl.dataset.value;
+        removeFilter(filter, filterValue);
+      }
     });
 
     toggleBtn?.addEventListener('click', () => {
       if (filtersPanel) {
-        const isHidden = filtersPanel.style.display === 'none';
+        const isHidden = filtersPanel.style.display === 'none' || filtersPanel.offsetParent === null;
         filtersPanel.style.display = isHidden ? 'block' : 'none';
       }
     });
   }
 
-  function removeFilter(filter) {
+  function removeFilter(filter, filterValue) {
     // Remove filter from URL and reload
     const url = new URL(window.location);
-    url.searchParams.delete(filter);
+    
+    // Handle special cases
+    if (filter === 'height') {
+      url.searchParams.delete('min_height');
+      url.searchParams.delete('max_height');
+    } else if (filter === 'status' && filterValue) {
+      // If removing status filter, set to 'all' or remove it
+      url.searchParams.delete('status');
+    } else {
+      url.searchParams.delete(filter);
+      if (filterValue) {
+        url.searchParams.delete(filterValue);
+      }
+    }
+    
     window.location.href = url.toString();
   }
 
@@ -1411,7 +1555,8 @@
           console.error('Scout invite failed:', error);
           alert(`Failed to send invitation: ${error.message}`);
           btn.disabled = false;
-          btn.textContent = 'Invite to Apply';
+          const originalText = btn.dataset.profileName ? `Invite to Apply` : 'Invite to Apply';
+          btn.textContent = originalText;
         }
       });
     });
@@ -1422,7 +1567,12 @@
    */
   function initNotesAndTags() {
     const modal = document.getElementById('notes-tags-modal');
-    const overlay = modal?.querySelector('.agency-notes-modal__overlay');
+    if (!modal) {
+      // Notes/tags modal doesn't exist - functionality is handled in detail drawer
+      return;
+    }
+
+    const overlay = modal.querySelector('.agency-notes-modal__overlay');
     const closeBtn = document.getElementById('notes-modal-close');
     const notesBtns = document.querySelectorAll('.agency-dashboard__card-notes-btn, .agency-dashboard__card-notes-indicator');
     const addNoteBtn = document.getElementById('add-note-btn');
@@ -2446,7 +2596,7 @@
 
   function updateWeightValue(slider) {
     const valueSpan = document.getElementById(`${slider.id}-value`);
-    if (valueSpan) valueSpan.textContent = slider.value;
+    if (valueSpan) valueSpan.textContent = `${slider.value}%`;
     updateTotalWeight();
   }
 
@@ -2477,8 +2627,8 @@
 
     try {
       saveBtn.disabled = true;
-      spinner.style.display = 'block';
-      saveText.textContent = 'Saving...';
+      if (spinner) spinner.style.display = 'block';
+      if (saveText) saveText.textContent = 'Saving...';
 
       // Collect form data
       const formData = new FormData(form);
@@ -2544,8 +2694,8 @@
       alert('Failed to save board. Please try again.');
     } finally {
       saveBtn.disabled = false;
-      spinner.style.display = 'none';
-      saveText.textContent = 'Save Board';
+      if (spinner) spinner.style.display = 'none';
+      if (saveText) saveText.textContent = 'Save Board';
     }
   }
 
@@ -2724,19 +2874,31 @@
 
         // Render charts
         const trafficChartEl = document.getElementById('analytics-traffic-chart');
-        if (trafficChartEl && analytics.timeline) {
-          renderTrafficChart(trafficChartEl, analytics.timeline);
+        if (trafficChartEl && analytics.timeline && analytics.timeline.length > 0) {
+          try {
+            renderTrafficChart(trafficChartEl, analytics.timeline);
+          } catch (error) {
+            console.error('Error rendering traffic chart:', error);
+            trafficChartEl.innerHTML = '<p style="color: var(--agency-text-tertiary); font-size: 0.875rem; text-align: center; padding: 2rem;">Unable to render chart</p>';
+          }
+        } else if (trafficChartEl) {
+          trafficChartEl.innerHTML = '<p style="color: var(--agency-text-tertiary); font-size: 0.875rem; text-align: center; padding: 2rem;">No data available</p>';
         }
 
         const distributionChartEl = document.getElementById('analytics-distribution-chart');
         if (distributionChartEl) {
-          // For now, use placeholder data - can be enhanced with actual experience level data
-          renderDistributionChart(distributionChartEl, {
-            'New Faces': 45,
-            'Developing': 30,
-            'Professional': 20,
-            'Top Talent': 5
-          });
+          try {
+            // For now, use placeholder data - can be enhanced with actual experience level data
+            renderDistributionChart(distributionChartEl, {
+              'New Faces': 45,
+              'Developing': 30,
+              'Professional': 20,
+              'Top Talent': 5
+            });
+          } catch (error) {
+            console.error('Error rendering distribution chart:', error);
+            distributionChartEl.innerHTML = '<p style="color: var(--agency-text-tertiary); font-size: 0.875rem; text-align: center; padding: 2rem;">Unable to render chart</p>';
+          }
         }
 
         // Show content

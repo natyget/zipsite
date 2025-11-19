@@ -1,0 +1,212 @@
+<!-- Board Editor Modal -->
+<div class="board-editor-modal" id="board-editor-modal" style="display: none;">
+  <div class="board-editor-modal__overlay"></div>
+  <div class="board-editor-modal__content">
+    <div class="board-editor-modal__header">
+      <h2 class="board-editor-modal__title" id="board-editor-title">Create New Board</h2>
+      <button class="board-editor-modal__close" id="board-editor-close" aria-label="Close modal">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <form id="board-editor-form" class="board-editor-modal__form">
+      <input type="hidden" id="board-editor-id" name="board_id" value="">
+
+      <!-- Tabs -->
+      <div class="board-editor-modal__tabs">
+        <button type="button" class="board-editor-modal__tab board-editor-modal__tab--active" data-tab="basic">Basic Info</button>
+        <button type="button" class="board-editor-modal__tab" data-tab="requirements">Requirements</button>
+        <button type="button" class="board-editor-modal__tab" data-tab="weights">Scoring Weights</button>
+      </div>
+
+      <!-- Basic Info Tab -->
+      <div class="board-editor-modal__tab-content board-editor-modal__tab-content--active" data-content="basic">
+        <div class="board-editor-modal__field">
+          <label for="board-name">Board Name *</label>
+          <input type="text" id="board-name" name="name" required placeholder="e.g., Spring 2024 Runway">
+        </div>
+
+        <div class="board-editor-modal__field">
+          <label for="board-description">Description</label>
+          <textarea id="board-description" name="description" rows="3" placeholder="Describe the purpose of this board..."></textarea>
+        </div>
+
+        <div class="board-editor-modal__field">
+          <label class="board-editor-modal__checkbox-label">
+            <input type="checkbox" id="board-is-active" name="is_active" checked>
+            <span>Active (board will be visible and can receive applications)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Requirements Tab -->
+      <div class="board-editor-modal__tab-content" data-content="requirements">
+        <div class="board-editor-modal__section">
+          <h3 class="board-editor-modal__section-title">Age Range</h3>
+          <div class="board-editor-modal__range-group">
+            <div class="board-editor-modal__field">
+              <label for="req-min-age">Min Age</label>
+              <input type="number" id="req-min-age" name="min_age" min="16" max="99" placeholder="16">
+            </div>
+            <div class="board-editor-modal__field">
+              <label for="req-max-age">Max Age</label>
+              <input type="number" id="req-max-age" name="max_age" min="16" max="99" placeholder="99">
+            </div>
+          </div>
+        </div>
+
+        <div class="board-editor-modal__section">
+          <h3 class="board-editor-modal__section-title">Height Range (cm)</h3>
+          <div class="board-editor-modal__range-group">
+            <div class="board-editor-modal__field">
+              <label for="req-min-height">Min Height</label>
+              <input type="number" id="req-min-height" name="min_height_cm" min="120" max="220" placeholder="160">
+            </div>
+            <div class="board-editor-modal__field">
+              <label for="req-max-height">Max Height</label>
+              <input type="number" id="req-max-height" name="max_height_cm" min="120" max="220" placeholder="190">
+            </div>
+          </div>
+        </div>
+
+        <div class="board-editor-modal__section">
+          <h3 class="board-editor-modal__section-title">Gender</h3>
+          <div class="board-editor-modal__checkbox-group">
+            <label class="board-editor-modal__checkbox-label">
+              <input type="checkbox" name="genders" value="female">
+              <span>Female</span>
+            </label>
+            <label class="board-editor-modal__checkbox-label">
+              <input type="checkbox" name="genders" value="male">
+              <span>Male</span>
+            </label>
+            <label class="board-editor-modal__checkbox-label">
+              <input type="checkbox" name="genders" value="non-binary">
+              <span>Non-binary</span>
+            </label>
+            <label class="board-editor-modal__checkbox-label">
+              <input type="checkbox" name="genders" value="other">
+              <span>Other</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="board-editor-modal__section">
+          <h3 class="board-editor-modal__section-title">Measurements</h3>
+          <div class="board-editor-modal__measurements-grid">
+            <div class="board-editor-modal__field">
+              <label for="req-min-bust">Min Bust (cm)</label>
+              <input type="number" id="req-min-bust" name="min_bust" min="60" max="120" placeholder="80">
+            </div>
+            <div class="board-editor-modal__field">
+              <label for="req-max-bust">Max Bust (cm)</label>
+              <input type="number" id="req-max-bust" name="max_bust" min="60" max="120" placeholder="100">
+            </div>
+            <div class="board-editor-modal__field">
+              <label for="req-min-waist">Min Waist (cm)</label>
+              <input type="number" id="req-min-waist" name="min_waist" min="50" max="100" placeholder="60">
+            </div>
+            <div class="board-editor-modal__field">
+              <label for="req-max-waist">Max Waist (cm)</label>
+              <input type="number" id="req-max-waist" name="max_waist" min="50" max="100" placeholder="80">
+            </div>
+            <div class="board-editor-modal__field">
+              <label for="req-min-hips">Min Hips (cm)</label>
+              <input type="number" id="req-min-hips" name="min_hips" min="70" max="130" placeholder="85">
+            </div>
+            <div class="board-editor-modal__field">
+              <label for="req-max-hips">Max Hips (cm)</label>
+              <input type="number" id="req-max-hips" name="max_hips" min="70" max="130" placeholder="105">
+            </div>
+          </div>
+        </div>
+
+        <div class="board-editor-modal__section">
+          <h3 class="board-editor-modal__section-title">Social Media Reach</h3>
+          <div class="board-editor-modal__field">
+            <label for="req-min-social-reach">Min Social Reach</label>
+            <input type="number" id="req-min-social-reach" name="min_social_reach" min="0" placeholder="0">
+            <p class="board-editor-modal__help-text">Minimum combined followers across all platforms</p>
+          </div>
+          <div class="board-editor-modal__field">
+            <label for="req-social-importance">Importance</label>
+            <select id="req-social-importance" name="social_reach_importance">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scoring Weights Tab -->
+      <div class="board-editor-modal__tab-content" data-content="weights">
+        <div class="board-editor-modal__section">
+          <p class="board-editor-modal__help-text" style="margin-bottom: 1.5rem;">
+            Adjust the importance of each factor when calculating match scores. Total must equal 100%.
+          </p>
+          <div class="board-editor-modal__weights-list">
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-height">Height</label>
+              <div class="board-editor-modal__weight-control">
+                <input type="range" id="weight-height" name="height_weight" min="0" max="100" value="20">
+                <span class="board-editor-modal__weight-value" id="weight-height-value">20%</span>
+              </div>
+            </div>
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-age">Age</label>
+              <div class="board-editor-modal__weight-control">
+                <input type="range" id="weight-age" name="age_weight" min="0" max="100" value="15">
+                <span class="board-editor-modal__weight-value" id="weight-age-value">15%</span>
+              </div>
+            </div>
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-measurements">Measurements</label>
+              <div class="board-editor-modal__weight-control">
+                <input type="range" id="weight-measurements" name="measurements_weight" min="0" max="100" value="25">
+                <span class="board-editor-modal__weight-value" id="weight-measurements-value">25%</span>
+              </div>
+            </div>
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-experience">Experience</label>
+              <div class="board-editor-modal__weight-control">
+                <input type="range" id="weight-experience" name="experience_weight" min="0" max="100" value="20">
+                <span class="board-editor-modal__weight-value" id="weight-experience-value">20%</span>
+              </div>
+            </div>
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-social">Social Reach</label>
+              <div class="board-editor-modal__weight-control">
+                <input type="range" id="weight-social" name="social_weight" min="0" max="100" value="10">
+                <span class="board-editor-modal__weight-value" id="weight-social-value">10%</span>
+              </div>
+            </div>
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-location">Location</label>
+              <div class="board-editor-modal__weight-control">
+                <input type="range" id="weight-location" name="location_weight" min="0" max="100" value="10">
+                <span class="board-editor-modal__weight-value" id="weight-location-value">10%</span>
+              </div>
+            </div>
+          </div>
+          <div class="board-editor-modal__total-weight" id="total-weight">
+            <strong>Total: <span id="total-weight-value">100%</span></strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="board-editor-modal__actions">
+        <button type="button" class="board-editor-modal__btn board-editor-modal__btn--secondary" id="board-editor-cancel">Cancel</button>
+        <button type="submit" class="board-editor-modal__btn board-editor-modal__btn--primary" id="board-editor-save">
+          <span id="board-editor-save-text">Save Board</span>
+          <div class="board-editor-modal__spinner" id="board-editor-spinner" style="display: none;"></div>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+

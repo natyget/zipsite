@@ -86,6 +86,7 @@
     <% } else if (page === 'applicants') { %>
       <!-- My Applicants Page -->
       <%- include('../partials/agency/inbox-header', { safeStats }) %>
+      <%- include('../partials/agency/header', { safeStats, view: 'applicants' }) %>
       <%- include('../partials/agency/filters', { safeBoards, safeFilters, page }) %>
       <%- include('../partials/agency/kanban', { profilesByStatus, currentUser }) %>
       <%- include('../partials/agency/gallery', { safeProfiles, currentUser }) %>
@@ -111,6 +112,8 @@
   </main>
 
   <%- include('../partials/agency/command-palette') %>
+  <%- include('../partials/agency/application-detail-drawer') %>
+  <%- include('../partials/agency/board-editor-modal') %>
 
 </div>
 
