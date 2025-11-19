@@ -107,9 +107,14 @@
     <% } else if (page === 'discover') { %>
       <!-- Discover Page -->
       <%- include('../partials/agency/discover-header') %>
+      <%- include('../partials/agency/discover-trending', { safeProfiles, currentUser }) %>
+      <%- include('../partials/agency/discover-filter-chips', { safeFilters }) %>
       <div class="agency-dashboard__scout-container">
         <%- include('../partials/agency/scout-filters', { safeFilters }) %>
-        <%- include('../partials/agency/scout', { safeProfiles, currentUser }) %>
+        <div class="discover-views-container">
+          <%- include('../partials/agency/scout', { safeProfiles, currentUser }) %>
+          <%- include('../partials/agency/scout-list', { safeProfiles, currentUser }) %>
+        </div>
       </div>
     <% } else if (page === 'boards') { %>
       <!-- Boards Page -->
@@ -126,6 +131,7 @@
   <%- include('../partials/agency/command-palette') %>
   <%- include('../partials/agency/application-detail-drawer') %>
   <%- include('../partials/agency/board-editor-modal') %>
+  <%- include('../partials/agency/talent-preview-modal') %>
 
 </div>
 

@@ -1,0 +1,74 @@
+<!-- Active Filter Chips -->
+<% 
+  const activeFilters = [];
+  if (safeFilters.min_height || safeFilters.max_height) {
+    activeFilters.push({
+      key: 'height',
+      label: `Height: ${safeFilters.min_height || 'Any'} - ${safeFilters.max_height || 'Any'} cm`,
+      value: { min_height: safeFilters.min_height, max_height: safeFilters.max_height }
+    });
+  }
+  if (safeFilters.min_age || safeFilters.max_age) {
+    activeFilters.push({
+      key: 'age',
+      label: `Age: ${safeFilters.min_age || 'Any'} - ${safeFilters.max_age || 'Any'}`,
+      value: { min_age: safeFilters.min_age, max_age: safeFilters.max_age }
+    });
+  }
+  if (safeFilters.city) {
+    activeFilters.push({
+      key: 'city',
+      label: `City: ${safeFilters.city}`,
+      value: { city: safeFilters.city }
+    });
+  }
+  if (safeFilters.gender) {
+    activeFilters.push({
+      key: 'gender',
+      label: `Gender: ${safeFilters.gender.charAt(0).toUpperCase() + safeFilters.gender.slice(1)}`,
+      value: { gender: safeFilters.gender }
+    });
+  }
+  if (safeFilters.eye_color) {
+    activeFilters.push({
+      key: 'eye_color',
+      label: `Eyes: ${safeFilters.eye_color.charAt(0).toUpperCase() + safeFilters.eye_color.slice(1)}`,
+      value: { eye_color: safeFilters.eye_color }
+    });
+  }
+  if (safeFilters.hair_color) {
+    activeFilters.push({
+      key: 'hair_color',
+      label: `Hair: ${safeFilters.hair_color.charAt(0).toUpperCase() + safeFilters.hair_color.slice(1)}`,
+      value: { hair_color: safeFilters.hair_color }
+    });
+  }
+%>
+
+<% if (activeFilters.length > 0) { %>
+  <div class="discover-filter-chips" id="discover-filter-chips">
+    <div class="discover-filter-chips__header">
+      <span class="discover-filter-chips__label">Active Filters:</span>
+      <button class="discover-filter-chips__clear-all" id="discover-filter-chips-clear-all">
+        Clear All
+      </button>
+    </div>
+    <div class="discover-filter-chips__list">
+      <% activeFilters.forEach(filter => { %>
+        <button 
+          class="discover-filter-chips__chip" 
+          data-filter-key="<%= filter.key %>"
+          data-filter-value='<%= JSON.stringify(filter.value) %>'
+          aria-label="Remove <%= filter.label %> filter"
+        >
+          <span class="discover-filter-chips__chip-label"><%= filter.label %></span>
+          <svg class="discover-filter-chips__chip-close" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      <% }); %>
+    </div>
+  </div>
+<% } %>
+

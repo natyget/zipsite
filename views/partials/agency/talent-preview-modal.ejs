@@ -1,0 +1,25 @@
+<!-- Talent Quick Preview Modal -->
+<div class="talent-preview-modal" id="talent-preview-modal" role="dialog" aria-labelledby="talent-preview-title" aria-modal="true" style="display: none;">
+  <div class="talent-preview-modal__overlay"></div>
+  <div class="talent-preview-modal__content">
+    <button 
+      class="talent-preview-modal__close" 
+      id="talent-preview-close" 
+      type="button"
+      aria-label="Close preview">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <div class="talent-preview-modal__body" id="talent-preview-body">
+      <!-- Content will be loaded dynamically -->
+      <div class="talent-preview-modal__loading">
+        <div class="loading-spinner"></div>
+        <p>Loading profile...</p>
+      </div>
+    </div>
+  </div>
+</div>
+

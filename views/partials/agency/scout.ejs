@@ -1,6 +1,33 @@
-      <!-- Scout Talent View -->
-      <div class="agency-dashboard__scout-grid">
+      <!-- Scout Talent Grid View -->
+      <div class="agency-dashboard__scout-grid discover-view discover-view--grid discover-view--active" id="discover-talent-grid">
         <% safeProfiles.forEach((profile, index) => { %>
+          <%
+            // Calculate experience level
+            const daysSinceCreated = profile.created_at 
+              ? Math.floor((new Date() - new Date(profile.created_at)) / (1000 * 60 * 60 * 24))
+              : 999;
+            const isNewFace = daysSinceCreated <= 30;
+            const experienceLevel = profile.is_pro ? 'PRO' : isNewFace ? 'NEW FACE' : 'ESTABLISHED';
+            
+            // Calculate match score (placeholder - can be enhanced with actual calculation)
+            const matchScore = profile.match_score || Math.floor(Math.random() * 20) + 80;
+            const matchScoreClass = matchScore >= 90 ? 'excellent' : matchScore >= 80 ? 'good' : matchScore >= 70 ? 'fair' : 'poor';
+            
+            // Format location
+            const location = profile.city && profile.country 
+              ? `${profile.city.toUpperCase()}, ${profile.country.toUpperCase()}`
+              : profile.city 
+                ? `${profile.city.toUpperCase()}`
+                : 'LOCATION TBD';
+            
+            // Format height
+            const heightFeet = profile.height_cm ? Math.floor(profile.height_cm / 30.48) : null;
+            const heightInches = profile.height_cm ? Math.round((profile.height_cm % 30.48) / 2.54) : null;
+            const heightDisplay = heightFeet && heightInches ? `${heightFeet}'${heightInches}"` : profile.height_cm ? `${profile.height_cm} cm` : '--';
+            
+            // Format age
+            const ageDisplay = profile.age ? `${profile.age} Years` : '--';
+          %>
           <div class="agency-dashboard__scout-card" data-profile-id="<%= profile.id %>">
             <div class="agency-dashboard__scout-image">
               <% if (profile.hero_image_path || (profile.images && profile.images.length > 0)) { %>
@@ -13,7 +40,24 @@
                   <%= (profile.first_name || 'T').charAt(0).toUpperCase() %><%= (profile.last_name || 'T').charAt(0).toUpperCase() %>
                 </div>
               <% } %>
-              <button class="agency-dashboard__scout-preview-btn" data-profile-id="<%= profile.id %>">
+              
+              <!-- Badges Overlay -->
+              <div class="agency-dashboard__scout-badges">
+                <% if (isNewFace) { %>
+                  <span class="agency-dashboard__scout-badge agency-dashboard__scout-badge--new">NEW</span>
+                <% } %>
+                <span class="agency-dashboard__scout-badge agency-dashboard__scout-badge--experience agency-dashboard__scout-badge--<%= experienceLevel.toLowerCase().replace(' ', '-') %>">
+                  <%= experienceLevel %>
+                </span>
+                <% if (matchScore >= 80) { %>
+                  <span class="agency-dashboard__scout-badge agency-dashboard__scout-badge--match agency-dashboard__scout-badge--match-<%= matchScoreClass %>">
+                    <%= matchScore %>% Match
+                  </span>
+                <% } %>
+              </div>
+
+              <!-- Quick View Button -->
+              <button class="agency-dashboard__scout-preview-btn" data-profile-id="<%= profile.id %>" aria-label="Quick view">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                   <circle cx="12" cy="12" r="3"/>
@@ -21,39 +65,25 @@
                 Quick View
               </button>
             </div>
+            
             <div class="agency-dashboard__scout-info">
               <div class="agency-dashboard__scout-header">
                 <h3 class="agency-dashboard__scout-name">
-                  <a href="/portfolio/<%= profile.slug %>" target="_blank">
+                  <a href="/portfolio/<%= profile.slug %>" target="_blank" rel="noopener">
                     <%= profile.first_name %> <%= profile.last_name %>
                   </a>
                 </h3>
-                <% if (profile.is_new) { %>
-                  <span class="agency-dashboard__scout-badge">New</span>
-                <% } %>
               </div>
+              
               <p class="agency-dashboard__scout-location">
-                <% 
-                  const location = profile.city && profile.country 
-                    ? `${profile.city}, ${profile.country}`
-                    : profile.city 
-                      ? `${profile.city}, ${profile.country || ''}`
-                      : 'Location not specified';
-                %>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                   <circle cx="12" cy="10" r="3"/>
                 </svg>
                 <%= location %>
               </p>
+              
               <div class="agency-dashboard__scout-stats">
-                <% 
-                  const heightFeet = profile.height_cm ? Math.floor(profile.height_cm / 30.48) : null;
-                  const heightInches = profile.height_cm ? Math.round((profile.height_cm % 30.48) / 2.54) : null;
-                  const heightDisplay = heightFeet && heightInches ? `${heightFeet}'${heightInches}"` : profile.height_cm ? `${profile.height_cm} cm` : '--';
-                  
-                  const ageDisplay = profile.age ? `${profile.age} yr` : '--';
-                %>
                 <div class="agency-dashboard__scout-stat">
                   <span class="agency-dashboard__scout-stat-label">Height</span>
                   <span class="agency-dashboard__scout-stat-value"><%= heightDisplay %></span>
@@ -63,12 +93,17 @@
                   <span class="agency-dashboard__scout-stat-value"><%= ageDisplay %></span>
                 </div>
               </div>
+              
               <button 
                 class="agency-dashboard__scout-invite-btn" 
                 data-profile-id="<%= profile.id %>"
                 data-profile-name="<%= profile.first_name %> <%= profile.last_name %>"
               >
-                Invite to Apply
+                <span class="agency-dashboard__scout-invite-text">Invite to Apply</span>
+                <svg class="agency-dashboard__scout-invite-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
               </button>
             </div>
           </div>
@@ -76,13 +111,13 @@
         <% if (safeProfiles.length === 0) { %>
           <div class="agency-dashboard__empty-state">
             <div class="agency-dashboard__empty-icon">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <circle cx="11" cy="11" r="8"/>
                 <path d="m21 21-4.35-4.35"/>
               </svg>
             </div>
-            <h3>No talent found</h3>
-            <p>Try adjusting your filters to see more results.</p>
+            <h3 class="agency-dashboard__empty-title">No talent found</h3>
+            <p class="agency-dashboard__empty-text">Try adjusting your filters to see more results.</p>
             <button class="agency-dashboard__empty-action" id="scout-reset-filters-btn">Clear Filters</button>
           </div>
         <% } %>

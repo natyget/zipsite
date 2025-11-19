@@ -710,6 +710,41 @@ router.post('/dashboard/agency/applications/:applicationId/:action', requireRole
   }
 });
 
+// GET /api/agency/discover/:profileId/preview - Get profile preview data
+router.get('/api/agency/discover/:profileId/preview', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const { profileId } = req.params;
+
+    const profile = await knex('profiles')
+      .where({ id: profileId, is_discoverable: true })
+      .first();
+
+    if (!profile) {
+      return res.status(404).json({ error: 'Profile not found or not discoverable' });
+    }
+
+    // Get images
+    const images = await knex('images')
+      .where({ profile_id: profileId })
+      .orderBy(['sort', 'created_at'])
+      .limit(5);
+
+    return res.json({
+      success: true,
+      profile: {
+        ...profile,
+        images: images.map(img => ({
+          path: img.path.startsWith('http') ? img.path : '/' + img.path,
+          alt: img.alt || `${profile.first_name} ${profile.last_name}`
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('[Discover Preview] Error:', error);
+    return res.status(500).json({ error: 'Failed to load profile preview' });
+  }
+});
+
 // POST /dashboard/agency/discover/:profileId/invite - Invite talent from Discover
 router.post('/dashboard/agency/discover/:profileId/invite', requireRole('AGENCY'), async (req, res, next) => {
   try {
