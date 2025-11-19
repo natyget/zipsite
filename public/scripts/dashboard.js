@@ -2122,6 +2122,13 @@
 
 // Load Analytics
 async function loadAnalytics() {
+  // Check if we're on agency dashboard - if so, skip (agency-dashboard.js handles it)
+  const agencyDashboard = document.getElementById('agency-dashboard');
+  if (agencyDashboard) {
+    // Agency dashboard has its own analytics loader
+    return;
+  }
+
   // Find analytics section in main content area
   const analyticsSection = document.getElementById('analytics');
   if (!analyticsSection) {

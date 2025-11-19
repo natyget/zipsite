@@ -547,6 +547,7 @@
 
     // Expose function globally for command palette
     window.openApplicationDetail = openApplicationDetail;
+    window.openBoardEditor = openBoardEditor;
 
     // Open modal from preview buttons
     previewButtons.forEach(btn => {
@@ -1164,20 +1165,30 @@
    */
   function initQuickActions() {
     // Handle Accept/Decline/Archive buttons (using application_id)
-    document.querySelectorAll('.agency-dashboard__quick-btn[data-action]').forEach(btn => {
+    // This handles buttons in kanban, list, table, and gallery views
+    const actionButtons = document.querySelectorAll(
+      '.agency-dashboard__quick-btn[data-action], ' +
+      '.agency-dashboard__table-btn[data-action], ' +
+      '.agency-dashboard__card-action-btn[data-action]'
+    );
+    
+    actionButtons.forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.preventDefault();
+        e.stopPropagation();
         const action = btn.dataset.action;
         const applicationId = btn.dataset.applicationId;
 
         if (!applicationId) {
           console.error('No application ID found');
+          alert('Unable to find application ID. Please refresh the page.');
           return;
         }
 
         const confirmed = confirm(`Are you sure you want to ${action} this application?`);
         if (!confirmed) return;
 
+        const originalText = btn.textContent;
         btn.disabled = true;
         btn.textContent = 'Processing...';
 
@@ -1206,7 +1217,7 @@
           console.error('Quick action failed:', error);
           alert(`Failed to ${action} application: ${error.message}`);
           btn.disabled = false;
-          btn.textContent = action.charAt(0).toUpperCase() + action.slice(1);
+          btn.textContent = originalText;
         }
       });
     });
@@ -2589,6 +2600,11 @@
       const errorEl = document.getElementById('analytics-error');
       const contentEl = document.getElementById('analytics-content');
 
+      if (!loadingEl || !errorEl || !contentEl) {
+        console.warn('Analytics elements not found, skipping load');
+        return;
+      }
+
       try {
         loadingEl.style.display = 'block';
         errorEl.style.display = 'none';
@@ -2596,23 +2612,38 @@
 
         const response = await fetch('/api/agency/analytics');
         if (!response.ok) {
-          throw new Error('Failed to load analytics');
+          let errorMessage = `Failed to load analytics: ${response.status}`;
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorData.details || errorMessage;
+          } catch (e) {
+            // If JSON parsing fails, use default message
+          }
+          throw new Error(errorMessage);
         }
 
         const data = await response.json();
-        if (!data.success || !data.analytics) {
-          throw new Error('Invalid analytics data');
+        if (!data || !data.success || !data.analytics) {
+          throw new Error(data?.error || 'Invalid analytics data received');
         }
 
         const analytics = data.analytics;
 
         // Update key metrics
-        document.getElementById('analytics-total').textContent = analytics.byStatus.total || 0;
-        document.getElementById('analytics-acceptance-rate').textContent = 
-          analytics.acceptanceRate !== undefined ? `${analytics.acceptanceRate}%` : '—';
-        document.getElementById('analytics-this-month').textContent = analytics.overTime.thisMonth || 0;
-        document.getElementById('analytics-avg-score').textContent = 
-          analytics.matchScores.average || 0;
+        const totalEl = document.getElementById('analytics-total');
+        if (totalEl) {
+          totalEl.textContent = analytics.byStatus.total || 0;
+        }
+        
+        const acceptanceRateEl = document.getElementById('analytics-acceptance-rate');
+        if (acceptanceRateEl) {
+          acceptanceRateEl.textContent = 
+            analytics.acceptanceRate !== undefined ? `${analytics.acceptanceRate}%` : '—';
+        }
+        
+        // Note: analytics-this-month and analytics-avg-score were replaced with
+        // analytics-profile-views and analytics-response-time in the new design
+        // These are static values for now
 
         // Update status breakdown
         const statusGrid = document.getElementById('analytics-status-grid');
@@ -2691,12 +2722,19 @@
         }
 
         // Show content
-        loadingEl.style.display = 'none';
-        contentEl.style.display = 'block';
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'block';
       } catch (error) {
         console.error('Error loading analytics:', error);
-        loadingEl.style.display = 'none';
-        errorEl.style.display = 'block';
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (errorEl) {
+          errorEl.style.display = 'block';
+          // Show error message
+          const errorMessage = errorEl.querySelector('div > div:last-child');
+          if (errorMessage) {
+            errorMessage.textContent = error.message || 'Unable to load analytics data at this time';
+          }
+        }
       }
     };
 
@@ -2924,10 +2962,46 @@
           return;
         }
 
-        container.innerHTML = data.applicants.map(applicant => {
+        const applicantsHtml = data.applicants.map(applicant => {
           const imageSrc = applicant.profileImage && applicant.profileImage.startsWith('http') 
             ? applicant.profileImage 
             : (applicant.profileImage || '/images/default-avatar.png');
+          
+          // Make items clickable to view applicant
+          return `
+            <div class="agency-overview__recent-item" style="cursor: pointer;" data-profile-id="${applicant.profileId}" data-application-id="${applicant.applicationId || ''}">
+              <div class="agency-overview__recent-avatar">
+                <img src="${imageSrc}" alt="${applicant.name}">
+              </div>
+              <div class="agency-overview__recent-info">
+                <div class="agency-overview__recent-name">${escapeHtml(applicant.name)}</div>
+                <div class="agency-overview__recent-meta">${escapeHtml(applicant.location)} • ${applicant.height} • Age ${applicant.age}</div>
+              </div>
+              <div class="agency-overview__recent-badges">
+                ${applicant.isNew ? '<span class="agency-overview__recent-badge">New Face</span>' : ''}
+                ${applicant.matchScore ? `<span class="agency-overview__recent-badge agency-overview__recent-badge--match">${applicant.matchScore}% Match</span>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+        container.innerHTML = applicantsHtml;
+        
+        // Add click handlers to recent applicant items
+        container.querySelectorAll('.agency-overview__recent-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const profileId = item.dataset.profileId;
+            const applicationId = item.dataset.applicationId;
+            if (window.openApplicationDetail) {
+              window.openApplicationDetail(applicationId || profileId);
+            } else {
+              // Fallback: navigate to applicants page
+              window.location.href = '/dashboard/agency/applicants';
+            }
+          });
+        });
+        
+        return;
           
           return `
             <div class="agency-overview__recent-item" data-profile-id="${applicant.profileId}" data-application-id="${applicant.applicationId}">
@@ -2952,10 +3026,16 @@
 
         // Add click handlers to open detail drawer
         container.querySelectorAll('.agency-overview__recent-item').forEach(item => {
+          item.style.cursor = 'pointer';
           item.addEventListener('click', () => {
             const profileId = item.dataset.profileId;
+            const applicationId = item.dataset.applicationId;
             if (window.openApplicationDetail) {
-              window.openApplicationDetail(profileId);
+              // Prefer applicationId if available, fallback to profileId
+              window.openApplicationDetail(applicationId || profileId);
+            } else {
+              // Fallback: navigate to applicants page
+              window.location.href = '/dashboard/agency/applicants';
             }
           });
         });
@@ -3403,11 +3483,12 @@
         }
         
         const boardId = card.dataset.boardId;
-        if (boardId) {
-          // Navigate to board detail view (or open modal)
-          // For now, we'll navigate to a board detail page
-          // If that doesn't exist, we can open the board editor
-          window.location.href = `/dashboard/agency/boards/${boardId}`;
+        if (boardId && window.openBoardEditor) {
+          // Open board editor to view/edit board details
+          window.openBoardEditor(boardId);
+        } else if (boardId) {
+          // Fallback: navigate to applicants page filtered by this board
+          window.location.href = `/dashboard/agency/applicants?board_id=${boardId}`;
         }
       });
       

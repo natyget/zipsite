@@ -30,23 +30,31 @@
                   <% } %>
             </div>
             <div class="agency-dashboard__list-actions">
-              <button class="agency-dashboard__list-preview" data-profile-id="<%= profile.id %>">Preview</button>
+              <button class="agency-dashboard__list-preview" data-profile-id="<%= profile.id %>" data-application-id="<%= profile.application_id || '' %>">Preview</button>
               <div class="agency-dashboard__list-quick-actions">
                 <% const appStatus = profile.application_status || 'pending'; %>
                 <% if (appStatus !== 'accepted') { %>
-                  <form method="post" action="/dashboard/agency/application/accept" class="agency-dashboard__quick-form">
-                            <input type="hidden" name="profile_id" value="<%= profile.id %>">
-                    <button type="submit" class="agency-dashboard__quick-btn agency-dashboard__quick-btn--accept">Accept</button>
-                          </form>
-                          <% } %>
+                  <button 
+                    type="button" 
+                    class="agency-dashboard__quick-btn agency-dashboard__quick-btn--accept" 
+                    data-action="accept" 
+                    data-application-id="<%= profile.application_id || '' %>"
+                  >
+                    Accept
+                  </button>
+                <% } %>
                 <% if (appStatus !== 'declined') { %>
-                  <form method="post" action="/dashboard/agency/application/decline" class="agency-dashboard__quick-form">
-                                <input type="hidden" name="profile_id" value="<%= profile.id %>">
-                    <button type="submit" class="agency-dashboard__quick-btn agency-dashboard__quick-btn--decline">Decline</button>
-                        </form>
-                        <% } %>
-                    </div>
+                  <button 
+                    type="button" 
+                    class="agency-dashboard__quick-btn agency-dashboard__quick-btn--decline" 
+                    data-action="decline" 
+                    data-application-id="<%= profile.application_id || '' %>"
+                  >
+                    Decline
+                  </button>
+                <% } %>
               </div>
+            </div>
           </div>
             <% }); %>
         <% if (safeProfiles.length === 0) { %>

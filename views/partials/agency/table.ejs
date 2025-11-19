@@ -44,18 +44,26 @@
                     </td>
                     <td>
                   <div class="agency-dashboard__table-actions">
-                    <button class="agency-dashboard__table-preview" data-profile-id="<%= profile.id %>">Preview</button>
+                    <button class="agency-dashboard__table-preview" data-profile-id="<%= profile.id %>" data-application-id="<%= profile.application_id || '' %>">Preview</button>
                     <% if (appStatus !== 'accepted') { %>
-                      <form method="post" action="/dashboard/agency/application/accept" class="agency-dashboard__quick-form">
-                        <input type="hidden" name="profile_id" value="<%= profile.id %>">
-                        <button type="submit" class="agency-dashboard__table-btn agency-dashboard__table-btn--accept">Accept</button>
-                      </form>
+                      <button 
+                        type="button" 
+                        class="agency-dashboard__table-btn agency-dashboard__table-btn--accept" 
+                        data-action="accept" 
+                        data-application-id="<%= profile.application_id || '' %>"
+                      >
+                        Accept
+                      </button>
                     <% } %>
                     <% if (appStatus !== 'declined') { %>
-                      <form method="post" action="/dashboard/agency/application/decline" class="agency-dashboard__quick-form">
-                        <input type="hidden" name="profile_id" value="<%= profile.id %>">
-                        <button type="submit" class="agency-dashboard__table-btn agency-dashboard__table-btn--decline">Decline</button>
-                      </form>
+                      <button 
+                        type="button" 
+                        class="agency-dashboard__table-btn agency-dashboard__table-btn--decline" 
+                        data-action="decline" 
+                        data-application-id="<%= profile.application_id || '' %>"
+                      >
+                        Decline
+                      </button>
                     <% } %>
                   </div>
                     </td>
