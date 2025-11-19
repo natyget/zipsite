@@ -26,6 +26,7 @@
     initSearch();
     initFilters();
     initQuickActions();
+    initScoutFilters();
     initScoutInvite();
     initNotesAndTags();
     initAgencyProfileAccordion();
@@ -1184,6 +1185,148 @@
           btn.textContent = action.charAt(0).toUpperCase() + action.slice(1);
         }
       });
+    });
+  }
+
+  /**
+   * Scout Filters with Real-time Filtering and Debounce
+   */
+  function initScoutFilters() {
+    const scoutFiltersForm = document.getElementById('scout-filters-form');
+    const scoutFiltersReset = document.getElementById('scout-filters-reset');
+    const scoutGrid = document.querySelector('.agency-dashboard__scout-grid');
+    
+    if (!scoutFiltersForm || !scoutGrid) return;
+
+    let debounceTimer = null;
+    const DEBOUNCE_DELAY = 500; // 500ms debounce
+
+    // Debounce helper function
+    function debounce(func, delay) {
+      return function(...args) {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => func.apply(this, args), delay);
+      };
+    }
+
+    // Build query string from form data
+    function buildQueryString(formData) {
+      const params = new URLSearchParams();
+      params.set('view', 'scout');
+      
+      const formEntries = new FormData(scoutFiltersForm);
+      for (const [key, value] of formEntries.entries()) {
+        if (value && value.trim()) {
+          params.set(key, value.trim());
+        }
+      }
+      
+      return params.toString();
+    }
+
+    // Apply filters (with loading state)
+    async function applyFilters() {
+      const queryString = buildQueryString();
+      const url = `/dashboard/agency?${queryString}`;
+      
+      // Show loading state
+      scoutGrid.style.opacity = '0.5';
+      scoutGrid.style.pointerEvents = 'none';
+      
+      try {
+        const response = await fetch(url, {
+          headers: {
+            'Accept': 'text/html',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch filtered results');
+        
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // Extract scout grid content
+        const newScoutGrid = doc.querySelector('.agency-dashboard__scout-grid');
+        if (newScoutGrid) {
+          scoutGrid.innerHTML = newScoutGrid.innerHTML;
+          
+          // Re-initialize invite buttons
+          initScoutInvite();
+          
+          // Update URL without page reload
+          window.history.pushState({}, '', url);
+        }
+      } catch (error) {
+        console.error('Error applying filters:', error);
+        alert('Failed to apply filters. Please try again.');
+      } finally {
+        scoutGrid.style.opacity = '1';
+        scoutGrid.style.pointerEvents = '';
+      }
+    }
+
+    // Debounced filter application
+    const debouncedApplyFilters = debounce(applyFilters, DEBOUNCE_DELAY);
+
+    // Handle input changes (with debounce)
+    const filterInputs = scoutFiltersForm.querySelectorAll('input, select');
+    filterInputs.forEach(input => {
+      input.addEventListener('input', () => {
+        debouncedApplyFilters();
+      });
+      
+      input.addEventListener('change', () => {
+        debouncedApplyFilters();
+      });
+    });
+
+    // Handle form submission (immediate, no debounce)
+    scoutFiltersForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      clearTimeout(debounceTimer);
+      applyFilters();
+    });
+
+    // Handle reset button
+    if (scoutFiltersReset) {
+      scoutFiltersReset.addEventListener('click', () => {
+        scoutFiltersForm.reset();
+        clearTimeout(debounceTimer);
+        window.location.href = '/dashboard/agency?view=scout';
+      });
+    }
+
+    // Handle active filter removal (delegated event listener for dynamically added buttons)
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.scout-filters__active-remove')) {
+        const btn = e.target.closest('.scout-filters__active-remove');
+        const filterKey = btn.dataset.filter;
+        
+        // Map filter keys to form field names
+        const filterMap = {
+          'height': ['min_height', 'max_height'],
+          'age': ['min_age', 'max_age'],
+          'city': 'city',
+          'gender': 'gender',
+          'eye_color': 'eye_color',
+          'hair_color': 'hair_color'
+        };
+        
+        const fieldNames = filterMap[filterKey];
+        if (Array.isArray(fieldNames)) {
+          fieldNames.forEach(name => {
+            const input = scoutFiltersForm.querySelector(`[name="${name}"]`);
+            if (input) input.value = '';
+          });
+        } else if (fieldNames) {
+          const input = scoutFiltersForm.querySelector(`[name="${fieldNames}"]`);
+          if (input) input.value = '';
+        }
+        
+        debouncedApplyFilters();
+      }
     });
   }
 

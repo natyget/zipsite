@@ -1452,7 +1452,7 @@ router.get('/api/agency/analytics', requireRole('AGENCY'), async (req, res, next
       ? Math.round(matchScores.reduce((a, b) => a + b, 0) / matchScores.length)
       : 0;
 
-    // Applications timeline (last 30 days)
+    // Applications timeline (last 30 days) with status breakdown
     const timeline = [];
     for (let i = 29; i >= 0; i--) {
       const date = new Date(now);
@@ -1461,14 +1461,25 @@ router.get('/api/agency/analytics', requireRole('AGENCY'), async (req, res, next
       const dayEnd = new Date(dayStart);
       dayEnd.setDate(dayEnd.getDate() + 1);
 
-      const count = allApplications.filter(a => {
+      const dayApplications = allApplications.filter(a => {
         const created = new Date(a.created_at);
         return created >= dayStart && created < dayEnd;
-      }).length;
+      });
+
+      const dayStatusBreakdown = {
+        pending: dayApplications.filter(a => !a.status || a.status === 'pending').length,
+        accepted: dayApplications.filter(a => a.status === 'accepted').length,
+        declined: dayApplications.filter(a => a.status === 'declined').length,
+        archived: dayApplications.filter(a => a.status === 'archived').length
+      };
 
       timeline.push({
         date: dayStart.toISOString().split('T')[0],
-        count
+        count: dayApplications.length,
+        pending: dayStatusBreakdown.pending,
+        accepted: dayStatusBreakdown.accepted,
+        declined: dayStatusBreakdown.declined,
+        archived: dayStatusBreakdown.archived
       });
     }
 

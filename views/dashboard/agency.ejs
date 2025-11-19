@@ -98,7 +98,10 @@
       <%- include('../../partials/agency/filters') %>
       
       <% if (view === 'scout') { %>
-        <%- include('../../partials/agency/scout') %>
+        <div class="agency-dashboard__scout-container">
+          <%- include('../../partials/agency/scout-filters') %>
+          <%- include('../../partials/agency/scout') %>
+        </div>
       <% } else { %>
         <%- include('../../partials/agency/kanban') %>
         <%- include('../../partials/agency/gallery') %>

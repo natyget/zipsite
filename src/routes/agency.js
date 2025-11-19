@@ -100,6 +100,11 @@ router.get('/dashboard/agency', requireRole('AGENCY'), async (req, res, next) =>
       search = '',
       min_height = '',
       max_height = '',
+      min_age = '',
+      max_age = '',
+      gender = '',
+      eye_color = '',
+      hair_color = '',
       status = '',
       board_id = '' // Filter by board
     } = req.query;
@@ -238,6 +243,31 @@ router.get('/dashboard/agency', requireRole('AGENCY'), async (req, res, next) =>
       query = query.where('profiles.height_cm', '<=', maxHeightNumber);
     }
 
+    // Age filters (for scout view)
+    const minAgeNumber = parseInt(min_age, 10);
+    const maxAgeNumber = parseInt(max_age, 10);
+    if (!Number.isNaN(minAgeNumber)) {
+      query = query.where('profiles.age', '>=', minAgeNumber);
+    }
+    if (!Number.isNaN(maxAgeNumber)) {
+      query = query.where('profiles.age', '<=', maxAgeNumber);
+    }
+
+    // Gender filter (for scout view)
+    if (gender) {
+      query = query.where('profiles.gender', gender);
+    }
+
+    // Eye color filter (for scout view)
+    if (eye_color) {
+      query = query.where('profiles.eye_color', eye_color);
+    }
+
+    // Hair color filter (for scout view)
+    if (hair_color) {
+      query = query.where('profiles.hair_color', hair_color);
+    }
+
     // Sort by match score if board is selected, otherwise use default sort
     if (board_id && sort !== 'az' && sort !== 'city') {
       // When board is selected, default to match score sorting
@@ -331,7 +361,7 @@ router.get('/dashboard/agency', requireRole('AGENCY'), async (req, res, next) =>
       profiles,
       boards: boardsWithCounts,
       view, // 'applicants' or 'scout'
-      filters: { sort, city, letter, search, min_height, max_height, status, board_id },
+      filters: { sort, city, letter, search, min_height, max_height, min_age, max_age, gender, eye_color, hair_color, status, board_id },
       stats,
       user: currentUser,
       currentUser,
