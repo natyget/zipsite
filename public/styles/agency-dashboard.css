@@ -6501,6 +6501,269 @@
   letter-spacing: 0.05em;
 }
 
+/* Greeting Section */
+.agency-overview__greeting {
+  margin-bottom: var(--agency-spacing-xl);
+}
+
+.agency-overview__greeting-title {
+  font-family: var(--agency-font-serif);
+  font-size: 3rem;
+  font-weight: 400;
+  color: var(--agency-text-primary);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.agency-overview__greeting-subtitle {
+  font-size: 1rem;
+  color: var(--agency-text-secondary);
+  margin: 0;
+}
+
+/* Section Headers */
+.agency-overview__section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--agency-spacing-md);
+}
+
+.agency-overview__section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--agency-text-primary);
+  margin: 0;
+  font-family: var(--agency-font-serif);
+}
+
+.agency-overview__section-link {
+  font-size: 0.875rem;
+  color: var(--agency-brand-color, var(--agency-accent-gold));
+  text-decoration: none;
+  font-weight: 500;
+  transition: var(--agency-transition-fast);
+}
+
+.agency-overview__section-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* Recent Applicants Section */
+.agency-overview__recent-applicants {
+  margin-bottom: var(--agency-spacing-xl);
+}
+
+.agency-overview__recent-list {
+  background: var(--agency-bg-surface);
+  border: 1px solid var(--agency-border);
+  border-radius: 16px;
+  padding: var(--agency-spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--agency-spacing-sm);
+}
+
+.agency-overview__recent-item {
+  display: flex;
+  align-items: center;
+  gap: var(--agency-spacing-md);
+  padding: var(--agency-spacing-md);
+  border-radius: 12px;
+  transition: var(--agency-transition-fast);
+  cursor: pointer;
+}
+
+.agency-overview__recent-item:hover {
+  background: var(--agency-bg-elevated);
+  transform: translateX(4px);
+}
+
+.agency-overview__recent-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--agency-border);
+}
+
+.agency-overview__recent-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.agency-overview__recent-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--agency-text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.agency-overview__recent-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--agency-text-secondary);
+}
+
+.agency-overview__recent-meta span:not(:last-child) {
+  display: flex;
+  align-items: center;
+}
+
+.agency-overview__recent-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.agency-overview__recent-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.agency-overview__recent-badge--new {
+  background: var(--agency-bg-elevated);
+  color: var(--agency-text-secondary);
+  border: 1px solid var(--agency-border);
+}
+
+.agency-overview__recent-badge--match {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.agency-overview__empty,
+.agency-overview__error,
+.agency-overview__loading {
+  padding: var(--agency-spacing-xl);
+  text-align: center;
+  color: var(--agency-text-tertiary);
+  font-size: 0.875rem;
+}
+
+.agency-overview__error {
+  color: #ef4444;
+}
+
+/* Quick Actions Section */
+.agency-overview__quick-actions {
+  margin-bottom: var(--agency-spacing-xl);
+}
+
+.agency-overview__quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--agency-spacing-md);
+}
+
+.agency-overview__quick-action-card {
+  background: var(--agency-bg-surface);
+  border: 1px solid var(--agency-border);
+  border-radius: 16px;
+  padding: var(--agency-spacing-lg);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--agency-spacing-md);
+  transition: var(--agency-transition-fast);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+}
+
+.agency-overview__quick-action-card:hover {
+  box-shadow: var(--agency-shadow-md);
+  transform: translateY(-2px);
+  border-color: var(--agency-brand-color, var(--agency-accent-gold));
+}
+
+.agency-overview__quick-action-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--agency-brand-color-light, var(--agency-accent-gold-light));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--agency-brand-color, var(--agency-accent-gold));
+  flex-shrink: 0;
+}
+
+.agency-overview__quick-action-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.agency-overview__quick-action-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.agency-overview__quick-action-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--agency-text-primary);
+  margin: 0 0 0.5rem 0;
+  font-family: var(--agency-font-serif);
+}
+
+.agency-overview__quick-action-description {
+  font-size: 0.875rem;
+  color: var(--agency-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.agency-overview__quick-action-badge {
+  position: absolute;
+  top: var(--agency-spacing-md);
+  right: var(--agency-spacing-md);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--agency-brand-color, var(--agency-accent-gold));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .agency-overview__greeting-title {
+    font-size: 2rem;
+  }
+
+  .agency-overview__kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .agency-overview__quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .agency-overview__recent-item {
+    flex-wrap: wrap;
+  }
+
+  .agency-overview__recent-badges {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
 /* Responsive Overview */
 @media (max-width: 1024px) {
   .agency-overview__charts {

@@ -619,7 +619,7 @@
                     </div>
                   </div>
                 <% }); %>
-                                      <% } %>
+                    <% } %>
                       </div>
               </div>
         </div>
@@ -630,23 +630,40 @@
   <!-- Overview Dashboard Section (shown when no view specified) -->
   <% if (typeof view === 'undefined' || view === '') { %>
     <section class="agency-overview" id="overview-dashboard">
-      <div class="agency-overview__header">
-        <div>
-          <h1 class="agency-overview__title">Dashboard Overview</h1>
-          <p class="agency-overview__subtitle">Your application pipeline at a glance</p>
-        </div>
-        <div class="agency-overview__header-actions">
-          <a href="/dashboard/agency?view=applicants" class="agency-overview__cta">
-            View All Applications
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </a>
-        </div>
+      <!-- Personalized Greeting -->
+      <div class="agency-overview__greeting">
+        <h1 class="agency-overview__greeting-title" id="overview-greeting">
+          <% 
+            const hour = new Date().getHours();
+            let greeting = 'Good Morning';
+            if (hour >= 12 && hour < 17) greeting = 'Good Afternoon';
+            if (hour >= 17) greeting = 'Good Evening';
+            const agencyName = currentUser && currentUser.agency_name ? currentUser.agency_name : 'Agency';
+          %>
+          <%= greeting %>, <%= agencyName %>
+        </h1>
+        <p class="agency-overview__greeting-subtitle">Here is your daily overview</p>
       </div>
 
       <!-- KPI Cards -->
       <div class="agency-overview__kpi-grid">
+        <div class="agency-overview__kpi-card agency-overview__kpi-card--highlight">
+          <div class="agency-overview__kpi-header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span class="agency-overview__kpi-label">Pending Applications</span>
+          </div>
+          <div class="agency-overview__kpi-value"><%= safeStats.pending %></div>
+          <div class="agency-overview__kpi-subtext">
+            <% if (safeStats.newToday > 0) { %>
+              <span class="agency-overview__kpi-trend">New today</span>
+            <% } else { %>
+              No new applications today
+                                      <% } %>
+                      </div>
+              </div>
+
         <div class="agency-overview__kpi-card">
           <div class="agency-overview__kpi-header">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -655,61 +672,90 @@
               <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
               <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
-            <span class="agency-overview__kpi-label">Total Applications</span>
+            <span class="agency-overview__kpi-label">Active Boards</span>
           </div>
-          <div class="agency-overview__kpi-value"><%= safeStats.total %></div>
-          <div class="agency-overview__kpi-subtext">All time</div>
+          <div class="agency-overview__kpi-value"><%= safeBoards.length %></div>
+          <div class="agency-overview__kpi-subtext">
+            <span class="agency-overview__kpi-trend" id="overview-boards-growth">+0%</span>
+          </div>
         </div>
 
-        <div class="agency-overview__kpi-card agency-overview__kpi-card--highlight">
+        <div class="agency-overview__kpi-card">
           <div class="agency-overview__kpi-header">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
-            <span class="agency-overview__kpi-label">Pending Review</span>
+            <span class="agency-overview__kpi-label">Total Talent Pool</span>
           </div>
-          <div class="agency-overview__kpi-value"><%= safeStats.pending %></div>
-          <div class="agency-overview__kpi-subtext">
-            <% if (safeStats.newToday > 0) { %>
-              <span class="agency-overview__kpi-trend">+<%= safeStats.newToday %> today</span>
-            <% } else { %>
-              No new applications today
+          <div class="agency-overview__kpi-value" id="overview-talent-pool">—</div>
+          <div class="agency-overview__kpi-subtext">Available talent</div>
+        </div>
+      </div>
+
+      <!-- Recent Applicants Section -->
+      <div class="agency-overview__recent-applicants">
+        <div class="agency-overview__section-header">
+          <h2 class="agency-overview__section-title">Recent Applicants</h2>
+          <a href="/dashboard/agency?view=applicants" class="agency-overview__section-link">View All</a>
+        </div>
+        <div class="agency-overview__recent-list" id="overview-recent-applicants">
+          <div class="agency-overview__loading">Loading recent applicants...</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions Section -->
+      <div class="agency-overview__quick-actions">
+        <div class="agency-overview__section-header">
+          <h2 class="agency-overview__section-title">Quick Actions</h2>
+        </div>
+        <div class="agency-overview__quick-actions-grid">
+          <button class="agency-overview__quick-action-card" id="quick-action-create-board">
+            <div class="agency-overview__quick-action-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </div>
+            <div class="agency-overview__quick-action-content">
+              <h3 class="agency-overview__quick-action-title">Create New Board</h3>
+              <p class="agency-overview__quick-action-description">Organize talent for upcoming shows</p>
+            </div>
+          </button>
+          <a href="/dashboard/agency?view=scout" class="agency-overview__quick-action-card">
+            <div class="agency-overview__quick-action-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+              </svg>
+            </div>
+            <div class="agency-overview__quick-action-content">
+              <h3 class="agency-overview__quick-action-title">Scout Talent</h3>
+              <p class="agency-overview__quick-action-description">Browse the global directory</p>
+            </div>
+          </a>
+          <a href="/dashboard/agency?view=applicants" class="agency-overview__quick-action-card">
+            <div class="agency-overview__quick-action-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <div class="agency-overview__quick-action-content">
+              <h3 class="agency-overview__quick-action-title">Review Inbox</h3>
+              <p class="agency-overview__quick-action-description">
+                <% if (safeStats.pending > 0) { %>
+                  You have <%= safeStats.pending %> pending application<%= safeStats.pending !== 1 ? 's' : '' %>
+                <% } else { %>
+                  You have pending applications
+                              <% } %>
+                </p>
+            </div>
+            <% if (safeStats.pending > 0) { %>
+              <span class="agency-overview__quick-action-badge"><%= safeStats.pending %></span>
             <% } %>
-          </div>
-        </div>
-
-        <div class="agency-overview__kpi-card">
-          <div class="agency-overview__kpi-header">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-            <span class="agency-overview__kpi-label">Acceptance Rate</span>
-          </div>
-          <div class="agency-overview__kpi-value" id="overview-acceptance-rate">
-            <% 
-              const processed = safeStats.accepted + safeStats.declined;
-              const acceptanceRate = processed > 0 ? Math.round((safeStats.accepted / processed) * 100) : 0;
-            %>
-            <%= acceptanceRate %>%
-          </div>
-          <div class="agency-overview__kpi-subtext">
-            <%= safeStats.accepted %> of <%= processed > 0 ? processed : '0' %> processed
-          </div>
-        </div>
-
-        <div class="agency-overview__kpi-card">
-          <div class="agency-overview__kpi-header">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <span class="agency-overview__kpi-label">This Month</span>
-          </div>
-          <div class="agency-overview__kpi-value" id="overview-this-month">—</div>
-          <div class="agency-overview__kpi-subtext">New applications</div>
+          </a>
         </div>
       </div>
 
@@ -800,7 +846,7 @@
         </div>
       </div>
     </section>
-  <% } %>
+                  <% } %>
 
   <!-- Tab Navigation (only show when not on overview) -->
   <% if (typeof view !== 'undefined' && view !== '') { %>
@@ -846,7 +892,7 @@
           <span class="agency-dashboard__eyebrow">Talent Management</span>
           <h1 class="agency-dashboard__title">My Applicants</h1>
           <p class="agency-dashboard__subtitle">Review and manage incoming talent applications with AI-powered insights</p>
-                  <% } %>
+                          <% } %>
       </div>
       
       <!-- View Mode Switcher -->
@@ -859,14 +905,14 @@
             <rect x="14" y="14" width="7" height="7" rx="1"/>
           </svg>
           <span>Pipeline</span>
-                            </button>
+                                </button>
         <button class="agency-dashboard__view-btn" data-view="gallery" title="Gallery View">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="18" height="18" rx="2"/>
             <path d="M3 9h18M9 3v18"/>
           </svg>
           <span>Gallery</span>
-                                </button>
+                                    </button>
         <button class="agency-dashboard__view-btn" data-view="list" title="List View">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="8" y1="6" x2="21" y2="6"/>
@@ -877,7 +923,7 @@
             <line x1="3" y1="18" x2="3.01" y2="18"/>
           </svg>
           <span>List</span>
-                                    </button>
+                                      </button>
         <button class="agency-dashboard__view-btn" data-view="table" title="Table View">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0H5a2 2 0 0 1-2-2V9m6 12h10a2 2 0 0 0 2-2V9M9 3h6"/>
@@ -911,7 +957,7 @@
           </div>
         </div>
       </div>
-    </section>
+  </section>
 
   <!-- Analytics Section -->
   <section class="agency-dashboard__analytics" id="analytics">
@@ -919,7 +965,7 @@
       <div class="agency-dashboard__analytics-header">
         <h2 class="agency-dashboard__analytics-title">Analytics & Insights</h2>
         <p class="agency-dashboard__analytics-subtitle">Track your application pipeline and performance metrics</p>
-      </div>
+          </div>
 
       <div class="agency-dashboard__analytics-content">
         <!-- Loading State -->
@@ -927,8 +973,8 @@
           <div style="text-align: center; padding: 3rem;">
             <div style="margin-bottom: 1rem; color: var(--agency-text-secondary);">Loading analytics...</div>
             <div style="font-size: 0.875rem; color: var(--agency-text-tertiary);">This may take a moment</div>
-          </div>
         </div>
+      </div>
 
         <!-- Error State -->
         <div class="agency-dashboard__analytics-error" id="analytics-error" style="display: none;">

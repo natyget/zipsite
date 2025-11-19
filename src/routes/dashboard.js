@@ -1369,6 +1369,139 @@ router.get('/dashboard/agency/analytics', requireRole('AGENCY'), async (req, res
   }
 });
 
+// Get recent applicants for overview dashboard
+router.get('/api/agency/overview/recent-applicants', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const agencyId = req.session.userId;
+    const limit = parseInt(req.query.limit) || 5;
+
+    // Get recent applications with profile data
+    const recentApplications = await knex('applications')
+      .where({ agency_id: agencyId })
+      .join('profiles', 'applications.profile_id', 'profiles.id')
+      .join('users', 'profiles.user_id', 'users.id')
+      .leftJoin('board_applications', function() {
+        this.on('applications.id', '=', 'board_applications.application_id')
+          .andOn('board_applications.is_primary', '=', knex.raw('?', [true]));
+      })
+      .leftJoin('boards', 'board_applications.board_id', 'boards.id')
+      .select(
+        'applications.id as application_id',
+        'applications.status as application_status',
+        'applications.created_at as application_created_at',
+        'profiles.id as profile_id',
+        'profiles.first_name',
+        'profiles.last_name',
+        'profiles.profile_image',
+        'profiles.city',
+        'profiles.country',
+        'profiles.height',
+        'profiles.age',
+        'profiles.slug',
+        'users.email as user_email',
+        'board_applications.match_score'
+      )
+      .orderBy('applications.created_at', 'desc')
+      .limit(limit);
+
+    // Format the response
+    const formatted = recentApplications.map(app => {
+      const isNew = new Date(app.application_created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const fullName = `${app.first_name || ''} ${app.last_name || ''}`.trim() || 'Unknown';
+      const location = [app.city, app.country].filter(Boolean).join(', ') || 'Location not specified';
+      
+      return {
+        applicationId: app.application_id,
+        profileId: app.profile_id,
+        name: fullName,
+        location: location,
+        height: app.height || 'N/A',
+        age: app.age || 'N/A',
+        profileImage: app.profile_image || '/images/default-avatar.png',
+        matchScore: app.match_score ? Math.round(app.match_score) : null,
+        isNew: isNew,
+        slug: app.slug,
+        createdAt: app.application_created_at
+      };
+    });
+
+    return res.json({
+      success: true,
+      applicants: formatted
+    });
+  } catch (error) {
+    console.error('[Dashboard/Agency/Recent Applicants] Error:', error);
+    return res.status(500).json({ 
+      error: 'Failed to load recent applicants',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    });
+  }
+});
+
+// Get overview stats (talent pool, board growth)
+router.get('/api/agency/overview/stats', requireRole('AGENCY'), async (req, res, next) => {
+  try {
+    const agencyId = req.session.userId;
+
+    // Calculate total talent pool (accepted applications + all public talent)
+    const acceptedCount = await knex('applications')
+      .where({ agency_id: agencyId, status: 'accepted' })
+      .count('id as count')
+      .first();
+
+    // Get all public talent profiles (not just applications)
+    const publicTalentCount = await knex('profiles')
+      .where({ is_public: true })
+      .count('id as count')
+      .first();
+
+    const totalTalentPool = parseInt(acceptedCount?.count || 0) + parseInt(publicTalentCount?.count || 0);
+
+    // Calculate board growth (compare current month vs previous month)
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    const currentMonthBoards = await knex('boards')
+      .where({ agency_id: agencyId })
+      .where('created_at', '>=', currentMonthStart)
+      .count('id as count')
+      .first();
+
+    const previousMonthBoards = await knex('boards')
+      .where({ agency_id: agencyId })
+      .where('created_at', '>=', previousMonthStart)
+      .where('created_at', '<', currentMonthStart)
+      .count('id as count')
+      .first();
+
+    const currentCount = parseInt(currentMonthBoards?.count || 0);
+    const previousCount = parseInt(previousMonthBoards?.count || 0);
+    
+    let growthPercentage = 0;
+    if (previousCount > 0) {
+      growthPercentage = Math.round(((currentCount - previousCount) / previousCount) * 100);
+    } else if (currentCount > 0) {
+      growthPercentage = 100; // New boards this month
+    }
+
+    return res.json({
+      success: true,
+      stats: {
+        totalTalentPool: totalTalentPool,
+        boardGrowth: growthPercentage
+      }
+    });
+  } catch (error) {
+    console.error('[Dashboard/Agency/Overview Stats] Error:', error);
+    return res.status(500).json({ 
+      error: 'Failed to load overview stats',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    });
+  }
+});
+
 // GET route for activity feed
 router.get('/dashboard/talent/activity', requireRole('TALENT'), async (req, res, next) => {
   try {

@@ -30,6 +30,7 @@
     initNotesAndTags();
     initAgencyProfileAccordion();
     initExportData();
+    initSettingsButton();
     initBoardsManagement();
     initBoardEditor();
     initAnalytics();
@@ -1877,6 +1878,18 @@
     });
   }
 
+  /**
+   * Settings Button
+   */
+  function initSettingsButton() {
+    const settingsBtn = document.getElementById('settings-btn');
+    if (!settingsBtn) return;
+
+    settingsBtn.addEventListener('click', () => {
+      window.location.href = '/dashboard/settings';
+    });
+  }
+
   function showExportModal(filters) {
     // Create modal
     const modal = document.createElement('div');
@@ -2530,6 +2543,95 @@
     const thisMonthEl = document.getElementById('overview-this-month');
     const avgScoreEl = document.getElementById('overview-avg-score');
 
+    // Load recent applicants
+    const loadRecentApplicants = async () => {
+      const container = document.getElementById('overview-recent-applicants');
+      if (!container) return;
+
+      try {
+        const response = await fetch('/api/agency/overview/recent-applicants?limit=5');
+        if (!response.ok) throw new Error('Failed to load recent applicants');
+
+        const data = await response.json();
+        if (!data.success || !data.applicants) {
+          container.innerHTML = '<div class="agency-overview__empty">No recent applicants</div>';
+          return;
+        }
+
+        if (data.applicants.length === 0) {
+          container.innerHTML = '<div class="agency-overview__empty">No recent applicants</div>';
+          return;
+        }
+
+        container.innerHTML = data.applicants.map(applicant => {
+          const imageSrc = applicant.profileImage && applicant.profileImage.startsWith('http') 
+            ? applicant.profileImage 
+            : (applicant.profileImage || '/images/default-avatar.png');
+          
+          return `
+            <div class="agency-overview__recent-item" data-profile-id="${applicant.profileId}" data-application-id="${applicant.applicationId}">
+              <img src="${imageSrc}" alt="${applicant.name}" class="agency-overview__recent-avatar" onerror="this.src='/images/default-avatar.png'">
+              <div class="agency-overview__recent-info">
+                <div class="agency-overview__recent-name">${escapeHtml(applicant.name)}</div>
+                <div class="agency-overview__recent-meta">
+                  <span>${escapeHtml(applicant.location)}</span>
+                  <span>•</span>
+                  <span>${applicant.height}</span>
+                  <span>•</span>
+                  <span>${applicant.age} years</span>
+                </div>
+              </div>
+              <div class="agency-overview__recent-badges">
+                ${applicant.isNew ? '<span class="agency-overview__recent-badge agency-overview__recent-badge--new">New Face</span>' : ''}
+                ${applicant.matchScore ? `<span class="agency-overview__recent-badge agency-overview__recent-badge--match">${applicant.matchScore}% Match</span>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Add click handlers to open detail drawer
+        container.querySelectorAll('.agency-overview__recent-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const profileId = item.dataset.profileId;
+            if (window.openApplicationDetail) {
+              window.openApplicationDetail(profileId);
+            }
+          });
+        });
+      } catch (error) {
+        console.error('Error loading recent applicants:', error);
+        container.innerHTML = '<div class="agency-overview__error">Failed to load recent applicants</div>';
+      }
+    };
+
+    // Load overview stats
+    const loadOverviewStats = async () => {
+      try {
+        const response = await fetch('/api/agency/overview/stats');
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (!data.success || !data.stats) return;
+
+        const stats = data.stats;
+
+        // Update talent pool
+        const talentPoolEl = document.getElementById('overview-talent-pool');
+        if (talentPoolEl) {
+          talentPoolEl.textContent = stats.totalTalentPool || 0;
+        }
+
+        // Update board growth
+        const boardGrowthEl = document.getElementById('overview-boards-growth');
+        if (boardGrowthEl) {
+          const growth = stats.boardGrowth || 0;
+          boardGrowthEl.textContent = growth > 0 ? `+${growth}%` : growth < 0 ? `${growth}%` : '+0%';
+        }
+      } catch (error) {
+        console.error('Error loading overview stats:', error);
+      }
+    };
+
     // Load overview data
     const loadOverviewData = async () => {
       try {
@@ -2567,15 +2669,52 @@
       }
     };
 
+    // Load all data
+    const loadAll = async () => {
+      await Promise.all([
+        loadOverviewData(),
+        loadRecentApplicants(),
+        loadOverviewStats()
+      ]);
+    };
+
+    // Quick action: Create Board
+    const createBoardBtn = document.getElementById('quick-action-create-board');
+    if (createBoardBtn) {
+      createBoardBtn.addEventListener('click', () => {
+        if (window.openBoardEditor) {
+          window.openBoardEditor();
+        } else {
+          // Fallback: scroll to boards section
+          const boardsSection = document.getElementById('boards');
+          if (boardsSection) {
+            boardsSection.scrollIntoView({ behavior: 'smooth' });
+            // Trigger create board button click
+            setTimeout(() => {
+              const createBtn = document.getElementById('create-board-btn');
+              if (createBtn) createBtn.click();
+            }, 500);
+          }
+        }
+      });
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
     // Load immediately if section is visible
     if (overviewSection.offsetParent !== null) {
-      loadOverviewData();
+      loadAll();
     } else {
       // Use Intersection Observer to load when section comes into view
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
-            loadOverviewData();
+            loadAll();
             observer.unobserve(entry.target);
           }
         });
