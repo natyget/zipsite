@@ -1,212 +1,561 @@
 <!-- Board Editor Modal -->
-<div class="board-editor-modal" id="board-editor-modal" style="display: none;">
-  <div class="board-editor-modal__overlay"></div>
+<div class="board-editor-modal" id="board-editor-modal" role="dialog" aria-labelledby="board-editor-title" aria-modal="true" style="display: none;">
+  <div class="board-editor-modal__overlay" aria-hidden="true"></div>
   <div class="board-editor-modal__content">
+    <!-- Header -->
     <div class="board-editor-modal__header">
       <h2 class="board-editor-modal__title" id="board-editor-title">Create New Board</h2>
-      <button class="board-editor-modal__close" id="board-editor-close" aria-label="Close modal">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <button 
+        class="board-editor-modal__close" 
+        id="board-editor-close" 
+        type="button"
+        aria-label="Close modal"
+        title="Close (Esc)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"/>
           <line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
     </div>
 
-    <form id="board-editor-form" class="board-editor-modal__form">
+    <form id="board-editor-form" class="board-editor-modal__form" novalidate>
       <input type="hidden" id="board-editor-id" name="board_id" value="">
 
-      <!-- Tabs -->
-      <div class="board-editor-modal__tabs">
-        <button type="button" class="board-editor-modal__tab board-editor-modal__tab--active" data-tab="basic">Basic Info</button>
-        <button type="button" class="board-editor-modal__tab" data-tab="requirements">Requirements</button>
-        <button type="button" class="board-editor-modal__tab" data-tab="weights">Scoring Weights</button>
-      </div>
-
-      <!-- Basic Info Tab -->
-      <div class="board-editor-modal__tab-content board-editor-modal__tab-content--active" data-content="basic">
-        <div class="board-editor-modal__field">
-          <label for="board-name">Board Name *</label>
-          <input type="text" id="board-name" name="name" required placeholder="e.g., Spring 2024 Runway">
-        </div>
-
-        <div class="board-editor-modal__field">
-          <label for="board-description">Description</label>
-          <textarea id="board-description" name="description" rows="3" placeholder="Describe the purpose of this board..."></textarea>
-        </div>
-
-        <div class="board-editor-modal__field">
-          <label class="board-editor-modal__checkbox-label">
-            <input type="checkbox" id="board-is-active" name="is_active" checked>
-            <span>Active (board will be visible and can receive applications)</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- Requirements Tab -->
-      <div class="board-editor-modal__tab-content" data-content="requirements">
-        <div class="board-editor-modal__section">
-          <h3 class="board-editor-modal__section-title">Age Range</h3>
-          <div class="board-editor-modal__range-group">
-            <div class="board-editor-modal__field">
-              <label for="req-min-age">Min Age</label>
-              <input type="number" id="req-min-age" name="min_age" min="16" max="99" placeholder="16">
-            </div>
-            <div class="board-editor-modal__field">
-              <label for="req-max-age">Max Age</label>
-              <input type="number" id="req-max-age" name="max_age" min="16" max="99" placeholder="99">
-            </div>
-          </div>
-        </div>
-
-        <div class="board-editor-modal__section">
-          <h3 class="board-editor-modal__section-title">Height Range (cm)</h3>
-          <div class="board-editor-modal__range-group">
-            <div class="board-editor-modal__field">
-              <label for="req-min-height">Min Height</label>
-              <input type="number" id="req-min-height" name="min_height_cm" min="120" max="220" placeholder="160">
-            </div>
-            <div class="board-editor-modal__field">
-              <label for="req-max-height">Max Height</label>
-              <input type="number" id="req-max-height" name="max_height_cm" min="120" max="220" placeholder="190">
-            </div>
-          </div>
-        </div>
-
-        <div class="board-editor-modal__section">
-          <h3 class="board-editor-modal__section-title">Gender</h3>
-          <div class="board-editor-modal__checkbox-group">
-            <label class="board-editor-modal__checkbox-label">
-              <input type="checkbox" name="genders" value="female">
-              <span>Female</span>
-            </label>
-            <label class="board-editor-modal__checkbox-label">
-              <input type="checkbox" name="genders" value="male">
-              <span>Male</span>
-            </label>
-            <label class="board-editor-modal__checkbox-label">
-              <input type="checkbox" name="genders" value="non-binary">
-              <span>Non-binary</span>
-            </label>
-            <label class="board-editor-modal__checkbox-label">
-              <input type="checkbox" name="genders" value="other">
-              <span>Other</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="board-editor-modal__section">
-          <h3 class="board-editor-modal__section-title">Measurements</h3>
-          <div class="board-editor-modal__measurements-grid">
-            <div class="board-editor-modal__field">
-              <label for="req-min-bust">Min Bust (cm)</label>
-              <input type="number" id="req-min-bust" name="min_bust" min="60" max="120" placeholder="80">
-            </div>
-            <div class="board-editor-modal__field">
-              <label for="req-max-bust">Max Bust (cm)</label>
-              <input type="number" id="req-max-bust" name="max_bust" min="60" max="120" placeholder="100">
-            </div>
-            <div class="board-editor-modal__field">
-              <label for="req-min-waist">Min Waist (cm)</label>
-              <input type="number" id="req-min-waist" name="min_waist" min="50" max="100" placeholder="60">
-            </div>
-            <div class="board-editor-modal__field">
-              <label for="req-max-waist">Max Waist (cm)</label>
-              <input type="number" id="req-max-waist" name="max_waist" min="50" max="100" placeholder="80">
-            </div>
-            <div class="board-editor-modal__field">
-              <label for="req-min-hips">Min Hips (cm)</label>
-              <input type="number" id="req-min-hips" name="min_hips" min="70" max="130" placeholder="85">
-            </div>
-            <div class="board-editor-modal__field">
-              <label for="req-max-hips">Max Hips (cm)</label>
-              <input type="number" id="req-max-hips" name="max_hips" min="70" max="130" placeholder="105">
-            </div>
-          </div>
-        </div>
-
-        <div class="board-editor-modal__section">
-          <h3 class="board-editor-modal__section-title">Social Media Reach</h3>
-          <div class="board-editor-modal__field">
-            <label for="req-min-social-reach">Min Social Reach</label>
-            <input type="number" id="req-min-social-reach" name="min_social_reach" min="0" placeholder="0">
-            <p class="board-editor-modal__help-text">Minimum combined followers across all platforms</p>
-          </div>
-          <div class="board-editor-modal__field">
-            <label for="req-social-importance">Importance</label>
-            <select id="req-social-importance" name="social_reach_importance">
-              <option value="low">Low</option>
-              <option value="medium" selected>Medium</option>
-              <option value="high">High</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <!-- Scoring Weights Tab -->
-      <div class="board-editor-modal__tab-content" data-content="weights">
-        <div class="board-editor-modal__section">
-          <p class="board-editor-modal__help-text" style="margin-bottom: 1.5rem;">
-            Adjust the importance of each factor when calculating match scores. Total must equal 100%.
-          </p>
-          <div class="board-editor-modal__weights-list">
-            <div class="board-editor-modal__weight-item">
-              <label for="weight-height">Height</label>
-              <div class="board-editor-modal__weight-control">
-                <input type="range" id="weight-height" name="height_weight" min="0" max="100" value="20">
-                <span class="board-editor-modal__weight-value" id="weight-height-value">20%</span>
-              </div>
-            </div>
-            <div class="board-editor-modal__weight-item">
-              <label for="weight-age">Age</label>
-              <div class="board-editor-modal__weight-control">
-                <input type="range" id="weight-age" name="age_weight" min="0" max="100" value="15">
-                <span class="board-editor-modal__weight-value" id="weight-age-value">15%</span>
-              </div>
-            </div>
-            <div class="board-editor-modal__weight-item">
-              <label for="weight-measurements">Measurements</label>
-              <div class="board-editor-modal__weight-control">
-                <input type="range" id="weight-measurements" name="measurements_weight" min="0" max="100" value="25">
-                <span class="board-editor-modal__weight-value" id="weight-measurements-value">25%</span>
-              </div>
-            </div>
-            <div class="board-editor-modal__weight-item">
-              <label for="weight-experience">Experience</label>
-              <div class="board-editor-modal__weight-control">
-                <input type="range" id="weight-experience" name="experience_weight" min="0" max="100" value="20">
-                <span class="board-editor-modal__weight-value" id="weight-experience-value">20%</span>
-              </div>
-            </div>
-            <div class="board-editor-modal__weight-item">
-              <label for="weight-social">Social Reach</label>
-              <div class="board-editor-modal__weight-control">
-                <input type="range" id="weight-social" name="social_weight" min="0" max="100" value="10">
-                <span class="board-editor-modal__weight-value" id="weight-social-value">10%</span>
-              </div>
-            </div>
-            <div class="board-editor-modal__weight-item">
-              <label for="weight-location">Location</label>
-              <div class="board-editor-modal__weight-control">
-                <input type="range" id="weight-location" name="location_weight" min="0" max="100" value="10">
-                <span class="board-editor-modal__weight-value" id="weight-location-value">10%</span>
-              </div>
-            </div>
-          </div>
-          <div class="board-editor-modal__total-weight" id="total-weight">
-            <strong>Total: <span id="total-weight-value">100%</span></strong>
-          </div>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="board-editor-modal__actions">
-        <button type="button" class="board-editor-modal__btn board-editor-modal__btn--secondary" id="board-editor-cancel">Cancel</button>
-        <button type="submit" class="board-editor-modal__btn board-editor-modal__btn--primary" id="board-editor-save">
-          <span id="board-editor-save-text">Save Board</span>
-          <div class="board-editor-modal__spinner" id="board-editor-spinner" style="display: none;"></div>
+      <!-- Tabs Navigation -->
+      <div class="board-editor-modal__tabs" role="tablist" aria-label="Board editor sections">
+        <button 
+          type="button" 
+          class="board-editor-modal__tab board-editor-modal__tab--active" 
+          data-tab="basic"
+          role="tab"
+          aria-selected="true"
+          aria-controls="tab-content-basic"
+          id="tab-basic">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <span>Basic Info</span>
         </button>
+        <button 
+          type="button" 
+          class="board-editor-modal__tab" 
+          data-tab="requirements"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-content-requirements"
+          id="tab-requirements">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span>Requirements</span>
+        </button>
+        <button 
+          type="button" 
+          class="board-editor-modal__tab" 
+          data-tab="weights"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-content-weights"
+          id="tab-weights">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="20" x2="12" y2="10"/>
+            <line x1="18" y1="20" x2="18" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="16"/>
+          </svg>
+          <span>Scoring Weights</span>
+        </button>
+      </div>
+
+      <!-- Tab Content Container -->
+      <div class="board-editor-modal__body">
+        <!-- Basic Info Tab -->
+        <div 
+          class="board-editor-modal__tab-content board-editor-modal__tab-content--active" 
+          data-content="basic"
+          id="tab-content-basic"
+          role="tabpanel"
+          aria-labelledby="tab-basic">
+          
+          <div class="board-editor-modal__field-group">
+            <div class="board-editor-modal__field">
+              <label for="board-name" class="board-editor-modal__label">
+                Board Name <span class="board-editor-modal__required">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="board-name" 
+                name="name" 
+                required 
+                placeholder="e.g., Spring 2024 Runway"
+                class="board-editor-modal__input"
+                aria-describedby="board-name-error"
+                aria-invalid="false">
+              <div class="board-editor-modal__error" id="board-name-error" role="alert"></div>
+            </div>
+
+            <div class="board-editor-modal__field">
+              <label for="board-description" class="board-editor-modal__label">
+                Description
+                <span class="board-editor-modal__label-hint">(Optional)</span>
+              </label>
+              <textarea 
+                id="board-description" 
+                name="description" 
+                rows="4" 
+                placeholder="Describe the purpose of this board, what type of talent you're looking for, or any specific requirements..."
+                class="board-editor-modal__textarea"
+                aria-describedby="board-description-hint"></textarea>
+              <p class="board-editor-modal__hint" id="board-description-hint">
+                This description helps you and your team understand the board's purpose.
+              </p>
+            </div>
+
+            <div class="board-editor-modal__field">
+              <div class="board-editor-modal__switch">
+                <input 
+                  type="checkbox" 
+                  id="board-is-active" 
+                  name="is_active" 
+                  checked
+                  class="board-editor-modal__switch-input">
+                <label for="board-is-active" class="board-editor-modal__switch-label">
+                  <span class="board-editor-modal__switch-slider"></span>
+                  <span class="board-editor-modal__switch-text">
+                    <strong>Active Board</strong>
+                    <span class="board-editor-modal__switch-description">Board will be visible and can receive applications</span>
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Requirements Tab -->
+        <div 
+          class="board-editor-modal__tab-content" 
+          data-content="requirements"
+          id="tab-content-requirements"
+          role="tabpanel"
+          aria-labelledby="tab-requirements"
+          hidden>
+          
+          <div class="board-editor-modal__intro">
+            <p>Define the requirements for this board. Leave fields empty to allow any value.</p>
+          </div>
+
+          <!-- Age Range -->
+          <div class="board-editor-modal__section">
+            <h3 class="board-editor-modal__section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              Age Range
+            </h3>
+            <div class="board-editor-modal__range-group">
+              <div class="board-editor-modal__field">
+                <label for="req-min-age" class="board-editor-modal__label">Minimum Age</label>
+                <input 
+                  type="number" 
+                  id="req-min-age" 
+                  name="min_age" 
+                  min="16" 
+                  max="99" 
+                  placeholder="16"
+                  class="board-editor-modal__input">
+              </div>
+              <div class="board-editor-modal__field">
+                <label for="req-max-age" class="board-editor-modal__label">Maximum Age</label>
+                <input 
+                  type="number" 
+                  id="req-max-age" 
+                  name="max_age" 
+                  min="16" 
+                  max="99" 
+                  placeholder="99"
+                  class="board-editor-modal__input">
+              </div>
+            </div>
+          </div>
+
+          <!-- Height Range -->
+          <div class="board-editor-modal__section">
+            <h3 class="board-editor-modal__section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 3v18M18 3v18M6 3h12M6 21h12"/>
+              </svg>
+              Height Range (cm)
+            </h3>
+            <div class="board-editor-modal__range-group">
+              <div class="board-editor-modal__field">
+                <label for="req-min-height" class="board-editor-modal__label">Minimum Height</label>
+                <input 
+                  type="number" 
+                  id="req-min-height" 
+                  name="min_height_cm" 
+                  min="120" 
+                  max="220" 
+                  placeholder="160"
+                  class="board-editor-modal__input">
+              </div>
+              <div class="board-editor-modal__field">
+                <label for="req-max-height" class="board-editor-modal__label">Maximum Height</label>
+                <input 
+                  type="number" 
+                  id="req-max-height" 
+                  name="max_height_cm" 
+                  min="120" 
+                  max="220" 
+                  placeholder="190"
+                  class="board-editor-modal__input">
+              </div>
+            </div>
+          </div>
+
+          <!-- Gender -->
+          <div class="board-editor-modal__section">
+            <h3 class="board-editor-modal__section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              Gender
+            </h3>
+            <div class="board-editor-modal__checkbox-group">
+              <label class="board-editor-modal__checkbox-option">
+                <input 
+                  type="checkbox" 
+                  name="genders" 
+                  value="female"
+                  class="board-editor-modal__checkbox">
+                <span class="board-editor-modal__checkbox-custom"></span>
+                <span class="board-editor-modal__checkbox-text">Female</span>
+              </label>
+              <label class="board-editor-modal__checkbox-option">
+                <input 
+                  type="checkbox" 
+                  name="genders" 
+                  value="male"
+                  class="board-editor-modal__checkbox">
+                <span class="board-editor-modal__checkbox-custom"></span>
+                <span class="board-editor-modal__checkbox-text">Male</span>
+              </label>
+              <label class="board-editor-modal__checkbox-option">
+                <input 
+                  type="checkbox" 
+                  name="genders" 
+                  value="non-binary"
+                  class="board-editor-modal__checkbox">
+                <span class="board-editor-modal__checkbox-custom"></span>
+                <span class="board-editor-modal__checkbox-text">Non-binary</span>
+              </label>
+              <label class="board-editor-modal__checkbox-option">
+                <input 
+                  type="checkbox" 
+                  name="genders" 
+                  value="other"
+                  class="board-editor-modal__checkbox">
+                <span class="board-editor-modal__checkbox-custom"></span>
+                <span class="board-editor-modal__checkbox-text">Other</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Measurements -->
+          <div class="board-editor-modal__section">
+            <h3 class="board-editor-modal__section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <path d="M9 9h6v6H9z"/>
+              </svg>
+              Measurements (cm)
+            </h3>
+            <div class="board-editor-modal__measurements-grid">
+              <div class="board-editor-modal__field">
+                <label for="req-min-bust" class="board-editor-modal__label">Min Bust</label>
+                <input 
+                  type="number" 
+                  id="req-min-bust" 
+                  name="min_bust" 
+                  min="60" 
+                  max="120" 
+                  placeholder="80"
+                  class="board-editor-modal__input">
+              </div>
+              <div class="board-editor-modal__field">
+                <label for="req-max-bust" class="board-editor-modal__label">Max Bust</label>
+                <input 
+                  type="number" 
+                  id="req-max-bust" 
+                  name="max_bust" 
+                  min="60" 
+                  max="120" 
+                  placeholder="100"
+                  class="board-editor-modal__input">
+              </div>
+              <div class="board-editor-modal__field">
+                <label for="req-min-waist" class="board-editor-modal__label">Min Waist</label>
+                <input 
+                  type="number" 
+                  id="req-min-waist" 
+                  name="min_waist" 
+                  min="50" 
+                  max="100" 
+                  placeholder="60"
+                  class="board-editor-modal__input">
+              </div>
+              <div class="board-editor-modal__field">
+                <label for="req-max-waist" class="board-editor-modal__label">Max Waist</label>
+                <input 
+                  type="number" 
+                  id="req-max-waist" 
+                  name="max_waist" 
+                  min="50" 
+                  max="100" 
+                  placeholder="80"
+                  class="board-editor-modal__input">
+              </div>
+              <div class="board-editor-modal__field">
+                <label for="req-min-hips" class="board-editor-modal__label">Min Hips</label>
+                <input 
+                  type="number" 
+                  id="req-min-hips" 
+                  name="min_hips" 
+                  min="70" 
+                  max="130" 
+                  placeholder="85"
+                  class="board-editor-modal__input">
+              </div>
+              <div class="board-editor-modal__field">
+                <label for="req-max-hips" class="board-editor-modal__label">Max Hips</label>
+                <input 
+                  type="number" 
+                  id="req-max-hips" 
+                  name="max_hips" 
+                  min="70" 
+                  max="130" 
+                  placeholder="105"
+                  class="board-editor-modal__input">
+              </div>
+            </div>
+          </div>
+
+          <!-- Social Media Reach -->
+          <div class="board-editor-modal__section">
+            <h3 class="board-editor-modal__section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+              </svg>
+              Social Media Reach
+            </h3>
+            <div class="board-editor-modal__field">
+              <label for="req-min-social-reach" class="board-editor-modal__label">
+                Minimum Social Reach
+                <span class="board-editor-modal__label-hint">(Optional)</span>
+              </label>
+              <input 
+                type="number" 
+                id="req-min-social-reach" 
+                name="min_social_reach" 
+                min="0" 
+                placeholder="0"
+                class="board-editor-modal__input">
+              <p class="board-editor-modal__hint">
+                Minimum combined followers across all platforms (Instagram, TikTok, etc.)
+              </p>
+            </div>
+            <div class="board-editor-modal__field">
+              <label for="req-social-importance" class="board-editor-modal__label">Importance Level</label>
+              <select 
+                id="req-social-importance" 
+                name="social_reach_importance"
+                class="board-editor-modal__select">
+                <option value="low">Low - Not a priority</option>
+                <option value="medium" selected>Medium - Nice to have</option>
+                <option value="high">High - Important factor</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scoring Weights Tab -->
+        <div 
+          class="board-editor-modal__tab-content" 
+          data-content="weights"
+          id="tab-content-weights"
+          role="tabpanel"
+          aria-labelledby="tab-weights"
+          hidden>
+          
+          <div class="board-editor-modal__intro">
+            <p>Adjust the importance of each factor when calculating match scores. Use a scale of 0-5, where 0 means not considered and 5 means very important.</p>
+          </div>
+
+          <div class="board-editor-modal__weights-container">
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-height" class="board-editor-modal__weight-label">
+                Height
+              </label>
+              <div class="board-editor-modal__weight-control">
+                <input 
+                  type="range" 
+                  id="weight-height" 
+                  name="height_weight" 
+                  min="0" 
+                  max="5" 
+                  value="2"
+                  step="0.5"
+                  class="board-editor-modal__weight-slider"
+                  aria-valuemin="0"
+                  aria-valuemax="5"
+                  aria-valuenow="2">
+                <span class="board-editor-modal__weight-value" id="weight-height-value" aria-live="polite">2.0</span>
+              </div>
+            </div>
+
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-age" class="board-editor-modal__weight-label">
+                Age
+              </label>
+              <div class="board-editor-modal__weight-control">
+                <input 
+                  type="range" 
+                  id="weight-age" 
+                  name="age_weight" 
+                  min="0" 
+                  max="5" 
+                  value="1.5"
+                  step="0.5"
+                  class="board-editor-modal__weight-slider"
+                  aria-valuemin="0"
+                  aria-valuemax="5"
+                  aria-valuenow="1.5">
+                <span class="board-editor-modal__weight-value" id="weight-age-value" aria-live="polite">1.5</span>
+              </div>
+            </div>
+
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-measurements" class="board-editor-modal__weight-label">
+                Measurements
+              </label>
+              <div class="board-editor-modal__weight-control">
+                <input 
+                  type="range" 
+                  id="weight-measurements" 
+                  name="measurements_weight" 
+                  min="0" 
+                  max="5" 
+                  value="2.5"
+                  step="0.5"
+                  class="board-editor-modal__weight-slider"
+                  aria-valuemin="0"
+                  aria-valuemax="5"
+                  aria-valuenow="2.5">
+                <span class="board-editor-modal__weight-value" id="weight-measurements-value" aria-live="polite">2.5</span>
+              </div>
+            </div>
+
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-experience" class="board-editor-modal__weight-label">
+                Experience
+              </label>
+              <div class="board-editor-modal__weight-control">
+                <input 
+                  type="range" 
+                  id="weight-experience" 
+                  name="experience_weight" 
+                  min="0" 
+                  max="5" 
+                  value="2"
+                  step="0.5"
+                  class="board-editor-modal__weight-slider"
+                  aria-valuemin="0"
+                  aria-valuemax="5"
+                  aria-valuenow="2">
+                <span class="board-editor-modal__weight-value" id="weight-experience-value" aria-live="polite">2.0</span>
+              </div>
+            </div>
+
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-social" class="board-editor-modal__weight-label">
+                Social Reach
+              </label>
+              <div class="board-editor-modal__weight-control">
+                <input 
+                  type="range" 
+                  id="weight-social" 
+                  name="social_reach_weight" 
+                  min="0" 
+                  max="5" 
+                  value="1"
+                  step="0.5"
+                  class="board-editor-modal__weight-slider"
+                  aria-valuemin="0"
+                  aria-valuemax="5"
+                  aria-valuenow="1">
+                <span class="board-editor-modal__weight-value" id="weight-social-value" aria-live="polite">1.0</span>
+              </div>
+            </div>
+
+            <div class="board-editor-modal__weight-item">
+              <label for="weight-location" class="board-editor-modal__weight-label">
+                Location
+              </label>
+              <div class="board-editor-modal__weight-control">
+                <input 
+                  type="range" 
+                  id="weight-location" 
+                  name="location_weight" 
+                  min="0" 
+                  max="5" 
+                  value="1"
+                  step="0.5"
+                  class="board-editor-modal__weight-slider"
+                  aria-valuemin="0"
+                  aria-valuemax="5"
+                  aria-valuenow="1">
+                <span class="board-editor-modal__weight-value" id="weight-location-value" aria-live="polite">1.0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="board-editor-modal__weight-summary">
+            <div class="board-editor-modal__weight-total" id="total-weight">
+              <span class="board-editor-modal__weight-total-label">Total Weight:</span>
+              <span class="board-editor-modal__weight-total-value" id="total-weight-value" aria-live="polite">10.0</span>
+            </div>
+            <p class="board-editor-modal__weight-hint" id="weight-hint">
+              Weights are used to calculate match scores. Higher values mean more importance.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions Footer -->
+      <div class="board-editor-modal__actions">
+        <button 
+          type="button" 
+          class="board-editor-modal__btn board-editor-modal__btn--secondary" 
+          id="board-editor-cancel">
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="board-editor-modal__btn board-editor-modal__btn--primary" 
+          id="board-editor-save"
+          aria-describedby="board-editor-save-status">
+          <span id="board-editor-save-text">Save Board</span>
+          <svg class="board-editor-modal__spinner" id="board-editor-spinner" style="display: none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+        </button>
+        <div class="board-editor-modal__save-status" id="board-editor-save-status" role="status" aria-live="polite"></div>
       </div>
     </form>
   </div>
 </div>
-
