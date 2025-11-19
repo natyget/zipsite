@@ -1,4 +1,7 @@
 <!-- Active Filter Chips -->
+<% if (typeof safeFilters === 'undefined') { %>
+  <% safeFilters = {}; %>
+<% } %>
 <% 
   const activeFilters = [];
   if (safeFilters.min_height || safeFilters.max_height) {

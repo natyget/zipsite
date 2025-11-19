@@ -533,18 +533,7 @@
    ============================================ */
 
 /* Scout Container */
-.agency-dashboard__scout-container {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: var(--agency-spacing-lg);
-  margin-top: var(--agency-spacing-lg);
-}
-
-@media (max-width: 1024px) {
-  .agency-dashboard__scout-container {
-    grid-template-columns: 1fr;
-  }
-}
+/* Removed - sidebar no longer used on discover page */
 
 /* Scout Filters Sidebar */
 .scout-filters {

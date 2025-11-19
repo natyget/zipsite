@@ -1,5 +1,5 @@
       <!-- Scout Talent List View -->
-      <div class="agency-dashboard__scout-list" id="discover-talent-list">
+      <div class="agency-dashboard__scout-list discover-view discover-view--list" id="discover-talent-list">
         <% safeProfiles.forEach((profile, index) => { %>
           <%
             const daysSinceCreated = profile.created_at 
@@ -106,18 +106,5 @@
             </div>
           </div>
         <% }); %>
-        <% if (safeProfiles.length === 0) { %>
-          <div class="agency-dashboard__empty-state">
-            <div class="agency-dashboard__empty-icon">
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="m21 21-4.35-4.35"/>
-              </svg>
-            </div>
-            <h3 class="agency-dashboard__empty-title">No talent found</h3>
-            <p class="agency-dashboard__empty-text">Try adjusting your filters to see more results.</p>
-            <button class="agency-dashboard__empty-action" id="scout-reset-filters-btn">Clear Filters</button>
-          </div>
-        <% } %>
       </div>
 

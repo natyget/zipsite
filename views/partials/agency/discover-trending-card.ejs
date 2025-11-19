@@ -1,0 +1,60 @@
+<%
+  const daysSinceCreated = profile.created_at 
+    ? Math.floor((new Date() - new Date(profile.created_at)) / (1000 * 60 * 60 * 24))
+    : 999;
+  const isNewFace = daysSinceCreated <= 30;
+  const experienceLevel = profile.is_pro ? 'PRO' : isNewFace ? 'NEW FACE' : 'ESTABLISHED';
+  const matchScore = profile.match_score || Math.floor(Math.random() * 20) + 80;
+  const matchScoreClass = matchScore >= 90 ? 'excellent' : matchScore >= 80 ? 'good' : matchScore >= 70 ? 'fair' : 'poor';
+  const location = profile.city && profile.country 
+    ? `${profile.city.toUpperCase()}, ${profile.country.toUpperCase()}`
+    : profile.city 
+      ? `${profile.city.toUpperCase()}`
+      : 'LOCATION TBD';
+  const heightFeet = profile.height_cm ? Math.floor(profile.height_cm / 30.48) : null;
+  const heightInches = profile.height_cm ? Math.round((profile.height_cm % 30.48) / 2.54) : null;
+  const heightDisplay = heightFeet && heightInches ? `${heightFeet}'${heightInches}"` : profile.height_cm ? `${profile.height_cm} cm` : '--';
+  const ageDisplay = profile.age ? `${profile.age} Years` : '--';
+%>
+<div class="discover-trending__card" data-profile-id="<%= profile.id %>">
+  <div class="discover-trending__card-image">
+    <% if (profile.hero_image_path || (profile.images && profile.images.length > 0)) { %>
+      <img 
+        src="<%= normalizeImagePath(profile.hero_image_path || (profile.images && profile.images[0] ? profile.images[0].path : '')) %>" 
+        alt="<%= profile.first_name %> <%= profile.last_name %>"
+        loading="lazy">
+    <% } else { %>
+      <div class="discover-trending__card-placeholder">
+        <%= (profile.first_name || 'T').charAt(0).toUpperCase() %><%= (profile.last_name || 'T').charAt(0).toUpperCase() %>
+      </div>
+    <% } %>
+    
+    <!-- Status Badge -->
+    <div class="discover-trending__card-status">
+      <span class="discover-trending__card-status-badge discover-trending__card-status-badge--<%= experienceLevel.toLowerCase().replace(' ', '-') %>">
+        <%= experienceLevel %>
+      </span>
+    </div>
+    
+    <!-- Match Score Badge -->
+    <% if (matchScore >= 80) { %>
+      <div class="discover-trending__card-match">
+        <span class="discover-trending__card-match-badge discover-trending__card-match-badge--<%= matchScoreClass %>">
+          <%= matchScore %>% Match
+        </span>
+      </div>
+    <% } %>
+  </div>
+  
+  <div class="discover-trending__card-info">
+    <h3 class="discover-trending__card-name">
+      <%= profile.first_name %> <%= profile.last_name %>
+    </h3>
+    <p class="discover-trending__card-location"><%= location %></p>
+    <div class="discover-trending__card-stats">
+      <span class="discover-trending__card-stat"><%= heightDisplay %></span>
+      <span class="discover-trending__card-stat"><%= ageDisplay %></span>
+    </div>
+  </div>
+</div>
+

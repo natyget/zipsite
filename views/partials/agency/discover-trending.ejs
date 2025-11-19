@@ -1,24 +1,30 @@
-<!-- Trending Talent Section -->
+<!-- Trending Talent Sections -->
 <% 
-  // Calculate trending profiles (new faces from last 24 hours, or most viewed)
-  const trendingProfiles = safeProfiles.filter(p => {
+  // Get user's city or default
+  const userCity = currentUser && currentUser.city ? currentUser.city : 'PARIS';
+  
+  // Trending in city (most viewed/recent in that city)
+  const trendingInCity = safeProfiles.filter(p => {
+    if (!p.city) return false;
+    return p.city.toLowerCase() === userCity.toLowerCase();
+  }).slice(0, 8);
+  
+  // New faces (created in last 24 hours)
+  const newFaces = safeProfiles.filter(p => {
     if (!p.created_at) return false;
     const daysSinceCreated = Math.floor((new Date() - new Date(p.created_at)) / (1000 * 60 * 60 * 24));
     return daysSinceCreated <= 1;
   }).slice(0, 8);
-  
-  // Get user's city or default to popular cities
-  const userCity = currentUser && currentUser.city ? currentUser.city : 'PARIS';
 %>
 
-<% if (trendingProfiles.length > 0) { %>
+<!-- Trending in City Section -->
+<% if (trendingInCity.length > 0) { %>
   <section class="discover-trending">
     <div class="discover-trending__header">
       <div class="discover-trending__title-group">
         <h2 class="discover-trending__title">TRENDING IN <%= userCity.toUpperCase() %></h2>
-        <p class="discover-trending__subtitle">NEW FACES • LAST 24H</p>
       </div>
-      <button class="discover-trending__view-all" id="trending-view-all">
+      <button class="discover-trending__view-all" id="trending-city-view-all">
         View All
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="9 18 15 12 9 6"/>
@@ -26,80 +32,22 @@
       </button>
     </div>
     
-    <div class="discover-trending__carousel" id="trending-carousel">
+    <div class="discover-trending__carousel" id="trending-city-carousel">
       <div class="discover-trending__track">
-        <% trendingProfiles.forEach((profile, index) => { %>
-          <%
-            const daysSinceCreated = profile.created_at 
-              ? Math.floor((new Date() - new Date(profile.created_at)) / (1000 * 60 * 60 * 24))
-              : 999;
-            const isNewFace = daysSinceCreated <= 30;
-            const experienceLevel = profile.is_pro ? 'PRO' : isNewFace ? 'NEW FACE' : 'ESTABLISHED';
-            const matchScore = profile.match_score || Math.floor(Math.random() * 20) + 80;
-            const matchScoreClass = matchScore >= 90 ? 'excellent' : matchScore >= 80 ? 'good' : matchScore >= 70 ? 'fair' : 'poor';
-            const location = profile.city && profile.country 
-              ? `${profile.city.toUpperCase()}, ${profile.country.toUpperCase()}`
-              : profile.city 
-                ? `${profile.city.toUpperCase()}`
-                : 'LOCATION TBD';
-            const heightFeet = profile.height_cm ? Math.floor(profile.height_cm / 30.48) : null;
-            const heightInches = profile.height_cm ? Math.round((profile.height_cm % 30.48) / 2.54) : null;
-            const heightDisplay = heightFeet && heightInches ? `${heightFeet}'${heightInches}"` : profile.height_cm ? `${profile.height_cm} cm` : '--';
-            const ageDisplay = profile.age ? `${profile.age} Years` : '--';
-          %>
-          <div class="discover-trending__card" data-profile-id="<%= profile.id %>">
-            <div class="discover-trending__card-image">
-              <% if (profile.hero_image_path || (profile.images && profile.images.length > 0)) { %>
-                <img 
-                  src="<%= normalizeImagePath(profile.hero_image_path || (profile.images && profile.images[0] ? profile.images[0].path : '')) %>" 
-                  alt="<%= profile.first_name %> <%= profile.last_name %>"
-                  loading="lazy">
-              <% } else { %>
-                <div class="discover-trending__card-placeholder">
-                  <%= (profile.first_name || 'T').charAt(0).toUpperCase() %><%= (profile.last_name || 'T').charAt(0).toUpperCase() %>
-                </div>
-              <% } %>
-              
-              <!-- Status Badge -->
-              <div class="discover-trending__card-status">
-                <span class="discover-trending__card-status-badge discover-trending__card-status-badge--<%= experienceLevel.toLowerCase().replace(' ', '-') %>">
-                  <%= experienceLevel %>
-                </span>
-              </div>
-              
-              <!-- Match Score Badge -->
-              <% if (matchScore >= 80) { %>
-                <div class="discover-trending__card-match">
-                  <span class="discover-trending__card-match-badge discover-trending__card-match-badge--<%= matchScoreClass %>">
-                    <%= matchScore %>% Match
-                  </span>
-                </div>
-              <% } %>
-            </div>
-            
-            <div class="discover-trending__card-info">
-              <h3 class="discover-trending__card-name">
-                <%= profile.first_name %> <%= profile.last_name %>
-              </h3>
-              <p class="discover-trending__card-location"><%= location %></p>
-              <div class="discover-trending__card-stats">
-                <span class="discover-trending__card-stat"><%= heightDisplay %></span>
-                <span class="discover-trending__card-stat"><%= ageDisplay %></span>
-              </div>
-            </div>
-          </div>
+        <% trendingInCity.forEach((profile) => { %>
+          <%- include('./discover-trending-card', { profile }) %>
         <% }); %>
       </div>
     </div>
     
     <!-- Carousel Controls -->
     <div class="discover-trending__controls">
-      <button class="discover-trending__control discover-trending__control--prev" id="trending-prev" aria-label="Previous">
+      <button class="discover-trending__control discover-trending__control--prev" id="trending-city-prev" aria-label="Previous">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
       </button>
-      <button class="discover-trending__control discover-trending__control--next" id="trending-next" aria-label="Next">
+      <button class="discover-trending__control discover-trending__control--next" id="trending-city-next" aria-label="Next">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="9 18 15 12 9 6"/>
         </svg>
@@ -108,3 +56,42 @@
   </section>
 <% } %>
 
+<!-- New Faces Section -->
+<% if (newFaces.length > 0) { %>
+  <section class="discover-trending discover-trending--new-faces">
+    <div class="discover-trending__header">
+      <div class="discover-trending__title-group">
+        <h2 class="discover-trending__title">NEW FACES</h2>
+        <p class="discover-trending__subtitle">LAST 24H</p>
+      </div>
+      <button class="discover-trending__view-all" id="new-faces-view-all">
+        View All
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="discover-trending__carousel" id="new-faces-carousel">
+      <div class="discover-trending__track">
+        <% newFaces.forEach((profile) => { %>
+          <%- include('./discover-trending-card', { profile }) %>
+        <% }); %>
+      </div>
+    </div>
+    
+    <!-- Carousel Controls -->
+    <div class="discover-trending__controls">
+      <button class="discover-trending__control discover-trending__control--prev" id="new-faces-prev" aria-label="Previous">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <button class="discover-trending__control discover-trending__control--next" id="new-faces-next" aria-label="Next">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+    </div>
+  </section>
+<% } %>

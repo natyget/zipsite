@@ -22,6 +22,7 @@
       this.initKeyboardShortcuts();
       this.initLazyLoading();
       this.updateResultsCount();
+      this.updateEmptyState();
     },
 
     initHeroSearch() {
@@ -270,6 +271,7 @@
     switchView(view) {
       const gridView = document.getElementById('discover-talent-grid');
       const listView = document.getElementById('discover-talent-list');
+      const emptyState = document.querySelector('.agency-dashboard__empty-state.discover-view');
       const viewBtns = document.querySelectorAll('.discover-controls__view-btn');
 
       // Update buttons
@@ -284,9 +286,26 @@
       if (listView) {
         listView.classList.toggle('discover-view--active', view === 'list');
       }
+      
+      // Show/hide empty state based on whether there are results
+      if (emptyState) {
+        const gridCount = gridView?.querySelectorAll('.agency-dashboard__scout-card').length || 0;
+        const listCount = listView?.querySelectorAll('.agency-dashboard__scout-list-item').length || 0;
+        const hasResults = gridCount > 0 || listCount > 0;
+        
+        if (hasResults) {
+          emptyState.classList.remove('discover-view--active');
+        } else {
+          // Hide both views and show empty state
+          gridView?.classList.remove('discover-view--active');
+          listView?.classList.remove('discover-view--active');
+          emptyState.classList.add('discover-view--active');
+        }
+      }
 
       this.currentView = view;
       localStorage.setItem('discover-view-mode', view);
+      this.updateResultsCount();
     },
 
     initFilterChips() {
@@ -583,19 +602,26 @@
     },
 
     initTrendingCarousel() {
-      const carousel = document.getElementById('trending-carousel');
+      // Initialize both trending carousels
+      this.initCarousel('trending-city-carousel', 'trending-city-prev', 'trending-city-next', 300);
+      this.initCarousel('new-faces-carousel', 'new-faces-prev', 'new-faces-next', 300);
+    },
+
+    initCarousel(carouselId, prevId, nextId, cardWidth) {
+      const carousel = document.getElementById(carouselId);
       const track = carousel?.querySelector('.discover-trending__track');
-      const prevBtn = document.getElementById('trending-prev');
-      const nextBtn = document.getElementById('trending-next');
+      const prevBtn = document.getElementById(prevId);
+      const nextBtn = document.getElementById(nextId);
 
       if (!track) return;
 
       let scrollPosition = 0;
-      const cardWidth = 280 + 16; // card width + gap
+      const gap = 16; // gap between cards
+      const scrollAmount = (cardWidth + gap) * 2;
 
       const scroll = (direction) => {
         const maxScroll = track.scrollWidth - track.clientWidth;
-        scrollPosition += direction * cardWidth * 2;
+        scrollPosition += direction * scrollAmount;
         scrollPosition = Math.max(0, Math.min(scrollPosition, maxScroll));
         track.scrollTo({ left: scrollPosition, behavior: 'smooth' });
       };
@@ -657,15 +683,7 @@
         });
       });
 
-      // Filter toggle
-      const filterToggle = document.getElementById('discover-filters-toggle');
-      const filters = document.getElementById('scout-filters');
-      
-      if (filterToggle && filters) {
-        filterToggle.addEventListener('click', () => {
-          filters.classList.toggle('scout-filters--open');
-        });
-      }
+      // Filter toggle removed - sidebar no longer used
     },
 
     initKeyboardShortcuts() {
@@ -694,10 +712,33 @@
       
       if (!countEl) return;
 
-      const activeView = this.currentView === 'grid' ? grid : list;
-      const count = activeView?.querySelectorAll('.agency-dashboard__scout-card, .agency-dashboard__scout-list-item').length || 0;
+      // Count from both views (they should have same count)
+      const gridCount = grid?.querySelectorAll('.agency-dashboard__scout-card').length || 0;
+      const listCount = list?.querySelectorAll('.agency-dashboard__scout-list-item').length || 0;
+      const count = Math.max(gridCount, listCount);
       
       countEl.textContent = `${count} ${count === 1 ? 'result' : 'results'}`;
+    },
+
+    updateEmptyState() {
+      const gridView = document.getElementById('discover-talent-grid');
+      const listView = document.getElementById('discover-talent-list');
+      const emptyState = document.querySelector('.agency-dashboard__empty-state.discover-view');
+      
+      if (!emptyState) return;
+      
+      const gridCount = gridView?.querySelectorAll('.agency-dashboard__scout-card').length || 0;
+      const listCount = listView?.querySelectorAll('.agency-dashboard__scout-list-item').length || 0;
+      const hasResults = gridCount > 0 || listCount > 0;
+      
+      if (hasResults) {
+        emptyState.classList.remove('discover-view--active');
+      } else {
+        // Hide both views and show empty state
+        gridView?.classList.remove('discover-view--active');
+        listView?.classList.remove('discover-view--active');
+        emptyState.classList.add('discover-view--active');
+      }
     },
 
     initLazyLoading() {
