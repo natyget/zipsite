@@ -22,7 +22,10 @@
   <section class="discover-trending">
     <div class="discover-trending__header">
       <div class="discover-trending__title-group">
-        <h2 class="discover-trending__title">TRENDING IN <%= userCity.toUpperCase() %></h2>
+        <h2 class="discover-trending__title">
+          <span class="discover-trending__title-accent">Trending in</span>
+          <span class="discover-trending__title-city"><%= userCity %></span>
+        </h2>
       </div>
       <button class="discover-trending__view-all" id="trending-city-view-all">
         View All
@@ -61,8 +64,10 @@
   <section class="discover-trending discover-trending--new-faces">
     <div class="discover-trending__header">
       <div class="discover-trending__title-group">
-        <h2 class="discover-trending__title">NEW FACES</h2>
-        <p class="discover-trending__subtitle">LAST 24H</p>
+        <h2 class="discover-trending__title">
+          <span class="discover-trending__title-accent">New Faces</span>
+        </h2>
+        <p class="discover-trending__subtitle">Last 24 Hours</p>
       </div>
       <button class="discover-trending__view-all" id="new-faces-view-all">
         View All
