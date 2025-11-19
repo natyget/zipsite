@@ -97,6 +97,57 @@ class Toast {
   static warning(message, title) {
     this.show(message, 'warning', title);
   }
+
+  /**
+   * Show a confirmation dialog (returns a Promise)
+   * @param {string} message - The confirmation message
+   * @param {string} title - Optional title
+   * @returns {Promise<boolean>} - Resolves to true if confirmed, false if cancelled
+   */
+  static confirm(message, title = 'Confirm') {
+    return new Promise((resolve) => {
+      // Create confirmation modal
+      const modal = document.createElement('div');
+      modal.className = 'toast-confirm-modal';
+      modal.innerHTML = `
+        <div class="toast-confirm-modal__overlay"></div>
+        <div class="toast-confirm-modal__content">
+          <div class="toast-confirm-modal__header">
+            <h3 class="toast-confirm-modal__title">${title}</h3>
+          </div>
+          <div class="toast-confirm-modal__body">
+            <p class="toast-confirm-modal__message">${message}</p>
+          </div>
+          <div class="toast-confirm-modal__actions">
+            <button class="toast-confirm-modal__btn toast-confirm-modal__btn--cancel" data-action="cancel">Cancel</button>
+            <button class="toast-confirm-modal__btn toast-confirm-modal__btn--confirm" data-action="confirm">Confirm</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+      modal.style.display = 'flex';
+
+      const handleAction = (confirmed) => {
+        modal.style.display = 'none';
+        setTimeout(() => modal.remove(), 300);
+        resolve(confirmed);
+      };
+
+      modal.querySelector('[data-action="confirm"]').addEventListener('click', () => handleAction(true));
+      modal.querySelector('[data-action="cancel"]').addEventListener('click', () => handleAction(false));
+      modal.querySelector('.toast-confirm-modal__overlay').addEventListener('click', () => handleAction(false));
+
+      // ESC key to cancel
+      const handleEscape = (e) => {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+          handleAction(false);
+          document.removeEventListener('keydown', handleEscape);
+        }
+      };
+      document.addEventListener('keydown', handleEscape);
+    });
+  }
 }
 
 // Expose globally

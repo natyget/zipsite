@@ -144,7 +144,9 @@
     },
 
     async deleteBoard(boardId) {
-        if (!confirm('Delete this board?')) return;
+        const confirmed = await window.Toast.confirm('Are you sure you want to delete this board? This action cannot be undone.', 'Delete Board');
+        if (!confirmed) return;
+        
         try {
             await fetch(`/api/agency/boards/${boardId}`, { method: 'DELETE' });
             window.Toast.success('Board deleted');

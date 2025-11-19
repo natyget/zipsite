@@ -19,7 +19,7 @@
      draggable="true">
   
   <!-- Card Checkbox (for batch selection) -->
-  <div class="agency-dashboard__card-checkbox" style="position: absolute; top: 0.75rem; left: 0.75rem; z-index: 10;">
+  <div class="agency-dashboard__card-checkbox">
     <input type="checkbox" class="agency-dashboard__select-checkbox" data-profile-id="<%= profile.id %>" id="card-select-<%= profile.id %>">
   </div>
 
@@ -37,9 +37,9 @@
     <% } %>
     
     <!-- Badges Overlay -->
-    <div class="agency-dashboard__card-badges" style="position: absolute; top: 0.75rem; right: 0.75rem; display: flex; gap: 0.5rem;">
+    <div class="agency-dashboard__card-badges">
       <% if (profile.is_pro) { %>
-        <span class="agency-dashboard__badge agency-dashboard__badge--pro" style="background: #000; color: #fff;">STUDIO+</span>
+        <span class="agency-dashboard__badge agency-dashboard__badge--pro-black">STUDIO+</span>
       <% } %>
       <span class="agency-dashboard__badge agency-dashboard__badge--status agency-dashboard__badge--<%= appStatus %>">
         <%= appStatus.charAt(0).toUpperCase() + appStatus.slice(1) %>
@@ -73,9 +73,8 @@
           ? profile.board_match_score 
           : aiScore;
         const scoreClass = matchScore >= 80 ? 'excellent' : matchScore >= 60 ? 'good' : matchScore >= 40 ? 'fair' : 'poor';
-        const scoreColor = matchScore >= 80 ? '#059669' : matchScore >= 60 ? '#2563eb' : matchScore >= 40 ? '#d97706' : '#dc2626';
       %>
-      <div class="agency-dashboard__match-score" title="Match Score" style="font-weight: 600; color: <%= scoreColor %>;">
+      <div class="agency-dashboard__match-score agency-dashboard__match-score--<%= scoreClass %>" title="Match Score">
         <%= matchScore %>%
       </div>
     </div>
@@ -107,20 +106,20 @@
     </div>
 
     <!-- Notes & Tags Actions -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <div class="agency-dashboard__card-actions-row">
       <!-- Notes Indicator/Button -->
-      <button class="agency-dashboard__card-notes-btn" data-application-id="<%= profile.application_id %>" data-profile-id="<%= profile.id %>" title="Notes & Tags" style="background: none; border: none; cursor: pointer; color: var(--agency-text-tertiary); display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem;">
+      <button class="agency-dashboard__card-notes-btn" data-application-id="<%= profile.application_id %>" data-profile-id="<%= profile.id %>" title="Notes & Tags">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
         <% if (profile.application_notes_count && profile.application_notes_count > 0) { %>
-          <span style="color: var(--agency-text-primary); font-weight: 500;"><%= profile.application_notes_count %></span>
+          <span><%= profile.application_notes_count %></span>
         <% } else { %>
           <span>Add Note</span>
         <% } %>
       </button>
 
-      <button class="agency-dashboard__card-menu" data-profile-id="<%= profile.id %>" aria-label="More options" style="background: none; border: none; cursor: pointer; color: var(--agency-text-tertiary);">
+      <button class="agency-dashboard__card-menu" data-profile-id="<%= profile.id %>" aria-label="More options">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="1"/>
           <circle cx="12" cy="5" r="1"/>
@@ -130,26 +129,24 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="agency-dashboard__card-quick-actions" style="display: flex; gap: 0.5rem;">
+    <div class="agency-dashboard__card-quick-actions">
       <% if (appStatus !== 'accepted' && profile.application_id) { %>
         <button 
           type="button" 
-          class="agency-dashboard__scout-invite-btn agency-dashboard__quick-btn--accept" 
+          class="agency-dashboard__scout-invite-btn agency-dashboard__quick-btn agency-dashboard__quick-btn--accept-solid" 
           data-action="accept"
           data-application-id="<%= profile.application_id %>"
-          title="Accept"
-          style="flex: 1; background-color: #10b981; border-color: #10b981;">
+          title="Accept">
           Accept
         </button>
       <% } %>
       <% if (appStatus !== 'declined' && profile.application_id) { %>
         <button 
           type="button" 
-          class="agency-dashboard__scout-invite-btn agency-dashboard__quick-btn--decline" 
+          class="agency-dashboard__scout-invite-btn agency-dashboard__quick-btn agency-dashboard__quick-btn--decline-outline" 
           data-action="decline"
           data-application-id="<%= profile.application_id %>"
-          title="Decline"
-          style="flex: 1; background-color: white; color: #ef4444; border: 1px solid #ef4444;">
+          title="Decline">
           Decline
         </button>
       <% } %>

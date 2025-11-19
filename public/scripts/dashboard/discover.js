@@ -84,7 +84,8 @@
           const profileId = btn.dataset.profileId;
           const name = btn.dataset.profileName || 'Talent';
 
-          if (!confirm(`Invite ${name} to apply?`)) return;
+          const confirmed = await window.Toast.confirm(`Invite ${name} to apply to your agency?`, 'Send Invitation');
+          if (!confirmed) return;
 
           btn.disabled = true;
           const originalText = btn.textContent;

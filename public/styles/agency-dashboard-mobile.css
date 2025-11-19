@@ -54,6 +54,7 @@
   z-index: 45;
   opacity: 0;
   transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 @media (max-width: 1024px) {
@@ -76,28 +77,12 @@
     transform: translateX(0);
   }
 
-  .agency-sidebar.is-open .agency-sidebar__mobile-overlay {
+  .agency-sidebar.is-open ~ .agency-sidebar__mobile-overlay,
+  .agency-dashboard:has(.agency-sidebar.is-open) .agency-sidebar__mobile-overlay {
     display: block;
     opacity: 1;
-    /* Move overlay behind sidebar but above content */
-    z-index: -1; 
-    /* Actually, the overlay should be a sibling or handle differently if sidebar has transform. 
-       Let's fix overlay structure: it's inside sidebar which moves. 
-       Ideally overlay is outside. But if inside, we need to counter-transform or make it fixed full screen.
-       "position: fixed" inside a transformed element behaves relative to that element in some browsers.
-       Better to put overlay outside. But I edited sidebar.ejs to put it inside.
-       Let's try fixed positioning logic. If it's inside, `top: 0; left: 0;` works relative to sidebar if transformed?
-       Actually, fixed inside transformed becomes absolute relative to transformed parent. 
-       So we need to move overlay out or use a different technique.
-       
-       Correction: I'll update the CSS to handle the overlay being inside or move it via JS if needed.
-       Actually, let's just style it to cover screen.
-    */
-  }
-  
-  /* Fix for overlay inside transformed element */
-  .agency-sidebar__mobile-overlay {
-      /* This won't work well if parent is transformed. */
+    pointer-events: auto;
+    z-index: 45;
   }
 
   .agency-sidebar__close-mobile {
@@ -106,7 +91,7 @@
   
   .agency-dashboard__main {
     margin-left: 0;
-    padding-top: 1rem; /* Space after mobile header */
+    padding-top: 1rem;
   }
 }
 

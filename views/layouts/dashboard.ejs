@@ -19,6 +19,9 @@
     <link rel="stylesheet" href="/styles/dashboard.css?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>">
     <% if (typeof user !== 'undefined' && user && user.role === 'AGENCY') { %>
         <link rel="stylesheet" href="/styles/agency-dashboard.css?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>">
+        <link rel="stylesheet" href="/styles/agency-dashboard-mobile.css?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>">
+        <link rel="stylesheet" href="/styles/agency-dashboard-discover.css?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>">
+        <link rel="stylesheet" href="/styles/toast.css?v=<%= Date.now() %>-<%= Math.random().toString(36).substring(7) %>">
     <% } %>
 </head>
 
