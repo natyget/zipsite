@@ -36,6 +36,9 @@
     initBoardEditor();
     initAnalytics();
     initOverviewDashboard();
+    initDiscoverPage();
+    initInboxPage();
+    initBoardsPage();
     
     // Load data from window if available
     if (window.AGENCY_DASHBOARD_DATA) {
@@ -398,14 +401,34 @@
     const targetColumn = e.currentTarget;
     const targetStatus = targetColumn.dataset.status;
     const card = state.dragState.card;
-    const profileId = card.dataset.profileId;
+    const applicationId = card.dataset.applicationId;
+
+    if (!applicationId) {
+      console.error('No application ID found on card');
+      return;
+    }
+
+    // Map status to action
+    const statusToAction = {
+      'accepted': 'accept',
+      'declined': 'decline',
+      'archived': 'archive',
+      'pending': 'pending' // This might not need an action, just status update
+    };
+
+    const action = statusToAction[targetStatus];
+    if (!action || action === 'pending') {
+      // For pending, we might need a different approach or just update status directly
+      console.warn('Cannot update to pending status via drag-drop');
+      return;
+    }
 
     // Move card to new column
     const cardsContainer = targetColumn.querySelector('.agency-dashboard__kanban-cards');
     cardsContainer.appendChild(card);
 
     // Update status via API
-    updateApplicationStatus(profileId, targetStatus).then(() => {
+    updateApplicationStatus(applicationId, action).then(() => {
       // Update card data attribute
       card.dataset.status = targetStatus;
       
@@ -2650,6 +2673,23 @@
           `;
         }
 
+        // Render charts
+        const trafficChartEl = document.getElementById('analytics-traffic-chart');
+        if (trafficChartEl && analytics.timeline) {
+          renderTrafficChart(trafficChartEl, analytics.timeline);
+        }
+
+        const distributionChartEl = document.getElementById('analytics-distribution-chart');
+        if (distributionChartEl) {
+          // For now, use placeholder data - can be enhanced with actual experience level data
+          renderDistributionChart(distributionChartEl, {
+            'New Faces': 45,
+            'Developing': 30,
+            'Professional': 20,
+            'Top Talent': 5
+          });
+        }
+
         // Show content
         loadingEl.style.display = 'none';
         contentEl.style.display = 'block';
@@ -2676,6 +2716,181 @@
 
       observer.observe(analyticsSection);
     }
+  }
+
+  /**
+   * Render Traffic Chart (Weekly Overview)
+   */
+  function renderTrafficChart(container, timelineData) {
+    if (!timelineData || timelineData.length === 0) {
+      container.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--agency-text-tertiary);">No traffic data available</div>';
+      return;
+    }
+
+    // Get last 7 days of data
+    const last7Days = timelineData.slice(-7);
+    const maxCount = Math.max(...last7Days.map(d => d.count), 1);
+    const chartHeight = 200;
+    const chartWidth = container.offsetWidth || 600;
+    const padding = { top: 20, right: 20, bottom: 40, left: 40 };
+    const graphWidth = chartWidth - padding.left - padding.right;
+    const graphHeight = chartHeight - padding.top - padding.bottom;
+
+    // Create SVG
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', chartWidth);
+    svg.setAttribute('height', chartHeight);
+    svg.style.overflow = 'visible';
+
+    // Create line path
+    const points = last7Days.map((d, i) => {
+      const x = padding.left + (i / (last7Days.length - 1 || 1)) * graphWidth;
+      const y = padding.top + graphHeight - (d.count / maxCount) * graphHeight;
+      return { x, y, count: d.count, date: d.date };
+    });
+
+    // Draw grid lines
+    const gridGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    for (let i = 0; i <= 4; i++) {
+      const y = padding.top + (i / 4) * graphHeight;
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', padding.left);
+      line.setAttribute('x2', padding.left + graphWidth);
+      line.setAttribute('y1', y);
+      line.setAttribute('y2', y);
+      line.setAttribute('stroke', 'rgba(0, 0, 0, 0.05)');
+      line.setAttribute('stroke-width', '1');
+      gridGroup.appendChild(line);
+    }
+    svg.appendChild(gridGroup);
+
+    // Draw line
+    const pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', pathData);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', 'var(--agency-text-primary)');
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(path);
+
+    // Draw points
+    points.forEach(point => {
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', point.x);
+      circle.setAttribute('cy', point.y);
+      circle.setAttribute('r', '4');
+      circle.setAttribute('fill', 'var(--agency-text-primary)');
+      svg.appendChild(circle);
+    });
+
+    // Draw X-axis labels (day names)
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    points.forEach((point, i) => {
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', point.x);
+      text.setAttribute('y', chartHeight - padding.bottom + 15);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('font-size', '12');
+      text.setAttribute('fill', 'var(--agency-text-tertiary)');
+      text.textContent = dayNames[i] || '';
+      svg.appendChild(text);
+    });
+
+    // Draw Y-axis labels
+    for (let i = 0; i <= 4; i++) {
+      const value = Math.round((maxCount / 4) * (4 - i));
+      const y = padding.top + (i / 4) * graphHeight;
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', padding.left - 10);
+      text.setAttribute('y', y + 4);
+      text.setAttribute('text-anchor', 'end');
+      text.setAttribute('font-size', '12');
+      text.setAttribute('fill', 'var(--agency-text-tertiary)');
+      text.textContent = value;
+      svg.appendChild(text);
+    }
+
+    container.innerHTML = '';
+    container.appendChild(svg);
+  }
+
+  /**
+   * Render Distribution Chart (Donut Chart)
+   */
+  function renderDistributionChart(container, data) {
+    if (!data || Object.keys(data).length === 0) {
+      container.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--agency-text-tertiary);">No distribution data available</div>';
+      return;
+    }
+
+    const chartSize = 200;
+    const centerX = chartSize / 2;
+    const centerY = chartSize / 2;
+    const radius = 70;
+    const innerRadius = 40;
+
+    const total = Object.values(data).reduce((sum, val) => sum + val, 0);
+    if (total === 0) {
+      container.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--agency-text-tertiary);">No data available</div>';
+      return;
+    }
+
+    const colors = {
+      'New Faces': '#1a1a1a',
+      'Developing': '#666',
+      'Professional': '#999',
+      'Top Talent': '#ccc'
+    };
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', chartSize);
+    svg.setAttribute('height', chartSize);
+    svg.setAttribute('viewBox', `0 0 ${chartSize} ${chartSize}`);
+
+    let currentAngle = -Math.PI / 2; // Start at top
+
+    Object.entries(data).forEach(([label, value]) => {
+      const percentage = value / total;
+      const angle = percentage * 2 * Math.PI;
+
+      // Create arc path
+      const startAngle = currentAngle;
+      const endAngle = currentAngle + angle;
+
+      const x1 = centerX + radius * Math.cos(startAngle);
+      const y1 = centerY + radius * Math.sin(startAngle);
+      const x2 = centerX + radius * Math.cos(endAngle);
+      const y2 = centerY + radius * Math.sin(endAngle);
+
+      const largeArcFlag = angle > Math.PI ? 1 : 0;
+
+      const outerArc = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+      const innerArc = `M ${x2} ${y2} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x1} ${y1} Z`;
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', outerArc + innerArc);
+      path.setAttribute('fill', colors[label] || '#999');
+      svg.appendChild(path);
+
+      currentAngle = endAngle;
+    });
+
+    // Add center text
+    const centerText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    centerText.setAttribute('x', centerX);
+    centerText.setAttribute('y', centerY);
+    centerText.setAttribute('text-anchor', 'middle');
+    centerText.setAttribute('dominant-baseline', 'middle');
+    centerText.setAttribute('font-size', '24');
+    centerText.setAttribute('font-weight', 'bold');
+    centerText.setAttribute('fill', 'var(--agency-text-primary)');
+    centerText.textContent = total;
+    svg.appendChild(centerText);
+
+    container.innerHTML = '';
+    container.appendChild(svg);
   }
 
   /**
@@ -3006,6 +3221,199 @@
         </div>
       </div>
     `).join('');
+  }
+
+  /**
+   * Discover Page Functionality
+   */
+  function initDiscoverPage() {
+    const discoverSearchInput = document.getElementById('discover-search-input');
+    const discoverMapViewBtn = document.getElementById('discover-map-view');
+    const discoverFiltersToggle = document.getElementById('discover-filters-toggle');
+    const scoutFilters = document.getElementById('scout-filters');
+    
+    // Search input handler with debounce
+    if (discoverSearchInput) {
+      let searchDebounceTimer = null;
+      const SEARCH_DEBOUNCE_DELAY = 300;
+      
+      discoverSearchInput.addEventListener('input', (e) => {
+        clearTimeout(searchDebounceTimer);
+        const searchQuery = e.target.value.trim();
+        
+        searchDebounceTimer = setTimeout(() => {
+          const url = new URL(window.location.href);
+          if (searchQuery) {
+            url.searchParams.set('search', searchQuery);
+          } else {
+            url.searchParams.delete('search');
+          }
+          
+          // Trigger existing filter logic by updating URL and reloading
+          window.location.href = url.toString();
+        }, SEARCH_DEBOUNCE_DELAY);
+      });
+      
+      // Handle Enter key (immediate search)
+      discoverSearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          clearTimeout(searchDebounceTimer);
+          const searchQuery = e.target.value.trim();
+          const url = new URL(window.location.href);
+          if (searchQuery) {
+            url.searchParams.set('search', searchQuery);
+          } else {
+            url.searchParams.delete('search');
+          }
+          window.location.href = url.toString();
+        }
+      });
+    }
+    
+    // Map view button handler (placeholder - can be enhanced later)
+    if (discoverMapViewBtn) {
+      discoverMapViewBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        // TODO: Implement map view functionality
+        alert('Map view coming soon!');
+      });
+    }
+    
+    // Filters toggle button handler
+    if (discoverFiltersToggle && scoutFilters) {
+      // Check initial state - if filters are visible, mark button as active
+      const initialIsVisible = scoutFilters.offsetParent !== null && 
+                                window.getComputedStyle(scoutFilters).display !== 'none';
+      if (initialIsVisible) {
+        discoverFiltersToggle.classList.add('agency-discover-header__btn--active');
+      }
+      
+      discoverFiltersToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isVisible = scoutFilters.offsetParent !== null && 
+                         window.getComputedStyle(scoutFilters).display !== 'none';
+        
+        if (isVisible) {
+          scoutFilters.style.display = 'none';
+          discoverFiltersToggle.classList.remove('agency-discover-header__btn--active');
+        } else {
+          scoutFilters.style.display = 'block';
+          discoverFiltersToggle.classList.add('agency-discover-header__btn--active');
+        }
+      });
+    }
+  }
+
+  /**
+   * Inbox Page Functionality
+   */
+  function initInboxPage() {
+    const inboxSearchInput = document.getElementById('inbox-search-input');
+    const inboxFiltersBtn = document.getElementById('inbox-filters-btn');
+    const filterPills = document.querySelectorAll('.agency-inbox-header__filter-pill');
+    const filtersPanel = document.querySelector('.agency-dashboard__filters');
+    
+    // Search input handler with debounce
+    if (inboxSearchInput) {
+      let searchDebounceTimer = null;
+      const SEARCH_DEBOUNCE_DELAY = 300;
+      
+      inboxSearchInput.addEventListener('input', (e) => {
+        clearTimeout(searchDebounceTimer);
+        const searchQuery = e.target.value.trim();
+        
+        searchDebounceTimer = setTimeout(() => {
+          const url = new URL(window.location.href);
+          if (searchQuery) {
+            url.searchParams.set('search', searchQuery);
+          } else {
+            url.searchParams.delete('search');
+          }
+          window.location.href = url.toString();
+        }, SEARCH_DEBOUNCE_DELAY);
+      });
+      
+      // Handle Enter key (immediate search)
+      inboxSearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          clearTimeout(searchDebounceTimer);
+          const searchQuery = e.target.value.trim();
+          const url = new URL(window.location.href);
+          if (searchQuery) {
+            url.searchParams.set('search', searchQuery);
+          } else {
+            url.searchParams.delete('search');
+          }
+          window.location.href = url.toString();
+        }
+      });
+    }
+    
+    // Filters button handler
+    if (inboxFiltersBtn && filtersPanel) {
+      inboxFiltersBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isVisible = filtersPanel.style.display !== 'none' && filtersPanel.offsetParent !== null;
+        
+        if (isVisible) {
+          filtersPanel.style.display = 'none';
+          inboxFiltersBtn.classList.remove('agency-inbox-header__filters-btn--active');
+        } else {
+          filtersPanel.style.display = 'block';
+          inboxFiltersBtn.classList.add('agency-inbox-header__filters-btn--active');
+        }
+      });
+    }
+    
+    // Filter pills handler
+    filterPills.forEach(pill => {
+      pill.addEventListener('click', (e) => {
+        e.preventDefault();
+        const status = pill.dataset.status || 'all';
+        
+        // Update active state
+        filterPills.forEach(p => p.classList.remove('agency-inbox-header__filter-pill--active'));
+        pill.classList.add('agency-inbox-header__filter-pill--active');
+        
+        // Update URL and reload
+        const url = new URL(window.location.href);
+        if (status === 'all') {
+          url.searchParams.delete('status');
+        } else {
+          url.searchParams.set('status', status);
+        }
+        window.location.href = url.toString();
+      });
+    });
+  }
+
+  /**
+   * Boards Page Functionality
+   */
+  function initBoardsPage() {
+    const boardCards = document.querySelectorAll('.agency-boards-page__card');
+    
+    boardCards.forEach(card => {
+      card.addEventListener('click', (e) => {
+        // Don't navigate if clicking on action buttons inside the card
+        if (e.target.closest('button') || e.target.closest('a')) {
+          return;
+        }
+        
+        const boardId = card.dataset.boardId;
+        if (boardId) {
+          // Navigate to board detail view (or open modal)
+          // For now, we'll navigate to a board detail page
+          // If that doesn't exist, we can open the board editor
+          window.location.href = `/dashboard/agency/boards/${boardId}`;
+        }
+      });
+      
+      // Add hover effect
+      card.style.cursor = 'pointer';
+    });
   }
 
 })();

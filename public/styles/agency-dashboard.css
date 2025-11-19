@@ -7186,6 +7186,12 @@
   border-color: var(--agency-brand-color, var(--agency-accent-gold));
 }
 
+.agency-discover-header__btn--active {
+  background: var(--agency-text-primary);
+  color: white;
+  border-color: var(--agency-text-primary);
+}
+
 .agency-discover-header__btn svg {
   flex-shrink: 0;
 }
@@ -7531,6 +7537,12 @@
 .agency-inbox-header__filters-btn:hover {
   background: var(--agency-bg-elevated);
   border-color: var(--agency-brand-color, var(--agency-accent-gold));
+}
+
+.agency-inbox-header__filters-btn--active {
+  background: var(--agency-text-primary);
+  color: white;
+  border-color: var(--agency-text-primary);
 }
 
 .agency-inbox-header__filters-btn svg {

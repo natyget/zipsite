@@ -175,6 +175,12 @@ router.get('/dashboard/agency/applicants', requireRole('AGENCY'), async (req, re
           this.where('applications.status', 'pending')
             .orWhereNull('applications.status');
         });
+      } else if (status === 'under-review') {
+        // Under review is typically pending applications that have been viewed
+        query = query.where(function() {
+          this.where('applications.status', 'pending')
+            .orWhereNull('applications.status');
+        }).whereNotNull('applications.viewed_at');
       } else {
         query = query.where('applications.status', status);
       }
@@ -469,8 +475,22 @@ router.get('/dashboard/agency/boards', requireRole('AGENCY'), async (req, res, n
         };
       }));
 
+      // Determine board type from name or description
+      let boardType = 'Runway';
+      const boardNameLower = (board.name || '').toLowerCase();
+      const boardDescLower = (board.description || '').toLowerCase();
+      
+      if (boardNameLower.includes('commercial') || boardDescLower.includes('commercial')) {
+        boardType = 'Commercial';
+      } else if (boardNameLower.includes('development') || boardNameLower.includes('new faces') || boardDescLower.includes('development')) {
+        boardType = 'Development';
+      } else if (boardNameLower.includes('runway') || boardDescLower.includes('runway')) {
+        boardType = 'Runway';
+      }
+
       return {
         ...board,
+        type: boardType,
         applications
       };
     }));
